@@ -22,7 +22,7 @@ class Interleave(name: String) extends Step {
     this.inputPorts = inputPorts
     this.outputPorts = outputPorts
 
-    true
+    inputPorts.size == 2 && inputPorts.contains("left") && inputPorts.contains("right")
   }
 
   override def receive(port: String, msg: ItemMessage): Unit = {

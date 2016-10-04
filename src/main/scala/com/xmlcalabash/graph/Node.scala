@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, Props}
 import com.xmlcalabash.messages.{CloseMessage, ItemMessage, RanMessage}
 import com.xmlcalabash.runtime.{Identity, Step, StepController}
 import Reaper.WatchMe
+import com.xmlcalabash.core.XProcException
 import com.xmlcalabash.items.GenericItem
 import com.xmlcalabash.util.UniqueId
 
@@ -195,7 +196,8 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
       //println("Making actors for " + this)
 
       if (worker.isDefined) {
-        worker.get.init(this, inputs(), outputs(), Set())
+        if (!worker.get.init(this, inputs(), outputs(), Set()))
+          throw new XProcException("Failed to initialize worker step.")
       }
 
       _actor = graph.system.actorOf(Props(new NodeActor(this)), name.get)

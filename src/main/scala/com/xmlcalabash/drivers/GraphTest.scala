@@ -61,12 +61,13 @@ object GraphTest extends App {
     graph.addEdge(nStart2, "result", nJoin, "right")
     graph.addEdge(nJoin, "result", nEnd, "source")
     graph.addEdge(nOpt, "result", nExpr, "user")
-    graph.addEdge(nExpr, "result", nEnd, "source")
+    graph.addEdge(nExpr, "result", nJoin, "left")
 
     val valid = graph.valid()
     println(valid)
 
     if (valid) {
+      graph.dump()
       graph.makeActors()
 
       nOpt.write(new StringItem("Fred"))

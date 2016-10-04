@@ -133,4 +133,16 @@ class Graph(private[graph] val engine: XProcEngine) {
       }
     }
   }
+
+  def dump(): Unit = {
+    for (node <- nodes) {
+      println(node)
+      for (port <- node.inputs()) {
+        println("\t" + port + " ->")
+      }
+      for (port <- node.outputs()) {
+        println("\t->" + port)
+      }
+    }
+  }
 }
