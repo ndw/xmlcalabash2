@@ -7,22 +7,16 @@ import net.sf.saxon.s9api.XdmNode
 /**
   * Created by ndw on 10/4/16.
   */
-class AtomicStep extends XMLArtifact {
-  def this(node: XdmNode, parent: Option[XMLArtifact]) {
-    this()
-    _xmlname = "atomic-step"
-    _node = node
-    _parent = parent
-    parse(node)
-  }
-
+class AtomicStep(node: Option[XdmNode], parent: Option[XMLArtifact]) extends XMLArtifact(node, parent) {
   override def dump(tree: TreeWriter): Unit = {
     tree.addStartElement(XProcConstants.px(_xmlname))
-    tree.addAttribute(XProcConstants.px("type"), _node.getNodeName.toString)
-    for (att <- prop) {
+    if (node.isDefined) {
+      tree.addAttribute(XProcConstants.px("type"), node.get.getNodeName.toString)
+    }
+    for (att <- _prop) {
       tree.addAttribute(att.name, att.value)
     }
-    for (att <- attr) {
+    for (att <- _attr) {
       tree.addAttribute(att.name, att.value)
     }
     for (ns <- _nsbindings) {
@@ -32,7 +26,7 @@ class AtomicStep extends XMLArtifact {
       tree.addEndElement()
     }
 
-    for (child <- children) {
+    for (child <- _children) {
       child.dump(tree)
     }
     tree.addEndElement()

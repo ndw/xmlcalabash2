@@ -5,10 +5,5 @@ import net.sf.saxon.s9api.XdmNode
 /**
   * Created by ndw on 10/4/16.
   */
-class Import extends XMLArtifact {
-  def this(node: XdmNode, parent: Option[XMLArtifact]) {
-    this()
-    initNode(node, parent)
-    parse(node)
-  }
+class Import(node: Option[XdmNode], parent: Option[XMLArtifact]) extends XMLArtifact(node, parent) {
 }

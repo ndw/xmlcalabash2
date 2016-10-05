@@ -5,21 +5,14 @@ import net.sf.saxon.s9api.XdmNode
 /**
   * Created by ndw on 10/4/16.
   */
-class Input extends XMLArtifact {
-  def this(node: XdmNode, parent: Option[XMLArtifact]) {
-    this()
-    initNode(node, parent)
-    parse(node)
-  }
-
+class Input(node: Option[XdmNode], parent: Option[XMLArtifact]) extends XMLArtifact(node, parent) {
   override def fixup(): Unit = {
-    if (children.size == 1 && children.head.isInstanceOf[XMLLiteral]) {
-      println("FIXUP UNWRAPPED INLINE")
-      val inline = new Inline()
+    if (_children.size == 1 && _children.head.isInstanceOf[XMLLiteral]) {
+      val inline = new Inline(None, Some(this))
       inline.xmlname = "inline"
-      inline.addChild(children.head)
-      children.remove(0)
-      children += inline
+      inline.addChild(_children.head)
+      _children.remove(0)
+      _children += inline
     }
   }
 }

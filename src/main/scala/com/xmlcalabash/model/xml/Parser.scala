@@ -22,9 +22,9 @@ class Parser(val engine: XProcEngine) {
     }
 
     val artifact = node.get.getNodeName match {
-      case XProcConstants.p_pipeline => new Pipeline(node.get, None)
-      case XProcConstants.p_declare_step => new DeclareStep(node.get, None)
-      case XProcConstants.p_library => new Library(node.get, None)
+      case XProcConstants.p_pipeline => new Pipeline(node, None)
+      case XProcConstants.p_declare_step => new DeclareStep(node, None)
+      case XProcConstants.p_library => new Library(node, None)
       case _ => throw new XProcException("Attempt to parse something that isn't a pipeline")
     }
 

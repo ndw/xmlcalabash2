@@ -5,12 +5,5 @@ import net.sf.saxon.s9api.XdmNode
 /**
   * Created by ndw on 10/4/16.
   */
-class Pipeline extends XMLArtifact {
-  def this(node: XdmNode, parent: Option[XMLArtifact]) {
-    this()
-    initNode(node, parent)
-    parseSubpipeline(node)
-  }
-
-
+class Pipeline(node: Option[XdmNode], parent: Option[XMLArtifact]) extends CompoundStep(node, parent) {
 }

@@ -1,21 +1,19 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.core.XProcConstants
 import com.xmlcalabash.model.xml.util.TreeWriter
 import net.sf.saxon.s9api.XdmNode
 
 /**
   * Created by ndw on 10/4/16.
   */
-class XMLLiteral extends XMLArtifact {
-  def this(node: XdmNode, parent: Option[XMLArtifact]) {
-    this()
-    _xmlname = "XMLLiteral"
-    _node = node
-    _parent = parent
+class XMLLiteral(node: Option[XdmNode], parent: Option[XMLArtifact]) extends XMLArtifact(node, parent) {
+  _xmlname = "XMLLiteral"
+
+  override def parse(node: Option[XdmNode]): Unit = {
+    // nop
   }
 
   override def dump(tree: TreeWriter): Unit = {
-    tree.addSubtree(_node)
+    tree.addSubtree(node.get)
   }
 }

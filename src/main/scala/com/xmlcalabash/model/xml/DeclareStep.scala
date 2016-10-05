@@ -5,10 +5,5 @@ import net.sf.saxon.s9api.XdmNode
 /**
   * Created by ndw on 10/4/16.
   */
-class DeclareStep extends XMLArtifact {
-  def this(node: XdmNode, parent: Option[XMLArtifact]) {
-    this()
-    initNode(node, parent)
-    parseSubpipeline(node)
-  }
+class DeclareStep(node: Option[XdmNode], parent: Option[XMLArtifact]) extends CompoundStep(node, parent) {
 }

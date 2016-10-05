@@ -9,7 +9,7 @@ import scala.collection.immutable.{HashMap, Set}
 /**
   * Created by ndw on 10/4/16.
   */
-class XMLArtifact {
+class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
   protected val properties = HashMap(
     XProcConstants.p_declare_step -> Set(XProcConstants._name, XProcConstants._type, XProcConstants._psvi_required,
       XProcConstants._xpath_version, XProcConstants._version, XProcConstants._exclude_inline_prefixes),
@@ -54,17 +54,14 @@ class XMLArtifact {
   )
 
   protected var _xmlname = "XMLArtifact"
-  protected var _parent: Option[XMLArtifact] = _
-  protected var _node: XdmNode = _
   protected val _nsbindings = collection.mutable.Set.empty[Namespace]
-  protected val prop = collection.mutable.Set.empty[Attribute]
-  protected val attr = collection.mutable.Set.empty[Attribute]
-  protected val children = collection.mutable.ListBuffer.empty[XMLArtifact]
+  protected val _prop = collection.mutable.Set.empty[Attribute]
+  protected val _attr = collection.mutable.Set.empty[Attribute]
+  protected val _children = collection.mutable.ListBuffer.empty[XMLArtifact]
 
-  def initNode(node: XdmNode, parent: Option[XMLArtifact]) {
-    _xmlname = node.getNodeName.getLocalName
-    _node = node
-    _parent = parent
+  if (node.isDefined) {
+    _xmlname = node.get.getNodeName.getLocalName
+    parse(node)
   }
 
   def xmlname = _xmlname
@@ -73,22 +70,18 @@ class XMLArtifact {
   }
 
   def addChild(child: XMLArtifact): Unit = {
-    children += child
+    _children += child
   }
 
-  def parse(node: XdmNode): Unit = {
-    parseNamespaces(node)
-    parseAttributes(node)
-    parseChildren(node)
+  def parse(node: Option[XdmNode]): Unit = {
+    if (node.isDefined) {
+      parseNamespaces(node.get)
+      parseAttributes(node.get)
+      parseChildren(node.get)
+    }
   }
 
-  def parseSubpipeline(node: XdmNode): Unit = {
-    parseNamespaces(node)
-    parseAttributes(node)
-    parseChildren(node, stepsAllowed = true)
-  }
-
-  private def parseNamespaces(node: XdmNode): Unit = {
+  private[model] def parseNamespaces(node: XdmNode): Unit = {
     for (childitem <- RelevantNodes.filter(node, Axis.NAMESPACE)) {
       val child = childitem.asInstanceOf[XdmNode]
       val prefix = if (child.getNodeName == null) {
@@ -100,10 +93,10 @@ class XMLArtifact {
       // This is kind of inefficient, but so be it
       val ns = new Namespace(prefix, child.getStringValue)
       var found = false
-      var parent = _parent
-      while (!found && parent.isDefined) {
-        found = parent.get._nsbindings.contains(ns)
-        parent = parent.get._parent
+      var p = parent
+      while (!found && p.isDefined) {
+        found = p.get._nsbindings.contains(ns)
+        p = p.get.parent
       }
 
       if (!found) {
@@ -112,14 +105,14 @@ class XMLArtifact {
     }
   }
 
-  private def parseAttributes(node: XdmNode): Unit = {
+  private[model] def parseAttributes(node: XdmNode): Unit = {
     var propnames = properties.getOrElse(node.getNodeName, Set.empty[QName])
     for (childitem <- RelevantNodes.filter(node, Axis.ATTRIBUTE)) {
       val child = childitem.asInstanceOf[XdmNode]
       if (propnames.contains(child.getNodeName)) {
-        prop += new Attribute(child)
+        _prop += new Attribute(child)
       } else {
-        attr += new Attribute(child)
+        _attr += new Attribute(child)
       }
     }
   }
@@ -128,44 +121,44 @@ class XMLArtifact {
     parseChildren(node, false)
   }
 
-  def parseChildren(node: XdmNode, stepsAllowed: Boolean): Unit = {
+  private[model] def parseChildren(node: XdmNode, stepsAllowed: Boolean): Unit = {
     for (childitem <- RelevantNodes.filter(node, Axis.CHILD)) {
       val child = childitem.asInstanceOf[XdmNode]
       child.getNodeName match {
-        case XProcConstants.p_catch => children += new Catch(child, Some(this))
-        case XProcConstants.p_choose => children += new Choose(child, Some(this))
-        case XProcConstants.p_data => children += new Data(child, Some(this))
-        case XProcConstants.p_declare_step => children += new DeclareStep(child, Some(this))
-        case XProcConstants.p_document => children += new Document(child, Some(this))
-        case XProcConstants.p_empty => children += new Empty(child, Some(this))
-        case XProcConstants.p_for_each => children += new ForEach(child, Some(this))
-        case XProcConstants.p_group => children += new Group(child, Some(this))
-        case XProcConstants.p_import => children += new Import(child, Some(this))
-        case XProcConstants.p_inline => children += new Inline(child, Some(this))
-        case XProcConstants.p_input => children += new Input(child, Some(this))
-        case XProcConstants.p_iteration_source => children += new IterationSource(child, Some(this))
-        case XProcConstants.p_library => children += new Library(child, Some(this))
-        case XProcConstants.p_log => children += new Log(child, Some(this))
-        case XProcConstants.p_namespaces => children += new Namespaces(child, Some(this))
-        case XProcConstants.p_option => children += new DeclOption(child, Some(this))
-        case XProcConstants.p_otherwise => children += new Otherwise(child, Some(this))
-        case XProcConstants.p_output => children += new Output(child, Some(this))
-        case XProcConstants.p_pipe => children += new Pipe(child, Some(this))
-        case XProcConstants.p_pipeline => children += new Pipeline(child, Some(this))
-        case XProcConstants.p_serialization => children += new Serialization(child, Some(this))
-        case XProcConstants.p_try => children += new Try(child, Some(this))
-        case XProcConstants.p_variable => children += new Variable(child, Some(this))
-        case XProcConstants.p_viewport => children += new Viewport(child, Some(this))
-        case XProcConstants.p_viewport_source => children += new ViewportSource(child, Some(this))
-        case XProcConstants.p_when => children += new When(child, Some(this))
-        case XProcConstants.p_with_option => children += new WithOption(child, Some(this))
-        case XProcConstants.p_with_param => children += new WithParam(child, Some(this))
-        case XProcConstants.p_xpath_context => children += new XPathContext(child, Some(this))
+        case XProcConstants.p_catch => _children += new Catch(Some(child), Some(this))
+        case XProcConstants.p_choose => _children += new Choose(Some(child), Some(this))
+        case XProcConstants.p_data => _children += new Data(Some(child), Some(this))
+        case XProcConstants.p_declare_step => _children += new DeclareStep(Some(child), Some(this))
+        case XProcConstants.p_document => _children += new Document(Some(child), Some(this))
+        case XProcConstants.p_empty => _children += new Empty(Some(child), Some(this))
+        case XProcConstants.p_for_each => _children += new ForEach(Some(child), Some(this))
+        case XProcConstants.p_group => _children += new Group(Some(child), Some(this))
+        case XProcConstants.p_import => _children += new Import(Some(child), Some(this))
+        case XProcConstants.p_inline => _children += new Inline(Some(child), Some(this))
+        case XProcConstants.p_input => _children += new Input(Some(child), Some(this))
+        case XProcConstants.p_iteration_source => _children += new IterationSource(Some(child), Some(this))
+        case XProcConstants.p_library => _children += new Library(Some(child), Some(this))
+        case XProcConstants.p_log => _children += new Log(Some(child), Some(this))
+        case XProcConstants.p_namespaces => _children += new Namespaces(Some(child), Some(this))
+        case XProcConstants.p_option => _children += new DeclOption(Some(child), Some(this))
+        case XProcConstants.p_otherwise => _children += new Otherwise(Some(child), Some(this))
+        case XProcConstants.p_output => _children += new Output(Some(child), Some(this))
+        case XProcConstants.p_pipe => _children += new Pipe(Some(child), Some(this))
+        case XProcConstants.p_pipeline => _children += new Pipeline(Some(child), Some(this))
+        case XProcConstants.p_serialization => _children += new Serialization(Some(child), Some(this))
+        case XProcConstants.p_try => _children += new Try(Some(child), Some(this))
+        case XProcConstants.p_variable => _children += new Variable(Some(child), Some(this))
+        case XProcConstants.p_viewport => _children += new Viewport(Some(child), Some(this))
+        case XProcConstants.p_viewport_source => _children += new ViewportSource(Some(child), Some(this))
+        case XProcConstants.p_when => _children += new When(Some(child), Some(this))
+        case XProcConstants.p_with_option => _children += new WithOption(Some(child), Some(this))
+        case XProcConstants.p_with_param => _children += new WithParam(Some(child), Some(this))
+        case XProcConstants.p_xpath_context => _children += new XPathContext(Some(child), Some(this))
         case XProcConstants.p_pipeinfo => Unit
         case XProcConstants.p_documentation => Unit
         case _ =>
           if (stepsAllowed) {
-            children += new AtomicStep(child, Some(this))
+            _children += new AtomicStep(Some(child), Some(this))
           } else {
             this match {
               case a: Inline => Unit
@@ -173,14 +166,14 @@ class XMLArtifact {
               case a: Output => Unit
               case _ => println("Unexpected: " + child.getNodeName)
             }
-            children += new XMLLiteral(child, Some(this))
+            _children += new XMLLiteral(Some(child), Some(this))
           }
       }
     }
   }
 
   def fixup(): Unit = {
-    for (child <- children) {
+    for (child <- _children) {
       child.fixup()
     }
   }
@@ -193,13 +186,13 @@ class XMLArtifact {
       tree.addNamespace(ns.prefix, ns.uri)
     }
 
-    for (att <- prop) {
+    for (att <- _prop) {
       tree.addAttribute(att.name, att.value)
     }
-    for (att <- attr) {
+    for (att <- _attr) {
       tree.addAttribute(att.name, att.value)
     }
-    for (child <- children) {
+    for (child <- _children) {
       child.dump(tree)
     }
     tree.addEndElement()
