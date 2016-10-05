@@ -1,33 +1,25 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.core.XProcConstants
-import com.xmlcalabash.model.xml.bindings.Binding
-import com.xmlcalabash.model.xml.util.TreeWriter
 import net.sf.saxon.s9api.XdmNode
 
 /**
-  * Created by ndw on 10/1/16.
+  * Created by ndw on 10/4/16.
   */
-class Input(context: Option[XdmNode], override val port: Option[String]) extends IODeclaration(context, port) {
-  private var _select: Option[String] = None
-
-  def select = _select
-
-  def select_=(value: Option[String]): Unit = {
-    _select = value
+class Input extends XMLArtifact {
+  def this(node: XdmNode, parent: Option[XMLArtifact]) {
+    this()
+    initNode(node, parent)
+    parse(node)
   }
 
-  def dump(tree: TreeWriter): Unit = {
-    tree.addStartElement(XProcConstants.px("input"))
-    if (port.isDefined) {
-      tree.addAttribute(XProcConstants._port, port.get)
+  override def fixup(): Unit = {
+    if (children.size == 1 && children.head.isInstanceOf[XMLLiteral]) {
+      println("FIXUP UNWRAPPED INLINE")
+      val inline = new Inline()
+      inline.xmlname = "inline"
+      inline.addChild(children.head)
+      children.remove(0)
+      children += inline
     }
-    if (select.isDefined) {
-      tree.addAttribute(XProcConstants._select, port.get)
-    }
-    if (bindings.isDefined) {
-      bindings.get.foreach { _.dump(tree) }
-    }
-    tree.addEndElement()
   }
 }
