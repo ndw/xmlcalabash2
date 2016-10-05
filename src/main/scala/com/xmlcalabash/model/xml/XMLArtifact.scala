@@ -1,10 +1,13 @@
 package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.core.XProcConstants
+import com.xmlcalabash.model.xml.decl.StepLibrary
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}
+import com.xmlcalabash.util.UniqueId
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 
 import scala.collection.immutable.{HashMap, Set}
+import scala.collection.mutable
 
 /**
   * Created by ndw on 10/4/16.
@@ -16,7 +19,7 @@ class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
     XProcConstants.p_pipeline -> Set(XProcConstants._name, XProcConstants._type, XProcConstants._psvi_required,
       XProcConstants._xpath_version, XProcConstants._version, XProcConstants._exclude_inline_prefixes),
     XProcConstants.p_input -> Set(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary,
-      XProcConstants._kind, XProcConstants._select),
+      XProcConstants._kind, XProcConstants._select, XProcConstants._step),
     XProcConstants.p_namespaces -> Set(XProcConstants._binding, XProcConstants._element),
     XProcConstants.p_for_each -> Set(XProcConstants._name),
     XProcConstants.p_viewport -> Set(XProcConstants._name, XProcConstants._match),
@@ -28,7 +31,8 @@ class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
     XProcConstants.p_catch -> Set(XProcConstants._name),
     XProcConstants.p_iteration_source -> Set(XProcConstants._select),
     XProcConstants.p_viewport_source -> Set.empty[QName],
-    XProcConstants.p_output -> Set(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary),
+    XProcConstants.p_output -> Set(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary,
+      XProcConstants._step),
     XProcConstants.p_log -> Set(XProcConstants._port, XProcConstants._href),
     XProcConstants.p_variable -> Set(XProcConstants._name, XProcConstants._select),
     XProcConstants.p_option -> Set(XProcConstants._name, XProcConstants._required, XProcConstants._select),
@@ -53,14 +57,18 @@ class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
     XProcConstants.p_pipe -> Set(XProcConstants._step, XProcConstants._port)
   )
 
+  val uid = UniqueId.nextId
+  private[xml] var _drp: Option[InputOrOutput] = None
   protected var _xmlname = "XMLArtifact"
   protected val _nsbindings = collection.mutable.Set.empty[Namespace]
   protected val _prop = collection.mutable.Set.empty[Attribute]
   protected val _attr = collection.mutable.Set.empty[Attribute]
   protected val _children = collection.mutable.ListBuffer.empty[XMLArtifact]
+  protected var _synthetic = true
 
   if (node.isDefined) {
     _xmlname = node.get.getNodeName.getLocalName
+    _synthetic = false
     parse(node)
   }
 
@@ -68,6 +76,10 @@ class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
   def xmlname_=(name: String): Unit = {
     _xmlname = name
   }
+
+  def children = _children
+  def synthetic = _synthetic
+  def defaultReadablePort = _drp
 
   def addChild(child: XMLArtifact): Unit = {
     _children += child
@@ -106,7 +118,7 @@ class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
   }
 
   private[model] def parseAttributes(node: XdmNode): Unit = {
-    var propnames = properties.getOrElse(node.getNodeName, Set.empty[QName])
+    val propnames = properties.getOrElse(node.getNodeName, Set.empty[QName])
     for (childitem <- RelevantNodes.filter(node, Axis.ATTRIBUTE)) {
       val child = childitem.asInstanceOf[XdmNode]
       if (propnames.contains(child.getNodeName)) {
@@ -172,15 +184,103 @@ class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
     }
   }
 
-  def fixup(): Unit = {
-    for (child <- _children) {
-      child.fixup()
+  def property(name: QName): Option[Attribute] = {
+    for (p <- _prop) {
+      if (p.name == name) {
+        return Some(p)
+      }
+    }
+    None
+  }
+
+  def addProperty(name: QName, value: String): Unit = {
+    val p = property(name)
+    if (p.isEmpty) {
+      _prop.add(new Attribute(name, value))
     }
   }
 
+  def setProperty(name: QName, value: String): Unit = {
+    val p = property(name)
+    if (p.isDefined) {
+      _prop -= p.get
+    }
+    _prop.add(new Attribute(name, value))
+  }
+
+  def removeProperty(name: QName): Unit = {
+    val p = property(name)
+    if (p.isDefined) {
+      _prop -= p.get
+    }
+  }
+
+  def findInScopeStep(name: String): Option[Step] = {
+    if (parent.isDefined) {
+      parent.get.findInScopeStep(name)
+    } else {
+      None
+    }
+  }
+
+  def bindings(): List[Binding] = {
+    val bind = mutable.ListBuffer.empty[Binding]
+    for (child <- _children) {
+      child match {
+        case b: Binding => bind += b
+        case _ => Unit
+      }
+    }
+    bind.toList
+  }
+
+  // ==================================================================================
+
+  def fixup(): Unit = {
+    // Fixup is driven from the top-level artifact
+  }
+
+  def findDeclarations(decls: List[StepLibrary]): Unit = {
+    for (child <- _children) { child.findDeclarations(decls) }
+  }
+
+  def makeInputsOutputsExplicit(): Unit = {
+    for (child <- _children) { child.makeInputsOutputsExplicit() }
+  }
+
+  def addDefaultReadablePort(port: Option[InputOrOutput]): Unit = {
+    _drp = port
+    for (child <- _children) { child.addDefaultReadablePort(port) }
+  }
+
+  def fixUnwrappedInlines(): Unit = {
+    for (child <- _children) { child.fixUnwrappedInlines() }
+  }
+
+  def fixBindingsOnIO(): Unit = {
+    for (child <- _children) { child.fixBindingsOnIO() }
+  }
+
+  def findPipeBindings(): Unit = {
+    for (child <- _children) { child.findPipeBindings() }
+  }
+
+  // ==================================================================================
+
+  override def toString: String = {
+    "[" + _xmlname + ":" + uid + "]"
+  }
+
+  // ==================================================================================
+
   def dump(tree: TreeWriter): Unit = {
     tree.addStartElement(XProcConstants.px(_xmlname))
-    tree.addAttribute(XProcConstants.px("obj"), this.toString)
+    tree.addAttribute(XProcConstants.px("id"), this.toString)
+    if (synthetic) {
+      tree.addAttribute(XProcConstants.px("synthetic"), "true")
+    }
+
+    dumpAdditionalAttributes(tree)
 
     for (ns <- _nsbindings) {
       tree.addNamespace(ns.prefix, ns.uri)
@@ -196,5 +296,9 @@ class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
       child.dump(tree)
     }
     tree.addEndElement()
+  }
+
+  def dumpAdditionalAttributes(tree: TreeWriter): Unit = {
+    // nop
   }
 }

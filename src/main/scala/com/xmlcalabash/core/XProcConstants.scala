@@ -17,6 +17,8 @@ object XProcConstants {
   val NS_XMLSCHEMA = "http://www.w3.org/2001/XMLSchema"
   val NS_XML = "http://www.w3.org/XML/1998/namespace"
 
+  val xml_id = new QName("xml", NS_XML, "id")
+
   val _as = new QName("", "as")
   val _binding = new QName("", "binding")
   val _byte_order_mark = new QName("", "byte-order-mark")
@@ -153,6 +155,8 @@ object XProcConstants {
 
   val untyped = BuiltInType.getSchemaType(StandardNames.XS_UNTYPED)
   val untypedAtomic = BuiltInType.getSchemaType(StandardNames.XS_UNTYPED_ATOMIC).asInstanceOf[SimpleType]
+
+  val px_anonymous_step_type =  new QName("px", NS_CALABASH_PX, "anonymous_step_type")
 
   def px(localName: String): QName = {
     new QName("px", NS_CALABASH_PX, localName)
