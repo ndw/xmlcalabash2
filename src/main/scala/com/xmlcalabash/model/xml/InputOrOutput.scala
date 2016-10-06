@@ -1,5 +1,7 @@
 package com.xmlcalabash.model.xml
 
+import java.io.PrintWriter
+
 import com.xmlcalabash.core.XProcConstants
 import com.xmlcalabash.model.xml.util.TreeWriter
 import net.sf.saxon.s9api.XdmNode
@@ -9,9 +11,23 @@ import scala.collection.mutable
 /**
   * Created by ndw on 10/5/16.
   */
-class InputOrOutput(node: Option[XdmNode], parent: Option[XMLArtifact]) extends XMLArtifact(node, parent) {
+class InputOrOutput(node: Option[XdmNode], parent: Option[Artifact]) extends Artifact(node, parent) {
+  def port: String = {
+    val p = property(XProcConstants._port)
+    if (p.isDefined) {
+      p.get.value
+    } else {
+      "anon" + uid.toString
+    }
+  }
+
   def primary: Boolean = {
     val p = property(XProcConstants._primary)
+    p.isDefined && p.get.value == "true"
+  }
+
+  def sequence: Boolean = {
+    val p = property(XProcConstants._sequence)
     p.isDefined && p.get.value == "true"
   }
 
@@ -25,7 +41,7 @@ class InputOrOutput(node: Option[XdmNode], parent: Option[XMLArtifact]) extends 
   }
 
   override def fixBindingsOnIO(): Unit = {
-    if (_children.isEmpty) {
+    if (bindings().isEmpty) {
       if (property(XProcConstants._step).isDefined) {
         val pipe = new Pipe(None, Some(this))
         pipe.addProperty(XProcConstants._step, property(XProcConstants._step).get.value)

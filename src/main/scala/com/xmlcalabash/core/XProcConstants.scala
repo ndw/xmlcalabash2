@@ -14,6 +14,7 @@ object XProcConstants {
   val NS_CALABASH_EX = "http://xmlcalabash.com/ns/extensions"
   val NS_CALABASH_CP = "http://xmlcalabash.com/ns/compiled"
   val NS_CALABASH_PX = "http://xmlcalabash.com/ns/parsed"
+  val NS_CALABASH_PG = "http://xmlcalabash.com/ns/graph"
   val NS_XMLSCHEMA = "http://www.w3.org/2001/XMLSchema"
   val NS_XML = "http://www.w3.org/XML/1998/namespace"
 
@@ -160,6 +161,10 @@ object XProcConstants {
 
   def px(localName: String): QName = {
     new QName("px", NS_CALABASH_PX, localName)
+  }
+
+  def pg(localName: String): QName = {
+    new QName("pg", NS_CALABASH_PG, localName)
   }
 
   def staticError(errno: Int) = {

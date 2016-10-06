@@ -1,6 +1,9 @@
 package com.xmlcalabash.model.xml
 
+import java.io.{PrintWriter, Writer}
+
 import com.xmlcalabash.core.XProcConstants
+import com.xmlcalabash.graph.{Graph, Node}
 import com.xmlcalabash.model.xml.decl.StepLibrary
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}
 import com.xmlcalabash.util.UniqueId
@@ -12,8 +15,8 @@ import scala.collection.mutable
 /**
   * Created by ndw on 10/4/16.
   */
-class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
-  protected val properties = HashMap(
+abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact]) {
+  protected val stepProperties = HashMap(
     XProcConstants.p_declare_step -> Set(XProcConstants._name, XProcConstants._type, XProcConstants._psvi_required,
       XProcConstants._xpath_version, XProcConstants._version, XProcConstants._exclude_inline_prefixes),
     XProcConstants.p_pipeline -> Set(XProcConstants._name, XProcConstants._type, XProcConstants._psvi_required,
@@ -63,7 +66,7 @@ class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
   protected val _nsbindings = collection.mutable.Set.empty[Namespace]
   protected val _prop = collection.mutable.Set.empty[Attribute]
   protected val _attr = collection.mutable.Set.empty[Attribute]
-  protected val _children = collection.mutable.ListBuffer.empty[XMLArtifact]
+  protected val _children = collection.mutable.ListBuffer.empty[Artifact]
   protected var _synthetic = true
 
   if (node.isDefined) {
@@ -81,7 +84,7 @@ class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
   def synthetic = _synthetic
   def defaultReadablePort = _drp
 
-  def addChild(child: XMLArtifact): Unit = {
+  def addChild(child: Artifact): Unit = {
     _children += child
   }
 
@@ -118,7 +121,7 @@ class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
   }
 
   private[model] def parseAttributes(node: XdmNode): Unit = {
-    val propnames = properties.getOrElse(node.getNodeName, Set.empty[QName])
+    val propnames = stepProperties.getOrElse(node.getNodeName, Set.empty[QName])
     for (childitem <- RelevantNodes.filter(node, Axis.ATTRIBUTE)) {
       val child = childitem.asInstanceOf[XdmNode]
       if (propnames.contains(child.getNodeName)) {
@@ -184,6 +187,14 @@ class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
     }
   }
 
+  def properties(): Set[QName] = {
+    val names = mutable.Set.empty[QName]
+    for (p <- _prop) {
+      names += p.name
+    }
+    names.toSet
+  }
+
   def property(name: QName): Option[Attribute] = {
     for (p <- _prop) {
       if (p.name == name) {
@@ -234,6 +245,10 @@ class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
     bind.toList
   }
 
+  def replaceNode(node: InputOrOutput, replacement: InputOrOutput): Unit = {
+    for (child <- _children) { child.replaceNode(node, replacement) }
+  }
+
   // ==================================================================================
 
   def fixup(): Unit = {
@@ -265,10 +280,28 @@ class XMLArtifact(val node: Option[XdmNode], val parent: Option[XMLArtifact]) {
     for (child <- _children) { child.findPipeBindings() }
   }
 
+  def hoistOptions(): Unit = {
+    for (child <- _children) { child.hoistOptions() }
+  }
+
+  // ==================================================================================
+
+  def buildGraph(graph: Graph): Unit = {
+    // nop
+  }
+
+  private[xml] def buildNodes(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
+    for (child <- children) { child.buildNodes(graph, nodeMap) }
+  }
+
+  private[xml] def buildEdges(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
+    for (child <- children) { child.buildEdges(graph, nodeMap) }
+  }
+
   // ==================================================================================
 
   override def toString: String = {
-    "[" + _xmlname + ":" + uid + "]"
+    _xmlname + "_" + uid
   }
 
   // ==================================================================================

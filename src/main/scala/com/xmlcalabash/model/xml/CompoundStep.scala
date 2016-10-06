@@ -1,13 +1,18 @@
 package com.xmlcalabash.model.xml
 
+import java.io.PrintWriter
+
 import com.xmlcalabash.core.XProcConstants
+import com.xmlcalabash.graph.{Graph, Node}
 import com.xmlcalabash.model.xml.decl.XProc10Steps
 import net.sf.saxon.s9api.XdmNode
+
+import scala.collection.mutable
 
 /**
   * Created by ndw on 10/4/16.
   */
-class CompoundStep(node: Option[XdmNode], parent: Option[XMLArtifact]) extends Step(node, parent) {
+class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(node, parent) {
   override def parse(node: Option[XdmNode]): Unit = {
     if (node.isDefined) {
       parseNamespaces(node.get)
@@ -24,6 +29,8 @@ class CompoundStep(node: Option[XdmNode], parent: Option[XMLArtifact]) extends S
       fixUnwrappedInlines()
       fixBindingsOnIO()
       findPipeBindings()
+      hoistOptions()
+      refactorBoundaries()
     }
   }
 
@@ -73,6 +80,7 @@ class CompoundStep(node: Option[XdmNode], parent: Option[XMLArtifact]) extends S
     for (child <- _children) {
       child match {
         case input: Input => input.addDefaultReadablePort(port)
+        case opt: DeclOption => opt.addDefaultReadablePort(port)
         case _ => Unit
       }
     }
@@ -116,5 +124,97 @@ class CompoundStep(node: Option[XdmNode], parent: Option[XMLArtifact]) extends S
     }
 
     step
+  }
+
+  private def refactorBoundaries(): Unit = {
+    if (parent.isDefined) {
+      return
+    }
+
+    val newch = collection.mutable.ListBuffer.empty[Artifact]
+
+    for (child <- children) {
+      child match {
+        case input: Input =>
+          val edge = new InputEdge(this)
+          edge.addProperty(XProcConstants._port, input.port)
+          val output = new Output(None, Some(edge))
+          output.addProperty(XProcConstants._port, "result")
+          if (input.sequence) {
+            output.addProperty(XProcConstants._sequence, "true")
+          }
+          edge.addChild(output)
+          newch += edge
+          replaceNode(input, output)
+        case output: Output =>
+          val edge = new OutputEdge(this)
+          edge.addProperty(XProcConstants._port, output.port)
+          val input = new Input(None, Some(edge))
+          input.addProperty(XProcConstants._port, "source")
+          if (output.sequence) {
+            input.addProperty(XProcConstants._sequence, "true")
+          }
+          edge.addChild(input)
+          for (binding <- output.bindings()) {
+            binding match {
+              case pipe: Pipe =>
+                val newPipe = new Pipe(None, Some(input))
+                for (prop <- pipe.properties()) {
+                  newPipe.addProperty(prop, pipe.property(prop).get.value)
+                }
+                newPipe._port = pipe._port
+                input.addChild(newPipe)
+            }
+          }
+          newch += edge
+        case _ =>
+          newch += child
+      }
+    }
+
+    _children.clear()
+    _children ++= newch
+  }
+
+  override def hoistOptions(): Unit = {
+    val newch = collection.mutable.ListBuffer.empty[Artifact]
+
+    for (child <- children) {
+      child match {
+        case atomic: AtomicStep =>
+          val hoisted = atomic.extractOptions()
+          for (opt <- hoisted) {
+            val optName = opt.property(XProcConstants._name).get.value
+
+            val expr = new ExprStep(this)
+            expr.addProperty(XProcConstants._name, optName)
+            expr.addProperty(XProcConstants._select, opt.property(XProcConstants._select).get.value)
+            val out = new Output(None, Some(expr))
+            out.addProperty(XProcConstants._port, "result")
+            expr.addChild(out)
+
+            val in = new Input(None, Some(opt))
+            in.addProperty(XProcConstants._port, "$" + optName)
+            val pipe = new Pipe(None, Some(in))
+            pipe._port = Some(out)
+            in.addChild(pipe)
+            atomic.addChild(in)
+
+            newch += expr
+          }
+          newch += child
+        case _ =>
+          newch += child
+      }
+    }
+
+    _children.clear()
+    _children ++= newch
+  }
+
+  override def buildGraph(graph: Graph): Unit = {
+    val nodeMap = mutable.HashMap.empty[Artifact, Node]
+    buildNodes(graph, nodeMap)
+    buildEdges(graph, nodeMap)
   }
 }

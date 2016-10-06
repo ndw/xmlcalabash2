@@ -4,9 +4,11 @@ import akka.actor.{ActorRef, Props}
 import com.xmlcalabash.messages.{CloseMessage, ItemMessage, RanMessage}
 import com.xmlcalabash.runtime.{Identity, Step, StepController}
 import Reaper.WatchMe
-import com.xmlcalabash.core.XProcException
+import com.xmlcalabash.core.{XProcConstants, XProcException}
 import com.xmlcalabash.items.GenericItem
+import com.xmlcalabash.model.xml.util.TreeWriter
 import com.xmlcalabash.util.UniqueId
+import net.sf.saxon.s9api.QName
 
 import scala.collection.{Set, immutable, mutable}
 
@@ -203,5 +205,45 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
       _actor = graph.system.actorOf(Props(new NodeActor(this)), name.get)
       graph.reaper ! WatchMe(_actor)
     }
+  }
+
+  def dump(tree: TreeWriter): Unit = {
+    tree.addStartElement(XProcConstants.pg("node"))
+    if (name.isDefined) {
+      tree.addAttribute(XProcConstants._name, name.get)
+    }
+    tree.addAttribute(XProcConstants._uid, uid.toString)
+
+    if (inputs().nonEmpty) {
+      tree.addStartElement(XProcConstants.pg("inputs"))
+      for (portName <- inputs()) {
+        val port = inputPort(portName)
+        if (port.isDefined) {
+          tree.addStartElement(XProcConstants.pg("in-edge"))
+          tree.addAttribute(new QName("", "source"), port.get.source.uid.toString)
+          tree.addAttribute(new QName("", "input-port"), port.get.inputPort)
+          tree.addAttribute(new QName("", "output-port"), port.get.outputPort)
+          tree.addEndElement()
+        }
+      }
+      tree.addEndElement()
+    }
+
+    if (outputs().nonEmpty) {
+      tree.addStartElement(XProcConstants.pg("outputs"))
+      for (portName <- outputs()) {
+        val port = outputPort(portName)
+        if (port.isDefined) {
+          tree.addStartElement(XProcConstants.pg("out-edge"))
+          tree.addAttribute(new QName("", "input-port"), port.get.inputPort)
+          tree.addAttribute(new QName("", "destination"), port.get.destination.uid.toString)
+          tree.addAttribute(new QName("", "output-port"), port.get.outputPort)
+          tree.addEndElement()
+        }
+      }
+      tree.addEndElement()
+    }
+
+    tree.addEndElement()
   }
 }

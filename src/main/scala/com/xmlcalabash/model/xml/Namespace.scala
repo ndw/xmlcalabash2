@@ -5,7 +5,7 @@ import net.sf.saxon.s9api.XdmNode
 /**
   * Created by ndw on 10/4/16.
   */
-class Namespace(val prefix: String, val uri: String) extends XMLArtifact(None, None) {
+class Namespace(val prefix: String, val uri: String) extends Artifact(None, None) {
   override def equals(that: Any): Boolean = {
     that match {
       case that: Namespace => that.canEqual(this) && this.hashCode == that.hashCode

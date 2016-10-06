@@ -1,9 +1,11 @@
 package com.xmlcalabash.graph
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import com.xmlcalabash.core.XProcEngine
+import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.xmlcalabash.messages.{CloseMessage, StartMessage}
+import com.xmlcalabash.model.xml.util.TreeWriter
 import com.xmlcalabash.runtime.Step
+import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
 import scala.collection.immutable
@@ -115,6 +117,28 @@ class Graph(private[graph] val engine: XProcEngine) {
     roots.toSet
   }
 
+  def inputs(): Set[InputNode] = {
+    val inodes = mutable.HashSet.empty[InputNode]
+    for (node <- nodes) {
+      node match {
+        case n: InputNode => inodes += n
+        case _ => Unit
+      }
+    }
+    inodes.toSet
+  }
+
+  def outputs(): Set[OutputNode] = {
+    val onodes = mutable.HashSet.empty[OutputNode]
+    for (node <- nodes) {
+      node match {
+        case n: OutputNode => onodes += n
+        case _ => Unit
+      }
+    }
+    onodes.toSet
+  }
+
   def makeActors(): Unit = {
     _system = ActorSystem("XMLCalabashPipeline")
     _reaper = _system.actorOf(Props(new ProductionReaper(this)), name="reaper")
@@ -134,15 +158,15 @@ class Graph(private[graph] val engine: XProcEngine) {
     }
   }
 
-  def dump(): Unit = {
+  def dump(): XdmNode = {
+    val tree = new TreeWriter(engine)
+    tree.startDocument(null)
+    tree.addStartElement(XProcConstants.pg("graph"))
     for (node <- nodes) {
-      println(node)
-      for (port <- node.inputs()) {
-        println("\t" + port + " ->")
-      }
-      for (port <- node.outputs()) {
-        println("\t->" + port)
-      }
+      node.dump(tree)
     }
+    tree.addEndElement()
+    tree.endDocument()
+    tree.getResult
   }
 }

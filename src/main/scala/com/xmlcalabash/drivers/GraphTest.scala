@@ -65,7 +65,9 @@ object GraphTest extends App {
 
     val valid = graph.valid()
     println(valid)
+    graph.dump()
 
+    /*
     if (valid) {
       graph.dump()
       graph.makeActors()
@@ -91,5 +93,6 @@ object GraphTest extends App {
         item = nEnd.read()
       }
     }
+    */
   }
 }

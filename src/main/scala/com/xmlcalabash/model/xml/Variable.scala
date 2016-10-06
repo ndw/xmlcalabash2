@@ -7,7 +7,7 @@ import net.sf.saxon.s9api.XdmNode
 /**
   * Created by ndw on 10/4/16.
   */
-class Variable(node: Option[XdmNode], parent: Option[XMLArtifact]) extends XMLArtifact(node, parent) {
+class Variable(node: Option[XdmNode], parent: Option[Artifact]) extends Artifact(node, parent) {
   override def addDefaultReadablePort(port: Option[InputOrOutput]): Unit = {
     _drp = port
     for (child <- _children) { child.addDefaultReadablePort(port) }

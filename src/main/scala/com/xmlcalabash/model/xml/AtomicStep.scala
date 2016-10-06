@@ -1,8 +1,12 @@
 package com.xmlcalabash.model.xml
 
+import java.io.PrintWriter
+
 import com.xmlcalabash.core.XProcConstants
+import com.xmlcalabash.graph.{Graph, Node}
 import com.xmlcalabash.model.xml.decl.{StepDecl, StepLibrary}
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}
+import com.xmlcalabash.runtime.Identity
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 
 import scala.collection.immutable.Set
@@ -11,7 +15,7 @@ import scala.collection.mutable
 /**
   * Created by ndw on 10/4/16.
   */
-class AtomicStep(node: Option[XdmNode], parent: Option[XMLArtifact]) extends Step(node, parent) {
+class AtomicStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(node, parent) {
   private val _stepType = if (node.isDefined) {
     node.get.getNodeName
   } else {
@@ -55,16 +59,17 @@ class AtomicStep(node: Option[XdmNode], parent: Option[XMLArtifact]) extends Ste
     val ohash = mutable.HashMap.empty[String, Output]
     for (child <- _children) {
       child match {
-        case i: Input =>
-          val port = i.property(XProcConstants._port)
+        case inp: Input =>
+          val port = inp.property(XProcConstants._port)
           if (port.isDefined) {
-            ihash.put(port.get.value, i)
+            ihash.put(port.get.value, inp)
           }
-        case o: Output =>
-          val port = o.property(XProcConstants._port)
+        case out: Output =>
+          val port = out.property(XProcConstants._port)
           if (port.isDefined) {
-            ohash.put(port.get.value, o)
+            ohash.put(port.get.value, out)
           }
+        case opt: DeclOption => Unit
       }
     }
 
@@ -92,6 +97,29 @@ class AtomicStep(node: Option[XdmNode], parent: Option[XMLArtifact]) extends Ste
         _children += output
       }
     }
+  }
+
+  private[xml] def extractOptions(): List[DeclOption] = {
+    val newch = collection.mutable.ListBuffer.empty[Artifact]
+    val opts  = collection.mutable.ListBuffer.empty[DeclOption]
+    for (child <- children) {
+      child match {
+        case opt: DeclOption =>
+          opts += opt
+        case _ =>
+          newch += child
+      }
+    }
+
+    _children.clear()
+    _children ++= newch
+
+    opts.toList
+  }
+
+  override def buildNodes(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
+    val node = graph.createNode(this.toString, new Identity(this.toString))
+    nodeMap.put(this, node)
   }
 
   override def dumpAdditionalAttributes(tree: TreeWriter): Unit = {

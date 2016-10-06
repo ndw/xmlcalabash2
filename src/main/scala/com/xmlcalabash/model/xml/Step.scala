@@ -1,12 +1,14 @@
 package com.xmlcalabash.model.xml
 
+import java.io.PrintWriter
+
 import com.xmlcalabash.core.XProcConstants
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 /**
   * Created by ndw on 10/5/16.
   */
-abstract class Step(node: Option[XdmNode], parent: Option[XMLArtifact]) extends XMLArtifact(node, parent) {
+abstract class Step(node: Option[XdmNode], parent: Option[Artifact]) extends Artifact(node, parent) {
   private val falseAttr = new Attribute(new QName("", "irrelevant"), "false")
   protected var _atomic = false
 

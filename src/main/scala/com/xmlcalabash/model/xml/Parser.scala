@@ -1,5 +1,7 @@
 package com.xmlcalabash.model.xml
 
+import java.io.{FileWriter, PrintWriter, StringWriter}
+
 import com.xmlcalabash.core.{XProcConstants, XProcEngine, XProcException}
 import com.xmlcalabash.model.xml.util.{NodeUtils, TreeWriter}
 import net.sf.saxon.s9api.XdmNode
@@ -13,7 +15,7 @@ import scala.collection.mutable.Stack
 class Parser(val engine: XProcEngine) {
   val logger = LoggerFactory.getLogger(this.getClass)
 
-  def parse(document: XdmNode): XMLArtifact = {
+  def parse(document: XdmNode): Artifact = {
     logger.debug("Parsing " + document.getBaseURI)
 
     val node = NodeUtils.getDocumentElement(document)
@@ -31,12 +33,16 @@ class Parser(val engine: XProcEngine) {
     artifact.fixup()
 
     val dumpNode = dump(artifact)
-    println(dumpNode)
+    //println(dumpNode)
+
+    val w = new FileWriter("graph.xml")
+    w.write(dumpNode.toString)
+    w.close()
 
     artifact
   }
 
-  private def dump(artifact: XMLArtifact): XdmNode = {
+  private def dump(artifact: Artifact): XdmNode = {
     val tree = new TreeWriter(engine)
     tree.startDocument(null)
 

@@ -1,13 +1,18 @@
 package com.xmlcalabash.model.xml
 
+import java.io.PrintWriter
+
 import com.xmlcalabash.core.XProcConstants
+import com.xmlcalabash.graph.{Graph, Node}
 import com.xmlcalabash.model.xml.util.TreeWriter
 import net.sf.saxon.s9api.XdmNode
+
+import scala.collection.mutable
 
 /**
   * Created by ndw on 10/4/16.
   */
-class Pipe(node: Option[XdmNode], parent: Option[XMLArtifact]) extends Binding(node, parent) {
+class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node, parent) {
   var _step: Option[Step] = None
   var _port: Option[InputOrOutput] = None
   _xmlname = "pipe"
@@ -81,6 +86,24 @@ class Pipe(node: Option[XdmNode], parent: Option[XMLArtifact]) extends Binding(n
       }
     }
   }
+
+  override def replaceNode(node: InputOrOutput, replacement: InputOrOutput): Unit = {
+    if (_port.isDefined && _port.get == node) {
+      _port = Some(replacement)
+    }
+    for (child <- _children) { child.replaceNode(node, replacement) }
+  }
+
+  override def buildEdges(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
+    val srcArtifact = parent.get.parent.get
+    val srcPort     = _port.get.property(XProcConstants._port).get.value
+    val resArtifact = _port.get.parent.get
+    val resPort     = parent.get.property(XProcConstants._port).get.value
+    //println(srcArtifact, srcPort, resArtifact, resPort)
+
+    graph.addEdge(nodeMap(resArtifact), resPort, nodeMap(srcArtifact), srcPort)
+  }
+
 
   override def dumpAdditionalAttributes(tree: TreeWriter): Unit = {
     if (_port.isDefined) {

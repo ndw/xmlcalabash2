@@ -5,5 +5,5 @@ import net.sf.saxon.s9api.XdmNode
 /**
   * Created by ndw on 10/4/16.
   */
-class ForEach(node: Option[XdmNode], parent: Option[XMLArtifact]) extends CompoundStep(node, parent) {
+class ForEach(node: Option[XdmNode], parent: Option[Artifact]) extends CompoundStep(node, parent) {
 }
