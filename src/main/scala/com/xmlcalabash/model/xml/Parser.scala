@@ -7,8 +7,6 @@ import com.xmlcalabash.model.xml.util.{NodeUtils, TreeWriter}
 import net.sf.saxon.s9api.XdmNode
 import org.slf4j.LoggerFactory
 
-import scala.collection.mutable.Stack
-
 /**
   * Created by ndw on 10/4/16.
   */
@@ -42,7 +40,7 @@ class Parser(val engine: XProcEngine) {
     artifact
   }
 
-  private def dump(artifact: Artifact): XdmNode = {
+  def dump(artifact: Artifact): XdmNode = {
     val tree = new TreeWriter(engine)
     tree.startDocument(null)
 

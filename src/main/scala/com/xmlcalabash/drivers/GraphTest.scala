@@ -1,7 +1,7 @@
 package com.xmlcalabash.drivers
 
 import com.xmlcalabash.core.XProcEngine
-import com.xmlcalabash.graph.Graph
+import com.xmlcalabash.graph.{Graph, XProcRuntime}
 import com.xmlcalabash.items.StringItem
 import com.xmlcalabash.runtime.{Identity, Interleave, XPathExpression}
 import net.sf.saxon.s9api.Processor
@@ -30,15 +30,15 @@ object GraphTest extends App {
     println(valid)
 
     if (valid) {
-      graph.makeActors()
+      val runtime = new XProcRuntime(graph)
+      runtime.start()
 
       nStart.write(new StringItem("hello"))
       nStart.write(new StringItem("hello"))
       nStart.close()
-      var running = true
-      while (running) {
+
+      while (runtime.running) {
         Thread.sleep(100)
-        running = !graph.finished
       }
 
       var item = nEnd.read()

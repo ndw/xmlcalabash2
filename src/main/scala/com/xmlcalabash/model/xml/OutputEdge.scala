@@ -8,11 +8,11 @@ import scala.collection.mutable
 /**
   * Created by ndw on 10/5/16.
   */
-class OutputEdge(parent: Artifact) extends Step(None, Some(parent)) {
+class OutputEdge(val port: String, parent: Artifact) extends Step(None, Some(parent)) {
   _xmlname = "output-edge"
 
   override def buildNodes(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
-    val node = graph.createOutputNode(this.toString)
+    val node = graph.createOutputNode(port)
     nodeMap.put(this, node)
   }
 }

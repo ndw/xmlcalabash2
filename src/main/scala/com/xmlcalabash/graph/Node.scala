@@ -9,6 +9,7 @@ import com.xmlcalabash.items.GenericItem
 import com.xmlcalabash.model.xml.util.TreeWriter
 import com.xmlcalabash.util.UniqueId
 import net.sf.saxon.s9api.QName
+import org.slf4j.LoggerFactory
 
 import scala.collection.{Set, immutable, mutable}
 
@@ -17,6 +18,7 @@ import scala.collection.{Set, immutable, mutable}
   */
 class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]) extends StepController {
   protected val uid = UniqueId.nextId
+  private val logger = LoggerFactory.getLogger(this.getClass)
   private val inputPort = mutable.HashMap.empty[String, Option[Edge]]
   private val outputPort = mutable.HashMap.empty[String, Option[Edge]]
   private val sequenceNos = mutable.HashMap.empty[String, Long]
@@ -47,7 +49,7 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
     outputPort.getOrElse(port, None)
   }
 
-  def addInput(port: String, edge: Option[Edge]): Unit = {
+  private[graph] def addInput(port: String, edge: Option[Edge]): Unit = {
     if (inputPort.getOrElse(port, None).isDefined) {
       graph.engine.staticError(None, "Input port '" + port + "' already in use")
       constructionOk = false
@@ -56,7 +58,7 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
     }
   }
 
-  def addOutput(port: String, edge: Option[Edge]): Unit = {
+  private[graph] def addOutput(port: String, edge: Option[Edge]): Unit = {
     if (outputPort.getOrElse(port, None).isDefined) {
       graph.engine.staticError(None, "Output port '" + port + "' already in use")
       constructionOk = false
@@ -65,7 +67,7 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
     }
   }
 
-  def removeInput(port: String): Unit = {
+  private[graph] def removeInput(port: String): Unit = {
     if (inputPort.getOrElse(port, None).isDefined) {
       inputPort.remove(port)
     } else {
@@ -92,8 +94,8 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
     dependents.add(node)
   }
 
-  def valid = constructionOk
-  def finished = _finished
+  private[graph] def valid = constructionOk
+  private[graph] def finished = _finished
 
   def noCycles(seen: immutable.HashSet[Node]): Boolean = {
     if (seen.contains(this)) {
@@ -155,14 +157,14 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
       sequenceNos.put(port, seqNo)
 
       val msg = new ItemMessage(targetPort, uid, seqNo, item)
-      println("Sending msg to " + targetPort + " on " + targetNode + " (from " + this + ")")
+      logger.debug("Node {} sends to {} on {}", this, targetPort, targetNode)
       targetNode.actor ! msg
     } else {
-      println("no downstream for " + port)
+      throw new XProcException("no downstream for " + port)
     }
   }
 
-  def run(): Unit = {
+  private[graph] def run(): Unit = {
     worker.get.run()
 
     for (port <- outputPort.keySet) {
@@ -170,7 +172,7 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
       val targetPort = edge.inputPort
       val targetNode = edge.destination
       val msg = new CloseMessage(targetPort)
-      println("Sending close to " + targetPort + " on " + targetNode + " (from " + this + ")")
+      logger.debug("Node {} closes {} on {}", this, targetPort, targetNode)
       targetNode.actor ! msg
     }
 
@@ -180,7 +182,7 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
       }
     }
 
-    println(name.get + " finished")
+    logger.debug("Node {} finishes", this)
     _finished = true
 
   }
@@ -202,7 +204,12 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
           throw new XProcException("Failed to initialize worker step.")
       }
 
-      _actor = graph.system.actorOf(Props(new NodeActor(this)), name.get)
+      var actorName = name
+      if (actorName.isEmpty) {
+        actorName = Some("anon" + UniqueId.nextId)
+      }
+
+      _actor = graph.system.actorOf(Props(new NodeActor(this)), actorName.get)
       graph.reaper ! WatchMe(_actor)
     }
   }

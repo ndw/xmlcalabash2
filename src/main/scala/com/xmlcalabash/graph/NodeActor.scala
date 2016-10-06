@@ -1,6 +1,7 @@
 package com.xmlcalabash.graph
 
 import akka.actor.{Actor, ActorRef}
+import akka.event.Logging
 import com.xmlcalabash.messages.{CloseMessage, ItemMessage, RanMessage, StartMessage}
 import com.xmlcalabash.runtime.{Identity, StepController}
 
@@ -9,16 +10,19 @@ import scala.collection.mutable
 /**
   * Created by ndw on 10/3/16.
   */
-class NodeActor(node: Node) extends Actor {
+private[graph] class NodeActor(node: Node) extends Actor {
+  val log = Logging(context.system, this)
   val openInputs = mutable.HashSet() ++ node.inputs()
   val dependsOn = mutable.HashSet() ++ node.dependsOn
 
   def checkRun(): Unit = {
-    println("Check run: " + node.toString + " [" + openInputs.isEmpty.toString + ", " + dependsOn.isEmpty.toString + "]")
     if (openInputs.isEmpty && dependsOn.isEmpty) {
-      println("RUN " + node.toString)
       node.run()
+      log.debug("Node {} stops", node)
       context.stop(self)
+    } else {
+      log.debug("Node {} not ready to run (inputs ready: {}, dependencies ready: {})", node,
+        openInputs.isEmpty, dependsOn.isEmpty)
     }
   }
 
@@ -34,6 +38,6 @@ class NodeActor(node: Node) extends Actor {
         dependsOn.remove(m.node)
         checkRun()
       }
-    case _ => println(node.name.get + " says 'huh?'")
+    case m: Any => log.debug("Node {} received unexpected message: {}", node, m)
   }
 }

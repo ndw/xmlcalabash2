@@ -1,22 +1,22 @@
 package com.xmlcalabash.graph
 
-import akka.event.Logging
+import com.xmlcalabash.core.XProcException
 import com.xmlcalabash.items.GenericItem
 import com.xmlcalabash.messages.{CloseMessage, ItemMessage, RanMessage}
+import net.sf.saxon.s9api.QName
 import org.slf4j.LoggerFactory
-
-import scala.util.Random
 
 /**
   * Created by ndw on 10/2/16.
   */
-private[graph] class InputNode(graph: Graph, name: Option[String]) extends Node(graph, name, None) {
+private[graph] class InputOption(graph: Graph, val optName: QName) extends Node(graph, None, None) {
   val logger = LoggerFactory.getLogger(this.getClass)
   private var constructionOk = true
   private var seqNo: Long = 1
+  private var initialized = false
 
   private[graph] override def addInput(port: String, edge: Option[Edge]): Unit = {
-    graph.engine.staticError(None, "Cannot connect inputs to an InputNode")
+    graph.engine.staticError(None, "Cannot connect inputs to an InputOption")
     constructionOk = false
   }
 
@@ -28,7 +28,11 @@ private[graph] class InputNode(graph: Graph, name: Option[String]) extends Node(
     // do nothing
   }
 
-  def write(item: GenericItem): Unit = {
+  def set(item: GenericItem): Unit = {
+    if (initialized) {
+      throw new XProcException("You cannot reinitialize an option")
+    }
+
     for (port <- outputs()) {
       val edge = output(port)
       val targetPort = edge.get.inputPort
@@ -40,9 +44,12 @@ private[graph] class InputNode(graph: Graph, name: Option[String]) extends Node(
       logger.debug("Input edge {} sends to {} on {}", this, targetPort, targetNode)
       targetNode.actor ! msg
     }
+
+    initialized = true
+    close()
   }
 
-  def close(): Unit = {
+  private def close(): Unit = {
     for (port <- outputs()) {
       val edge = output(port)
       val targetPort = edge.get.inputPort

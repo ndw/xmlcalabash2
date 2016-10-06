@@ -5,13 +5,15 @@ import java.net.URI
 import javax.xml.transform.sax.SAXSource
 
 import com.xmlcalabash.core.XProcEngine
-import com.xmlcalabash.graph.Graph
+import com.xmlcalabash.graph.{Graph, XProcRuntime}
 import com.xmlcalabash.items.StringItem
 import com.xmlcalabash.model.xml.Parser
-import net.sf.saxon.s9api.Processor
+import net.sf.saxon.s9api.{Processor, QName}
+import org.slf4j.LoggerFactory
 import org.xml.sax.InputSource
 
 object Main extends App {
+  val logger = LoggerFactory.getLogger(this.getClass)
   val processor = new Processor(false)
 
   val href = "pipe.xpl"
@@ -21,37 +23,37 @@ object Main extends App {
   val parser = new Parser(engine)
 
   val model = parser.parse(node)
+  val mdump = parser.dump(model)
+  val pxw = new FileWriter("px.xml")
+  pxw.write(mdump.toString)
+  pxw.close()
+  println(mdump)
+
   val graph = new Graph(engine)
   model.buildGraph(graph)
 
-  val valid = graph.valid()
-  println(valid)
+  val pgw = new FileWriter("pg.xml")
+  val gdump = graph.dump()
+  pgw.write(gdump.toString)
+  pgw.close()
+  println(gdump)
 
-  if (valid) {
-    println(graph.dump())
+  logger.info("Start your engines!")
+  val runtime = new XProcRuntime(graph)
+  runtime.start()
 
-    val w = new FileWriter("pg.xml")
-    w.write(graph.dump().toString)
-    w.close()
+  runtime.write("source", new StringItem("Hello world"))
+  runtime.close("source")
 
-    /*
-    graph.makeActors()
-    for (node <- graph.inputs()) {
-      node.write(new StringItem("Hello world"))
-      node.close()
-    }
-    var running = true
-    while (running) {
-      Thread.sleep(100)
-      running = !graph.finished
-    }
-    for (node <- graph.outputs()) {
-      var item = node.read()
-      while (item.isDefined) {
-        println("OUTPUT:" + item.get)
-        item = node.read()
-      }
-    }
-    */
+  runtime.set(new QName("", "fred"), new StringItem("Flintstone"))
+
+  while (runtime.running) {
+    Thread.sleep(100)
+  }
+
+  var item = runtime.read("result")
+  while (item.isDefined) {
+    println("OUTPUT:" + item.get)
+    item = runtime.read("result")
   }
 }

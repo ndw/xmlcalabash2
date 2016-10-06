@@ -136,7 +136,7 @@ class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step
     for (child <- children) {
       child match {
         case input: Input =>
-          val edge = new InputEdge(this)
+          val edge = new InputEdge(input.port, this)
           edge.addProperty(XProcConstants._port, input.port)
           val output = new Output(None, Some(edge))
           output.addProperty(XProcConstants._port, "result")
@@ -147,7 +147,7 @@ class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step
           newch += edge
           replaceNode(input, output)
         case output: Output =>
-          val edge = new OutputEdge(this)
+          val edge = new OutputEdge(output.port, this)
           edge.addProperty(XProcConstants._port, output.port)
           val input = new Input(None, Some(edge))
           input.addProperty(XProcConstants._port, "source")
@@ -210,11 +210,5 @@ class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step
 
     _children.clear()
     _children ++= newch
-  }
-
-  override def buildGraph(graph: Graph): Unit = {
-    val nodeMap = mutable.HashMap.empty[Artifact, Node]
-    buildNodes(graph, nodeMap)
-    buildEdges(graph, nodeMap)
   }
 }

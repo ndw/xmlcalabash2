@@ -6,7 +6,7 @@ import com.xmlcalabash.runtime.{Step, StepController}
 /**
   * Created by ndw on 10/3/16.
   */
-class Fan(name: String) extends Step {
+private[graph] class Fan(name: String) extends Step {
   private var controller: StepController = _
   private var inputPorts: collection.Set[String] = _
   private var outputPorts: collection.Set[String] = _

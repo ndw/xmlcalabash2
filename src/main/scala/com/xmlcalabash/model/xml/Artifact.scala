@@ -1,9 +1,7 @@
 package com.xmlcalabash.model.xml
 
-import java.io.{PrintWriter, Writer}
-
-import com.xmlcalabash.core.XProcConstants
-import com.xmlcalabash.graph.{Graph, Node}
+import com.xmlcalabash.core.{XProcConstants, XProcException}
+import com.xmlcalabash.graph.{Graph, Node, XProcRuntime}
 import com.xmlcalabash.model.xml.decl.StepLibrary
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}
 import com.xmlcalabash.util.UniqueId
@@ -133,7 +131,7 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
   }
 
   private def parseChildren(node: XdmNode): Unit = {
-    parseChildren(node, false)
+    parseChildren(node, stepsAllowed = false)
   }
 
   private[model] def parseChildren(node: XdmNode, stepsAllowed: Boolean): Unit = {

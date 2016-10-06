@@ -5,7 +5,7 @@ import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.xmlcalabash.messages.{CloseMessage, StartMessage}
 import com.xmlcalabash.model.xml.util.TreeWriter
 import com.xmlcalabash.runtime.Step
-import net.sf.saxon.s9api.XdmNode
+import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable
 import scala.collection.immutable
@@ -20,12 +20,18 @@ class Graph(private[graph] val engine: XProcEngine) {
   private var _system: ActorSystem = _
   private var _reaper: ActorRef = _
 
-  def finished = _finished
+  private[graph] def finished = _finished
   private[graph] def system = _system
   private[graph] def reaper = _reaper
 
   def createNode(name: String, step: Step): Node = {
     val node = new Node(this, Some(name), Some(step))
+    nodes.add(node)
+    node
+  }
+
+  def createInputOption(name: QName): InputOption = {
+    val node = new InputOption(this, name)
     nodes.add(node)
     node
   }
@@ -117,29 +123,40 @@ class Graph(private[graph] val engine: XProcEngine) {
     roots.toSet
   }
 
-  def inputs(): Set[InputNode] = {
-    val inodes = mutable.HashSet.empty[InputNode]
+  private[graph] def inputs(): List[InputNode] = {
+    val inodes = mutable.ListBuffer.empty[InputNode]
     for (node <- nodes) {
       node match {
         case n: InputNode => inodes += n
         case _ => Unit
       }
     }
-    inodes.toSet
+    inodes.toList
   }
 
-  def outputs(): Set[OutputNode] = {
-    val onodes = mutable.HashSet.empty[OutputNode]
+  private [graph] def options(): List[InputOption] = {
+    val onodes = mutable.ListBuffer.empty[InputOption]
+    for (node <- nodes) {
+      node match {
+        case n: InputOption => onodes += n
+        case _ => Unit
+      }
+    }
+    onodes.toList
+  }
+
+  private[graph] def outputs(): List[OutputNode] = {
+    val onodes = mutable.ListBuffer.empty[OutputNode]
     for (node <- nodes) {
       node match {
         case n: OutputNode => onodes += n
         case _ => Unit
       }
     }
-    onodes.toSet
+    onodes.toList
   }
 
-  def makeActors(): Unit = {
+  private[graph] def makeActors(): Unit = {
     _system = ActorSystem("XMLCalabashPipeline")
     _reaper = _system.actorOf(Props(new ProductionReaper(this)), name="reaper")
 
