@@ -28,7 +28,7 @@ abstract class Reaper extends Actor {
       context.watch(ref)
       watched += ref
     case Terminated(ref) =>
-      log.info("Reaper sees termination {}", ref)
+      log.debug("Reaper sees termination {}", ref)
       watched -= ref
       if (watched.isEmpty) {
         allSoulsReaped()
@@ -38,7 +38,7 @@ abstract class Reaper extends Actor {
 
 private[graph] class ProductionReaper(val graph: Graph) extends Reaper {
   def allSoulsReaped(): Unit = {
-    log.info("All steps have finished")
+    log.debug("All steps have finished")
     graph.finish()
     context.system.terminate()
   }

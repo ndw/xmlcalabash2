@@ -141,7 +141,11 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
   }
 
   def receive(port: String, msg: ItemMessage): Unit = {
-    worker.get.receive(port, msg)
+    if (worker.isDefined) {
+      worker.get.receive(port, msg)
+    } else {
+      logger.info("No worker: {}", this)
+    }
   }
 
   def send(port: String, item: GenericItem): Unit = {
@@ -165,6 +169,11 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
   }
 
   private[graph] def run(): Unit = {
+    if (worker.isEmpty) {
+      logger.info("No worker: {}", this)
+      return
+    }
+
     worker.get.run()
 
     for (port <- outputPort.keySet) {
@@ -200,8 +209,7 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
       //println("Making actors for " + this)
 
       if (worker.isDefined) {
-        if (!worker.get.init(this, inputs(), outputs(), Set()))
-          throw new XProcException("Failed to initialize worker step.")
+        worker.get.setup(this, inputs().toList, outputs().toList, List.empty[QName])
       }
 
       var actorName = name

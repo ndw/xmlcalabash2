@@ -1,15 +1,17 @@
 package com.xmlcalabash.runtime
 
 import com.xmlcalabash.messages.ItemMessage
+import net.sf.saxon.s9api.QName
 
 /**
   * Created by ndw on 10/3/16.
   */
 trait Step {
-  def init(controller: StepController,
-           inputPorts: collection.Set[String],
-           outputPorts: collection.Set[String],
-           options: collection.Set[String]): Boolean
-  def receive(port: String, msg: ItemMessage)
+  def setup(controller: StepController,
+            inputPorts: List[String],
+            outputPorts: List[String],
+            options: List[QName])
+  def reset()
   def run()
+  def receive(port: String, msg: ItemMessage)
 }

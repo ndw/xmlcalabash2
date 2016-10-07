@@ -5,6 +5,7 @@ import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.xmlcalabash.messages.{CloseMessage, StartMessage}
 import com.xmlcalabash.model.xml.util.TreeWriter
 import com.xmlcalabash.runtime.Step
+import com.xmlcalabash.util.UniqueId
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable
@@ -44,6 +45,12 @@ class Graph(private[graph] val engine: XProcEngine) {
 
   def createOutputNode(name: String): OutputNode = {
     val node = new OutputNode(this, Some(name))
+    nodes.add(node)
+    node
+  }
+
+  def createVariableNode(name: QName, step: Step): Node = {
+    val node = new Node(this, Some("var_" + UniqueId.nextId + toString), Some(step))
     nodes.add(node)
     node
   }

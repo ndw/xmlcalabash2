@@ -94,10 +94,17 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
   }
 
   override def buildEdges(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
-    val srcArtifact = parent.get.parent.get
-    val srcPort     = _port.get.property(XProcConstants._port).get.value
     val resArtifact = _port.get.parent.get
-    val resPort     = parent.get.property(XProcConstants._port).get.value
+    val srcPort     = _port.get.property(XProcConstants._port).get.value
+    val srcArtifact = parent.get.parent.get
+    var resPort     = "???"
+
+    parent.get match {
+      case x: XPathContext => resPort = "source"
+      case _=> resPort = parent.get.property(XProcConstants._port).get.value
+    }
+
+    //val resPort     = parent.get.property(XProcConstants._port).get.value
     //println(srcArtifact, srcPort, resArtifact, resPort)
 
     graph.addEdge(nodeMap(resArtifact), resPort, nodeMap(srcArtifact), srcPort)

@@ -30,10 +30,10 @@ object Main extends App {
   pxw.close()
   println(mdump)
 
-  // graph()
-  // run()
+  val graph = makeGraph
+  run()
 
-  private def graph: Graph = {
+  private def makeGraph: Graph = {
     val graph = new Graph(engine)
     model.buildGraph(graph)
 
@@ -54,7 +54,7 @@ object Main extends App {
     runtime.write("source", new StringItem("Hello world"))
     runtime.close("source")
 
-    runtime.set(new QName("", "fred"), new StringItem("Flintstone"))
+    runtime.set(new QName("http://www.w3.org/ns/xproc-step", "fred"), new StringItem("Flintstone"))
 
     while (runtime.running) {
       Thread.sleep(100)

@@ -1,0 +1,55 @@
+<px:pipeline xmlns:px="http://xmlcalabash.com/ns/parsed">
+   <px:declare-step xmlns:p="http://www.w3.org/ns/xproc"
+                    xmlns:c="http://www.w3.org/ns/xproc-step"
+                    xmlns:xi="http://www.w3.org/2001/XInclude"
+                    px:id="declare-step_0"
+                    version="1.0">
+      <px:input-edge px:id="input-edge_70" px:synthetic="true" port="source">
+         <px:output px:id="output_73"
+                    px:synthetic="true"
+                    sequence="true"
+                    port="result"/>
+      </px:input-edge>
+      <px:output-edge px:id="output-edge_76" px:synthetic="true" port="result">
+         <px:input px:id="input_79"
+                   px:synthetic="true"
+                   port="source"
+                   sequence="true">
+            <px:pipe px:id="pipe_82"
+                     px:synthetic="true"
+                     px:port="output_56"
+                     step="end"/>
+         </px:input>
+      </px:output-edge>
+      <px:option px:id="option_21" name="c:fred" select="'test'">
+         <px:xpath-context px:id="xpath-context_62" px:synthetic="true"/>
+      </px:option>
+      <px:variable px:id="variable_28" select="concat($c:fred, '!')" name="barney">
+         <px:xpath-context px:id="xpath-context_63" px:synthetic="true">
+            <px:pipe px:id="pipe_64" px:synthetic="true" px:port="output_73"/>
+            <px:name-pipe px:id="name-pipe_65" px:synthetic="true" px:decl="option_21"/>
+         </px:xpath-context>
+      </px:variable>
+      <px:variable px:id="variable_35" name="barney" select="concat($barney, '!')">
+         <px:xpath-context px:id="xpath-context_66" px:synthetic="true">
+            <px:pipe px:id="pipe_67" px:synthetic="true" px:port="output_73"/>
+            <px:name-pipe px:id="name-pipe_68" px:synthetic="true" px:decl="variable_28"/>
+         </px:xpath-context>
+      </px:variable>
+      <px:atomic-step px:id="atomic-step_42" px:type="p:identity" name="end">
+         <px:input px:id="input_52"
+                   px:synthetic="true"
+                   px:drp="input_6"
+                   port="source"
+                   primary="true"
+                   sequence="true">
+            <px:pipe px:id="pipe_69" px:synthetic="true" px:port="output_73"/>
+         </px:input>
+         <px:output px:id="output_56"
+                    px:synthetic="true"
+                    port="result"
+                    primary="true"
+                    sequence="true"/>
+      </px:atomic-step>
+   </px:declare-step>
+</px:pipeline>
