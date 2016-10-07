@@ -18,7 +18,7 @@
   <xsl:apply-templates/>
 </xsl:template>
 
-<xsl:template match="px:atomic-step">
+<xsl:template match="px:atomic-step|px:for-each-begin|px:for-each-end">
   <xsl:text>subgraph "cluster</xsl:text>
   <xsl:value-of select="@px:id"/>
   <xsl:text>" {&#10;</xsl:text>
@@ -92,6 +92,19 @@
 </xsl:template>
 
 <xsl:template match="px:input">
+  <xsl:text>subgraph "cluster</xsl:text>
+  <xsl:value-of select="@px:id"/>
+  <xsl:text>" {&#10;</xsl:text>
+  <xsl:text>label = "input </xsl:text>
+  <xsl:value-of select="@port"/>
+  <xsl:text>";&#10;</xsl:text>
+
+  <xsl:apply-templates/>
+
+  <xsl:text>}&#10;</xsl:text>
+</xsl:template>
+
+<xsl:template match="px:iteration-source">
   <xsl:text>subgraph "cluster</xsl:text>
   <xsl:value-of select="@px:id"/>
   <xsl:text>" {&#10;</xsl:text>

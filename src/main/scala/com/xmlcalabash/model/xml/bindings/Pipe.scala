@@ -55,6 +55,10 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
                   if (name.isDefined && (name.get.value == portName)) {
                     _port = Some(i)
                   }
+                case is: IterationSource =>
+                  if (portName == "current") {
+                    _port = Some(is)
+                  }
                 case _ => Unit
               }
             }
@@ -72,13 +76,32 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
               }
             }
           case compound: CompoundStep =>
-            for (child <- compound.children) {
-              child match {
-                case i: Input =>
-                  if (i.primary) {
-                    _port = Some(i)
-                  }
-                case _ => Unit
+            var ancestor = false
+            var p = parent
+            while (!ancestor && p.isDefined) {
+              ancestor = (p == _step)
+              p = p.get.parent
+            }
+
+            if (ancestor) {
+              for (child <- compound.children) {
+                child match {
+                  case i: Input =>
+                    if (i.primary) {
+                      _port = Some(i)
+                    }
+                  case _ => Unit
+                }
+              }
+            } else {
+              for (child <- compound.children) {
+                child match {
+                  case o: Output =>
+                    if (o.primary) {
+                      _port = Some(o)
+                    }
+                  case _ => Unit
+                }
               }
             }
         }
@@ -86,11 +109,11 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
     }
   }
 
-  override def replaceNode(node: InputOrOutput, replacement: InputOrOutput): Unit = {
+  override def adjustPortReference(node: InputOrOutput, replacement: InputOrOutput): Unit = {
     if (_port.isDefined && _port.get == node) {
       _port = Some(replacement)
     }
-    for (child <- _children) { child.replaceNode(node, replacement) }
+    for (child <- _children) { child.adjustPortReference(node, replacement) }
   }
 
   override def buildEdges(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {

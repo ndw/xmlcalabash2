@@ -143,6 +143,9 @@ object XProcConstants {
   val p_in_scope_names = new QName("p", NS_XPROC, "in-scope-names")
   val p_template = new QName("p", NS_XPROC, "template")
 
+  // FIXME: this one is fake
+  val p_interleave = new QName("p", NS_XPROC, "interleave")
+
   val c_data = new QName(NS_XPROC_STEP, "data")
   val xs_QName = new QName("xs", NS_XMLSCHEMA, "QName")
   val xs_untypedAtomic = new QName("xs", NS_XMLSCHEMA, "untypedAtomic")
@@ -158,6 +161,8 @@ object XProcConstants {
   val untypedAtomic = BuiltInType.getSchemaType(StandardNames.XS_UNTYPED_ATOMIC).asInstanceOf[SimpleType]
 
   val px_anonymous_step_type =  new QName("px", NS_CALABASH_PX, "anonymous_step_type")
+  val px_for_each_begin =  new QName("px", NS_CALABASH_PX, "for-each-begin")
+  val px_for_each_end =  new QName("px", NS_CALABASH_PX, "for-each-end")
 
   def px(localName: String): QName = {
     new QName("px", NS_CALABASH_PX, localName)

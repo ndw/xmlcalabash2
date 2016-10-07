@@ -16,7 +16,7 @@ import scala.collection.mutable
   * Created by ndw on 10/4/16.
   */
 class AtomicStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(node, parent) {
-  private val _stepType = if (node.isDefined) {
+  protected val _stepType = if (node.isDefined) {
     node.get.getNodeName
   } else {
     XProcConstants.px_anonymous_step_type

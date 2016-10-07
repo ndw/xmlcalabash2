@@ -30,8 +30,9 @@ object Main extends App {
   pxw.close()
   println(mdump)
 
-  val graph = makeGraph
-  run()
+  var graph: Graph = _
+  //graph = makeGraph
+  //run()
 
   private def makeGraph: Graph = {
     val graph = new Graph(engine)

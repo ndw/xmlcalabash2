@@ -1,7 +1,5 @@
 package com.xmlcalabash.model.xml
 
-import java.util.logging.Logger
-
 import com.xmlcalabash.core.{XProcConstants, XProcException}
 import com.xmlcalabash.graph.{Graph, Node, XProcRuntime}
 import com.xmlcalabash.model.xml.bindings._
@@ -83,6 +81,14 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
   def xmlname = _xmlname
   def xmlname_=(name: String): Unit = {
     _xmlname = name
+  }
+
+  def root: PipelineDocument = {
+    var p = this
+    while (p.parent.isDefined) {
+      p = p.parent.get
+    }
+    p.asInstanceOf[PipelineDocument]
   }
 
   def children = _children
@@ -250,8 +256,12 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
     bind.toList
   }
 
-  def replaceNode(node: InputOrOutput, replacement: InputOrOutput): Unit = {
-    for (child <- _children) { child.replaceNode(node, replacement) }
+  //def replaceNode(node: InputOrOutput, replacement: InputOrOutput): Unit = {
+  //  for (child <- _children) { child.replaceNode(node, replacement) }
+  //}
+
+  def adjustPortReference(fromPort: InputOrOutput, toPort: InputOrOutput): Unit = {
+    for (child <- _children) { child.adjustPortReference(fromPort, toPort) }
   }
 
   // ==================================================================================
