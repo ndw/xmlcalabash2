@@ -1,11 +1,15 @@
 package com.xmlcalabash.model.xml
 
+import java.util.logging.Logger
+
 import com.xmlcalabash.core.{XProcConstants, XProcException}
 import com.xmlcalabash.graph.{Graph, Node, XProcRuntime}
+import com.xmlcalabash.model.xml.bindings._
 import com.xmlcalabash.model.xml.decl.StepLibrary
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}
 import com.xmlcalabash.util.UniqueId
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
+import org.slf4j.LoggerFactory
 
 import scala.collection.immutable.{HashMap, Set}
 import scala.collection.mutable
@@ -58,14 +62,17 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
     XProcConstants.p_pipe -> Set(XProcConstants._step, XProcConstants._port)
   )
 
-  val uid = UniqueId.nextId
-  private[xml] var _drp: Option[InputOrOutput] = None
   protected var _xmlname = "XMLArtifact"
+  private[xml] var _drp: Option[InputOrOutput] = None
   protected val _nsbindings = collection.mutable.Set.empty[Namespace]
   protected val _prop = collection.mutable.Set.empty[Attribute]
   protected val _attr = collection.mutable.Set.empty[Attribute]
   protected val _children = collection.mutable.ListBuffer.empty[Artifact]
   protected var _synthetic = true
+  protected var _valid = true // Innocent until proven guilty
+  protected val logger =  LoggerFactory.getLogger(this.getClass)
+
+  val uid = UniqueId.nextId
 
   if (node.isDefined) {
     _xmlname = node.get.getNodeName.getLocalName
@@ -153,7 +160,7 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
         case XProcConstants.p_library => _children += new Library(Some(child), Some(this))
         case XProcConstants.p_log => _children += new Log(Some(child), Some(this))
         case XProcConstants.p_namespaces => _children += new Namespaces(Some(child), Some(this))
-        case XProcConstants.p_option => _children += new DeclOption(Some(child), Some(this))
+        case XProcConstants.p_option => _children += new OptionDecl(Some(child), Some(this))
         case XProcConstants.p_otherwise => _children += new Otherwise(Some(child), Some(this))
         case XProcConstants.p_output => _children += new Output(Some(child), Some(this))
         case XProcConstants.p_pipe => _children += new Pipe(Some(child), Some(this))
@@ -255,6 +262,14 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
 
   def findDeclarations(decls: List[StepLibrary]): Unit = {
     for (child <- _children) { child.findDeclarations(decls) }
+  }
+
+  def findNameDecl(varname: QName, ref: Artifact): Option[NameDecl] = {
+    if (parent.isDefined) {
+      parent.get.findNameDecl(varname, ref)
+    } else {
+      None
+    }
   }
 
   def makeInputsOutputsExplicit(): Unit = {

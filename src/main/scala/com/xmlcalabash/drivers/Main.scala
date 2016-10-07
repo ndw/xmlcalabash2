@@ -8,6 +8,7 @@ import com.xmlcalabash.core.XProcEngine
 import com.xmlcalabash.graph.{Graph, XProcRuntime}
 import com.xmlcalabash.items.StringItem
 import com.xmlcalabash.model.xml.Parser
+import com.xmlcalabash.xpath.{CR_xpath_31_20151217, XPathParser}
 import net.sf.saxon.s9api.{Processor, QName}
 import org.slf4j.LoggerFactory
 import org.xml.sax.InputSource
@@ -29,31 +30,40 @@ object Main extends App {
   pxw.close()
   println(mdump)
 
-  val graph = new Graph(engine)
-  model.buildGraph(graph)
+  // graph()
+  // run()
 
-  val pgw = new FileWriter("pg.xml")
-  val gdump = graph.dump()
-  pgw.write(gdump.toString)
-  pgw.close()
-  println(gdump)
+  private def graph: Graph = {
+    val graph = new Graph(engine)
+    model.buildGraph(graph)
 
-  logger.info("Start your engines!")
-  val runtime = new XProcRuntime(graph)
-  runtime.start()
+    val pgw = new FileWriter("pg.xml")
+    val gdump = graph.dump()
+    pgw.write(gdump.toString)
+    pgw.close()
+    println(gdump)
 
-  runtime.write("source", new StringItem("Hello world"))
-  runtime.close("source")
-
-  runtime.set(new QName("", "fred"), new StringItem("Flintstone"))
-
-  while (runtime.running) {
-    Thread.sleep(100)
+    graph
   }
 
-  var item = runtime.read("result")
-  while (item.isDefined) {
-    println("OUTPUT:" + item.get)
-    item = runtime.read("result")
+  private def run(): Unit = {
+    logger.info("Start your engines!")
+    val runtime = new XProcRuntime(graph)
+    runtime.start()
+
+    runtime.write("source", new StringItem("Hello world"))
+    runtime.close("source")
+
+    runtime.set(new QName("", "fred"), new StringItem("Flintstone"))
+
+    while (runtime.running) {
+      Thread.sleep(100)
+    }
+
+    var item = runtime.read("result")
+    while (item.isDefined) {
+      println("OUTPUT:" + item.get)
+      item = runtime.read("result")
+    }
   }
 }

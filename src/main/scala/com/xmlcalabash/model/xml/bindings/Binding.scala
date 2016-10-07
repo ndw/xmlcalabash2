@@ -1,5 +1,6 @@
-package com.xmlcalabash.model.xml
+package com.xmlcalabash.model.xml.bindings
 
+import com.xmlcalabash.model.xml.Artifact
 import net.sf.saxon.s9api.XdmNode
 
 /**

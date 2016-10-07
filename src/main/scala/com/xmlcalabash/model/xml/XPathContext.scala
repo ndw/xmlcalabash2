@@ -9,11 +9,4 @@ import net.sf.saxon.s9api.XdmNode
   */
 class XPathContext(node: Option[XdmNode], parent: Option[Artifact]) extends Artifact(node, parent) {
   _xmlname = "xpath-context"
-
-
-  override def dumpAdditionalAttributes(tree: TreeWriter): Unit = {
-    if (_drp.isDefined) {
-      tree.addAttribute(XProcConstants.px("drp"), _drp.get.toString)
-    }
-  }
 }

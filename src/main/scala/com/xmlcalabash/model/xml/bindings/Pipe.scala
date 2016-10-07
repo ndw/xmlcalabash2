@@ -1,9 +1,8 @@
-package com.xmlcalabash.model.xml
-
-import java.io.PrintWriter
+package com.xmlcalabash.model.xml.bindings
 
 import com.xmlcalabash.core.XProcConstants
 import com.xmlcalabash.graph.{Graph, Node}
+import com.xmlcalabash.model.xml._
 import com.xmlcalabash.model.xml.util.TreeWriter
 import net.sf.saxon.s9api.XdmNode
 
@@ -103,7 +102,6 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
 
     graph.addEdge(nodeMap(resArtifact), resPort, nodeMap(srcArtifact), srcPort)
   }
-
 
   override def dumpAdditionalAttributes(tree: TreeWriter): Unit = {
     if (_port.isDefined) {

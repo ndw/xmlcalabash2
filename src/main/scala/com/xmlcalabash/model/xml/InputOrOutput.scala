@@ -3,6 +3,7 @@ package com.xmlcalabash.model.xml
 import java.io.PrintWriter
 
 import com.xmlcalabash.core.XProcConstants
+import com.xmlcalabash.model.xml.bindings.{Inline, Pipe}
 import com.xmlcalabash.model.xml.util.TreeWriter
 import net.sf.saxon.s9api.XdmNode
 

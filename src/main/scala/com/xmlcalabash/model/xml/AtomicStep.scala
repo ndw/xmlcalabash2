@@ -69,7 +69,7 @@ class AtomicStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(n
           if (port.isDefined) {
             ohash.put(port.get.value, out)
           }
-        case opt: DeclOption => Unit
+        case opt: OptionDecl => Unit
       }
     }
 
@@ -99,12 +99,12 @@ class AtomicStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(n
     }
   }
 
-  private[xml] def extractOptions(): List[DeclOption] = {
+  private[xml] def extractOptions(): List[OptionDecl] = {
     val newch = collection.mutable.ListBuffer.empty[Artifact]
-    val opts  = collection.mutable.ListBuffer.empty[DeclOption]
+    val opts  = collection.mutable.ListBuffer.empty[OptionDecl]
     for (child <- children) {
       child match {
-        case opt: DeclOption =>
+        case opt: OptionDecl =>
           opts += opt
         case _ =>
           newch += child

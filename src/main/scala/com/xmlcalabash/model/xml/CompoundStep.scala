@@ -4,8 +4,9 @@ import java.io.PrintWriter
 
 import com.xmlcalabash.core.XProcConstants
 import com.xmlcalabash.graph.{Graph, Node}
+import com.xmlcalabash.model.xml.bindings.Pipe
 import com.xmlcalabash.model.xml.decl.XProc10Steps
-import net.sf.saxon.s9api.XdmNode
+import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable
 
@@ -80,7 +81,7 @@ class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step
     for (child <- _children) {
       child match {
         case input: Input => input.addDefaultReadablePort(port)
-        case opt: DeclOption => opt.addDefaultReadablePort(port)
+        case opt: OptionDecl => opt.addDefaultReadablePort(port)
         case _ => Unit
       }
     }
@@ -124,6 +125,33 @@ class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step
     }
 
     step
+  }
+
+  override def findNameDecl(varname: QName, ref: Artifact): Option[NameDecl] = {
+    var found: Option[NameDecl] = None
+
+    for (child <- children) {
+      child match {
+        case v: NameDecl =>
+          if (v == ref) {
+            if (found.isDefined) {
+              return found
+            } else {
+              if (parent.isDefined) {
+                return parent.get.findNameDecl(varname, ref)
+              } else {
+                return None
+              }
+            }
+          } else {
+            if (v.declaredName.get == varname) {
+              found = Some(v)
+            }
+          }
+        case _ => Unit
+      }
+    }
+    found
   }
 
   private def refactorBoundaries(): Unit = {

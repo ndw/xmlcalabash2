@@ -7,20 +7,5 @@ import net.sf.saxon.s9api.XdmNode
 /**
   * Created by ndw on 10/4/16.
   */
-class Variable(node: Option[XdmNode], parent: Option[Artifact]) extends Artifact(node, parent) {
-  override def addDefaultReadablePort(port: Option[InputOrOutput]): Unit = {
-    _drp = port
-    for (child <- _children) { child.addDefaultReadablePort(port) }
-  }
-
-  override def fixBindingsOnIO(): Unit = {
-    if (bindings().isEmpty) {
-      if (defaultReadablePort.isDefined) {
-        val ctx = new XPathContext(None, Some(this))
-        ctx._drp = defaultReadablePort
-        _children += ctx
-      }
-    }
-    for (child <- _children) { child.fixBindingsOnIO() }
-  }
+class Variable(node: Option[XdmNode], parent: Option[Artifact]) extends NameDecl(node, parent) {
 }
