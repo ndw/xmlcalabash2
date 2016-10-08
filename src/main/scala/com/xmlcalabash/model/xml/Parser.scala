@@ -29,14 +29,6 @@ class Parser(val engine: XProcEngine) {
     }
 
     artifact.fixup()
-
-    val dumpNode = dump(artifact)
-    //println(dumpNode)
-
-    val w = new FileWriter("graph.xml")
-    w.write(dumpNode.toString)
-    w.close()
-
     artifact
   }
 

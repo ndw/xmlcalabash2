@@ -10,7 +10,7 @@ import scala.util.Random
 /**
   * Created by ndw on 10/2/16.
   */
-private[graph] class InputNode(graph: Graph, name: Option[String]) extends Node(graph, name, None) {
+class InputNode(graph: Graph, name: Option[String]) extends Node(graph, name, None) {
   val logger = LoggerFactory.getLogger(this.getClass)
   private var constructionOk = true
   private var seqNo: Long = 1

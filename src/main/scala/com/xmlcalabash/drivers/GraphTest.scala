@@ -1,8 +1,9 @@
 package com.xmlcalabash.drivers
 
+import com.xmlcalabash.calc.{AddExpr, NumberLiteral}
 import com.xmlcalabash.core.XProcEngine
 import com.xmlcalabash.graph.{Graph, XProcRuntime}
-import com.xmlcalabash.items.StringItem
+import com.xmlcalabash.items.{NumberItem, StringItem}
 import com.xmlcalabash.runtime.{Identity, Interleave, XPathExpression}
 import net.sf.saxon.s9api.Processor
 
@@ -12,7 +13,7 @@ object GraphTest extends App {
 
   val graph = new Graph(engine)
 
-  testGraph2()
+  testGraph3()
 
   def testGraph1(): Unit = {
     val nStart = graph.createInputNode("nStart")
@@ -94,5 +95,42 @@ object GraphTest extends App {
       }
     }
     */
+  }
+
+  def testGraph3(): Unit = {
+    val left  = graph.createNode("l", new NumberLiteral(3))
+    val right = graph.createNode("r", new NumberLiteral(4))
+    val add   = graph.createNode("p", new AddExpr(List("+")))
+    val add2  = graph.createNode("p2", new AddExpr(List("+")))
+
+    val nfoo = graph.createInputNode("nfoo")
+    val nEnd = graph.createOutputNode("nEnd")
+
+    graph.addEdge(left, "result", add, "left")
+    graph.addEdge(right, "result", add, "right")
+    graph.addEdge(add, "result", add2, "left")
+    graph.addEdge(nfoo, "result", add2, "right")
+    graph.addEdge(add2, "result", nEnd, "source")
+
+    val valid = graph.valid()
+    println(valid)
+
+    if (valid) {
+      val runtime = new XProcRuntime(graph)
+      runtime.start()
+
+      nfoo.write(new NumberItem(36))
+      nfoo.close()
+
+      while (runtime.running) {
+        Thread.sleep(100)
+      }
+
+      var item = nEnd.read()
+      while (item.isDefined) {
+        println("OUTPUT: " + item.get)
+        item = nEnd.read()
+      }
+    }
   }
 }
