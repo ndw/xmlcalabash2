@@ -34,6 +34,7 @@ object CalcDemo extends App {
   var dumpTree: Option[String] = None
   var dumpSimpleTree: Option[String] = None
   var dumpGraph: Option[String] = None
+  var quiet = false
 
   var argpos = 0
   while (argpos < args.length) {
@@ -44,6 +45,8 @@ object CalcDemo extends App {
       dumpSimpleTree = Some(arg.substring(2))
     } else if (arg.startsWith("-g")) {
       dumpGraph = Some(arg.substring(2))
+    } else if (arg == "-q") {
+      quiet = true
     } else if (arg.startsWith("-v")) {
       val bind = arg.substring(2)
       val pos = bind.indexOf("=")
@@ -58,11 +61,13 @@ object CalcDemo extends App {
     argpos += 1
   }
 
-  println("Evaluate expression: " + expr)
-  if (bindings.nonEmpty) {
-    println("Where:")
-    for (varname <- bindings.keySet) {
-      println("\t" + varname + "=" + bindings(varname))
+  if (!quiet) {
+    println("Evaluate expression: " + expr)
+    if (bindings.nonEmpty) {
+      println("Where:")
+      for (varname <- bindings.keySet) {
+        println("\t" + varname + "=" + bindings(varname))
+      }
     }
   }
 
@@ -71,23 +76,24 @@ object CalcDemo extends App {
     halt("Lexical error in expression: " + expr)
   }
 
-  var ps = System.out
   if (dumpTree.isDefined) {
-    if (dumpTree.get != "-") {
-      ps = new PrintStream(dumpTree.get)
+    if (dumpTree.get == "") {
+      println(calc.parseTree.get.toString)
+    } else {
+      val pw = new FileWriter(dumpTree.get)
+      pw.write(calc.parseTree.get.toString)
+      pw.close()
     }
-    val gdump = graph.dump()
-    ps.println(calc.parseTree.get.toString)
-    ps.close()
   }
 
-  ps = System.out
   if (dumpSimpleTree.isDefined) {
-    if (dumpSimpleTree.get != "-") {
-      ps = new PrintStream(dumpSimpleTree.get)
+    if (dumpSimpleTree.get == "") {
+      println(calc.simplifiedTree.get.toString)
+    } else {
+      val pw = new FileWriter(dumpSimpleTree.get)
+      pw.write(calc.simplifiedTree.get.toString)
+      pw.close()
     }
-    ps.println(calc.simplifiedTree.get.toString)
-    ps.close()
   }
 
   val nodeMap = mutable.HashMap.empty[String, Node]
@@ -103,13 +109,14 @@ object CalcDemo extends App {
     halt("Graph isn't valid?")
   }
 
-  ps = System.out
   if (dumpGraph.isDefined) {
-    if (dumpGraph.get != "-") {
-      ps = new PrintStream(dumpGraph.get)
+    if (dumpGraph.get == "") {
+      println(graph.dump().toString)
+    } else {
+      val pw = new FileWriter(dumpGraph.get)
+      pw.write(graph.dump().toString)
+      pw.close()
     }
-    ps.println(graph.dump().toString)
-    ps.close()
   }
 
   val runtime = new XProcRuntime(graph)
