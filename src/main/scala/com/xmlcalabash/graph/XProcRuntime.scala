@@ -1,6 +1,5 @@
 package com.xmlcalabash.graph
 
-import com.xmlcalabash.core.XProcException
 import com.xmlcalabash.items.GenericItem
 import net.sf.saxon.s9api.QName
 import org.slf4j.LoggerFactory
@@ -14,13 +13,12 @@ class XProcRuntime(val graph: Graph) {
   private var started = false
 
   if (!graph.valid) {
-    engine.staticError(None, "Graph is invalid")
-    throw new XProcException("Invalid graph")
+    throw new GraphException("Invalid graph")
   }
 
   def inputs(): List[InputNode] = {
     if (!started) {
-      throw new XProcException("You must start the pipeline first!")
+      throw new GraphException("You must start the pipeline first!")
     }
 
     graph.inputs()
@@ -28,7 +26,7 @@ class XProcRuntime(val graph: Graph) {
 
   def options(): List[InputOption] = {
     if (!started) {
-      throw new XProcException("You must start the pipeline first!")
+      throw new GraphException("You must start the pipeline first!")
     }
 
     graph.options()
@@ -36,7 +34,7 @@ class XProcRuntime(val graph: Graph) {
 
   def outputs(): List[OutputNode] = {
     if (!started) {
-      throw new XProcException("You must start the pipeline first!")
+      throw new GraphException("You must start the pipeline first!")
     }
 
     graph.outputs()
@@ -55,7 +53,7 @@ class XProcRuntime(val graph: Graph) {
 
   def set(optName: QName, item: GenericItem): Unit = {
     if (!started) {
-      throw new XProcException("You must start the pipeline first!")
+      throw new GraphException("You must start the pipeline first!")
     }
 
     for (opt <- options()) {
@@ -70,7 +68,7 @@ class XProcRuntime(val graph: Graph) {
 
   def write(port: String, item: GenericItem): Unit = {
     if (!started) {
-      throw new XProcException("You must start the pipeline first!")
+      throw new GraphException("You must start the pipeline first!")
     }
 
     for (node <- inputs()) {
@@ -85,7 +83,7 @@ class XProcRuntime(val graph: Graph) {
 
   def close(port: String): Unit = {
     if (!started) {
-      throw new XProcException("You must start the pipeline first!")
+      throw new GraphException("You must start the pipeline first!")
     }
 
     for (node <- inputs()) {

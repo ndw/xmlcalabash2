@@ -18,8 +18,7 @@
   <xsl:apply-templates/>
 </xsl:template>
 
-<xsl:template match="px:atomic-step|px:for-each-begin|px:for-each-end
-                     |px:iteration-buffer">
+<xsl:template match="px:atomic-step|px:for-each">
   <xsl:text>subgraph "cluster</xsl:text>
   <xsl:value-of select="@px:id"/>
   <xsl:text>" {&#10;</xsl:text>

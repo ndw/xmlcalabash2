@@ -1,5 +1,7 @@
 package com.xmlcalabash.drivers
 
+import java.io.FileWriter
+
 import com.xmlcalabash.calc.{AddExpr, NumberLiteral}
 import com.xmlcalabash.core.XProcEngine
 import com.xmlcalabash.graph.{Graph, XProcRuntime}
@@ -13,7 +15,113 @@ object GraphTest extends App {
 
   val graph = new Graph(engine)
 
-  testGraph3()
+  nodes010(graph)
+
+  val valid = graph.valid()
+  println(valid)
+
+  if (valid) {
+    val pgw = new FileWriter("pg.xml")
+    val gdump = graph.dump()
+    pgw.write(gdump.toString)
+    pgw.close()
+    println(gdump)
+  }
+
+  def nodes000(graph: Graph): Unit = {
+    val a = graph.createNode("a")
+  }
+
+  def nodes001(graph: Graph): Unit = {
+    val a = graph.createNode("a")
+    val b = graph.createNode("b")
+
+    graph.addEdge(a, "output", b, "input")
+  }
+
+  def nodes002(graph: Graph): Unit = {
+    val a = graph.createNode("a")
+    val b = graph.createNode("b")
+    val c = graph.createNode("c")
+
+    graph.addEdge(a, "output", b, "input")
+    graph.addEdge(b, "output", c, "input")
+  }
+
+  def nodes003(graph: Graph): Unit = {
+    val a = graph.createNode("a")
+    val b = graph.createNode("b")
+    val c = graph.createNode("c")
+
+    graph.addEdge(a, "output", b, "input")
+    graph.addEdge(b, "input", c, "input")
+  }
+
+  def nodes004(graph: Graph): Unit = {
+    val a = graph.createNode("a")
+    val b = graph.createNode("b")
+    val c = graph.createNode("c")
+
+    graph.addEdge(a, "output", c, "input")
+    graph.addEdge(b, "output", c, "input")
+  }
+
+  def nodes005(graph: Graph): Unit = {
+    val a = graph.createNode("a")
+    val b = graph.createNode("b")
+    val c = graph.createNode("c")
+    val d = graph.createNode("d")
+
+    graph.addEdge(a, "output", d, "input")
+    graph.addEdge(b, "output", d, "input")
+    graph.addEdge(c, "output", d, "input")
+  }
+
+  def nodes006(graph: Graph): Unit = {
+    val a = graph.createNode("a")
+    val b = graph.createNode("b")
+    val c = graph.createNode("c")
+
+    graph.addEdge(a, "output", b, "input")
+    graph.addEdge(a, "output", c, "input")
+  }
+
+  def nodes007(graph: Graph): Unit = {
+    val a = graph.createNode("a")
+    val b = graph.createNode("b")
+    val c = graph.createNode("c")
+    val d = graph.createNode("d")
+
+    graph.addEdge(a, "output", b, "input")
+    graph.addEdge(a, "output", c, "input")
+    graph.addEdge(a, "output", d, "input")
+  }
+
+  def nodes008(graph: Graph): Unit = {
+    val a = graph.createNode("a")
+    val b = graph.createNode("b")
+
+    graph.addEdge(a, "output", b, "input")
+    graph.addEdge(a, "output", b, "input")
+  }
+
+  def nodes009(graph: Graph): Unit = {
+    val a = graph.createNode("a")
+    val b = graph.createNode("b")
+
+    graph.addEdge(a, "output", b, "input")
+    graph.addEdge(a, "output", b, "input")
+    graph.addEdge(a, "output", b, "input")
+  }
+
+  def nodes010(graph: Graph): Unit = {
+    val a = graph.createNode("a")
+    val b = graph.createNode("b")
+    val c = graph.createNode("c")
+
+    graph.addEdge(a, "output", b, "source")
+    graph.addEdge(b, "current", c, "input")
+  }
 
   def testGraph1(): Unit = {
     val nStart = graph.createInputNode("nStart")

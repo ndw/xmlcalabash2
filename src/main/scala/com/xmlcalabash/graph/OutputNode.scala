@@ -12,8 +12,8 @@ class OutputNode(graph: Graph, name: Option[String]) extends Node(graph, name, N
   private var constructionOk = true
 
   override def addOutput(port: String, edge: Option[Edge]): Unit = {
-    graph.engine.staticError(None, "Cannot connect to outputs of an OutputNode")
     constructionOk = false
+    throw new GraphException("Cannot connect outputs to an OutputNode")
   }
 
   override def valid: Boolean = {

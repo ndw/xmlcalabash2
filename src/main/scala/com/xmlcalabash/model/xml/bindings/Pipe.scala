@@ -49,18 +49,38 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
               }
             }
           case compound: CompoundStep =>
-            for (child <- compound.children) {
-              child match {
-                case i: Input =>
-                  val name = i.property(XProcConstants._port)
-                  if (name.isDefined && (name.get.value == portName)) {
-                    _port = Some(i)
+            var ancestor = false
+            var p = parent
+            while (!ancestor && p.isDefined) {
+              ancestor = (p == _step)
+              p = p.get.parent
+            }
+
+            if (ancestor) {
+              for (child <- compound.children) {
+                child match {
+                  case i: Input =>
+                    val name = i.property(XProcConstants._port)
+                    if (name.isDefined && (name.get.value == portName)) {
+                      _port = Some(i)
+                    }
+                  case is: IterationSource =>
+                    if (portName == "current") {
+                      _port = Some(is)
+                    }
+                  case _ => Unit
+                }
+              }
+            } else {
+                for (child <- compound.children) {
+                  child match {
+                    case o: Output =>
+                      val name = o.property(XProcConstants._port)
+                      if (name.isDefined && (name.get.value == portName)) {
+                        _port = Some(o)
+                      }
+                    case _ => Unit
                   }
-                case is: IterationSource =>
-                  if (portName == "current") {
-                    _port = Some(is)
-                  }
-                case _ => Unit
               }
             }
         }
@@ -91,6 +111,8 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
                     if (i.primary) {
                       _port = Some(i)
                     }
+                  case is: IterationSource =>
+                    _port = Some(is)
                   case _ => Unit
                 }
               }
@@ -117,45 +139,87 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
     for (child <- _children) { child.adjustPortReference(node, replacement) }
   }
 
-  override def findCrossoverPipes(ancestor: Artifact, excl: InputOrOutput, pipeList: List[Pipe]): List[Pipe] = {
-    val list = ListBuffer.empty[Pipe]
-
-    if (_port.isDefined) {
-      var p: Artifact = this
-      while (p.parent.isDefined) {
-        if (p == excl) {
-          return list.toList
-        }
-        p = p.parent.get
-      }
-
-      p = _port.get
-      while (p.parent.isDefined) {
-        if (p == ancestor) {
-          return list.toList
-        }
-        p = p.parent.get
-      }
-      list += this
-    }
-    list.toList
-  }
-
   override def buildEdges(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
-    val resArtifact = _port.get.parent.get
-    val srcPort     = _port.get.property(XProcConstants._port).get.value
-    val srcArtifact = parent.get.parent.get
-    var resPort     = "???"
+    if (_port.isEmpty || _port.get.parent.isEmpty) {
+      println("ERROR")
+    }
+
+    val srcArtifact = _port.get.parent.get
+    val resArtifact = parent.get.parent.get
+    var inPort      = "???" // _port.get.property(XProcConstants._port).get.value
+    var outPort     = "???"
+    var srcNode: Node = null
+    var resNode: Node = null
+
+    //println("Edges on " + this + ": " + "from " + srcArtifact + " to " + resArtifact)
+
+    _port.get match {
+      case x: IterationSource => outPort = "current"
+      case _ =>
+        val port = _port.get.property(XProcConstants._port)
+        if (port.isDefined) {
+          outPort = port.get.value
+        } else {
+          println("No source port on " + parent.get)
+        }
+    }
 
     parent.get match {
-      case x: XPathContext => resPort = "source"
-      case _=> resPort = parent.get.property(XProcConstants._port).get.value
+      case x: XPathContext =>
+        inPort = "source"
+      case x: IterationSource =>
+        inPort = "source"
+      case _ =>
+        if (parent.isDefined) {
+          val port = parent.get.property(XProcConstants._port)
+          if (port.isDefined) {
+            inPort = port.get.value
+          } else {
+            println("No result port on " + parent.get)
+          }
+        } else {
+          println("No parent on " + this)
+        }
     }
 
-    //val resPort     = parent.get.property(XProcConstants._port).get.value
-    //println(srcArtifact, srcPort, resArtifact, resPort)
+    srcArtifact match {
+      case loop: ForEach =>
+        var inside = false
+        var p: Option[Artifact] = Some(resArtifact)
+        while (!inside && p.isDefined) {
+          inside = (p.get == loop)
+          p = p.get.parent
+        }
+        if (inside) {
+          srcNode = loop.loopStart
+        } else {
+          srcNode = loop.loopStart.loopEnd
+        }
+      case _ =>
+        srcNode = nodeMap(srcArtifact)
+    }
 
-    graph.addEdge(nodeMap(resArtifact), resPort, nodeMap(srcArtifact), srcPort)
+    resArtifact match {
+      case loop: ForEach =>
+        var inside = false
+        var p: Option[Artifact] = Some(srcArtifact)
+        while (!inside && p.isDefined) {
+          inside = (p.get == loop)
+          p = p.get.parent
+        }
+        if (inside) {
+          resNode = loop.loopStart.loopEnd
+          inPort = "I_" + inPort
+        } else {
+          resNode = loop.loopStart
+        }
+      case _ =>
+        resNode = nodeMap(resArtifact)
+    }
+
+    //println("    " + srcNode + "/" + outPort + " -> " + resNode + "/" + inPort)
+
+    graph.addEdge(srcNode, outPort, resNode, inPort)
   }
 
   override def dumpAdditionalAttributes(tree: TreeWriter): Unit = {

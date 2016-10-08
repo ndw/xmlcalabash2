@@ -14,7 +14,7 @@ abstract class Step(node: Option[XdmNode], parent: Option[Artifact]) extends Art
 
   def atomic = _atomic
 
-  def primaryInputPort: Option[Input] = {
+  def primaryInputPort: Option[InputOrOutput] = {
     var primary: Option[Input] = None
 
     for (child <- _children) {

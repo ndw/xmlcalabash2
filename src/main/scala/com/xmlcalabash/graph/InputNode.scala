@@ -11,13 +11,12 @@ import scala.util.Random
   * Created by ndw on 10/2/16.
   */
 class InputNode(graph: Graph, name: Option[String]) extends Node(graph, name, None) {
-  val logger = LoggerFactory.getLogger(this.getClass)
   private var constructionOk = true
   private var seqNo: Long = 1
 
   private[graph] override def addInput(port: String, edge: Option[Edge]): Unit = {
-    graph.engine.staticError(None, "Cannot connect inputs to an InputNode")
     constructionOk = false
+    throw new GraphException("Cannot connect inputs to an InputNode")
   }
 
   private[graph] override def valid: Boolean = {

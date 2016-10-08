@@ -10,14 +10,13 @@ import org.slf4j.LoggerFactory
   * Created by ndw on 10/2/16.
   */
 private[graph] class InputOption(graph: Graph, val optName: QName) extends Node(graph, None, None) {
-  val logger = LoggerFactory.getLogger(this.getClass)
   private var constructionOk = true
   private var seqNo: Long = 1
   private var initialized = false
 
   private[graph] override def addInput(port: String, edge: Option[Edge]): Unit = {
-    graph.engine.staticError(None, "Cannot connect inputs to an InputOption")
     constructionOk = false
+    throw new GraphException("Cannot connect inputs to an InputOption")
   }
 
   private[graph] override def valid: Boolean = {

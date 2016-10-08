@@ -7,6 +7,7 @@ import com.xmlcalabash.model.xml.util.TreeWriter
 import com.xmlcalabash.runtime.Step
 import com.xmlcalabash.util.UniqueId
 import net.sf.saxon.s9api.{QName, XdmNode}
+import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 import scala.collection.immutable
@@ -15,8 +16,12 @@ import scala.collection.immutable
   * Created by ndw on 10/2/16.
   */
 class Graph(private[graph] val engine: XProcEngine) {
+  protected val logger = LoggerFactory.getLogger(this.getClass)
   private val nodes = mutable.HashSet.empty[Node]
+  private val fans = mutable.HashMap.empty[Node, Node]
   private val edges = mutable.HashSet.empty[Edge]
+  private var _validated = false
+  private var _valid = true
   private var _finished = false
   private var _system: ActorSystem = _
   private var _reaper: ActorRef = _
@@ -25,84 +30,137 @@ class Graph(private[graph] val engine: XProcEngine) {
   private[graph] def system = _system
   private[graph] def reaper = _reaper
 
+  def chkValid() = {
+    if (_validated) {
+      throw new GraphException("Attempt to change validated graph")
+    }
+  }
+
+  def createNode(name: String): Node = {
+    chkValid()
+    val node = new Node(this, Some(name), None)
+    nodes.add(node)
+    node
+  }
+
   def createNode(name: String, step: Step): Node = {
+    chkValid()
     val node = new Node(this, Some(name), Some(step))
     nodes.add(node)
     node
   }
 
   def createInputOption(name: QName): InputOption = {
+    chkValid()
     val node = new InputOption(this, name)
     nodes.add(node)
     node
   }
 
   def createInputNode(name: String): InputNode = {
+    chkValid()
     val node = new InputNode(this, Some(name))
     nodes.add(node)
     node
   }
 
   def createOutputNode(name: String): OutputNode = {
+    chkValid()
     val node = new OutputNode(this, Some(name))
     nodes.add(node)
     node
   }
 
   def createVariableNode(name: QName, step: Step): Node = {
-    val node = new Node(this, Some("var_" + UniqueId.nextId + toString), Some(step))
+    chkValid()
+    val node = new Node(this, Some("var_" + UniqueId.nextId), Some(step))
+    nodes.add(node)
+    node
+  }
+
+  def createLoopNode(): LoopStart = {
+    chkValid()
+    val loopEnd = new LoopEnd(this, Some("loop_end_" + UniqueId.nextId))
+    val loopStart = new LoopStart(this, Some("loop_start_" + UniqueId.nextId), loopEnd)
+    nodes.add(loopStart)
+    nodes.add(loopEnd)
+    loopStart
+  }
+
+  private[graph] def createIterationCacheNode(): IterationCache = {
+    val node = new IterationCache(this, Some("i_cache_" + UniqueId.nextId))
     nodes.add(node)
     node
   }
 
   def addEdge(from: Port, to: Port): Unit = {
+    chkValid()
     addEdge(from.node, from.name, to.node, to.name)
   }
 
   def addEdge(source: Node, outputPort: String, destination: Node, inputPort: String): Unit = {
+    chkValid()
+
     val from =
       if (source.output(outputPort).isDefined) {
         val edge = source.output(outputPort).get
-        edge.source match {
-        case n: FanOut => n.nextPort
-        case n: Node =>
+
+        if (fans.contains(edge.source)) {
+          val fanOut = fans(edge.source).asInstanceOf[FanOut]
+          fanOut.nextPort
+        } else {
+          logger.debug("Fanout: " + source + "." + outputPort)
           val fanOut = new FanOut(this)
           nodes.add(fanOut)
-          edge.source.removeOutput(edge.outputPort)
-          edge.destination.removeInput(edge.inputPort)
-          edges.remove(edge)
+          fans.put(edge.source, fanOut)
+
+          removeEdge(edge)
           addEdge(source, outputPort, fanOut, "source")
+
           val targetPort = new Port(edge.destination, edge.inputPort)
           addEdge(fanOut.nextPort, targetPort)
           fanOut.nextPort
-      }
+        }
     } else {
         new Port(source, outputPort)
       }
     val to =
       if (destination.input(inputPort).isDefined) {
         val edge = destination.input(inputPort).get
-        edge.destination match {
-          case n: FanIn => n.nextPort
-          case n: Node =>
-            val fanIn = new FanIn(this)
-            nodes.add(fanIn)
-            edge.source.removeOutput(edge.outputPort)
-            edge.destination.removeInput(edge.inputPort)
-            edges.remove(edge)
-            addEdge(fanIn, "result", destination, inputPort)
-            val sourcePort = new Port(edge.source, edge.outputPort)
-            addEdge(sourcePort, fanIn.nextPort)
-            fanIn.nextPort
+
+        if (fans.contains(edge.destination)) {
+          val fanIn = fans(edge.destination).asInstanceOf[FanIn]
+          fanIn.nextPort
+        } else {
+          logger.debug("Fanin: " + destination + "." + inputPort)
+          val fanIn = new FanIn(this)
+          nodes.add(fanIn)
+          fans.put(edge.destination, fanIn)
+          edge.source.removeOutput(edge.outputPort)
+          edge.destination.removeInput(edge.inputPort)
+          edges.remove(edge)
+          addEdge(fanIn, "result", destination, inputPort)
+          val sourcePort = new Port(edge.source, edge.outputPort)
+          addEdge(sourcePort, fanIn.nextPort)
+          fanIn.nextPort
         }
       } else {
         new Port(destination, inputPort)
       }
+
     val edge = new Edge(this, from, to)
+
     edges.add(edge)
   }
 
+  private[graph] def removeEdge(edge: Edge): Unit = {
+    edge.source.removeOutput(edge.outputPort)
+    edge.destination.removeInput(edge.inputPort)
+    edges.remove(edge)
+  }
+
   def addDependency(node: Node, dependsOn: Node): Unit = {
+    chkValid()
     node.addDependancy(dependsOn)
   }
 
@@ -111,13 +169,44 @@ class Graph(private[graph] val engine: XProcEngine) {
   }
 
   def valid(): Boolean = {
-    var valid = true
-    for (node <- nodes) {
-      valid = valid && node.valid
-      valid = valid && node.noCycles(immutable.HashSet.empty[Node])
-      valid = valid && node.connected()
+    if (_validated) {
+      return _valid
     }
-    valid
+
+    val srcPorts = mutable.HashSet.empty[Port]
+    val dstPorts = mutable.HashSet.empty[Port]
+    for (edge <- edges) {
+      val src = new Port(edge.source, edge.outputPort)
+      val dst = new Port(edge.destination, edge.inputPort)
+
+      srcPorts += src
+      dstPorts += dst
+
+      if (srcPorts.contains(dst)) {
+        _valid = false
+        throw new GraphException("Attempt to write to an input port: " + dst)
+      }
+
+      if (dstPorts.contains(src)) {
+        _valid = false
+        throw new GraphException("Attempt to read to an output port: " + dst)
+      }
+    }
+
+    for (node <- nodes) {
+      _valid = _valid && node.valid
+      _valid = _valid && node.noCycles(immutable.HashSet.empty[Node])
+      _valid = _valid && node.connected()
+    }
+
+    if (_valid) {
+      for (node <- nodes) {
+        node.addIterationCaches()
+      }
+    }
+
+    _validated = true
+    _valid
   }
 
   private def roots(): Set[Node] = {

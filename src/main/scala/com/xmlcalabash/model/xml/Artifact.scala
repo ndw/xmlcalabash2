@@ -261,20 +261,6 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
     for (child <- _children) { child.adjustPortReference(fromPort, toPort) }
   }
 
-  private[xml] def findCrossoverPipes(excl: InputOrOutput): List[Pipe] = {
-    findCrossoverPipes(this, excl, List.empty[Pipe])
-  }
-
-  private[xml] def findCrossoverPipes(ancestor: Artifact, excl: InputOrOutput, pipeList: List[Pipe]): List[Pipe] = {
-    val pipes = ListBuffer.empty[Pipe]
-
-    for (child <- _children) {
-      val list = child.findCrossoverPipes(ancestor, excl, pipeList)
-      pipes ++= list
-    }
-
-    pipes.toList
-  }
   // ==================================================================================
 
   def fixup(): Unit = {

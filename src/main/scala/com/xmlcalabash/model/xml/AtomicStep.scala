@@ -118,7 +118,11 @@ class AtomicStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(n
   }
 
   override def buildNodes(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
-    val node = graph.createNode(this.toString, new Identity(this.toString))
+    var name = this.toString
+    if (property(XProcConstants._name).isDefined) {
+      name = name + "_" + property(XProcConstants._name).get.value
+    }
+    val node = graph.createNode(name, new Identity(this.toString))
     nodeMap.put(this, node)
   }
 

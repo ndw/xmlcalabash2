@@ -28,43 +28,51 @@ object Main extends App {
   val pxw = new FileWriter("px.xml")
   pxw.write(mdump.toString)
   pxw.close()
-  println(mdump)
+  //println(mdump)
 
   var graph: Graph = _
-  //graph = makeGraph
+  graph = makeGraph
   //run()
 
   private def makeGraph: Graph = {
     val graph = new Graph(engine)
     model.buildGraph(graph)
 
+    if (graph.valid) {
+      println(graph.valid())
+    }
+
     val pgw = new FileWriter("pg.xml")
     val gdump = graph.dump()
     pgw.write(gdump.toString)
     pgw.close()
-    println(gdump)
+    //println(gdump)
 
     graph
   }
 
   private def run(): Unit = {
-    logger.info("Start your engines!")
-    val runtime = new XProcRuntime(graph)
-    runtime.start()
+    if (graph.valid()) {
+      logger.info("Start your engines!")
+      val runtime = new XProcRuntime(graph)
+      runtime.start()
 
-    runtime.write("source", new StringItem("Hello world"))
-    runtime.close("source")
+      runtime.write("pSource", new StringItem("Hello world"))
+      runtime.close("pSource")
 
-    runtime.set(new QName("http://www.w3.org/ns/xproc-step", "fred"), new StringItem("Flintstone"))
+      runtime.set(new QName("http://www.w3.org/ns/xproc-step", "fred"), new StringItem("Flintstone"))
 
-    while (runtime.running) {
-      Thread.sleep(100)
-    }
+      while (runtime.running) {
+        Thread.sleep(100)
+      }
 
-    var item = runtime.read("result")
-    while (item.isDefined) {
-      println("OUTPUT:" + item.get)
-      item = runtime.read("result")
+      var item = runtime.read("pResult")
+      while (item.isDefined) {
+        println("OUTPUT:" + item.get)
+        item = runtime.read("pResult")
+      }
+    } else {
+      println("Invalid graph")
     }
   }
 }

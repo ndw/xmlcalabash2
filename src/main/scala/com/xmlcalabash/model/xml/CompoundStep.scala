@@ -6,6 +6,7 @@ import com.xmlcalabash.core.XProcConstants
 import com.xmlcalabash.graph.{Graph, Node}
 import com.xmlcalabash.model.xml.bindings.Pipe
 import com.xmlcalabash.model.xml.decl.XProc10Steps
+import com.xmlcalabash.runtime.Identity
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable
@@ -48,20 +49,22 @@ class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step
     }
 
     if (input.isDefined) {
-      val req = input.get.property(XProcConstants._primary)
-      if (req.isEmpty) {
+      val prim = input.get.property(XProcConstants._primary)
+      if (prim.isEmpty) {
         input.get.setProperty(XProcConstants._primary, "true")
       }
     }
 
     if (output.isDefined) {
-      val req = output.get.property(XProcConstants._primary)
-      if (req.isEmpty) {
+      val prim = output.get.property(XProcConstants._primary)
+      if (prim.isEmpty) {
         output.get.setProperty(XProcConstants._primary, "true")
       }
     }
 
-    for (child <- _children) { child.makeInputsOutputsExplicit() }
+    for (child <- _children) {
+      child.makeInputsOutputsExplicit()
+    }
   }
 
   override def addDefaultReadablePort(port: Option[InputOrOutput]): Unit = {

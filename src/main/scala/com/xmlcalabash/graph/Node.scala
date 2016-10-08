@@ -2,9 +2,9 @@ package com.xmlcalabash.graph
 
 import akka.actor.{ActorRef, Props}
 import com.xmlcalabash.messages.{CloseMessage, ItemMessage, RanMessage}
-import com.xmlcalabash.runtime.{Identity, Step, StepController}
+import com.xmlcalabash.runtime.{Step, StepController}
 import Reaper.WatchMe
-import com.xmlcalabash.core.{XProcConstants, XProcException}
+import com.xmlcalabash.core.XProcConstants
 import com.xmlcalabash.items.GenericItem
 import com.xmlcalabash.model.xml.util.TreeWriter
 import com.xmlcalabash.util.UniqueId
@@ -18,7 +18,7 @@ import scala.collection.{Set, immutable, mutable}
   */
 class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]) extends StepController {
   protected val uid = UniqueId.nextId
-  private val logger = LoggerFactory.getLogger(this.getClass)
+  protected val logger = LoggerFactory.getLogger(this.getClass)
   private val inputPort = mutable.HashMap.empty[String, Option[Edge]]
   private val outputPort = mutable.HashMap.empty[String, Option[Edge]]
   private val sequenceNos = mutable.HashMap.empty[String, Long]
@@ -32,6 +32,8 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
 
   private[graph] val dependsOn = mutable.HashSet.empty[Node]
   private[graph] def actor = _actor
+
+  logger.debug("Create node: " + this)
 
   def inputs(): Set[String] = {
     inputPort.keySet
@@ -51,8 +53,8 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
 
   private[graph] def addInput(port: String, edge: Option[Edge]): Unit = {
     if (inputPort.getOrElse(port, None).isDefined) {
-      graph.engine.staticError(None, "Input port '" + port + "' already in use")
       constructionOk = false
+      throw new GraphException("Input port '" + port + "' already in use")
     } else {
       inputPort.put(port, edge)
     }
@@ -60,8 +62,8 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
 
   private[graph] def addOutput(port: String, edge: Option[Edge]): Unit = {
     if (outputPort.getOrElse(port, None).isDefined) {
-      graph.engine.staticError(None, "Output port '" + port + "' already in use")
       constructionOk = false
+      throw new GraphException("Output port '" + port + "' already in use")
     } else {
       outputPort.put(port, edge)
     }
@@ -71,8 +73,8 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
     if (inputPort.getOrElse(port, None).isDefined) {
       inputPort.remove(port)
     } else {
-      graph.engine.staticError(None, "Attempt to remove unconnected input")
       constructionOk = false
+      throw new GraphException("Attempt to remove unconnected input")
     }
   }
 
@@ -80,8 +82,8 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
     if (outputPort.getOrElse(port, None).isDefined) {
       outputPort.remove(port)
     } else {
-      graph.engine.staticError(None, "Attempt to remove unconnected output")
       constructionOk = false
+      throw new GraphException("Attempt to remove unconnected output")
     }
   }
 
@@ -99,7 +101,7 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
 
   def noCycles(seen: immutable.HashSet[Node]): Boolean = {
     if (seen.contains(this)) {
-      graph.engine.staticError(None, "Graph contains a cycle!")
+      throw new GraphException("Graph contains a cycle!")
       false
     } else {
       var valid = true
@@ -119,17 +121,21 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
     var valid = true
     for (port <- inputPort.keySet) {
       if (inputPort.get(port).isEmpty) {
-        graph.engine.staticError(None, "Unconnected input port")
         valid = false
+        throw new GraphException("Unconnected input port")
       }
     }
     for (port <- outputPort.keySet) {
       if (outputPort.get(port).isEmpty) {
-        graph.engine.staticError(None, "Unconnected output port")
         valid = false
+        throw new GraphException("Unconnected output port")
       }
     }
     valid
+  }
+
+  def addIterationCaches(): Unit = {
+    // nop
   }
 
   override def toString: String = {
@@ -164,7 +170,7 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
       logger.debug("Node {} sends to {} on {}", this, targetPort, targetNode)
       targetNode.actor ! msg
     } else {
-      throw new XProcException("no downstream for " + port)
+      throw new GraphException("no downstream for " + port)
     }
   }
 
@@ -227,6 +233,9 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
     if (name.isDefined) {
       tree.addAttribute(XProcConstants._name, name.get)
     }
+    if (step.isDefined) {
+      tree.addAttribute(XProcConstants._step, step.get.toString)
+    }
     tree.addAttribute(XProcConstants._uid, uid.toString)
 
     if (inputs().nonEmpty) {
@@ -250,8 +259,8 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
         val port = outputPort(portName)
         if (port.isDefined) {
           tree.addStartElement(XProcConstants.pg("out-edge"))
-          tree.addAttribute(new QName("", "input-port"), port.get.inputPort)
           tree.addAttribute(new QName("", "destination"), port.get.destination.uid.toString)
+          tree.addAttribute(new QName("", "input-port"), port.get.inputPort)
           tree.addAttribute(new QName("", "output-port"), port.get.outputPort)
           tree.addEndElement()
         }
