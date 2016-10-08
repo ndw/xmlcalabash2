@@ -7,6 +7,7 @@ import com.xmlcalabash.model.xml.util.TreeWriter
 import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 /**
   * Created by ndw on 10/4/16.
@@ -114,6 +115,30 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
       _port = Some(replacement)
     }
     for (child <- _children) { child.adjustPortReference(node, replacement) }
+  }
+
+  override def findCrossoverPipes(ancestor: Artifact, excl: InputOrOutput, pipeList: List[Pipe]): List[Pipe] = {
+    val list = ListBuffer.empty[Pipe]
+
+    if (_port.isDefined) {
+      var p: Artifact = this
+      while (p.parent.isDefined) {
+        if (p == excl) {
+          return list.toList
+        }
+        p = p.parent.get
+      }
+
+      p = _port.get
+      while (p.parent.isDefined) {
+        if (p == ancestor) {
+          return list.toList
+        }
+        p = p.parent.get
+      }
+      list += this
+    }
+    list.toList
   }
 
   override def buildEdges(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {

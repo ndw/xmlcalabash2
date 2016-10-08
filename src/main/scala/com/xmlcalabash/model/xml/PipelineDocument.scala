@@ -96,6 +96,11 @@ class PipelineDocument(node: Option[XdmNode], parent: Option[Artifact]) extends 
             }
           }
 
+          // Now find all the inputs that cross from the outside the for-each to the inside
+          // Each one of those needs to be buffered
+          val crossovers = forEach.findCrossoverPipes(iterationSource.get)
+
+          // The feBegin reads the iteration and provides the current port
           val input = new Input(None, Some(feBegin))
           iterationSource.get.children foreach { input.addChild }
           feBegin.addChild(input)
@@ -106,6 +111,7 @@ class PipelineDocument(node: Option[XdmNode], parent: Option[Artifact]) extends 
 
           innerPortMap.put(iterationSource.get, output)
 
+          // The feEnd reads the outputs and provides them to the "outside"
           for (output <- feOutputs) {
             val endInput = new Input(None, Some(feEnd))
             output.children foreach { endInput.addChild }
@@ -116,6 +122,24 @@ class PipelineDocument(node: Option[XdmNode], parent: Option[Artifact]) extends 
             output.addProperty(XProcConstants._port, "out_" + output.property(XProcConstants._port).get.value)
             feEnd.addChild(endOutput)
             outerPortMap.put(output, endOutput)
+          }
+
+          // Now make the buffers
+          for (pipe <- crossovers) {
+            val buffer = new IterationBuffer(parent)
+            val input = new Input(None, Some(buffer))
+            input.addProperty(XProcConstants._port, "source")
+            val newPipe = new Pipe(None, Some(input))
+            newPipe._port = pipe._port
+            input.addChild(newPipe)
+            buffer.addChild(input)
+
+            val output = new Output(None, Some(buffer))
+            output.addProperty(XProcConstants._port, "result")
+            buffer.addChild(output)
+
+            pipe._port = Some(output)
+            newch += buffer
           }
 
           for (child <- feChildren) {
@@ -139,7 +163,6 @@ class PipelineDocument(node: Option[XdmNode], parent: Option[Artifact]) extends 
     _children.clear()
     _children ++= newch
   }
-
 
   override def buildGraph(graph: Graph): Unit = {
     val nodeMap = mutable.HashMap.empty[Artifact, Node]

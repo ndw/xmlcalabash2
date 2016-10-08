@@ -163,6 +163,7 @@ object XProcConstants {
   val px_anonymous_step_type =  new QName("px", NS_CALABASH_PX, "anonymous_step_type")
   val px_for_each_begin =  new QName("px", NS_CALABASH_PX, "for-each-begin")
   val px_for_each_end =  new QName("px", NS_CALABASH_PX, "for-each-end")
+  val px_iteration_buffer =  new QName("px", NS_CALABASH_PX, "iteration-buffer")
 
   def px(localName: String): QName = {
     new QName("px", NS_CALABASH_PX, localName)

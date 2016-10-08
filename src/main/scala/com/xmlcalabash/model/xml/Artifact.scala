@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.immutable.{HashMap, Set}
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 /**
   * Created by ndw on 10/4/16.
@@ -256,14 +257,24 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
     bind.toList
   }
 
-  //def replaceNode(node: InputOrOutput, replacement: InputOrOutput): Unit = {
-  //  for (child <- _children) { child.replaceNode(node, replacement) }
-  //}
-
-  def adjustPortReference(fromPort: InputOrOutput, toPort: InputOrOutput): Unit = {
+  private[xml] def adjustPortReference(fromPort: InputOrOutput, toPort: InputOrOutput): Unit = {
     for (child <- _children) { child.adjustPortReference(fromPort, toPort) }
   }
 
+  private[xml] def findCrossoverPipes(excl: InputOrOutput): List[Pipe] = {
+    findCrossoverPipes(this, excl, List.empty[Pipe])
+  }
+
+  private[xml] def findCrossoverPipes(ancestor: Artifact, excl: InputOrOutput, pipeList: List[Pipe]): List[Pipe] = {
+    val pipes = ListBuffer.empty[Pipe]
+
+    for (child <- _children) {
+      val list = child.findCrossoverPipes(ancestor, excl, pipeList)
+      pipes ++= list
+    }
+
+    pipes.toList
+  }
   // ==================================================================================
 
   def fixup(): Unit = {
