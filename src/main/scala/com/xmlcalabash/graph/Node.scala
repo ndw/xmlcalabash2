@@ -3,7 +3,6 @@ package com.xmlcalabash.graph
 import akka.actor.{ActorRef, Props}
 import com.xmlcalabash.messages.{CloseMessage, ItemMessage, RanMessage}
 import com.xmlcalabash.runtime.{Step, StepController}
-import Reaper.WatchMe
 import com.xmlcalabash.core.XProcConstants
 import com.xmlcalabash.graph.GraphMonitor.GWatch
 import com.xmlcalabash.items.GenericItem
