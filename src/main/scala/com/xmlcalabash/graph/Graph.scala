@@ -24,11 +24,11 @@ class Graph(private[graph] val engine: XProcEngine) {
   private var _valid = true
   private var _finished = false
   private var _system: ActorSystem = _
-  private var _reaper: ActorRef = _
+  private var _monitor: ActorRef = _
 
   private[graph] def finished = _finished
   private[graph] def system = _system
-  private[graph] def reaper = _reaper
+  private[graph] def monitor = _monitor
 
   def chkValid() = {
     if (_validated) {
@@ -254,7 +254,7 @@ class Graph(private[graph] val engine: XProcEngine) {
 
   private[graph] def makeActors(): Unit = {
     _system = ActorSystem("XMLCalabashPipeline")
-    _reaper = _system.actorOf(Props(new ProductionReaper(this)), name="reaper")
+    _monitor = _system.actorOf(Props(new GraphMonitor(this)), name="monitor")
 
     for (node <- roots()) {
       node.makeActors()
@@ -266,7 +266,7 @@ class Graph(private[graph] val engine: XProcEngine) {
         case node: InputNode => Unit
         case node: OutputNode => Unit
         case node: Node =>
-          node.actor ! new StartMessage()
+          node.actor ! new StartMessage(node.actor)
       }
     }
   }

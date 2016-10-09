@@ -26,6 +26,10 @@ class UnaryExpr(val op: String) extends Step {
     // nop
   }
 
+  override def teardown() = {
+    // nop
+  }
+
   override def receive(port: String, msg: ItemMessage): Unit = {
     var value = 0
     msg.item match {

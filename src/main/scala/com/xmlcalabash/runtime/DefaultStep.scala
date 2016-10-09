@@ -36,6 +36,10 @@ abstract class DefaultStep(name: String) extends Step  {
     logger.debug("{} run", this)
   }
 
+  override def teardown() = {
+    logger.debug("{} teardown", this)
+  }
+
   override def receive(port: String, msg: ItemMessage): Unit = {
     logger.debug("{} receives #{} on {}: {}", this, count.toString, port, msg)
   }

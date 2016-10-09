@@ -41,6 +41,10 @@ class AddExpr(val ops: List[String]) extends Step {
     controller.send("result", item)
   }
 
+  override def teardown() = {
+    // nop
+  }
+
   override def receive(port: String, msg: ItemMessage): Unit = {
     var value = 0
 

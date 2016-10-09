@@ -32,7 +32,7 @@ object Main extends App {
 
   var graph: Graph = _
   graph = makeGraph
-  //run()
+  run()
 
   private def makeGraph: Graph = {
     val graph = new Graph(engine)

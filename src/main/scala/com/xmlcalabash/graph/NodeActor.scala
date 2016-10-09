@@ -2,6 +2,7 @@ package com.xmlcalabash.graph
 
 import akka.actor.{Actor, ActorRef}
 import akka.event.Logging
+import com.xmlcalabash.graph.GraphMonitor.{GFinish, GStart}
 import com.xmlcalabash.messages.{CloseMessage, ItemMessage, RanMessage, StartMessage}
 import com.xmlcalabash.runtime.{Identity, StepController}
 
@@ -17,13 +18,17 @@ private[graph] class NodeActor(node: Node) extends Actor {
 
   def checkRun(): Unit = {
     if (openInputs.isEmpty && dependsOn.isEmpty) {
-      node.run()
-      log.debug("Node {} stops", node)
-      context.stop(self)
+      run()
     } else {
       log.debug("Node {} not ready to run (inputs ready: {}, dependencies ready: {})", node,
         openInputs.isEmpty, dependsOn.isEmpty)
     }
+  }
+
+  private def run() = {
+    node.graph.monitor ! GStart(node)
+    node.run()
+    node.graph.monitor ! GFinish(node)
   }
 
   def receive = {

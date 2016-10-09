@@ -5,6 +5,7 @@ import com.xmlcalabash.messages.{CloseMessage, ItemMessage, RanMessage}
 import com.xmlcalabash.runtime.{Step, StepController}
 import Reaper.WatchMe
 import com.xmlcalabash.core.XProcConstants
+import com.xmlcalabash.graph.GraphMonitor.GWatch
 import com.xmlcalabash.items.GenericItem
 import com.xmlcalabash.model.xml.util.TreeWriter
 import com.xmlcalabash.util.UniqueId
@@ -170,7 +171,7 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
       logger.debug("Node {} sends to {} on {}", this, targetPort, targetNode)
       targetNode.actor ! msg
     } else {
-      throw new GraphException("no downstream for " + port)
+      logger.info(this + " writes to unknown output port: " + port)
     }
   }
 
@@ -224,7 +225,7 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
       }
 
       _actor = graph.system.actorOf(Props(new NodeActor(this)), actorName.get)
-      graph.reaper ! WatchMe(_actor)
+      graph.monitor ! GWatch(this)
     }
   }
 

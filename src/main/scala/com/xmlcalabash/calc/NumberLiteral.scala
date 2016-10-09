@@ -25,6 +25,10 @@ class NumberLiteral(val number: Int) extends Step {
     controller.send("result", item)
   }
 
+  override def teardown() = {
+    // nop
+  }
+
   override def receive(port: String, msg: ItemMessage): Unit = {
     // nop
   }

@@ -13,5 +13,6 @@ trait Step {
             options: List[QName])
   def reset()
   def run()
+  def teardown()
   def receive(port: String, msg: ItemMessage)
 }
