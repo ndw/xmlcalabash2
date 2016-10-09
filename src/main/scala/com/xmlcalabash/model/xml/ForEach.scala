@@ -1,10 +1,11 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.core.XProcConstants
 import com.xmlcalabash.graph.{Graph, LoopStart, Node}
+import com.xmlcalabash.runtime.ForEachIterator
 import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 /**
   * Created by ndw on 10/4/16.
@@ -31,18 +32,19 @@ class ForEach(node: Option[XdmNode], parent: Option[Artifact]) extends CompoundS
   }
 
   override def buildNodes(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
-    loopStart = graph.createLoopNode()
+    val subpipeline = ListBuffer.empty[Node]
 
     val childMap = mutable.HashMap.empty[Artifact, Node]
-
     for (child <- children) {
       child.buildNodes(graph, childMap)
     }
-
     for (art <- childMap.keySet) {
       val node = childMap(art)
-      loopStart.addNode(node)
+      subpipeline += node
       nodeMap.put(art, node)
     }
+
+    val forEach = new ForEachIterator(this.toString, subpipeline.toList)
+    loopStart = graph.createIteratorNode(forEach, subpipeline.toList)
   }
 }

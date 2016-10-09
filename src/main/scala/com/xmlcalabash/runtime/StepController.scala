@@ -1,5 +1,6 @@
 package com.xmlcalabash.runtime
 
+import com.xmlcalabash.graph.Node
 import com.xmlcalabash.items.GenericItem
 
 /**
@@ -7,4 +8,7 @@ import com.xmlcalabash.items.GenericItem
   */
 trait StepController {
   def send(port: String, item: GenericItem)
+  def close(port: String)
+  def tell(node: Node, msg: Any)
+  def stop()
 }

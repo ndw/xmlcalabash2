@@ -4,7 +4,7 @@ import akka.actor.{ActorRef, Props}
 import com.xmlcalabash.messages.{CloseMessage, ItemMessage, RanMessage}
 import com.xmlcalabash.runtime.{Step, StepController}
 import com.xmlcalabash.core.XProcConstants
-import com.xmlcalabash.graph.GraphMonitor.GWatch
+import com.xmlcalabash.graph.GraphMonitor.{GFinish, GWatch}
 import com.xmlcalabash.items.GenericItem
 import com.xmlcalabash.model.xml.util.TreeWriter
 import com.xmlcalabash.util.UniqueId
@@ -25,10 +25,10 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
   private val dependents = mutable.HashSet.empty[Node]
   private var constructionOk = true
   private val actors = mutable.HashMap.empty[String, ActorRef]
-  private var _actor: ActorRef = _
-  private var madeActors = false
-  private var _finished = false
-  private val worker = step
+  protected var _actor: ActorRef = _
+  protected var madeActors = false
+  protected var _finished = false
+  protected val worker = step
 
   private[graph] val dependsOn = mutable.HashSet.empty[Node]
   private[graph] def actor = _actor
@@ -174,14 +174,26 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
     }
   }
 
-  private[graph] def run(): Unit = {
-    if (worker.isEmpty) {
-      logger.info("No worker: {}", this)
-      return
+  def close(port: String): Unit = {
+    val edge = outputPort(port).get
+    val targetPort = edge.inputPort
+    val targetNode = edge.destination
+    val msg = new CloseMessage(port)
+    logger.debug("Node {} closes {} on {}", this, targetPort, targetNode)
+    targetNode.actor ! msg
+  }
+
+  def tell(node: Node, msg: Any): Unit = {
+    node.actor ! msg
+  }
+
+  private[graph] def reset() = {
+    if (worker.isDefined) {
+      worker.get.reset()
     }
+  }
 
-    worker.get.run()
-
+  def stop(): Unit = {
     for (port <- outputPort.keySet) {
       val edge = outputPort(port).get
       val targetPort = edge.inputPort
@@ -199,7 +211,18 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
 
     logger.debug("Node {} finishes", this)
     _finished = true
+    graph.monitor ! GFinish(this)
+  }
 
+  private[graph] def run(): Unit = {
+    if (worker.isEmpty) {
+      logger.info("No worker: {}", this)
+      return
+    }
+
+    logger.info("CALLED NODE RUN: " + this)
+    worker.get.run()
+    stop()
   }
 
   private[graph] def makeActors(): Unit = {
@@ -212,7 +235,6 @@ class Node(val graph: Graph, val name: Option[String] = None, step: Option[Step]
 
     if (!madeActors) {
       madeActors = true
-      //println("Making actors for " + this)
 
       if (worker.isDefined) {
         worker.get.setup(this, inputs().toList, outputs().toList, List.empty[QName])

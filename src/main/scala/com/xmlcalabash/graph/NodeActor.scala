@@ -2,9 +2,9 @@ package com.xmlcalabash.graph
 
 import akka.actor.{Actor, ActorRef}
 import akka.event.Logging
-import com.xmlcalabash.graph.GraphMonitor.{GFinish, GStart}
-import com.xmlcalabash.messages.{CloseMessage, ItemMessage, RanMessage, StartMessage}
-import com.xmlcalabash.runtime.{Identity, StepController}
+import com.xmlcalabash.graph.GraphMonitor.{GFinish, GFinished, GStart}
+import com.xmlcalabash.messages._
+import com.xmlcalabash.runtime.{CompoundStart, Identity, StepController}
 
 import scala.collection.mutable
 
@@ -26,22 +26,47 @@ private[graph] class NodeActor(node: Node) extends Actor {
   }
 
   private def run() = {
+    log.debug("RUN   " + node)
     node.graph.monitor ! GStart(node)
     node.run()
-    node.graph.monitor ! GFinish(node)
+
+    node match {
+      case n: LoopStart =>
+        if (n.stepFinished) {
+          node.graph.monitor ! GFinish(node)
+        }
+      case n: LoopEnd =>
+        Unit
+      case _ => node.graph.monitor ! GFinish(node)
+    }
   }
 
   def receive = {
-    case m: ItemMessage => node.receive(m.port, m)
+    case m: ItemMessage =>
+      log.debug("MSG   {}", node)
+      node.receive(m.port, m)
     case m: CloseMessage =>
+      log.debug("CLOSE {}: {}", m.port, node)
       openInputs.remove(m.port)
       checkRun()
     case m: StartMessage =>
+      log.debug("SMSG  {}", node)
       checkRun()
     case m: RanMessage =>
+      log.debug("RAN  {}", node)
       if (dependsOn.contains(m.node)) {
         dependsOn.remove(m.node)
         checkRun()
+      }
+    case m: ResetMessage =>
+      log.debug("RESET {}", node)
+      node.reset()
+    case m: GFinished =>
+      node match {
+        case ls: LoopStart =>
+          log.debug("RTORS {}", ls)
+          ls.readyToRestart()
+        case _ => log.debug("Node {} didn't expect to be notified of subgraph completion")
       }
     case m: Any => log.debug("Node {} received unexpected message: {}", node, m)
   }

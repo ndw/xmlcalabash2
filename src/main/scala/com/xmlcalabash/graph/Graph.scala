@@ -4,7 +4,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.xmlcalabash.messages.{CloseMessage, StartMessage}
 import com.xmlcalabash.model.xml.util.TreeWriter
-import com.xmlcalabash.runtime.Step
+import com.xmlcalabash.runtime.{CompoundStart, Step}
 import com.xmlcalabash.util.UniqueId
 import net.sf.saxon.s9api.{QName, XdmNode}
 import org.slf4j.LoggerFactory
@@ -78,12 +78,17 @@ class Graph(private[graph] val engine: XProcEngine) {
     node
   }
 
-  def createLoopNode(): LoopStart = {
+  def createIteratorNode(start: CompoundStart, subpipeline: List[Node]): LoopStart = {
     chkValid()
-    val loopEnd = new LoopEnd(this, Some("loop_end_" + UniqueId.nextId))
-    val loopStart = new LoopStart(this, Some("loop_start_" + UniqueId.nextId), loopEnd)
+    val loopEnd = new LoopEnd(this, Some("loop_end_" + UniqueId.nextId), start.compoundEnd)
+    val loopStart = new LoopStart(this, Some("loop_start_" + UniqueId.nextId), loopEnd, start)
     nodes.add(loopStart)
     nodes.add(loopEnd)
+
+    for (node <- subpipeline) {
+      loopStart.addNode(node)
+    }
+
     loopStart
   }
 
@@ -109,7 +114,6 @@ class Graph(private[graph] val engine: XProcEngine) {
           val fanOut = fans(edge.source).asInstanceOf[FanOut]
           fanOut.nextPort
         } else {
-          logger.debug("Fanout: " + source + "." + outputPort)
           val fanOut = new FanOut(this)
           nodes.add(fanOut)
           fans.put(edge.source, fanOut)
@@ -132,7 +136,6 @@ class Graph(private[graph] val engine: XProcEngine) {
           val fanIn = fans(edge.destination).asInstanceOf[FanIn]
           fanIn.nextPort
         } else {
-          logger.debug("Fanin: " + destination + "." + inputPort)
           val fanIn = new FanIn(this)
           nodes.add(fanIn)
           fans.put(edge.destination, fanIn)

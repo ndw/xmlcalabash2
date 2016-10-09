@@ -17,6 +17,7 @@ class CalcParser(engine: XProcEngine, expr: String) {
   private var simplified: Option[XdmNode] = None
   private val _XPath = new QName("", "XPath")
   private val _IntegerLiteral = new QName("", "IntegerLiteral")
+  private val _QName = new QName("", "QName")
   private val _ParenthesizedExpr = new QName("", "ParenthesizedExpr")
   private val _TOKEN = new QName("", "TOKEN")
   private val _EOF = new QName("", "EOF")
@@ -57,6 +58,7 @@ class CalcParser(engine: XProcEngine, expr: String) {
         var keep = (children.size != 1)
         keep = keep || node.getNodeName == _IntegerLiteral
         keep = keep || node.getNodeName == _TOKEN
+        keep = keep || node.getNodeName == _QName
         keep = keep && node.getNodeName != _ParenthesizedExpr
         keep = keep && node.getNodeName != _XPath
         keep = keep && node.getNodeName != _EOF

@@ -60,8 +60,6 @@ object Main extends App {
       runtime.write("pSource", new StringItem("Hello world"))
       runtime.close("pSource")
 
-      runtime.set(new QName("http://www.w3.org/ns/xproc-step", "fred"), new StringItem("Flintstone"))
-
       while (runtime.running) {
         Thread.sleep(100)
       }

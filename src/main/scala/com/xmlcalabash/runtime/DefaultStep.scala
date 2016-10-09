@@ -14,13 +14,11 @@ abstract class DefaultStep(name: String) extends Step  {
   protected var outputPorts = List.empty[String]
   protected var options = List.empty[QName]
 
-  private var count = 0
-
   override def setup(ctrl: StepController,
                      inputs: List[String],
                      outputs: List[String],
                      opts: List[QName]): Unit = {
-    logger.debug("{} setup", this)
+    logger.debug("{} setup", name)
     controller = ctrl
     inputPorts = inputs
     outputPorts = outputs
@@ -29,7 +27,6 @@ abstract class DefaultStep(name: String) extends Step  {
 
   override def reset(): Unit = {
     logger.debug("{} reset", this)
-    count = 0
   }
 
   override def run(): Unit = {
@@ -41,6 +38,6 @@ abstract class DefaultStep(name: String) extends Step  {
   }
 
   override def receive(port: String, msg: ItemMessage): Unit = {
-    logger.debug("{} receives #{} on {}: {}", this, count.toString, port, msg)
+    logger.debug("{} receive on {}: {}", name, port, msg)
   }
 }
