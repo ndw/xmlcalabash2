@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.graph.{Graph, LoopStart, Node}
-import com.xmlcalabash.runtime.ForEachIterator
+import com.jafpl.graph.{Graph, LoopStart, Node}
+import com.xmlcalabash.runtime.ForEachStep
 import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
@@ -44,7 +44,8 @@ class ForEach(node: Option[XdmNode], parent: Option[Artifact]) extends CompoundS
       nodeMap.put(art, node)
     }
 
-    val forEach = new ForEachIterator(this.toString, subpipeline.toList)
+    val forEach = new ForEachStep(this.toString)
     loopStart = graph.createIteratorNode(forEach, subpipeline.toList)
+
   }
 }

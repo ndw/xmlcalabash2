@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.graph.{Graph, Node}
+import com.jafpl.graph.{Graph, Node}
 import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable

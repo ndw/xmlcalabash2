@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml.bindings
 
 import com.xmlcalabash.core.XProcConstants
-import com.xmlcalabash.graph.{Graph, Node}
+import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.model.xml._
 import com.xmlcalabash.model.xml.util.TreeWriter
 import net.sf.saxon.s9api.XdmNode

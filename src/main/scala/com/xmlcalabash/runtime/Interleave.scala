@@ -1,8 +1,9 @@
 package com.xmlcalabash.runtime
 
+import com.jafpl.items.GenericItem
+import com.jafpl.runtime.{DefaultStep, StepController}
 import com.xmlcalabash.core.XProcException
-import com.xmlcalabash.items.GenericItem
-import com.xmlcalabash.messages.ItemMessage
+import com.jafpl.messages.ItemMessage
 import net.sf.saxon.s9api.QName
 
 /**

@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml
 import java.io.PrintWriter
 
 import com.xmlcalabash.core.XProcConstants
-import com.xmlcalabash.graph.{Graph, Node}
+import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.model.xml.decl.{StepDecl, StepLibrary}
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}
 import com.xmlcalabash.runtime.Identity

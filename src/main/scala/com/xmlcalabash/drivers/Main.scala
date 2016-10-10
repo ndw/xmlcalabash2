@@ -1,11 +1,10 @@
 package com.xmlcalabash.drivers
 
 import java.io.FileWriter
-import java.net.URI
 import javax.xml.transform.sax.SAXSource
 
 import com.xmlcalabash.core.XProcEngine
-import com.xmlcalabash.graph.{Graph, XProcRuntime}
+import com.jafpl.graph.{Graph, Runtime}
 import com.xmlcalabash.items.StringItem
 import com.xmlcalabash.model.xml.Parser
 import com.xmlcalabash.xpath.{CR_xpath_31_20151217, XPathParser}
@@ -35,15 +34,15 @@ object Main extends App {
   run()
 
   private def makeGraph: Graph = {
-    val graph = new Graph(engine)
+    val graph = new Graph()
     model.buildGraph(graph)
 
-    if (graph.valid) {
+    if (graph.valid()) {
       println(graph.valid())
     }
 
     val pgw = new FileWriter("pg.xml")
-    val gdump = graph.dump()
+    val gdump = graph.dump(processor)
     pgw.write(gdump.toString)
     pgw.close()
     //println(gdump)
@@ -54,20 +53,20 @@ object Main extends App {
   private def run(): Unit = {
     if (graph.valid()) {
       logger.info("Start your engines!")
-      val runtime = new XProcRuntime(graph)
-      runtime.start()
+      val graphRuntime = new Runtime(graph)
+      graphRuntime.start()
 
-      runtime.write("pSource", new StringItem("Hello world"))
-      runtime.close("pSource")
+      graphRuntime.write("source", new StringItem("Hello world"))
+      graphRuntime.close("source")
 
-      while (runtime.running) {
+      while (graphRuntime.running) {
         Thread.sleep(100)
       }
 
-      var item = runtime.read("pResult")
+      var item = graphRuntime.read("result")
       while (item.isDefined) {
         println("OUTPUT:" + item.get)
-        item = runtime.read("pResult")
+        item = graphRuntime.read("result")
       }
     } else {
       println("Invalid graph")

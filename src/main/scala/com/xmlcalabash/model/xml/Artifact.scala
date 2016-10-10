@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.core.{XProcConstants, XProcException}
-import com.xmlcalabash.graph.{Graph, Node, XProcRuntime}
+import com.jafpl.graph.{Graph, Node, Runtime}
 import com.xmlcalabash.model.xml.bindings._
 import com.xmlcalabash.model.xml.decl.StepLibrary
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}

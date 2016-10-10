@@ -1,5 +1,7 @@
 package com.xmlcalabash.items
 
+import com.jafpl.items.GenericItem
+
 /**
   * Created by ndw on 10/3/16.
   */

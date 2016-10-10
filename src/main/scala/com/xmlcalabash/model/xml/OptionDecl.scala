@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.core.XProcConstants
-import com.xmlcalabash.graph.{Graph, Node}
+import com.jafpl.graph.{Graph, Node}
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable

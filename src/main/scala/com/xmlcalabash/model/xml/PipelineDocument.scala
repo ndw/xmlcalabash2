@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.core.{XProcConstants, XProcEngine, XProcException}
-import com.xmlcalabash.graph.{Graph, Node, XProcRuntime}
+import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.model.xml.bindings.Pipe
 import com.xmlcalabash.model.xml.decl.XProc10Steps
 import net.sf.saxon.s9api.XdmNode

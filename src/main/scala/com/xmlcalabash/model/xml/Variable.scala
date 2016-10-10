@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.core.XProcConstants
-import com.xmlcalabash.graph.{Graph, Node}
+import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.model.xml.util.TreeWriter
 import com.xmlcalabash.runtime.XPathExpression
 import com.xmlcalabash.util.UniqueId

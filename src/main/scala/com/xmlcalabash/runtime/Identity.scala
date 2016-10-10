@@ -1,7 +1,7 @@
 package com.xmlcalabash.runtime
 
-import com.xmlcalabash.messages.ItemMessage
-import net.sf.saxon.s9api.QName
+import com.jafpl.runtime.DefaultStep
+import com.jafpl.messages.ItemMessage
 
 /**
   * Created by ndw on 10/3/16.
