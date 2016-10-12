@@ -72,9 +72,9 @@ class PipelineDocument(node: Option[XdmNode], parent: Option[Artifact]) extends 
     _children ++= newch
   }
 
-  override def buildGraph(graph: Graph): Unit = {
+  override def buildGraph(graph: Graph, engine: XProcEngine): Unit = {
     val nodeMap = mutable.HashMap.empty[Artifact, Node]
-    buildNodes(graph, nodeMap)
+    buildNodes(graph, engine, nodeMap)
     buildEdges(graph, nodeMap)
   }
 }

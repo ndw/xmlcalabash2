@@ -9,15 +9,14 @@ import net.sf.saxon.s9api.QName
 /**
   * Created by ndw on 10/3/16.
   */
-class Interleave(name: String) extends DefaultStep(name) {
+class Interleave extends DefaultStep {
   private val leftSource = collection.mutable.ListBuffer.empty[GenericItem]
   private val rightSource = collection.mutable.ListBuffer.empty[GenericItem]
 
   override def setup(ctrl: StepController,
                      inputs: List[String],
-                     outputs: List[String],
-                     opts: List[QName]): Unit = {
-    super.setup(ctrl, inputs, outputs, opts)
+                     outputs: List[String]): Unit = {
+    super.setup(ctrl, inputs, outputs)
     if (inputPorts.size == 2 && inputPorts.contains("left") && inputPorts.contains("right")) {
       // nop
     } else {

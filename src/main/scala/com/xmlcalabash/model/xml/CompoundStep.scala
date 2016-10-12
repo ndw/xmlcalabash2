@@ -128,7 +128,7 @@ class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step
               return found
             } else {
               if (parent.isDefined) {
-                return parent.get.findNameDecl(varname, ref)
+                return parent.get.findNameDecl(varname, this)
               } else {
                 return None
               }

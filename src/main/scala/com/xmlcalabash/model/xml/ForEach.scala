@@ -1,6 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, LoopStart, Node}
+import com.xmlcalabash.core.XProcEngine
 import com.xmlcalabash.runtime.ForEachStep
 import net.sf.saxon.s9api.XdmNode
 
@@ -31,12 +32,12 @@ class ForEach(node: Option[XdmNode], parent: Option[Artifact]) extends CompoundS
     primary
   }
 
-  override def buildNodes(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
+  override def buildNodes(graph: Graph, engine: XProcEngine, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
     val subpipeline = ListBuffer.empty[Node]
 
     val childMap = mutable.HashMap.empty[Artifact, Node]
     for (child <- children) {
-      child.buildNodes(graph, childMap)
+      child.buildNodes(graph, engine, childMap)
     }
     for (art <- childMap.keySet) {
       val node = childMap(art)
@@ -44,8 +45,7 @@ class ForEach(node: Option[XdmNode], parent: Option[Artifact]) extends CompoundS
       nodeMap.put(art, node)
     }
 
-    val forEach = new ForEachStep(this.toString)
+    val forEach = new ForEachStep()
     loopStart = graph.createIteratorNode(forEach, subpipeline.toList)
-
   }
 }

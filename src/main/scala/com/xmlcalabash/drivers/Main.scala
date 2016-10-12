@@ -27,7 +27,6 @@ object Main extends App {
   val pxw = new FileWriter("px.xml")
   pxw.write(mdump.toString)
   pxw.close()
-  //println(mdump)
 
   var graph: Graph = _
   graph = makeGraph
@@ -35,7 +34,7 @@ object Main extends App {
 
   private def makeGraph: Graph = {
     val graph = new Graph()
-    model.buildGraph(graph)
+    model.buildGraph(graph, engine)
 
     if (graph.valid()) {
       println(graph.valid())
@@ -45,7 +44,6 @@ object Main extends App {
     val gdump = graph.dump(processor)
     pgw.write(gdump.toString)
     pgw.close()
-    //println(gdump)
 
     graph
   }

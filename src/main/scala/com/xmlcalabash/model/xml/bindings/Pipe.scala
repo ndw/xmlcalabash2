@@ -193,7 +193,7 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
         if (inside) {
           srcNode = loop.loopStart
         } else {
-          srcNode = loop.loopStart.loopEnd
+          srcNode = loop.loopStart.endNode
         }
       case _ =>
         srcNode = nodeMap(srcArtifact)
@@ -208,7 +208,7 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
           p = p.get.parent
         }
         if (inside) {
-          resNode = loop.loopStart.loopEnd
+          resNode = loop.loopStart.endNode
           inPort = "I_" + inPort
         } else {
           resNode = loop.loopStart

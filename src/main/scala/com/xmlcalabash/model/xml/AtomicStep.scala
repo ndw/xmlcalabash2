@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml
 
 import java.io.PrintWriter
 
-import com.xmlcalabash.core.XProcConstants
+import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.model.xml.decl.{StepDecl, StepLibrary}
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}
@@ -70,6 +70,7 @@ class AtomicStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(n
             ohash.put(port.get.value, out)
           }
         case opt: OptionDecl => Unit
+        case opt: WithOption => Unit
       }
     }
 
@@ -117,12 +118,10 @@ class AtomicStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(n
     opts.toList
   }
 
-  override def buildNodes(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
-    var name = this.toString
-    if (property(XProcConstants._name).isDefined) {
-      name = name + "_" + property(XProcConstants._name).get.value
-    }
-    val node = graph.createNode(name, new Identity(this.toString))
+  override def buildNodes(graph: Graph, engine: XProcEngine, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
+    super.buildNodes(graph, engine, nodeMap)
+
+    val node = graph.createNode(engine.implementation(stepType))
     nodeMap.put(this, node)
   }
 

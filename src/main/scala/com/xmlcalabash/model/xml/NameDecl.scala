@@ -33,6 +33,20 @@ abstract class NameDecl(node: Option[XdmNode], parent: Option[Artifact]) extends
     }
   }
 
+  def inScopeNamespaces: Map[String, String] = {
+    val bindings = mutable.HashMap.empty[String, String]
+    var ctx: Option[Artifact] = Some(this)
+    while (ctx.isDefined) {
+      for (pfx <- ctx.get.nsbindings.keySet) {
+        if (!bindings.contains(pfx)) {
+          bindings.put(pfx, ctx.get.nsbindings(pfx))
+        }
+      }
+      ctx = ctx.get.parent
+    }
+    bindings.toMap
+  }
+
   override def addDefaultReadablePort(port: Option[InputOrOutput]): Unit = {
     _drp = port
     for (child <- _children) { child.addDefaultReadablePort(port) }

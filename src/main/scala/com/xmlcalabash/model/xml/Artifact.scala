@@ -1,6 +1,8 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.core.{XProcConstants, XProcException}
+import java.net.URI
+
+import com.xmlcalabash.core.{XProcConstants, XProcEngine, XProcException}
 import com.jafpl.graph.{Graph, Node, Runtime}
 import com.xmlcalabash.model.xml.bindings._
 import com.xmlcalabash.model.xml.decl.StepLibrary
@@ -82,6 +84,14 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
   def xmlname = _xmlname
   def xmlname_=(name: String): Unit = {
     _xmlname = name
+  }
+
+  def nsbindings: Map[String, String] = {
+    val map = mutable.HashMap.empty[String, String]
+    for (ns <- _nsbindings) {
+      map.put(ns.prefix, ns.uri)
+    }
+    map.toMap
   }
 
   def root: PipelineDocument = {
@@ -273,7 +283,7 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
 
   def findNameDecl(varname: QName, ref: Artifact): Option[NameDecl] = {
     if (parent.isDefined) {
-      parent.get.findNameDecl(varname, ref)
+      parent.get.findNameDecl(varname, this)
     } else {
       None
     }
@@ -306,12 +316,12 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
 
   // ==================================================================================
 
-  def buildGraph(graph: Graph): Unit = {
+  def buildGraph(graph: Graph, engine: XProcEngine): Unit = {
     // nop
   }
 
-  private[xml] def buildNodes(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
-    for (child <- children) { child.buildNodes(graph, nodeMap) }
+  private[xml] def buildNodes(graph: Graph, engine: XProcEngine, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
+    for (child <- children) { child.buildNodes(graph, engine, nodeMap) }
   }
 
   private[xml] def buildEdges(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
