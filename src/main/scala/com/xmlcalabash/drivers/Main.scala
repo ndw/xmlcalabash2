@@ -41,8 +41,8 @@ object Main extends App {
     }
 
     val pgw = new FileWriter("pg.xml")
-    val gdump = graph.dump(processor)
-    pgw.write(gdump.toString)
+    val gdump = graph.dump()
+    pgw.write(gdump)
     pgw.close()
 
     graph

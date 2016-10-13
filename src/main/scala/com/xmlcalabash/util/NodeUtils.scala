@@ -1,6 +1,7 @@
-package com.xmlcalabash.model.xml.util
+package com.xmlcalabash.util
 
 import com.xmlcalabash.core.XProcEngine
+import com.xmlcalabash.model.xml.util.RelevantNodes
 import net.sf.saxon.Controller
 import net.sf.saxon.event.{NamespaceReducer, TreeReceiver}
 import net.sf.saxon.expr.instruct.Executable

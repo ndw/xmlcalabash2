@@ -3,7 +3,8 @@ package com.xmlcalabash.model.xml
 import java.io.{FileWriter, PrintWriter, StringWriter}
 
 import com.xmlcalabash.core.{XProcConstants, XProcEngine, XProcException}
-import com.xmlcalabash.model.xml.util.{NodeUtils, TreeWriter}
+import com.xmlcalabash.model.xml.util.TreeWriter
+import com.xmlcalabash.util.NodeUtils
 import net.sf.saxon.s9api.XdmNode
 import org.slf4j.LoggerFactory
 

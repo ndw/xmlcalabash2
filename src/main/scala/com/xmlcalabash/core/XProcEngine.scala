@@ -1,7 +1,7 @@
 package com.xmlcalabash.core
 
 import com.jafpl.runtime.Step
-import com.xmlcalabash.model.xml.decl.XProc10Steps
+import com.xmlcalabash.model.xml.decl.{XProc10Steps, XProc11Steps}
 import com.xmlcalabash.runtime.{Identity, XProcStep, Xslt}
 import net.sf.saxon.s9api.{Processor, QName, XdmNode}
 import org.slf4j.LoggerFactory
@@ -13,7 +13,7 @@ import scala.collection.mutable
   */
 class XProcEngine(val processor: Processor) {
   protected val logger = LoggerFactory.getLogger(this.getClass)
-  val stdLibrary = new XProc10Steps()
+  val stdLibrary = new XProc11Steps()
 
   def implementation(stepType: QName): XProcStep = {
     val map = mutable.HashMap(

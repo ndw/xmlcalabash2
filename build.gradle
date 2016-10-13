@@ -30,6 +30,7 @@ dependencies {
     [group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion ],
     [group: 'com.ibm.icu', name: 'icu4j', version: '49.1'],
     [group: 'nu.validator.htmlparser', name: 'htmlparser', version: '1.4'],
+    [group: 'args4j', name: 'args4j', version: '2.33'],
     [group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.2.5'],
     [group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.2.5'],
     [group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.1'],

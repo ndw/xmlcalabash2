@@ -146,6 +146,7 @@ object XProcConstants {
   val p_interleave = new QName("p", NS_XPROC, "interleave")
 
   val c_data = new QName(NS_XPROC_STEP, "data")
+  val c_error = new QName(NS_XPROC_STEP, "error")
   val xs_QName = new QName("xs", NS_XMLSCHEMA, "QName")
   val xs_untypedAtomic = new QName("xs", NS_XMLSCHEMA, "untypedAtomic")
   val xs_string = new QName("xs", NS_XMLSCHEMA, "string")

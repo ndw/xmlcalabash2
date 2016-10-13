@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml
 import com.xmlcalabash.core.{XProcConstants, XProcEngine, XProcException}
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.model.xml.bindings.Pipe
-import com.xmlcalabash.model.xml.decl.XProc10Steps
+import com.xmlcalabash.model.xml.decl.{XProc10Steps, XProc11Steps}
 import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
@@ -15,7 +15,7 @@ import scala.collection.mutable.ListBuffer
 class PipelineDocument(node: Option[XdmNode], parent: Option[Artifact]) extends CompoundStep(node, parent) {
   override def fixup(): Unit = {
     if (parent.isEmpty) {
-      findDeclarations(List(new XProc10Steps()))
+      findDeclarations(List(new XProc11Steps()))
       makeInputsOutputsExplicit()
       addDefaultReadablePort(None)
       fixUnwrappedInlines()
