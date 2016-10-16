@@ -201,6 +201,9 @@ class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step
             newch += expr
           }
           newch += child
+        case compound: CompoundStep =>
+          newch += child
+          compound.hoistOptions()
         case _ =>
           newch += child
       }

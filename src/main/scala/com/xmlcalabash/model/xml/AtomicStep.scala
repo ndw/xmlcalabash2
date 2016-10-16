@@ -1,13 +1,10 @@
 package com.xmlcalabash.model.xml
 
-import java.io.PrintWriter
-
-import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.jafpl.graph.{Graph, Node}
+import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.xmlcalabash.model.xml.decl.{StepDecl, StepLibrary}
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}
-import com.xmlcalabash.runtime.Identity
-import net.sf.saxon.s9api.{Axis, QName, XdmNode}
+import net.sf.saxon.s9api.{Axis, XdmNode}
 
 import scala.collection.immutable.Set
 import scala.collection.mutable
@@ -97,6 +94,19 @@ class AtomicStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(n
       if (ohash.get(port).isEmpty) {
         _children += output
       }
+    }
+  }
+
+  override def promoteShortcutOptions(): Unit = {
+    for (qname <- attributes()) {
+      val attr = attribute(qname)
+      val opt = new WithOption(None, Some(this))
+      opt.setProperty(XProcConstants._name, attr.get.name.toString)
+      var value = attr.get.value.replace("'", "&apos;")
+      opt.setProperty(XProcConstants._select, "'" + value + "'")
+      opt.parseExpression(Some(attr.get.name), node.get)
+      addChild(opt)
+      removeAttribute(qname)
     }
   }
 

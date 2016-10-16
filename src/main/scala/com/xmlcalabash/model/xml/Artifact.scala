@@ -263,6 +263,27 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
     }
   }
 
+  def attributes(): Set[QName] = {
+    _attr.collect { case a: Attribute => a.name }.toSet
+  }
+
+  def attribute(name: QName): Option[Attribute] = {
+    var attr: Option[Attribute] = None
+    for (a <- _attr) {
+      if (a.name == name) {
+        attr = Some(a)
+      }
+    }
+    attr
+  }
+
+  def removeAttribute(name: QName): Unit = {
+    val a = attribute(name)
+    if (a.isDefined) {
+      _attr -= a.get
+    }
+  }
+
   def findInScopeStep(name: String): Option[Step] = {
     if (parent.isDefined) {
       parent.get.findInScopeStep(name)
@@ -308,6 +329,10 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
 
   def makeInputsOutputsExplicit(): Unit = {
     for (child <- _children) { child.makeInputsOutputsExplicit() }
+  }
+
+  def promoteShortcutOptions(): Unit = {
+    for (child <- _children) { child.promoteShortcutOptions() }
   }
 
   def addDefaultReadablePort(port: Option[InputOrOutput]): Unit = {

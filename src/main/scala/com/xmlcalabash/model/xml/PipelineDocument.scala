@@ -1,13 +1,12 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.core.{XProcConstants, XProcEngine, XProcException}
 import com.jafpl.graph.{Graph, Node}
+import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.xmlcalabash.model.xml.bindings.Pipe
-import com.xmlcalabash.model.xml.decl.{XProc10Steps, XProc11Steps}
+import com.xmlcalabash.model.xml.decl.XProc11Steps
 import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
 /**
   * Created by ndw on 10/6/16.
@@ -17,6 +16,7 @@ class PipelineDocument(node: Option[XdmNode], parent: Option[Artifact]) extends 
     if (parent.isEmpty) {
       findDeclarations(List(new XProc11Steps()))
       makeInputsOutputsExplicit()
+      promoteShortcutOptions()
       addDefaultReadablePort(None)
       fixUnwrappedInlines()
       fixBindingsOnIO()

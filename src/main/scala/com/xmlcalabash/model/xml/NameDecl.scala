@@ -95,9 +95,14 @@ abstract class NameDecl(node: Option[XdmNode], parent: Option[Artifact]) extends
 
     val lexName = property(XProcConstants._name)
     if (lexName.isDefined) {
-      _declName = Some(new QName(lexName.get.value, node))
+      parseExpression(Some(new QName(lexName.get.value, node)), node)
+    } else {
+      parseExpression(None, node)
     }
+  }
 
+  def parseExpression(lexName: Option[QName], node: XdmNode) {
+    _declName = lexName
     _funcRefs = Some(mutable.ListBuffer.empty[QName])
     _nameRefs = Some(mutable.ListBuffer.empty[QName])
 
