@@ -2,7 +2,6 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ChooseStart, Graph, Node}
 import com.xmlcalabash.core.{XProcConstants, XProcEngine}
-import com.xmlcalabash.model.xml.util.WhenOrOtherwise
 import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
@@ -24,7 +23,7 @@ class Choose(node: Option[XdmNode], parent: Option[Artifact]) extends CompoundSt
     // the p:output elements of all the p:when children.
     val portSet = mutable.HashSet.empty[String]
     var primary: Option[String] = None
-    for (when <- children.collect { case when: WhenOrOtherwise => when }) {
+    for (when <- children.collect { case when: When => when }) {
       var wprimary: Option[Output] = None
       for (output <- when.children.collect { case out: Output => out }) {
         if (!portSet.contains(output.port)) {

@@ -5,7 +5,7 @@ import javax.xml.transform.sax.SAXSource
 
 import com.jafpl.graph.{Graph, Runtime}
 import com.xmlcalabash.core.XProcEngine
-import com.xmlcalabash.items.StringItem
+import com.xmlcalabash.items.{StringItem, XPathDataModelItem}
 import com.xmlcalabash.model.xml.Parser
 import net.sf.saxon.s9api.Processor
 import org.slf4j.LoggerFactory
@@ -53,8 +53,16 @@ object Main extends App {
       val graphRuntime = new Runtime(graph)
       graphRuntime.start()
 
-      graphRuntime.write("source", new StringItem("Hello world"))
-      graphRuntime.close("source")
+      for (input <- graphRuntime.inputs()) {
+        println("==input=> " + input.port)
+        if (input.port == "source") {
+          graphRuntime.write(input.port, new StringItem("Hello world"))
+        }
+        if (input.port == "{}fred") {
+          graphRuntime.write(input.port, new XPathDataModelItem(engine.getUntypedAtomic("-1")))
+        }
+        graphRuntime.close(input.port)
+      }
 
       while (graphRuntime.running) {
         Thread.sleep(100)

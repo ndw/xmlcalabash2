@@ -12,9 +12,14 @@ import net.sf.saxon.s9api._
 /**
   * Created by ndw on 10/3/16.
   */
-class XPathExpression(engine: XProcEngine, nsbindings: Map[String,String], expr: String) extends DefaultStep {
+class XPathExpression(engine: XProcEngine, nsbindings: Map[String,String], expr: String, option: Option[QName]) extends DefaultStep {
   private var vars = collection.mutable.HashMap.empty[QName, XdmValue]
   private var context: Option[GenericItem] = None
+  private var assignedValue: Option[XdmValue] = None
+
+  def this(engine: XProcEngine, nsbindings: Map[String,String], expr: String) {
+    this(engine, nsbindings, expr, None)
+  }
 
   override def setup(ctrl: StepController,
                      inputs: List[String],
@@ -36,15 +41,29 @@ class XPathExpression(engine: XProcEngine, nsbindings: Map[String,String], expr:
         context = Some(msg.item)
       }
     } else {
+      var name = parseClarkName(port)
+      if (option.isDefined && (name == option.get)) {
+        msg.item match {
+          case item: StringItem => assignedValue = Some(getUntypedAtomic(engine.processor, item.get))
+          case item: XPathDataModelItem => assignedValue = Some(item.value)
+          case _ => throw new XProcException("Unexpected value passed to expression")
+        }
+      }
+
       msg.item match {
         case item: StringItem => vars.put(parseClarkName(port), getUntypedAtomic(engine.processor, item.get))
         case item: XPathDataModelItem => vars.put(parseClarkName(port), item.value)
-        case _ => throw new XProcException("Only strings can be passed to an XPathExpression")
+        case _ => throw new XProcException("Unexpected value passed to expression")
       }
     }
   }
 
   override def run(): Unit = {
+    if (assignedValue.isDefined) {
+      controller.send("result", new XPathDataModelItem(assignedValue.get))
+      return
+    }
+
     val manager = new ContentTypeManager()
 
     val xcomp = engine.processor.newXPathCompiler()

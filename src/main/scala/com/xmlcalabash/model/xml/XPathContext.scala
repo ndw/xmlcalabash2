@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.model.xml.bindings.Pipe
+import com.xmlcalabash.model.xml.bindings.{NamePipe, Pipe}
 import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
@@ -34,10 +34,11 @@ class XPathContext(node: Option[XdmNode], parent: Option[Artifact]) extends Arti
     parent.get match {
       case when: When =>
         // Special defaulting rules apply inside p:when/p:xpath-context
-        val pipe = children.head.asInstanceOf[Pipe]
-        if (pipe.synthetic) {
-          val chooseCtx = parent.get.parent.get.children.head.asInstanceOf[XPathContext]
-          pipe.connectAs(chooseCtx.children.head.asInstanceOf[Pipe])
+        for (pipe <- children.collect { case pipe: Pipe => pipe }) {
+          if (pipe.synthetic) {
+            val chooseCtx = parent.get.parent.get.children.head.asInstanceOf[XPathContext]
+            pipe.connectAs(chooseCtx.children.head.asInstanceOf[Pipe])
+          }
         }
       case _ => Unit
     }
@@ -46,6 +47,21 @@ class XPathContext(node: Option[XdmNode], parent: Option[Artifact]) extends Arti
   }
 
   override private[xml] def buildEdges(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
-    // nop; handled by When
+    if (parent.isDefined && parent.get.isInstanceOf[When]) {
+      // nop; handled by When
+    } else {
+      for (child <- children) {
+        child match {
+          case pipe: Pipe =>
+            if (parent.isDefined && parent.get.isInstanceOf[OptionDecl]) {
+              // nop; option decls don't get a context node
+            } else {
+              child.buildEdges(graph, nodeMap)
+            }
+          case npipe: NamePipe =>
+            child.buildEdges(graph, nodeMap)
+        }
+      }
+    }
   }
 }

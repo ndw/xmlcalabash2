@@ -72,7 +72,7 @@ class Parser(val engine: XProcEngine) {
         case XProcConstants.p_log => Some(new Log(Some(child), Some(artifact)))
         case XProcConstants.p_namespaces => Some(new Namespaces(Some(child), Some(artifact)))
         case XProcConstants.p_option => Some(new OptionDecl(Some(child), Some(artifact)))
-        case XProcConstants.p_otherwise => Some(new Otherwise(Some(child), Some(artifact)))
+        case XProcConstants.p_otherwise => Some(new When(Some(child), Some(artifact), otherwise=true))
         case XProcConstants.p_output => Some(new Output(Some(child), Some(artifact)))
         case XProcConstants.p_pipe => Some(new Pipe(Some(child), Some(artifact)))
         case XProcConstants.p_pipeline => Some(new Pipeline(Some(child), Some(artifact)))

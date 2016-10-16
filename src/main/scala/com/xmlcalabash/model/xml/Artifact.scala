@@ -167,6 +167,7 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
     }
   }
 
+  /*
   private def parseChildren(node: XdmNode): Unit = {
     parseChildren(node, stepsAllowed = false)
   }
@@ -221,6 +222,7 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
       }
     }
   }
+  */
 
   def properties(): Set[QName] = {
     val names = mutable.Set.empty[QName]
@@ -270,9 +272,11 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
   }
 
   def bindings(): List[Binding] = {
+    // Name bindings don't count...
     val bind = mutable.ListBuffer.empty[Binding]
     for (child <- _children) {
       child match {
+        case n: NamePipe => Unit
         case b: Binding => bind += b
         case _ => Unit
       }

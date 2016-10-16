@@ -3,9 +3,7 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.xmlcalabash.runtime.XPathExpression
-import com.xmlcalabash.util.UniqueId
-import com.xmlcalabash.xpath.XPathParser
-import net.sf.saxon.s9api.{QName, XdmNode}
+import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
 
@@ -29,6 +27,7 @@ class WithOption(node: Option[XdmNode], parent: Option[Artifact]) extends NameDe
   override def buildEdges(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
     super.buildEdges(graph, nodeMap)
 
+    /* handled by name-binding in xpath-context
     val xpp = new XPathParser(select.get)
     for (cname <- xpp.variableRefs()) {
       val name = new QName("", cname)
@@ -42,6 +41,7 @@ class WithOption(node: Option[XdmNode], parent: Option[Artifact]) extends NameDe
         graph.addEdge(nodeMap(decl.get), "result", nodeMap(this), destPort)
       }
     }
+    */
 
     val srcNode = nodeMap(this)
     val srcPort = "result"
