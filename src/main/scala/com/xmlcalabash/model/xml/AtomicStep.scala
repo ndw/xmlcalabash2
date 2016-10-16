@@ -4,7 +4,7 @@ import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.xmlcalabash.model.xml.decl.{StepDecl, StepLibrary}
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}
-import net.sf.saxon.s9api.{Axis, XdmNode}
+import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 
 import scala.collection.immutable.Set
 import scala.collection.mutable
@@ -45,6 +45,51 @@ class AtomicStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(n
       }
     }
     _decl = decl
+  }
+
+  override def valid(listener: XMLErrorListener): Boolean = {
+    var valid = true
+
+    if (decl.isEmpty) {
+      valid = false
+      listener.error(node, s"No declaration for $stepType")
+    } else {
+      val optSet = mutable.HashSet.empty[QName]
+      for (opt <- attributes()) {
+        if (opt.getNamespaceURI == "") {
+          if (decl.get.options.contains(opt)) {
+            optSet += opt
+          } else {
+            valid = false
+            listener.error(node, s"There is no '$opt' option")
+          }
+        } else {
+          // Extension attributes are ok
+        }
+      }
+
+      for (opt <- children.collect { case opt: WithOption => opt }) {
+        if (opt.declaredName.isDefined) {
+          val name = opt.declaredName.get
+          if (decl.get.options.contains(name)) {
+            if (optSet.contains(name)) {
+              valid = false
+              listener.error(opt.node, s"Duplicatated assignments to the '$name' option")
+            } else {
+              optSet += name
+            }
+          } else {
+            listener.error(node, s"There is no '$name' option")
+          }
+        } else {
+          valid = false
+          listener.error(opt.node, "The 'name' attribute is required on p:with-option")
+        }
+      }
+
+    }
+
+    valid
   }
 
   override def makeInputsOutputsExplicit(): Unit = {

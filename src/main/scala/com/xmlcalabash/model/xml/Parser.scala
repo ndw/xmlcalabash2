@@ -1,52 +1,57 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.core.{XProcConstants, XProcEngine, XProcException}
+import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.xmlcalabash.model.xml.bindings.{Data, Document, Inline, Pipe}
+import com.xmlcalabash.model.xml.decl.StepLibrary
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}
-import com.xmlcalabash.util.NodeUtils
+import com.xmlcalabash.util.{NodeUtils, PipelineErrorListener, SourceLocation}
 import net.sf.saxon.s9api.{Axis, XdmNode}
 import org.slf4j.LoggerFactory
 
 /**
   * Created by ndw on 10/4/16.
   */
-class Parser(val engine: XProcEngine) {
+class Parser(val engine: XProcEngine, val errorListener: PipelineErrorListener) {
   val logger = LoggerFactory.getLogger(this.getClass)
+  val listener = errorListener match {
+    case xml: XMLErrorListener => xml
+    case any: PipelineErrorListener => new XMLErrorListener(any)
+  }
 
-  def parse(document: XdmNode): Artifact = {
+  def parse(document: XdmNode, against: List[StepLibrary]): Option[Artifact] = {
     logger.debug("Parsing " + document.getBaseURI)
 
     val node = NodeUtils.getDocumentElement(document)
     if (node.isEmpty) {
-      throw new XProcException("Attempt to parse empty XML document")
+      listener.error(new SourceLocation(document), "Attempt to parse empty XML document")
+      return None
     }
 
     val artifact = walk(node.get)
-
-    /*
-    val artifact = node.get.getNodeName match {
-      case XProcConstants.p_pipeline => new Pipeline(node, None)
-      case XProcConstants.p_declare_step => new DeclareStep(node, None)
-      case XProcConstants.p_library => new Library(node, None)
-      case _ => throw new XProcException("Attempt to parse something that isn't a pipeline")
+    if (artifact.isDefined) {
+      if (artifact.get.validate(against, listener)) {
+        artifact.get.fixup()
+        artifact
+      } else {
+        None
+      }
+    } else {
+      None
     }
-
-    artifact.parse(node)
-    */
-
-    artifact.fixup()
-    artifact
   }
 
-  def walk(node: XdmNode): PipelineDocument = {
+  def walk(node: XdmNode): Option[PipelineDocument] = {
     val artifact = node.getNodeName match {
-      case XProcConstants.p_pipeline => new Pipeline(Some(node), None)
-      case XProcConstants.p_declare_step => new DeclareStep(Some(node), None)
-      case XProcConstants.p_library => new Library(Some(node), None)
-      case _ => throw new XProcException("Attempt to parse something that isn't a pipeline")
+      case XProcConstants.p_pipeline => Some(new Pipeline(Some(node), None))
+      case XProcConstants.p_declare_step => Some(new DeclareStep(Some(node), None))
+      case XProcConstants.p_library => Some(new Library(Some(node), None))
+      case _ =>
+        listener.error(Some(node), "Attempt to parse something that isn't a pipeline")
+        None
     }
-
-    walkChildren(artifact, node, 0)
+    if (artifact.isDefined) {
+      walkChildren(artifact.get, node, 0)
+    }
     artifact
   }
 
