@@ -133,8 +133,8 @@ class When(node: Option[XdmNode], parent: Option[Artifact], otherwise: Boolean) 
   }
 
   override private[xml] def buildEdges(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
-    val chooseEnd = parent.get.asInstanceOf[Choose].chooseStart._chooseEnd
-    val whenEnd = whenStart._whenEnd
+    val chooseEnd = parent.get.asInstanceOf[Choose].chooseStart.compoundEnd
+    val whenEnd = whenStart.compoundEnd
 
     for (child <- children) {
       child.buildEdges(graph, nodeMap)

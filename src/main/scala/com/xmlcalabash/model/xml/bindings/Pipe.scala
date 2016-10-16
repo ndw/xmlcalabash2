@@ -197,10 +197,12 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
         if (inside) {
           srcNode = loop.loopStart
         } else {
-          srcNode = loop.loopStart.endNode
+          srcNode = loop.loopStart.compoundEnd
         }
       case choose: Choose =>
-        srcNode = choose.chooseStart.endNode
+        srcNode = choose.chooseStart.compoundEnd
+      case group: Group =>
+        srcNode = group.compoundStart.compoundEnd
       case _ =>
         srcNode = nodeMap(srcArtifact)
     }
@@ -214,17 +216,24 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
           p = p.get.parent
         }
         if (inside) {
-          resNode = loop.loopStart.endNode
+          resNode = loop.loopStart.compoundEnd
           inPort = "I_" + inPort
         } else {
           resNode = loop.loopStart
         }
       case when: When =>
         if (parent.isEmpty || !parent.get.isInstanceOf[XPathContext]) {
-          resNode = when.whenStart._whenEnd
+          resNode = when.whenStart.compoundEnd
           inPort = "I_" + outPort
         }  else {
           resNode = when.whenStart
+        }
+      case group: Group =>
+        if (parent.isEmpty || !parent.get.isInstanceOf[XPathContext]) {
+          resNode = group.compoundStart.compoundEnd
+          inPort = "I_" + outPort
+        }  else {
+          resNode = group.compoundStart.asInstanceOf[Node]
         }
       case _ =>
         resNode = nodeMap(resArtifact)

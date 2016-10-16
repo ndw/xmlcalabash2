@@ -1,16 +1,19 @@
 buildscript {
   repositories {
     mavenCentral()
+    maven { url "https://plugins.gradle.org/m2/" }
   }
 
   dependencies {
     classpath group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion
+    classpath group: 'gradle.plugin.com.github.maiflai', name: 'gradle-scalatest', version: '0.14'
   }
 }
 
 plugins {
   id "scala"
   id "maven"
+  id "com.github.maiflai.scalatest" version "0.14"
 }
 
 repositories {
@@ -42,7 +45,15 @@ dependencies {
     [group: 'org.restlet.jee', name: 'org.restlet.ext.slf4j', version: '2.2.2'],
     [group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.10'],
     [group: 'org.slf4j', name: 'slf4j-api', version: '1.7.10'],
-    [group: 'org.xmlresolver', name: 'xmlresolver', version: '0.12.3']
+    [group: 'org.xmlresolver', name: 'xmlresolver', version: '0.12.3'],
+    [group: 'com.jafpl', name: 'jafpl', version: '0.0.0']
+  )
+  testCompile (
+    [group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion ],
+    [group: 'org.scalatest', name: 'scalatest_2.11', version: '3.0.0']
+  )
+  testRuntime (
+    [group: 'org.pegdown', name: 'pegdown', version: '1.6.0']
   )
 }
 

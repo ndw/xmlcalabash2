@@ -1,5 +1,6 @@
 package com.xmlcalabash.model.xml
 
+import com.jafpl.graph.CompoundStart
 import com.xmlcalabash.core.XProcConstants
 import com.xmlcalabash.model.xml.bindings.Pipe
 import net.sf.saxon.s9api.{QName, XdmNode}
@@ -8,16 +9,7 @@ import net.sf.saxon.s9api.{QName, XdmNode}
   * Created by ndw on 10/4/16.
   */
 class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(node, parent) {
-  /*
-  override def parse(node: Option[XdmNode]): Unit = {
-    if (node.isDefined) {
-      println("parse: " + node.get.getNodeName)
-      parseNamespaces(node.get)
-      parseAttributes(node.get)
-      parseChildren(node.get, stepsAllowed = true)
-    }
-  }
-  */
+  var compoundStart: CompoundStart = _
 
   override def makeInputsOutputsExplicit(): Unit = {
     var icount = 0
@@ -82,6 +74,7 @@ class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step
         val newChildren = collection.mutable.ListBuffer.empty[Artifact]
         val newOutput = new Output(None, Some(this))
         newOutput.setProperty(XProcConstants._port, "result")
+        newOutput.setProperty(XProcConstants._primary, "true")
 
         newChildren += newOutput
         newChildren ++= _children
