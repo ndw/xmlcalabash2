@@ -13,7 +13,7 @@ import scala.collection.mutable
 /**
   * Created by ndw on 10/4/16.
   */
-class Document(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node, parent) {
+class Document(node: Option[XdmNode], parent: Option[Artifact]) extends InputBinding(node, parent) {
   val href = node.get.getAttributeValue(XProcConstants._href)
 
   override def buildNodes(graph: Graph, engine: XProcEngine, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {

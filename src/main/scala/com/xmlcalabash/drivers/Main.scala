@@ -3,12 +3,11 @@ package com.xmlcalabash.drivers
 import java.io.FileWriter
 import javax.xml.transform.sax.SAXSource
 
-import com.xmlcalabash.core.XProcEngine
 import com.jafpl.graph.{Graph, Runtime}
+import com.xmlcalabash.core.XProcEngine
 import com.xmlcalabash.items.StringItem
 import com.xmlcalabash.model.xml.Parser
-import com.xmlcalabash.xpath.{CR_xpath_31_20151217, XPathParser}
-import net.sf.saxon.s9api.{Processor, QName}
+import net.sf.saxon.s9api.Processor
 import org.slf4j.LoggerFactory
 import org.xml.sax.InputSource
 

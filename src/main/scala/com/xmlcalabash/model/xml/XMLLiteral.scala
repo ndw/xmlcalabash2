@@ -9,9 +9,12 @@ import net.sf.saxon.s9api.XdmNode
 class XMLLiteral(node: Option[XdmNode], parent: Option[Artifact]) extends Artifact(node, parent) {
   _xmlname = "XMLLiteral"
 
+  /*
   override def parse(node: Option[XdmNode]): Unit = {
+    println("parse: skip xmlliteral")
     // nop
   }
+  */
 
   override def dump(tree: TreeWriter): Unit = {
     tree.addSubtree(node.get)

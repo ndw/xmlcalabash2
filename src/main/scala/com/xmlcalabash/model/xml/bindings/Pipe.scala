@@ -1,13 +1,12 @@
 package com.xmlcalabash.model.xml.bindings
 
-import com.xmlcalabash.core.XProcConstants
 import com.jafpl.graph.{Graph, Node}
+import com.xmlcalabash.core.XProcConstants
 import com.xmlcalabash.model.xml._
 import com.xmlcalabash.model.xml.util.TreeWriter
 import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
 /**
   * Created by ndw on 10/4/16.
@@ -19,10 +18,15 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
 
   override def addDefaultReadablePort(port: Option[InputOrOutput]): Unit = {
     _drp = port
-    for (child <- _children) { child.addDefaultReadablePort(port) }
+    super.addDefaultReadablePort(port)
   }
 
   override def findPipeBindings(): Unit = {
+    if (_port.isDefined) {
+      // Already found (probably by p:xpath-context in p:when)
+      return
+    }
+
     if (property(XProcConstants._step).isDefined) {
       val stepName = property(XProcConstants._step).get.value
       _step = findInScopeStep(stepName)
@@ -195,6 +199,8 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
         } else {
           srcNode = loop.loopStart.endNode
         }
+      case choose: Choose =>
+        srcNode = choose.chooseStart.endNode
       case _ =>
         srcNode = nodeMap(srcArtifact)
     }
@@ -213,6 +219,13 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
         } else {
           resNode = loop.loopStart
         }
+      case when: When =>
+        if (parent.isEmpty || !parent.get.isInstanceOf[XPathContext]) {
+          resNode = when.whenStart._whenEnd
+          inPort = "I_" + outPort
+        }  else {
+          resNode = when.whenStart
+        }
       case _ =>
         resNode = nodeMap(resArtifact)
     }
@@ -220,6 +233,10 @@ class Pipe(node: Option[XdmNode], parent: Option[Artifact]) extends Binding(node
     //println("    " + srcNode + "/" + outPort + " -> " + resNode + "/" + inPort)
 
     graph.addEdge(srcNode, outPort, resNode, inPort)
+  }
+
+  def connectAs(pipe: Pipe): Unit = {
+    _port = pipe._port
   }
 
   override def dumpAdditionalAttributes(tree: TreeWriter): Unit = {

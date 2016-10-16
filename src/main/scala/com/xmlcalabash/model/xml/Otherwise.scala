@@ -1,8 +1,8 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{Graph, LoopStart, Node}
+import com.jafpl.graph.{Graph, Node, WhenStart}
 import com.xmlcalabash.core.XProcEngine
-import com.xmlcalabash.runtime.{OtherwiseStep, WhenStep}
+import com.xmlcalabash.model.xml.util.WhenOrOtherwise
 import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
@@ -11,8 +11,8 @@ import scala.collection.mutable.ListBuffer
 /**
   * Created by ndw on 10/4/16.
   */
-class Otherwise(node: Option[XdmNode], parent: Option[Artifact]) extends CompoundStep(node, parent) {
-  private[xml] var otherwiseStart: LoopStart = _
+class Otherwise(node: Option[XdmNode], parent: Option[Artifact]) extends WhenOrOtherwise(node, parent) {
+  private[xml] var otherwiseStart: WhenStart = _
 
   override def buildNodes(graph: Graph, engine: XProcEngine, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
     val subpipeline = ListBuffer.empty[Node]
@@ -27,8 +27,7 @@ class Otherwise(node: Option[XdmNode], parent: Option[Artifact]) extends Compoun
       nodeMap.put(art, node)
     }
 
-    val otherwise = new OtherwiseStep()
-    otherwiseStart = graph.createIteratorNode(otherwise, subpipeline.toList)
+    otherwiseStart = graph.createWhenNode(subpipeline.toList)
   }
 
 }

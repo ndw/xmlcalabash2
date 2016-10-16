@@ -9,8 +9,6 @@ import com.xmlcalabash.core.{XProcConstants, XProcEngine, XProcException}
 import com.xmlcalabash.items.{StringItem, XPathDataModelItem}
 import net.sf.saxon.s9api._
 
-import scala.collection.mutable.ListBuffer
-
 /**
   * Created by ndw on 10/3/16.
   */
@@ -83,7 +81,8 @@ class XPathExpression(engine: XProcEngine, nsbindings: Map[String,String], expr:
 
     val iterator = selector.iterator()
     while (iterator.hasNext) {
-      controller.send("result", new XPathDataModelItem(iterator.next()))
+      val next = iterator.next()
+      controller.send("result", new XPathDataModelItem(next))
     }
   }
 

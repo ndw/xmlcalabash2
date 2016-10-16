@@ -1,9 +1,7 @@
 package com.xmlcalabash.model.xml
 
-import java.net.URI
-
-import com.xmlcalabash.core.{XProcConstants, XProcEngine, XProcException}
-import com.jafpl.graph.{Graph, Node, Runtime}
+import com.jafpl.graph.{Graph, Node}
+import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.xmlcalabash.model.xml.bindings._
 import com.xmlcalabash.model.xml.decl.StepLibrary
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}
@@ -78,7 +76,7 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
   if (node.isDefined) {
     _xmlname = node.get.getNodeName.getLocalName
     _synthetic = false
-    parse(node)
+    //parse(node)
   }
 
   def xmlname = _xmlname
@@ -110,13 +108,28 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
     _children += child
   }
 
+  def insertBefore(node: Artifact, newChild: Artifact): Unit = {
+    val newChildren = ListBuffer.empty[Artifact]
+    for (child <- _children) {
+      if (child == node) {
+        newChildren += newChild
+      }
+      newChildren += child
+    }
+    _children.clear()
+    _children ++= newChildren
+  }
+
+  /*
   def parse(node: Option[XdmNode]): Unit = {
     if (node.isDefined) {
+      println("parse: " + node.get.getNodeName)
       parseNamespaces(node.get)
       parseAttributes(node.get)
       parseChildren(node.get)
     }
   }
+  */
 
   private[model] def parseNamespaces(node: XdmNode): Unit = {
     for (childitem <- RelevantNodes.filter(node, Axis.NAMESPACE)) {

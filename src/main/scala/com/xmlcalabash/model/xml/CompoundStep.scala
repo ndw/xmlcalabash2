@@ -1,27 +1,23 @@
 package com.xmlcalabash.model.xml
 
-import java.io.PrintWriter
-
 import com.xmlcalabash.core.XProcConstants
-import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.model.xml.bindings.Pipe
-import com.xmlcalabash.model.xml.decl.XProc10Steps
-import com.xmlcalabash.runtime.Identity
 import net.sf.saxon.s9api.{QName, XdmNode}
-
-import scala.collection.mutable
 
 /**
   * Created by ndw on 10/4/16.
   */
 class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(node, parent) {
+  /*
   override def parse(node: Option[XdmNode]): Unit = {
     if (node.isDefined) {
+      println("parse: " + node.get.getNodeName)
       parseNamespaces(node.get)
       parseAttributes(node.get)
       parseChildren(node.get, stepsAllowed = true)
     }
   }
+  */
 
   override def makeInputsOutputsExplicit(): Unit = {
     var icount = 0
@@ -65,13 +61,53 @@ class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step
     for (child <- _children) {
       child.makeInputsOutputsExplicit()
     }
+
+    // Figure out of the last step in the pipeline has a primary output port
+    output = None
+    val last = children.last
+    for (child <- last.children) {
+      child match {
+        case o: Output =>
+          if (o.primary) {
+            output = Some(o)
+          }
+        case _ => Unit
+      }
+    }
+
+    // If the last step has a primary output port...
+    if (output.isDefined) {
+      // If the the compound step has no output, add a default output port
+      if (ocount == 0 && output.isDefined) {
+        val newChildren = collection.mutable.ListBuffer.empty[Artifact]
+        val newOutput = new Output(None, Some(this))
+        newOutput.setProperty(XProcConstants._port, "result")
+
+        newChildren += newOutput
+        newChildren ++= _children
+        _children.clear()
+        _children ++= newChildren
+      }
+
+      // Make the primary output port of the last step the default readable port
+      // for all outputs. (This will only matter if the binding gets defaulted.)
+      for (child <- children) {
+        child match {
+          case o: Output =>
+            o._drp = output
+          case _ => Unit
+        }
+      }
+    }
   }
 
   override def addDefaultReadablePort(port: Option[InputOrOutput]): Unit = {
+    _drp = port
     for (child <- _children) {
       child match {
         case input: Input => input.addDefaultReadablePort(port)
         case opt: OptionDecl => opt.addDefaultReadablePort(port)
+        case ctx: XPathContext => ctx.addDefaultReadablePort(port)
         case _ => Unit
       }
     }
@@ -121,26 +157,27 @@ class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step
     var found: Option[NameDecl] = None
 
     for (child <- children) {
+      if (child == ref) {
+        if (found.isDefined) {
+          return found
+        } else {
+          if (parent.isDefined) {
+            return parent.get.findNameDecl(varname, this)
+          } else {
+            return None
+          }
+        }
+      }
+
       child match {
         case v: NameDecl =>
-          if (v == ref) {
-            if (found.isDefined) {
-              return found
-            } else {
-              if (parent.isDefined) {
-                return parent.get.findNameDecl(varname, this)
-              } else {
-                return None
-              }
-            }
-          } else {
-            if (v.declaredName.get == varname) {
-              found = Some(v)
-            }
+          if (v.declaredName.get == varname) {
+            found = Some(v)
           }
         case _ => Unit
       }
     }
+
     found
   }
 

@@ -16,7 +16,7 @@ class Identity extends DefaultXProcStep {
   }
 
   override def run(): Unit = {
-    logger.info("RUNNING Identity")
+    logger.info("RUNNING Identity: " + label)
   }
 
 }

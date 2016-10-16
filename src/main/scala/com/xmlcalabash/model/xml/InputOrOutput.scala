@@ -1,10 +1,7 @@
 package com.xmlcalabash.model.xml
 
-import java.io.PrintWriter
-
 import com.xmlcalabash.core.XProcConstants
-import com.xmlcalabash.model.xml.bindings.{Inline, Pipe}
-import com.xmlcalabash.model.xml.util.TreeWriter
+import com.xmlcalabash.model.xml.bindings._
 import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
@@ -57,6 +54,24 @@ class InputOrOutput(node: Option[XdmNode], parent: Option[Artifact]) extends Art
         }
       }
     }
+
+    val newChildren = mutable.ListBuffer.empty[Artifact]
+    for (child <- _children) {
+      child match {
+        case ibind: InputBinding =>
+          val istep = new InputStep(ibind, parent.get.parent.get)
+          val output = istep.children.head.asInstanceOf[Output]
+          val pipe = new Pipe(None, Some(this))
+          pipe._port = Some(output)
+          newChildren += pipe
+          parent.get.insertBefore(this, istep)
+        case art: Artifact => newChildren += art
+      }
+    }
+
+    _children.clear()
+    _children ++= newChildren
+
     for (child <- _children) { child.fixBindingsOnIO() }
   }
 }

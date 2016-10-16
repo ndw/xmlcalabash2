@@ -24,7 +24,7 @@
   <xsl:text>";&#10;</xsl:text>
 </xsl:template>
 
-<xsl:template match="px:atomic-step|px:for-each">
+<xsl:template match="px:atomic-step">
   <xsl:text>subgraph "cluster</xsl:text>
   <xsl:value-of select="@px:id"/>
   <xsl:text>" {&#10;</xsl:text>
@@ -36,6 +36,30 @@
 
   <xsl:text>}&#10;</xsl:text>
 </xsl:template>
+
+
+<xsl:template match="px:for-each|px:choose|px:when|px:xpath-context">
+  <xsl:text>subgraph "cluster</xsl:text>
+  <xsl:value-of select="@px:id"/>
+  <xsl:text>" {&#10;</xsl:text>
+  <xsl:text>label = "</xsl:text>
+
+  <xsl:choose>
+    <xsl:when test="@name">
+      <xsl:value-of select="concat(local-name(.), '/', @name)"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="local-name(.)"/>
+    </xsl:otherwise>
+  </xsl:choose>
+
+  <xsl:text>";&#10;</xsl:text>
+
+  <xsl:apply-templates/>
+
+  <xsl:text>}&#10;</xsl:text>
+</xsl:template>
+
 
 <xsl:template match="px:variable|px:option">
   <xsl:value-of select="concat('subgraph ', f:cluster(.), ' {&#10;')"/>
@@ -139,7 +163,7 @@
   <xsl:text>}&#10;</xsl:text>
 </xsl:template>
 
-<xsl:template match="px:xpath-context|px:name-pipe">
+<xsl:template match="px:name-pipe">
   <xsl:apply-templates/>
 </xsl:template>
 

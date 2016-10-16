@@ -49,7 +49,7 @@ abstract class NameDecl(node: Option[XdmNode], parent: Option[Artifact]) extends
 
   override def addDefaultReadablePort(port: Option[InputOrOutput]): Unit = {
     _drp = port
-    for (child <- _children) { child.addDefaultReadablePort(port) }
+    super.addDefaultReadablePort(port)
   }
 
   override def fixBindingsOnIO(): Unit = {

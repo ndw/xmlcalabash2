@@ -121,8 +121,14 @@ class AtomicStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(n
   override def buildNodes(graph: Graph, engine: XProcEngine, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
     super.buildNodes(graph, engine, nodeMap)
 
-    val node = graph.createNode(engine.implementation(stepType))
-    nodeMap.put(this, node)
+    val impl = engine.implementation(stepType)
+
+    if (node.isDefined && Option(node.get.getAttributeValue(XProcConstants._name)).isDefined) {
+      impl.label = impl.label + "_" + node.get.getAttributeValue(XProcConstants._name)
+    }
+
+    val gnode = graph.createNode(impl)
+    nodeMap.put(this, gnode)
   }
 
   override def dumpAdditionalAttributes(tree: TreeWriter): Unit = {
