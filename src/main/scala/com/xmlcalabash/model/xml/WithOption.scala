@@ -27,22 +27,6 @@ class WithOption(node: Option[XdmNode], parent: Option[Artifact]) extends NameDe
   override def buildEdges(graph: Graph, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
     super.buildEdges(graph, nodeMap)
 
-    /* handled by name-binding in xpath-context
-    val xpp = new XPathParser(select.get)
-    for (cname <- xpp.variableRefs()) {
-      val name = new QName("", cname)
-      val decl = findNameDecl(name, this)
-
-      if (decl.isDefined) {
-        var destPort = decl.get.declaredName.get.getClarkName
-        if (!destPort.startsWith("{")) {
-          destPort = "{}" + destPort
-        }
-        graph.addEdge(nodeMap(decl.get), "result", nodeMap(this), destPort)
-      }
-    }
-    */
-
     val srcNode = nodeMap(this)
     val srcPort = "result"
     val destNode = nodeMap(parent.get)

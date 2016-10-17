@@ -44,16 +44,14 @@ object Main extends App {
     val graph = new Graph()
     model.buildGraph(graph, engine)
 
-    if (graph.valid()) {
-      println(graph.valid())
-    }
+    val valid = graph.valid()
 
     val pgw = new FileWriter("pg.xml")
     val gdump = graph.dump()
     pgw.write(gdump)
     pgw.close()
 
-    if (graph.valid()) {
+    if (valid) {
       Some(graph)
     } else {
       None
@@ -66,7 +64,7 @@ object Main extends App {
     graphRuntime.start()
 
     for (input <- graphRuntime.inputs()) {
-      println("==input=> " + input.port)
+      //println("==input=> " + input.port)
       if (input.port == "source") {
         graphRuntime.write(input.port, new StringItem("Hello world"))
       }
