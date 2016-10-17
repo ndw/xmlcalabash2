@@ -18,7 +18,8 @@ class XProcEngine(val processor: Processor) {
   def implementation(stepType: QName): XProcStep = {
     val map = mutable.HashMap(
       XProcConstants.p_identity -> "com.xmlcalabash.runtime.Identity",
-      XProcConstants.p_xslt -> "com.xmlcalabash.runtime.Xslt"
+      XProcConstants.p_xslt -> "com.xmlcalabash.runtime.Xslt",
+      XProcConstants.p_error -> "com.xmlcalabash.runtime.Error"
     )
 
     val className = map.get(stepType)
