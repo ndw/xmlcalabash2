@@ -4,6 +4,7 @@ import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.xmlcalabash.model.xml.decl.{StepDecl, StepLibrary}
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}
+import com.xmlcalabash.util.XProcSourceLocation
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 
 import scala.collection.immutable.Set
@@ -159,6 +160,9 @@ class AtomicStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(n
     super.buildNodes(graph, engine, nodeMap)
 
     val impl = engine.implementation(stepType)
+    if (node.isDefined) {
+      impl.location = new XProcSourceLocation(node.get)
+    }
 
     if (node.isDefined && Option(node.get.getAttributeValue(XProcConstants._name)).isDefined) {
       impl.label = impl.label + "_" + node.get.getAttributeValue(XProcConstants._name)

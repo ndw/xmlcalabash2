@@ -10,6 +10,9 @@ class XProcException(val err: Option[QName], val msg: String, val throwable: Opt
     this(None, msg, None)
   }
 
+  def this(err: Option[QName], msg: String) {
+    this(err, msg, None)
+  }
   def this(throwable: Throwable) {
     this(None, throwable.getCause.getMessage, Some(throwable))
   }

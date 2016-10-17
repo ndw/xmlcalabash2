@@ -52,7 +52,7 @@ class Error extends DefaultXProcStep {
     if (code.isDefined) {
       if (code.get.contains(":")) {
         if (codePrefix.isDefined || codeNamespace.isDefined) {
-          println("Error: can't specify both")
+          engine.stepError(StepConstants.xd(34), location, "If code contains a colon, you may not specify code-prefix or code-namespace")
         }
         val pos = code.get.indexOf(":")
         val pfx = code.get.substring(0, pos)

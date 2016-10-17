@@ -4,7 +4,7 @@ import com.xmlcalabash.core.{XProcConstants, XProcEngine}
 import com.xmlcalabash.model.xml.bindings.{Data, Document, Inline, Pipe}
 import com.xmlcalabash.model.xml.decl.StepLibrary
 import com.xmlcalabash.model.xml.util.{RelevantNodes, TreeWriter}
-import com.xmlcalabash.util.{NodeUtils, PipelineErrorListener, SourceLocation}
+import com.xmlcalabash.util.{NodeUtils, PipelineErrorListener, XProcSourceLocation}
 import net.sf.saxon.s9api.{Axis, XdmNode}
 import org.slf4j.LoggerFactory
 
@@ -23,7 +23,7 @@ class Parser(val engine: XProcEngine, val errorListener: PipelineErrorListener) 
 
     val node = NodeUtils.getDocumentElement(document)
     if (node.isEmpty) {
-      listener.error(new SourceLocation(document), "Attempt to parse empty XML document")
+      listener.error(new XProcSourceLocation(document), "Attempt to parse empty XML document")
       return None
     }
 

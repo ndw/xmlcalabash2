@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.util.{PipelineErrorListener, SourceLocation}
+import com.xmlcalabash.util.{PipelineErrorListener, XProcSourceLocation}
 import net.sf.saxon.s9api.{QName, XdmNode}
 import org.slf4j.LoggerFactory
 
@@ -19,7 +19,7 @@ class XMLErrorListener(val listener: Option[PipelineErrorListener]) extends Pipe
 
   val logger = LoggerFactory.getLogger(this.getClass)
 
-  override def error(code: QName, loc: SourceLocation, msg: String): Unit = {
+  override def error(code: QName, loc: XProcSourceLocation, msg: String): Unit = {
     if (listener.isDefined) {
       listener.get.error(code, loc, msg)
     } else {
@@ -32,9 +32,9 @@ class XMLErrorListener(val listener: Option[PipelineErrorListener]) extends Pipe
       error(code, msg)
     } else {
       if (listener.isDefined) {
-        listener.get.error(code, new SourceLocation(node.get), msg)
+        listener.get.error(code, new XProcSourceLocation(node.get), msg)
       } else {
-        error(code, new SourceLocation(node.get), msg)
+        error(code, new XProcSourceLocation(node.get), msg)
       }
     }
   }
@@ -47,7 +47,7 @@ class XMLErrorListener(val listener: Option[PipelineErrorListener]) extends Pipe
     }
   }
 
-  override def error(loc: SourceLocation, msg: String): Unit = {
+  override def error(loc: XProcSourceLocation, msg: String): Unit = {
     if (listener.isDefined) {
       listener.get.error(loc, msg)
     } else {
@@ -60,9 +60,9 @@ class XMLErrorListener(val listener: Option[PipelineErrorListener]) extends Pipe
       error(msg)
     } else {
       if (listener.isDefined) {
-        listener.get.error(new SourceLocation(node.get), msg)
+        listener.get.error(new XProcSourceLocation(node.get), msg)
       } else {
-        error(new SourceLocation(node.get), msg)
+        error(new XProcSourceLocation(node.get), msg)
       }
     }
   }
@@ -75,7 +75,7 @@ class XMLErrorListener(val listener: Option[PipelineErrorListener]) extends Pipe
     }
   }
 
-  override def warn(code: QName, loc: SourceLocation, msg: String): Unit = {
+  override def warn(code: QName, loc: XProcSourceLocation, msg: String): Unit = {
     if (listener.isDefined) {
       listener.get.warn(code, loc, msg)
     } else {
@@ -88,9 +88,9 @@ class XMLErrorListener(val listener: Option[PipelineErrorListener]) extends Pipe
       warn(code, msg)
     } else {
       if (listener.isDefined) {
-        listener.get.warn(code, new SourceLocation(node.get), msg)
+        listener.get.warn(code, new XProcSourceLocation(node.get), msg)
       } else {
-        warn(code, new SourceLocation(node.get), msg)
+        warn(code, new XProcSourceLocation(node.get), msg)
       }
     }
   }
@@ -103,7 +103,7 @@ class XMLErrorListener(val listener: Option[PipelineErrorListener]) extends Pipe
     }
   }
 
-  override def warn(loc: SourceLocation, msg: String): Unit = {
+  override def warn(loc: XProcSourceLocation, msg: String): Unit = {
     if (listener.isDefined) {
       listener.get.warn(loc, msg)
     } else {
@@ -116,9 +116,9 @@ class XMLErrorListener(val listener: Option[PipelineErrorListener]) extends Pipe
       warn(msg)
     } else {
       if (listener.isDefined) {
-        listener.get.warn(new SourceLocation(node.get), msg)
+        listener.get.warn(new XProcSourceLocation(node.get), msg)
       } else {
-        warn(new SourceLocation(node.get), msg)
+        warn(new XProcSourceLocation(node.get), msg)
       }
     }
   }
@@ -131,7 +131,7 @@ class XMLErrorListener(val listener: Option[PipelineErrorListener]) extends Pipe
     }
   }
 
-  private def format(code: Option[QName], loc: Option[SourceLocation], msg: String): String = {
+  private def format(code: Option[QName], loc: Option[XProcSourceLocation], msg: String): String = {
     var formatted = ""
     if (loc.isDefined) {
       var path = loc.get.baseURI.toASCIIString
@@ -151,11 +151,11 @@ class XMLErrorListener(val listener: Option[PipelineErrorListener]) extends Pipe
   }
 
 
-  def error(code: Option[QName], loc: Option[SourceLocation], msg: String): Unit = {
+  def error(code: Option[QName], loc: Option[XProcSourceLocation], msg: String): Unit = {
     logger.error(format(code, loc, msg))
   }
 
-  def warn(code: Option[QName], loc: Option[SourceLocation], msg: String): Unit = {
+  def warn(code: Option[QName], loc: Option[XProcSourceLocation], msg: String): Unit = {
     logger.warn(format(code, loc, msg))
   }
 }
