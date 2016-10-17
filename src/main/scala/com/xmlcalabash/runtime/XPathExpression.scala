@@ -60,7 +60,7 @@ class XPathExpression(engine: XProcEngine, nsbindings: Map[String,String], expr:
 
   override def run(): Unit = {
     if (assignedValue.isDefined) {
-      controller.send("result", new XPathDataModelItem(assignedValue.get))
+      controller.send("result", new XPathDataModelItem(assignedValue.get, nsbindings))
       return
     }
 
@@ -101,7 +101,7 @@ class XPathExpression(engine: XProcEngine, nsbindings: Map[String,String], expr:
     val iterator = selector.iterator()
     while (iterator.hasNext) {
       val next = iterator.next()
-      controller.send("result", new XPathDataModelItem(next))
+      controller.send("result", new XPathDataModelItem(next, nsbindings))
     }
   }
 

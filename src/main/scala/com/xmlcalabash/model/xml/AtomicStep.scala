@@ -145,7 +145,7 @@ class AtomicStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(n
   override def promoteShortcutOptions(): Unit = {
     for (qname <- attributes()) {
       val attr = attribute(qname)
-      val opt = new WithOption(None, Some(this))
+      val opt = new WithOption(node, Some(this))
       opt.setProperty(XProcConstants._name, attr.get.name.toString)
       var value = attr.get.value.replace("'", "&apos;")
       opt.setProperty(XProcConstants._select, "'" + value + "'")
