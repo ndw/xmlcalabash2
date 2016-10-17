@@ -134,14 +134,14 @@ class XMLErrorListener(val listener: Option[PipelineErrorListener]) extends Pipe
   private def format(code: Option[QName], loc: Option[SourceLocation], msg: String): String = {
     var formatted = ""
     if (loc.isDefined) {
-      var path = loc.get.uri.toASCIIString
+      var path = loc.get.baseURI.toASCIIString
       if (path.startsWith("file:" + cwd) || path.startsWith("file://" + cwd)) {
         val pos = path.indexOf(cwd)
         path = path.substring(pos + cwd.length)
       }
       formatted += path + ":"
-      if (loc.get.line > 0) {
-        formatted += loc.get.line + ":" + loc.get.column + ":"
+      if (loc.get.lineNumber > 0) {
+        formatted += loc.get.lineNumber + ":" + loc.get.columnNumber + ":"
       }
     }
     if (code.isDefined) {
