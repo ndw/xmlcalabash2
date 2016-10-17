@@ -46,7 +46,7 @@ dependencies {
     [group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.10'],
     [group: 'org.slf4j', name: 'slf4j-api', version: '1.7.10'],
     [group: 'org.xmlresolver', name: 'xmlresolver', version: '0.12.3'],
-    [group: 'com.jafpl', name: 'jafpl', version: '0.0.0']
+    [group: 'com.jafpl', name: 'jafpl', version: '0.0.0a']
   )
   testCompile (
     [group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion ],
