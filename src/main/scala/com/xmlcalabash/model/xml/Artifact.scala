@@ -288,11 +288,7 @@ abstract class Artifact(val node: Option[XdmNode], val parent: Option[Artifact])
   def findPipeBindings(): Unit = {
     for (child <- _children) { child.findPipeBindings() }
   }
-
-  def hoistOptions(): Unit = {
-    for (child <- _children) { child.hoistOptions() }
-  }
-
+  
   // ==================================================================================
 
   def buildGraph(graph: Graph, engine: XProcEngine): Unit = {

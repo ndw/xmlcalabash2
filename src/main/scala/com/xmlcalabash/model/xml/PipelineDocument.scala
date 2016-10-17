@@ -25,7 +25,6 @@ class PipelineDocument(node: Option[XdmNode], parent: Option[Artifact]) extends 
       fixUnwrappedInlines()
       fixBindingsOnIO()
       findPipeBindings()
-      hoistOptions()
       refactorBoundaries()
     }
   }

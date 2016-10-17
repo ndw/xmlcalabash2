@@ -2,7 +2,6 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.CompoundStart
 import com.xmlcalabash.core.XProcConstants
-import com.xmlcalabash.model.xml.bindings.Pipe
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 /**
@@ -172,44 +171,5 @@ class CompoundStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step
     }
 
     found
-  }
-
-  override def hoistOptions(): Unit = {
-    val newch = collection.mutable.ListBuffer.empty[Artifact]
-
-    for (child <- children) {
-      child match {
-        case atomic: AtomicStep =>
-          val hoisted = atomic.extractOptions()
-          for (opt <- hoisted) {
-            val optName = opt.property(XProcConstants._name).get.value
-
-            val expr = new ExprStep(this)
-            expr.addProperty(XProcConstants._name, optName)
-            expr.addProperty(XProcConstants._select, opt.property(XProcConstants._select).get.value)
-            val out = new Output(None, Some(expr))
-            out.addProperty(XProcConstants._port, "result")
-            expr.addChild(out)
-
-            val in = new Input(None, Some(opt))
-            in.addProperty(XProcConstants._port, "$" + optName)
-            val pipe = new Pipe(None, Some(in))
-            pipe._port = Some(out)
-            in.addChild(pipe)
-            atomic.addChild(in)
-
-            newch += expr
-          }
-          newch += child
-        case compound: CompoundStep =>
-          newch += child
-          compound.hoistOptions()
-        case _ =>
-          newch += child
-      }
-    }
-
-    _children.clear()
-    _children ++= newch
   }
 }

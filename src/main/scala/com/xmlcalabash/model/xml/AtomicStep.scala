@@ -155,24 +155,6 @@ class AtomicStep(node: Option[XdmNode], parent: Option[Artifact]) extends Step(n
     }
   }
 
-  private[xml] def extractOptions(): List[OptionDecl] = {
-    val newch = collection.mutable.ListBuffer.empty[Artifact]
-    val opts  = collection.mutable.ListBuffer.empty[OptionDecl]
-    for (child <- children) {
-      child match {
-        case opt: OptionDecl =>
-          opts += opt
-        case _ =>
-          newch += child
-      }
-    }
-
-    _children.clear()
-    _children ++= newch
-
-    opts.toList
-  }
-
   override def buildNodes(graph: Graph, engine: XProcEngine, nodeMap: mutable.HashMap[Artifact, Node]): Unit = {
     super.buildNodes(graph, engine, nodeMap)
 
