@@ -1,0 +1,90 @@
+// This is a grammar for a simple, text-base pipeline language.
+//
+// Bits gleefully stolen from the XPath 2.0 and Java 7 grammars.
+//
+// It is designed to be fed to http://www.bottlecaps.de/rex/
+
+Pipeline       ::= "pipeline" PortMap? "{" ( VarBinding | Cut )+ "}" EOF
+
+Cut            ::= Step ( ARR Step )*
+
+Step           ::= PortMap? ( AtomicStep | CompoundStep ) PortMap?
+PortMap        ::= "[" PortBinding ("," PortBinding )* "]"
+PortBinding    ::= Name ":" ( Name | StringLiteral )
+
+AtomicStep     ::= Name Opts?
+
+CompoundStep   ::= Name Opts? PortMap? "{" (VarBinding | Cut )+ "}"
+
+Opts           ::= "(" (AnonBinding ("," AnonBinding)*
+                       ("," (OptionBinding ("," OptionBinding )* )?)?)
+                       | (OptionBinding ("," OptionBinding )* )? ")"
+
+OptionBinding  ::= Name "=" ( VarOrString | StringArray )
+AnonBinding    ::= (VarOrString | StringArray)
+
+VarOrString    ::= ( VarRef | StringLiteral )
+
+VarBinding     ::= PortMap? "$" Name ":=" ( StringLiteral | StringArray )
+
+VarRef         ::= "$" Name
+
+StringArray    ::= "[" (VarOrString ("," VarOrString )* )? "]"
+
+Ignorable      ::= WhiteSpace | Comment /* ws: definition */
+
+<?TOKENS?>
+
+UnicodeInputCharacter  ::= UnicodeEscape | RawInputCharacter
+UnicodeEscape          ::= '\' UnicodeMarker HexDigit HexDigit HexDigit HexDigit
+UnicodeMarker          ::= 'u'+
+RawInputCharacter      ::= [#x0001-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+HexDigit               ::= [0-9a-fA-F]
+InputCharacter         ::= UnicodeInputCharacter - ( CR | LF )
+
+Comment                ::= TraditionalComment | EndOfLineComment
+TraditionalComment     ::= '/*' ( UnicodeInputCharacter* 
+                                  - ( UnicodeInputCharacter* '*/' UnicodeInputCharacter* ) )
+                           '*/'
+EndOfLineComment       ::= '//' InputCharacter*
+
+WhiteSpace             ::= ' ' | #x0009 | #x000C | LineTerminator
+
+LF                     ::= #x000A
+CR                     ::= #x000D
+LineTerminator         ::= LF | CR | CR LF
+
+StringLiteral          ::= '"' ( EscapeQuot | [^"] )* '"'
+                         | "'" ( EscapeApos | [^'] )* "'"  /* ws: explicit */
+EscapeQuot             ::= '""'
+EscapeApos             ::= "''"
+
+ARR                    ::= "->" | "→"
+EOF                    ::= $
+
+Name                   ::= NameStartChar NameChar*
+
+NameStartChar
+         ::=
+           | [A-Z]
+           | '_'
+           | [a-z]
+           | [#x00C0-#x00D6]
+           | [#x00D8-#x00F6]
+           | [#x00F8-#x02FF]
+           | [#x0370-#x037D]
+           | [#x037F-#x1FFF]
+           | [#x200C-#x200D]
+           | [#x2070-#x218F]
+           | [#x2C00-#x2FEF]
+           | [#x3001-#xD7FF]
+           | [#xF900-#xFDCF]
+           | [#xFDF0-#xFFFD]
+           | [#x10000-#xEFFFF]
+NameChar ::= NameStartChar
+           | '-'
+           | '.'
+           | [0-9]
+           | #x00B7
+           | [#x0300-#x036F]
+           | [#x203F-#x2040]
