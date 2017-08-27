@@ -9,7 +9,6 @@ Pipeline       ::= "pipeline" PortMap? "{" ( VarBinding | Cut )+ "}" EOF
 Cut            ::= Step ( ARR Step )*
 
 Step           ::= PortMap? ( AtomicStep | CompoundStep )
-//PortMap        ::= "[" PortBinding ("," PortBinding )* "]"
 
 BindingList    ::= PortBinding ("," PortBinding)*
 SourceBindingList ::= BindingList
@@ -35,18 +34,13 @@ Otherwise      ::= "otherwise" Opts? PortMap? CompoundBody
 Try            ::= "try" Opts? PortMap? CompoundBody Catch+
 Catch          ::= "catch" Opts? PortMap? CompoundBody
 
-Opts           ::= "(" OptionBindings? ")"
+Opts           ::= "(" OptionBinding ("," OptionBinding)* ")"
 
-OptionBindings ::= OptionBinding ("," OptionBinding)*
-OptionBinding  ::= AnyName "=" ( VarOrString | StringArray )
+OptionBinding  ::= AnyName "=" StringLiteral
 
-VarOrString    ::= ( VarRef | StringLiteral )
-
-VarBinding     ::= "$" AnyName ":=" ( StringLiteral | StringArray )
+VarBinding     ::= "$" AnyName ":=" StringLiteral
 
 VarRef         ::= "$" AnyName
-
-StringArray    ::= "[" (VarOrString ("," VarOrString )* )? "]"
 
 Ignorable      ::= WhiteSpace | Comment /* ws: definition */
 
