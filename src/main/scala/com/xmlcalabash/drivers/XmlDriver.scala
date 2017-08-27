@@ -2,8 +2,10 @@ package com.xmlcalabash.drivers
 
 import javax.xml.transform.sax.SAXSource
 
-import com.xmlcalabash.model.util.DefaultErrorListener
+import com.jafpl.runtime.GraphRuntime
+import com.xmlcalabash.model.util.{DefaultErrorListener, DefaultParserConfiguration}
 import com.xmlcalabash.model.xml.Parser
+import com.xmlcalabash.runtime.{PrintingConsumer, SaxonRuntimeConfiguration}
 import net.sf.saxon.s9api.Processor
 import org.xml.sax.InputSource
 
@@ -18,9 +20,20 @@ object XmlDriver extends App {
 
   private val node = builder.build(source)
 
-  val listener = new DefaultErrorListener()
+  val parserConfig = new DefaultParserConfiguration()
 
-  val parser = new Parser(listener)
+  val parser = new Parser(parserConfig)
   val pipeline = parser.parsePipeline(node)
-  println(pipeline)
+  println(pipeline.asXML)
+  val graph = pipeline.pipelineGraph()
+  println(graph.asXML)
+
+  val runtimeConfig = new SaxonRuntimeConfiguration(processor)
+  val runtime = new GraphRuntime(graph, runtimeConfig)
+  runtime.inputs("source").send("Hello, world.")
+
+  val pc = new PrintingConsumer()
+  runtime.outputs("result").setProvider(pc)
+
+  runtime.run()
 }

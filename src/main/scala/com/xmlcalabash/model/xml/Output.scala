@@ -1,31 +1,21 @@
 package com.xmlcalabash.model.xml
 
+import com.xmlcalabash.model.exceptions.ModelException
 import com.xmlcalabash.model.xml.containers.Container
-import net.sf.saxon.NonDelegatingURIResolver
 
-class Output(override val parent: Option[Artifact]) extends Artifact(parent) {
-  private var _port: Option[String] = None
-  private var _sequence: Option[Boolean] = None
-  private var _primary: Option[Boolean] = None
-  private var valid = true
+import scala.collection.mutable.ListBuffer
 
-  protected[xml] def this(parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
-    this(Some(parent))
+class Output(override val config: ParserConfiguration,
+             override val parent: Option[Artifact]) extends IOPort(config, parent) {
+  protected[xml] def this(config: ParserConfiguration, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
+    this(config, Some(parent))
     _port = Some(port)
     _primary = Some(primary)
     _sequence = Some(sequence)
   }
 
-  def port: Option[String] = _port
-  def primary: Boolean = _primary.getOrElse(false)
-  def primary_=(setPrimary: Boolean): Unit = {
-    _primary = Some(setPrimary)
-  }
-
   override def validate(): Boolean = {
-    _port = properties.get(XProcConstants._port)
-    _sequence = lexicalBoolean(properties.get(XProcConstants._sequence))
-    _primary = lexicalBoolean(properties.get(XProcConstants._primary))
+    super.validate()
 
     for (key <- List(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary)) {
       if (properties.contains(key)) {
@@ -33,13 +23,9 @@ class Output(override val parent: Option[Artifact]) extends Artifact(parent) {
       }
     }
 
-    if (_port.isEmpty) {
-      throw new XmlPipelineException("portreq", "Port is required")
-    }
-
     if (properties.nonEmpty) {
       val key = properties.keySet.head
-      throw new XmlPipelineException("badopt", s"Unexpected attribute: ${key.getLocalName}")
+      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}")
     }
 
     if (parent.isDefined && parent.get.isInstanceOf[Container]) {
@@ -47,15 +33,33 @@ class Output(override val parent: Option[Artifact]) extends Artifact(parent) {
         if (dataSourceClasses.contains(child.getClass)) {
           valid = valid && child.validate()
         } else {
-          throw new XmlPipelineException("badelem", s"Unexpected element: ${child}")
+          throw new ModelException("badelem", s"Unexpected element: ${child}")
         }
       }
     } else {
       if (children.nonEmpty) {
-        throw new XmlPipelineException("badelem", s"Unexpected element: ${children.head}")
+        throw new ModelException("badelem", s"Unexpected element: ${children.head}")
       }
     }
 
     valid
   }
+
+  override def asXML: xml.Elem = {
+    dumpAttr("port", _port)
+    dumpAttr("sequence", _sequence)
+    dumpAttr("primary", _primary)
+    dumpAttr("id", id.toString)
+
+    val nodes = ListBuffer.empty[xml.Node]
+    if (children.nonEmpty) {
+      nodes += xml.Text("\n")
+    }
+    for (child <- children) {
+      nodes += child.asXML
+      nodes += xml.Text("\n")
+    }
+    new xml.Elem("p", "output", dump_attr.get, namespaceScope, false, nodes:_*)
+  }
+
 }

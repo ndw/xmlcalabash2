@@ -1,20 +1,40 @@
 package com.xmlcalabash.model.xml
 
-import com.sun.prism.image.ViewPort
+import com.jafpl.graph.{ContainerStart, Graph, Node}
+import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.model.util.UniqueId
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport}
 import com.xmlcalabash.model.xml.datasource.{Data, Document, Empty, Inline, Pipe}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 
 import scala.collection.mutable
 
-class Artifact(val parent: Option[Artifact]) {
+class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
+  protected[xml] var id: Long = UniqueId.nextId
   protected[xml] val properties = mutable.HashMap.empty[QName,String]
-  protected[xml] val children = mutable.ListBuffer.empty[Artifact]
+  protected[xml] val children: mutable.ListBuffer[Artifact] = mutable.ListBuffer.empty[Artifact]
   protected[xml] var inScopeNS = Map.empty[String,String]
   protected[xml] val subpiplineClasses = List(classOf[ForEach], classOf[Viewport],
     classOf[Choose], classOf[Group], classOf[Try], classOf[AtomicStep])
   protected[xml] val dataSourceClasses = List(classOf[Empty], classOf[Pipe],
     classOf[Document], classOf[Inline], classOf[Data])
+  protected[xml] var _label = Option.empty[String]
+  protected[xml] var valid = true
+  protected[xml] var graphNode = Option.empty[Node]
+  protected[xml] var dump_attr = Option.empty[xml.MetaData]
+
+  def label: Option[String] = _label
+  protected[xml] def label_=(label: String): Unit = {
+    _label = Some(label)
+  }
+
+  def name: String = {
+    if (_label.isDefined) {
+      _label.get + "_" + id
+    } else {
+      "_" + id
+    }
+  }
 
   protected[xml] def parse(node: XdmNode): Unit = {
     // Parse namespaces
@@ -56,10 +76,25 @@ class Artifact(val parent: Option[Artifact]) {
 
   protected[xml] def addChild(child: Artifact): Unit = {
     child match {
-      case input: Input =>
-        children.insert(0, child)
-      case output: Output =>
-        children.insert(0, child)
+      case ioport: IOPort =>
+        var pos = 0
+        var found = false
+        while (pos < children.length && !found) {
+          children(pos) match {
+            case doc: Documentation => Unit
+            case pipe: PipeInfo => Unit
+            case port: IOPort => Unit
+            case _ => found = true
+          }
+          if (!found) {
+            pos += 1
+          }
+        }
+        if (found) {
+          children.insert(pos, child)
+        } else {
+          children += child
+        }
       case _ =>
         children += child
     }
@@ -70,7 +105,7 @@ class Artifact(val parent: Option[Artifact]) {
       if (value.get == "true" || value.get == "false") {
         Some(value.get == "true")
       } else {
-        throw new XmlPipelineException("badboolean", s"Not a boolean: $value")
+        throw new ModelException("badboolean", s"Not a boolean: $value")
       }
     } else {
       None
@@ -86,7 +121,7 @@ class Artifact(val parent: Option[Artifact]) {
         if (inScopeNS.contains(prefix)) {
           Some(new QName(prefix, inScopeNS(prefix), local))
         } else {
-          throw new XmlPipelineException("badns", s"No in-scope namespace for prefix: $prefix")
+          throw new ModelException("badns", s"No in-scope namespace for prefix: $prefix")
         }
       } else {
         Some(new QName("", name.get))
@@ -104,7 +139,7 @@ class Artifact(val parent: Option[Artifact]) {
         if (inScopeNS.contains(prefix)) {
           set += prefix
         } else {
-          throw new XmlPipelineException("badns", s"No in-scope namespace for prefix: $prefix")
+          throw new ModelException("badns", s"No in-scope namespace for prefix: $prefix")
         }
       }
       set.toSet
@@ -193,8 +228,82 @@ class Artifact(val parent: Option[Artifact]) {
     None
   }
 
+  def findStep(stepName: String): Option[Artifact] = {
+    if (name == stepName) {
+      Some(this)
+    } else {
+      var step = Option.empty[Artifact]
+      for (child <- children) {
+        if (step.isEmpty && (child.name == stepName)) {
+          step = Some(child)
+        }
+      }
+      if (step.isDefined) {
+        step
+      } else {
+        if (parent.isDefined) {
+          parent.get.findStep(stepName)
+        } else {
+          None
+        }
+      }
+    }
+  }
+
+  def precedingSibling(): Option[Artifact] = {
+    if (parent.isDefined) {
+      var preceding = Option.empty[Artifact]
+      for (child <- parent.get.children) {
+        child match {
+          case step: PipelineStep =>
+            if (child == this) {
+              return preceding
+            }
+            preceding = Some(child)
+          case _ => Unit
+        }
+      }
+      None
+    } else {
+      None
+    }
+  }
+
+  def defaultReadablePort(): Option[IOPort] = {
+    if (parent.isDefined) {
+      this match {
+        case step: PipelineStep =>
+          val ps = precedingSibling()
+          if (ps.isDefined) {
+            for (port <- ps.get.outputPorts) {
+              val out = ps.get.output(port)
+              if (out.get.primary) {
+                return out
+              }
+            }
+          } else {
+            for (port <- parent.get.inputPorts) {
+              val in = parent.get.input(port)
+              if (in.get.primary) {
+                return in
+              }
+            }
+          }
+          None
+        case _ => None
+      }
+    } else {
+      None
+    }
+  }
+
   def validate(): Boolean = {
     println(s"ERROR: $this doesn't override validate")
+    false
+  }
+
+  def makePortsExplicit(): Boolean = {
+    println(s"ERROR: $this doesn't override makeBindingsExplicit")
     false
   }
 
@@ -203,4 +312,75 @@ class Artifact(val parent: Option[Artifact]) {
     false
   }
 
+  def makeGraph(graph: Graph, parent: ContainerStart) {
+    println(s"ERROR: $this doesn't override makePipeline")
+  }
+
+  protected[xml] def graphChildren(graph: Graph, parent: ContainerStart) {
+    for (child <- children) {
+      child match {
+        case doc: Documentation => Unit
+        case pipe: PipeInfo => Unit
+        case _ =>
+          child.makeGraph(graph, parent)
+      }
+    }
+  }
+
+  def makeEdges(graph: Graph, parent: ContainerStart) {
+    println(s"ERROR: $this doesn't override makePipeline")
+  }
+
+  protected[xml] def graphEdges(graph: Graph, parent: ContainerStart) {
+    for (child <- children) {
+      child match {
+        case doc: Documentation => Unit
+        case pipe: PipeInfo => Unit
+        case _ =>
+          child.makeEdges(graph, parent)
+      }
+    }
+  }
+
+  protected[xml] def dumpAttr(name: String, value: String): Unit = {
+    val attr = new xml.UnprefixedAttribute(name, xml.Text(value), xml.Null)
+    if (dump_attr.isDefined) {
+      dump_attr = Some(dump_attr.get.append(attr))
+    } else {
+      dump_attr = Some(attr)
+    }
+  }
+
+  protected[xml] def dumpAttr(name: String, value: Option[Any]): Unit = {
+    if (value.isDefined) {
+      dumpAttr(name, value.get.toString)
+    }
+  }
+
+  protected[xml] def dumpAttr(properties: Map[QName, String]): Unit = {
+    for ((prop,value) <- properties) {
+      if (prop.getNamespaceURI == "") {
+        dumpAttr(prop.getLocalName, value)
+      } else {
+        val attr = new xml.PrefixedAttribute(prop.getPrefix, prop.getLocalName, xml.Text(value), xml.Null)
+        if (dump_attr.isDefined) {
+          dump_attr = Some(dump_attr.get.append(attr))
+        } else {
+          dump_attr = Some(attr)
+        }
+      }
+    }
+  }
+
+  protected[xml] def namespaceScope: xml.NamespaceBinding = {
+    var bindings: xml.NamespaceBinding = xml.TopScope
+    for ((prefix, uri) <- inScopeNS) {
+      bindings = new xml.NamespaceBinding(prefix, uri, bindings)
+    }
+    bindings
+  }
+
+  def asXML: xml.Elem = {
+    <ERROR artifact={ this.toString }/>
+  }
 }

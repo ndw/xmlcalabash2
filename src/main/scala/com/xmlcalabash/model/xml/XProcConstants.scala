@@ -33,6 +33,10 @@ object XProcConstants {
   val p_with_option = new QName("p", ns_p, "with-option")
 
   val p_identity = new QName("p", ns_p, "identity")
+  val p_sink = new QName("p", ns_p, "sink")
+
+  // Extras for testing
+  val p_producer = new QName("p", ns_p, "producer")
 
   val _byte_order_mark = new QName("", "byte-order-mark")
   val _cdata_section_elements = new QName("", "cdata-section-elements")
@@ -55,6 +59,7 @@ object XProcConstants {
   val _select = new QName("", "select")
   val _sequence = new QName("", "sequence")
   val _standalone = new QName("", "standalone")
+  val _step = new QName("", "step")
   val _type = new QName("", "type")
   val _undeclare_prefixes = new QName("", "undeclare-prefixes")
   val _version = new QName("", "version")

@@ -1,5 +1,6 @@
 package com.xmlcalabash.model.xml
 
-class IterationSource(override val parent: Option[Artifact]) extends Artifact(parent) {
+class IterationSource(override val config: ParserConfiguration,
+                      override val parent: Option[Artifact]) extends Artifact(config, parent) {
 
 }

@@ -1,0 +1,334 @@
+step add-attribute
+  input source
+  output result
+  option match as XSLTMatchPattern
+  option attribute-name as QName
+  option attribute-prefix? as NCName
+  option attribute-namespace? as anyURI
+  option attribute-value
+
+step add-xml-base
+  input source
+  output result
+  option all? as boolean = 'false'
+  option relative? as boolean = 'true'
+
+step compare
+  primary input source
+  input alternate
+  output result
+  option fail-if-not-equal? as boolean = 'false'
+
+step count
+  input source*
+  output result
+  option limit? as integer = "0"
+
+step delete
+  input source
+  output result
+  option match as XSLTMatchPattern
+
+step directory-list
+  output result
+  option path as anyURI
+  option include-filter? as RegularExpression
+  option exclude-filter? as RegularExpression
+
+step error
+  input source
+  output result*
+  option code as QName
+  option code-prefix? as NCName
+  option code-namespace? as anyURI
+
+step escape-markup
+  input source
+  output result
+  option cdata-section-elements?
+  option doctype-public?
+  option doctype-system? as anyURI
+  option escape-uri-attributes? as boolean = 'false'
+  option include-content-type? as boolean = 'true'
+  option indent? as boolean = 'false'
+  option media-type?
+  option method? as QName = 'xml'
+  option omit-xml-declaration? as boolean = 'true'
+  option standalone? as (true|false|omit) = 'omit'
+  option undeclare-prefixes? as boolean
+  option version? = '1.0'
+
+step filter
+  input source
+  output result*
+  option select as XPathExpression
+
+step http-request
+  input source
+  output result
+  option byte-order-mark? as boolean
+  option cdata-section-elements?
+  option doctype-public?
+  option doctype-system? as anyURI
+  option encoding?
+  option escape-uri-attributes? as boolean = 'false'
+  option include-content-type? as boolean = 'true'
+  option indent? as boolean = 'false'
+  option media-type?
+  option method? as QName = 'xml'
+  option normalization-form? = 'none'
+  option omit-xml-declaration? as boolean = 'true'
+  option standalone? as (true|false|omit) = 'omit'
+  option undeclare-prefixes? as boolean
+  option version? = '1.0'
+
+step identity
+  input source*
+  output result*
+
+step insert
+  primary input source
+  input insertion*
+  output result
+  option match? as XSLTMatchPattern = '/*'
+  option position as (first-child|last-child|before|after)
+
+step label-elements
+  input source
+  output result
+  option attribute? as QName = 'xml:id'
+  option attribute-prefix? as NCName
+  option attribute-namespace? as anyURI
+  option label? as XPathExpression = concat("_",$p:index)
+  option match? as XSLTMatchPattern = '*'
+  option replace? as boolean = 'true'
+
+step load
+  output result
+  option href as anyURI
+  option dtd-validate? as boolean = 'false'
+
+step make-absolute-uris
+  input source
+  output result
+  option match as XSLTMatchPattern
+  option base-uri? as anyURI
+
+step namespace-rename
+  input source
+  output result
+  option from? as anyURI
+  option to? as anyURI
+  option apply-to? as (all|elements|attributes) = 'all'
+
+step pack
+  primary input source*
+  input alternate*
+  output result*
+  option wrapper as QName
+  option wrapper-prefix? as NCName
+  option wrapper-namespace? as anyURI
+
+step parameters
+  input parameters
+  output result
+
+step rename
+  input source
+  output result
+  option match as XSLTMatchPattern
+  option new-name as QName
+  option new-prefix? as NCName
+  option new-namespace? as anyURI
+
+step replace
+  primary input source
+  input replacement
+  output result
+  option match as XSLTMatchPattern
+
+step set-attributes
+  primary input source
+  input attributes
+  output result
+  option match as XSLTMatchPattern
+
+step sink
+  input source*
+
+step split-sequence
+  input source*
+  primary output matched*
+  output not-matched*
+  option initial-only? as boolean = 'false'
+  option test as XPathExpression
+
+step store
+  input source
+  output result
+  option href as anyURI
+  option byte-order-mark? as boolean
+  option cdata-section-elements?
+  option doctype-public?
+  option doctype-system? as anyURI
+  option encoding?
+  option escape-uri-attributes? as boolean = 'false'
+  option include-content-type? as boolean = 'true'
+  option indent? as boolean = 'false'
+  option media-type?
+  option method? as QName = 'xml'
+  option normalization-form? as NormalizationForm = 'none'
+  option omit-xml-declaration? as boolean = 'true'
+  option standalone? as (true|false|omit) = 'omit'
+  option undeclare-prefixes? as boolean
+  option version? = '1.0'
+
+step string-replace
+  input source
+  output result
+  option match as XSLTMatchPattern
+  option replace as XPathExpression
+
+step unescape-markup
+  input source
+  output result
+  option namespace? as anyURI
+  option content-type? = 'application/xml'
+  option encoding?
+  option charset?
+
+step unwrap
+  input source
+  output result
+  option match as XSLTMatchPattern
+
+step wrap
+  input source
+  output result
+  option wrapper as QName
+  option wrapper-prefix? as NCName
+  option wrapper-namespace? as anyURI
+  option match as XSLTMatchPattern
+  option group-adjacent? as XPathExpression
+
+step wrap-sequence
+  input source*
+  output result*
+  option wrapper as QName
+  option wrapper-prefix? as NCName
+  option wrapper-namespace? as anyURI
+  option group-adjacent? as XPathExpression
+
+step xinclude
+  input source
+  output result
+  option fixup-xml-base? as boolean = 'false'
+  option fixup-xml-lang? as boolean = 'false'
+
+step xslt
+  primary input source*
+  input stylesheet
+  input parameters
+  primary output result
+  output secondary*
+  option initial-mode? as QName
+  option template-name? as QName
+  option output-base-uri? as anyURI
+  option version?
+
+step exec
+  primary input source*
+  primary output result
+  output errors
+  output exit-status
+  option command
+  option args? = ''
+  option cwd?
+  option source-is-xml? as boolean = 'true'
+  option result-is-xml? as boolean = 'true'
+  option wrap-result-lines? as boolean = 'false'
+  option errors-is-xml? as boolean = 'false'
+  option wrap-error-lines? as boolean = 'false'
+  option path-separator?
+  option failure-threshold? as integer
+  option arg-separator? = ' '
+  option byte-order-mark? as boolean
+  option cdata-section-elements?
+  option doctype-public?
+  option doctype-system? as anyURI
+  option encoding?
+  option escape-uri-attributes? as boolean = 'false'
+  option include-content-type? as boolean = 'true'
+  option indent? as boolean = 'false'
+  option media-type?
+  option method? as QName = 'xml'
+  option normalization-form? as NormalizationForm = 'none'
+  option omit-xml-declaration? as boolean = 'true'
+  option standalone? as (true|false|omit) = 'omit'
+  option undeclare-prefixes? as boolean
+  option version? = '1.0'
+
+step hash
+  primary input source
+  output result
+  input parameters
+  option value
+  option algorithm as QName
+  option match as XSLTMatchPattern
+  option version?
+
+step uuid
+  primary input source
+  output result
+  option match as XSLTMatchPattern
+  option version? as integer
+
+step validate-with-relax-ng
+  primary input source
+  input schema
+  output result
+  option dtd-attribute-values? as boolean = 'false'
+  option dtd-id-idref-warnings? as boolean = 'false'
+  option assert-valid? as boolean = 'true'
+
+step validate-with-schematron
+  input parameters
+  primary input source
+  input schema
+  primary output result
+  output report*
+  option phase? = '#ALL'
+  option assert-valid? as boolean = 'true'
+
+step validate-with-xml-schema
+  primary input source
+  input schema*
+  output result
+  option use-location-hints? as boolean = 'false'
+  option try-namespaces? as boolean = 'false'
+  option assert-valid? as boolean = 'true'
+  option mode? as (strict|lax) = 'strict'
+
+step www-form-urldecode
+  output result
+  option value
+
+step www-form-urlencode
+  primary input source
+  output result
+  input parameters
+  option match as XSLTMatchPattern
+
+step xquery
+  primary input source*
+  input query
+  input parameters
+  output result*
+
+step xsl-formatter
+  input source
+  input parameters
+  output result
+  option href as anyURI
+  option content-type?
+

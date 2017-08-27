@@ -1,11 +1,13 @@
 package com.xmlcalabash.model.xml.datasource
 
-import com.xmlcalabash.model.xml.containers.Container
-import com.xmlcalabash.model.xml.{Artifact, XProcConstants, XmlPipelineException}
+import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.model.xml.{Artifact, ParserConfiguration, XProcConstants}
 
-class Document(override val parent: Option[Artifact]) extends DataSource(parent) {
+import scala.collection.mutable.ListBuffer
+
+class Document(override val config: ParserConfiguration,
+               override val parent: Option[Artifact]) extends DataSource(config, parent) {
   private var _href: Option[String] = None
-  private var valid = true
 
   override def validate(): Boolean = {
     _href = properties.get(XProcConstants._href)
@@ -17,19 +19,32 @@ class Document(override val parent: Option[Artifact]) extends DataSource(parent)
     }
 
     if (_href.isEmpty) {
-      throw new XmlPipelineException("hrefreq", "Href is required")
+      throw new ModelException("hrefreq", "Href is required")
     }
 
     if (properties.nonEmpty) {
       val key = properties.keySet.head
-      throw new XmlPipelineException("badopt", s"Unexpected attribute: ${key.getLocalName}")
+      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}")
     }
 
     if (children.nonEmpty) {
-      throw new XmlPipelineException("badelem", s"Unexpected element: ${children.head}")
+      throw new ModelException("badelem", s"Unexpected element: ${children.head}")
     }
 
     valid
+  }
+
+  override def asXML: xml.Elem = {
+    dumpAttr("href", _href)
+
+    val nodes = ListBuffer.empty[xml.Node]
+    nodes += xml.Text("\n")
+    for (child <- children) {
+      nodes += child.asXML
+      nodes += xml.Text("\n")
+    }
+    new xml.Elem("p", "document", dump_attr.getOrElse(xml.Null),
+      namespaceScope, false, nodes:_*)
   }
 
 }

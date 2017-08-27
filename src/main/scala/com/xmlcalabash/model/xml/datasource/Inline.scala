@@ -1,10 +1,11 @@
 package com.xmlcalabash.model.xml.datasource
 
-import com.xmlcalabash.model.xml.{Artifact, DeclareStep, Import, Input, Log, OptionDecl, Output, Serialization, XProcConstants, XmlPipelineException}
+import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.model.xml.{Artifact, ParserConfiguration, XProcConstants}
 
-class Inline(override val parent: Option[Artifact]) extends DataSource(parent) {
+class Inline(override val config: ParserConfiguration,
+             override val parent: Option[Artifact]) extends DataSource(config, parent) {
   private var _excludeInlinePrefixes: Set[String] = Set()
-  private var valid = true
 
   override def validate(): Boolean = {
     _excludeInlinePrefixes = lexicalPrefixes(properties.get(XProcConstants._exclude_inline_prefixes))
@@ -15,7 +16,7 @@ class Inline(override val parent: Option[Artifact]) extends DataSource(parent) {
     }
 
     if (properties.nonEmpty) {
-      throw new XmlPipelineException("badopt",
+      throw new ModelException("badopt",
         s"Unexpected attribute: ${properties.keySet.head.getLocalName}")
     }
 

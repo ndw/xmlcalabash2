@@ -1,35 +1,25 @@
-// This is a grammar for a simple, text-base pipeline language.
-//
-// Bits gleefully stolen from the XPath 2.0 and Java 7 grammars.
+// This is a grammar for the step configuration file
 //
 // It is designed to be fed to http://www.bottlecaps.de/rex/
 
-Pipeline       ::= "pipeline" PortMap? "{" ( VarBinding | Cut )+ "}" EOF
+Steps          ::= Step* EOF
 
-Cut            ::= Step ( ARR Step )*
+Step           ::= "step" StepName
+                   Implementation*
+                   Input*
+                   Output*
+                   Option*
 
-Step           ::= PortMap? ( AtomicStep | CompoundStep ) PortMap?
-PortMap        ::= "[" PortBinding ("," PortBinding )* "]"
-PortBinding    ::= Name ":" ( Name | StringLiteral )
+Implementation ::= "has" "implementation" ClassName
 
-AtomicStep     ::= Name Opts?
+Input          ::= "primary"? "input" "*"? PortName
+Output         ::= "primary"? "output" "*"? PortName
 
-CompoundStep   ::= Name Opts? PortMap? "{" (VarBinding | Cut )+ "}"
+Option         ::= "option" OptionName "?"? DeclaredType ("=" StringLiteral)?
 
-Opts           ::= "(" (AnonBinding ("," AnonBinding)*
-                       ("," (OptionBinding ("," OptionBinding )* )?)?)
-                       | (OptionBinding ("," OptionBinding )* )? ")"
+DeclaredType   ::= TypeName | '(' Literal ('|' Literal)* ')'
 
-OptionBinding  ::= Name "=" ( VarOrString | StringArray )
-AnonBinding    ::= (VarOrString | StringArray)
-
-VarOrString    ::= ( VarRef | StringLiteral )
-
-VarBinding     ::= PortMap? "$" Name ":=" ( StringLiteral | StringArray )
-
-VarRef         ::= "$" Name
-
-StringArray    ::= "[" (VarOrString ("," VarOrString )* )? "]"
+// ...
 
 Ignorable      ::= WhiteSpace | Comment /* ws: definition */
 
@@ -43,7 +33,7 @@ HexDigit               ::= [0-9a-fA-F]
 InputCharacter         ::= UnicodeInputCharacter - ( CR | LF )
 
 Comment                ::= TraditionalComment | EndOfLineComment
-TraditionalComment     ::= '/*' ( UnicodeInputCharacter* 
+TraditionalComment     ::= '/*' ( UnicodeInputCharacter*
                                   - ( UnicodeInputCharacter* '*/' UnicodeInputCharacter* ) )
                            '*/'
 EndOfLineComment       ::= '//' InputCharacter*
@@ -59,10 +49,16 @@ StringLiteral          ::= '"' ( EscapeQuot | [^"] )* '"'
 EscapeQuot             ::= '""'
 EscapeApos             ::= "''"
 
-ARR                    ::= "->" | "→"
 EOF                    ::= $
 
-Name                   ::= NameStartChar NameChar*
+NameString             ::= NameStartChar NameChar*
+
+PortName               ::= NameString
+StepName               ::= NameString
+OptionName             ::= NameString
+ClassName              ::= NameString
+TypeName               ::= NameString
+Literal                ::= NameString
 
 NameStartChar
          ::=

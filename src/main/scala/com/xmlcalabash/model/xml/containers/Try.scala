@@ -1,7 +1,8 @@
 package com.xmlcalabash.model.xml.containers
 
-import com.xmlcalabash.model.xml.Artifact
+import com.xmlcalabash.model.xml.{Artifact, ParserConfiguration}
 
-class Try(override val parent: Option[Artifact]) extends Container(parent) {
+class Try(override val config: ParserConfiguration,
+          override val parent: Option[Artifact]) extends Container(config, parent) {
 
 }
