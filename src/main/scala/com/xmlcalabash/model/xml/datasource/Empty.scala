@@ -1,6 +1,7 @@
 package com.xmlcalabash.model.xml.datasource
 
-import com.xmlcalabash.model.xml.{Artifact, ParserConfiguration}
+import com.xmlcalabash.model.util.ParserConfiguration
+import com.xmlcalabash.model.xml.Artifact
 
 class Empty(override val config: ParserConfiguration,
             override val parent: Option[Artifact]) extends DataSource(config, parent) {

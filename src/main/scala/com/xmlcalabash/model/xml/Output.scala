@@ -1,6 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.containers.Container
 
 import scala.collection.mutable.ListBuffer

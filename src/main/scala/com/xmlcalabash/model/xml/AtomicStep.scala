@@ -2,6 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.model.util.ParserConfiguration
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer
@@ -86,12 +87,21 @@ class AtomicStep(override val config: ParserConfiguration,
     true
   }
 
-  override def makeGraph(graph: Graph, parent: ContainerStart) {
-    val node = parent.addAtomic(config.stepImplementation(stepType), name)
+  override def makeGraph(graph: Graph, parent: Node) {
+    val node = parent match {
+      case start: ContainerStart =>
+        start.addAtomic(config.stepImplementation(stepType), name)
+      case _ =>
+        throw new ModelException("badparent", "Atomic step parent isn't a container?")
+    }
     graphNode = Some(node)
+
+    for (child <- children) {
+      child.makeGraph(graph, node)
+    }
   }
 
-  override def makeEdges(graph: Graph, parent: ContainerStart) {
+  override def makeEdges(graph: Graph, parent: Node) {
     for (child <- children) {
       child match {
         case doc: Documentation => Unit

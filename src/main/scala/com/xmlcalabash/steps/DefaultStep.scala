@@ -1,9 +1,13 @@
 package com.xmlcalabash.steps
 
+import com.jafpl.exceptions.StepException
+import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, PortSpecification, Step, StepDataProvider}
+import com.xmlcalabash.runtime.SaxonRuntimeConfiguration
 
 class DefaultStep extends Step {
   protected var consumer: Option[StepDataProvider] = None
+  protected var config: Option[SaxonRuntimeConfiguration] = None
 
   override def inputSpec: PortSpecification = PortSpecification.ANY
   override def outputSpec: PortSpecification = PortSpecification.ANY
@@ -21,8 +25,12 @@ class DefaultStep extends Step {
     // nop
   }
 
-  override def initialize(): Unit = {
-    // nop
+  override def initialize(config: RuntimeConfiguration): Unit = {
+    config match {
+      case saxon: SaxonRuntimeConfiguration =>
+        this.config = Some(saxon)
+      case _ => throw new StepException("badconfig", "Supplied configuration is unusable")
+    }
   }
 
   override def run(): Unit = {

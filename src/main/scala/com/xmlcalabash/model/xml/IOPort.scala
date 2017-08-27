@@ -2,6 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
 
 import scala.collection.mutable.ListBuffer
@@ -68,11 +69,7 @@ class IOPort(override val config: ParserConfiguration,
     valid
   }
 
-  override def makeGraph(graph: Graph, parent: ContainerStart) {
-    // no direct contribution
-  }
-
-  override def makeEdges(graph: Graph, parent: ContainerStart) {
+  override def makeEdges(graph: Graph, parent: Node) {
     for (child <- children) {
       child match {
         case doc: Documentation => Unit

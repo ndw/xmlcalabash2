@@ -2,6 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
 import net.sf.saxon.s9api.QName
@@ -21,8 +22,13 @@ class DeclareStep(override val config: ParserConfiguration,
     val graph = new Graph()
     val pipeline = graph.addPipeline(name)
 
-    graph.addInput(pipeline, "source")
-    graph.addOutput(pipeline, "result")
+    for (port <- inputPorts) {
+      graph.addInput(pipeline, "source")
+    }
+
+    for (port <- outputPorts) {
+      graph.addOutput(pipeline, "result")
+    }
 
     graphNode = Some(pipeline)
     graphChildren(graph, pipeline)

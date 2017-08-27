@@ -1,8 +1,9 @@
 package com.xmlcalabash.model.xml.containers
 
 import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.datasource.Pipe
-import com.xmlcalabash.model.xml.{Artifact, Input, Output, ParserConfiguration, PipelineStep}
+import com.xmlcalabash.model.xml.{Artifact, Input, Output, PipelineStep}
 
 import scala.collection.mutable
 

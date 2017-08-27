@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.model.exceptions.ModelException
-import com.xmlcalabash.model.util.UniqueId
+import com.xmlcalabash.model.util.{ParserConfiguration, UniqueId}
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport}
 import com.xmlcalabash.model.xml.datasource.{Data, Document, Empty, Inline, Pipe}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
@@ -312,23 +312,20 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
     false
   }
 
-  def makeGraph(graph: Graph, parent: ContainerStart) {
-    println(s"ERROR: $this doesn't override makePipeline")
+  def makeGraph(graph: Graph, parent: Node) {
+    for (child <- children) {
+      child.makeGraph(graph, parent)
+    }
   }
 
   protected[xml] def graphChildren(graph: Graph, parent: ContainerStart) {
     for (child <- children) {
-      child match {
-        case doc: Documentation => Unit
-        case pipe: PipeInfo => Unit
-        case _ =>
-          child.makeGraph(graph, parent)
-      }
+      child.makeGraph(graph, parent)
     }
   }
 
-  def makeEdges(graph: Graph, parent: ContainerStart) {
-    println(s"ERROR: $this doesn't override makePipeline")
+  def makeEdges(graph: Graph, parent: Node) {
+    println(s"ERROR: $this doesn't override makeEdges")
   }
 
   protected[xml] def graphEdges(graph: Graph, parent: ContainerStart) {

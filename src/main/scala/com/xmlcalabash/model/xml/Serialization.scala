@@ -2,6 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.model.util.ParserConfiguration
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer
@@ -125,11 +126,11 @@ class Serialization(override val config: ParserConfiguration,
     new xml.Elem("p", "serialization", dump_attr.get, namespaceScope, false, nodes: _*)
   }
 
-  override def makeGraph(graph: Graph, parent: ContainerStart) {
+  override def makeGraph(graph: Graph, parent: Node) {
     // no direct contribution
   }
 
-  override def makeEdges(graph: Graph, parent: ContainerStart) {
+  override def makeEdges(graph: Graph, parent: Node) {
     // no direct contribution
   }
 }

@@ -1,6 +1,7 @@
 package com.xmlcalabash.drivers
 
-import com.xmlcalabash.model.tpl.{TplParser, TreeBuilder}
+import com.xmlcalabash.model.tpl.{PipelineBuilder, TplParser, TreeBuilder}
+import com.xmlcalabash.model.util.DefaultParserConfiguration
 
 import scala.io.Source
 
@@ -17,11 +18,11 @@ object TplDriver extends App {
   }
   bufferedSource.close
 
-  val handler = new TreeBuilder()
-  val parser = new TplParser(text, handler)
+  val config = new DefaultParserConfiguration()
+  val tbuilder = new TreeBuilder()
+  val pbuilder = new PipelineBuilder(config)
+  val parser = new TplParser(text, tbuilder)
   parser.parse
 
-  handler.stack.head.simplify()
-  handler.stack.head.dump()
 
 }

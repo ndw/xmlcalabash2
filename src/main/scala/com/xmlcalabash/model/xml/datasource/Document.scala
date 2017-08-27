@@ -1,7 +1,9 @@
 package com.xmlcalabash.model.xml.datasource
 
+import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.model.exceptions.ModelException
-import com.xmlcalabash.model.xml.{Artifact, ParserConfiguration, XProcConstants}
+import com.xmlcalabash.model.util.ParserConfiguration
+import com.xmlcalabash.model.xml.{Artifact, IOPort, XProcConstants}
 
 import scala.collection.mutable.ListBuffer
 
@@ -33,6 +35,22 @@ class Document(override val config: ParserConfiguration,
 
     valid
   }
+
+  override def makeGraph(graph: Graph, parent: Node) {
+    val container = this.parent.get.parent.get.parent.get
+    val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
+    val hrefBinding = cnode.addVariable("href", _href.get)
+    val docReader = cnode.addAtomic(config.stepImplementation(XProcConstants.p_document))
+    graph.addBindingEdge(hrefBinding, docReader)
+    graphNode = Some(docReader)
+  }
+
+  override def makeEdges(graph: Graph, parent: Node): Unit = {
+    val toStep = this.parent.get.parent
+    val toPort = this.parent.get.asInstanceOf[IOPort].port.get
+    graph.addEdge(graphNode.get, "result", toStep.get.graphNode.get, toPort)
+  }
+
 
   override def asXML: xml.Elem = {
     dumpAttr("href", _href)

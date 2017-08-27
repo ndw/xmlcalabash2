@@ -14,10 +14,12 @@ class TreeBuilder extends EventHandler {
   }
 
   def startNonterminal(name: String, begin: Int) {
+    println(" NT: " + name)
     stack += new TplNode(name)
   }
 
   def endNonterminal(name: String, end: Int) {
+    println("/NT: " + name)
     val popped = mutable.ListBuffer.empty[TplNode]
     while (stack.last.name != name) {
       popped.insert(0, stack.last)
@@ -30,6 +32,11 @@ class TreeBuilder extends EventHandler {
 
   def terminal(name: String, begin: Int, end: Int) {
     val tag = if (name(0) == '\'') "TOKEN" else name
+    if (tag == "TOKEN") {
+      // nop
+    } else {
+      println("  T: " + name)
+    }
 
     stack += new TplNode(tag, Some(characters(begin,end)))
   }

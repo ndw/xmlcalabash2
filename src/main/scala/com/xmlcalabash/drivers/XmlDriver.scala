@@ -24,16 +24,23 @@ object XmlDriver extends App {
 
   val parser = new Parser(parserConfig)
   val pipeline = parser.parsePipeline(node)
-  println(pipeline.asXML)
+  //println(pipeline.asXML)
   val graph = pipeline.pipelineGraph()
-  println(graph.asXML)
+  //println(graph.asXML)
 
   val runtimeConfig = new SaxonRuntimeConfiguration(processor)
   val runtime = new GraphRuntime(graph, runtimeConfig)
-  runtime.inputs("source").send("Hello, world.")
 
-  val pc = new PrintingConsumer()
-  runtime.outputs("result").setProvider(pc)
+  for (port <- pipeline.inputPorts) {
+    println(s"Binding input port $port to 'Hello, world.'")
+    runtime.inputs(port).send("Hello, world.")
+  }
+
+  for (port <- pipeline.outputPorts) {
+    println(s"Binding output port $port to stdout")
+    val pc = new PrintingConsumer()
+    runtime.outputs(port).setProvider(pc)
+  }
 
   runtime.run()
 }

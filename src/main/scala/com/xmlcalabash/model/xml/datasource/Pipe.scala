@@ -1,8 +1,9 @@
 package com.xmlcalabash.model.xml.datasource
 
-import com.jafpl.graph.{ContainerStart, Graph}
+import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.model.exceptions.ModelException
-import com.xmlcalabash.model.xml.{Artifact, Documentation, IOPort, ParserConfiguration, PipeInfo, XProcConstants}
+import com.xmlcalabash.model.util.ParserConfiguration
+import com.xmlcalabash.model.xml.{Artifact, Documentation, IOPort, PipeInfo, XProcConstants}
 
 import scala.collection.mutable.ListBuffer
 
@@ -45,7 +46,7 @@ class Pipe(override val config: ParserConfiguration,
     valid
   }
 
-  override def makeEdges(graph: Graph, parent: ContainerStart): Unit = {
+  override def makeEdges(graph: Graph, parent: Node): Unit = {
     val fromStep = findStep(step.get)
     val fromPort = port.get
     val toStep = this.parent.get.parent
