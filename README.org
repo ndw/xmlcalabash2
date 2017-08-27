@@ -1,7 +1,9 @@
 #+TITLE: XML Calabash (2.x)
 
-This repository contains the “2.x” version of XML Calabash.
+This is a dead branch. You want the ~master~ branch.
 
-XML Calabash 2.x depends on Saxon 9.7.
+I’m rebuilding on top of the lastest
+[[https://github.com/ndw/jafpl/][JAFPL]] library.
 
-It’s also woefully incomplete.
+I’m only really keeping this branch for historical interest and in case
+I discover some things I wish I’d ported over.
