@@ -7,6 +7,7 @@ import scala.collection.mutable.ListBuffer
 class Step(override val config: ParserConfiguration, override val parent: Option[Artifact]) extends Artifact(config,parent) {
   private var _sourceBindings = ListBuffer.empty[PortBinding]
   private var _resultBindings = ListBuffer.empty[PortBinding]
+  private var _optionBindings = ListBuffer.empty[OptionBinding]
 
   def sourceBindings: List[PortBinding] = _sourceBindings.toList
   protected[tpl] def sourceBindings_=(bindings: List[PortBinding]): Unit = {
@@ -24,6 +25,14 @@ class Step(override val config: ParserConfiguration, override val parent: Option
     }
   }
 
+  def optionBindings: List[OptionBinding] = _optionBindings.toList
+  protected[tpl] def optionBindings_=(bindings: List[OptionBinding]): Unit = {
+    _optionBindings.clear()
+    for (binding <- bindings) {
+      _optionBindings += binding
+    }
+  }
+
   protected[tpl] def addSourceBinding(binding: PortBinding): Unit = {
     _sourceBindings += binding
   }
@@ -32,4 +41,7 @@ class Step(override val config: ParserConfiguration, override val parent: Option
     _resultBindings += binding
   }
 
+  protected[tpl] def addOptionBinding(binding: OptionBinding): Unit = {
+    _optionBindings += binding
+  }
 }

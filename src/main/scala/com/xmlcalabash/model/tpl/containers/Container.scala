@@ -6,7 +6,7 @@ import com.xmlcalabash.model.util.ParserConfiguration
 import scala.collection.mutable.ListBuffer
 
 class Container(override val config: ParserConfiguration, override val parent: Option[Artifact]) extends Step(config,parent) {
-  private val _children = ListBuffer.empty[Artifact]
+  protected val _children = ListBuffer.empty[Artifact]
 
   def children: List[Artifact] = _children.toList
 

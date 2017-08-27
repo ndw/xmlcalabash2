@@ -21,7 +21,7 @@ object TplDriver extends App {
   val config = new DefaultParserConfiguration()
   val tbuilder = new TreeBuilder()
   val pbuilder = new PipelineBuilder(config)
-  val parser = new TplParser(text, tbuilder)
+  val parser = new TplParser(text, pbuilder)
   parser.parse
 
 
