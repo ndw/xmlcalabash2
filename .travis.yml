@@ -1,0 +1,16 @@
+dist: trusty
+env:
+  TERM=dumb
+
+install: true
+language: scala
+scala:
+  - 2.12.3
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION test
+sudu: false
+jdk:
+  - oraclejdk8
+
+#after_success:
+#  - src/website/bin/travis-publish.sh
