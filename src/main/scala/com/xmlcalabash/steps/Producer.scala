@@ -1,6 +1,6 @@
 package com.xmlcalabash.steps
 
-import com.jafpl.steps.PortSpecification
+import com.xmlcalabash.runtime.{XmlMetadata, XmlPortSpecification}
 
 import scala.collection.mutable
 
@@ -15,12 +15,12 @@ class Producer() extends DefaultStep {
     }
   }
 
-  override def inputSpec: PortSpecification = PortSpecification.NONE
-  override def outputSpec: PortSpecification = PortSpecification.RESULTSEQ
+  override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
+  override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULTSEQ
 
   override def run(): Unit = {
     for (item <- items) {
-      consumer.get.send("result", item)
+      consumer.get.receive("result", item, new XmlMetadata("text/plain"))
     }
   }
 }

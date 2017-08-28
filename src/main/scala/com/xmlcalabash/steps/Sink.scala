@@ -1,8 +1,8 @@
 package com.xmlcalabash.steps
 
-import com.jafpl.steps.PortSpecification
+import com.xmlcalabash.runtime.XmlPortSpecification
 
 class Sink extends DefaultStep {
-  override def inputSpec: PortSpecification = PortSpecification.SOURCE
-  override def outputSpec: PortSpecification = PortSpecification.NONE
+  override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCE
+  override def outputSpec: XmlPortSpecification = XmlPortSpecification.NONE
 }

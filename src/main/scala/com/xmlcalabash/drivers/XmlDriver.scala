@@ -2,8 +2,9 @@ package com.xmlcalabash.drivers
 
 import javax.xml.transform.sax.SAXSource
 
+import com.jafpl.messages.Metadata
 import com.jafpl.runtime.GraphRuntime
-import com.xmlcalabash.model.util.{DefaultErrorListener, DefaultParserConfiguration}
+import com.xmlcalabash.model.util.DefaultParserConfiguration
 import com.xmlcalabash.model.xml.Parser
 import com.xmlcalabash.runtime.{PrintingConsumer, SaxonRuntimeConfiguration}
 import net.sf.saxon.s9api.Processor
@@ -33,13 +34,13 @@ object XmlDriver extends App {
 
   for (port <- pipeline.inputPorts) {
     println(s"Binding input port $port to 'Hello, world.'")
-    runtime.inputs(port).send("Hello, world.")
+    runtime.inputs(port).receive("source", "Hello, world.", Metadata.STRING)
   }
 
   for (port <- pipeline.outputPorts) {
     println(s"Binding output port $port to stdout")
     val pc = new PrintingConsumer()
-    runtime.outputs(port).setProvider(pc)
+    runtime.outputs(port).setConsumer(pc)
   }
 
   runtime.run()

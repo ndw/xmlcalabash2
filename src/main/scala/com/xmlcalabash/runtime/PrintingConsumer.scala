@@ -1,11 +1,10 @@
 package com.xmlcalabash.runtime
 
-import com.jafpl.steps.DataProvider
+import com.jafpl.messages.Metadata
+import com.jafpl.steps.DataConsumer
 
-class PrintingConsumer extends DataProvider {
-  override def send(item: Any): Unit = {
+class PrintingConsumer extends DataConsumer {
+  override def receive(port: String, item: Any, metadata: Metadata): Unit = {
     println(item.toString)
   }
-
-  override def close(): Unit = Unit
 }

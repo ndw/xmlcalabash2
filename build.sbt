@@ -23,7 +23,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
   "org.scala-lang.modules" %% "scala-swing" % "2.0.0-M2",
   "net.sf.saxon" % "Saxon-HE" % "9.8.0-4",
-  "com.thaiopensource" % "jing" % "20091111",
+  //"com.thaiopensource" % "jing" % "20091111",
   "net.java.dev.msv" % "msv-core" % "2013.6.1",
   "com.ibm.icu" % "icu4j" % "59.1",
   "org.apache.httpcomponents" % "httpclient" % "4.5.3",
@@ -33,7 +33,7 @@ libraryDependencies ++= Seq(
   "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
   "org.xmlresolver" % "xmlresolver" % "0.12.3",
   "nu.validator" % "htmlparser" % "1.4.6",
-  "com.jafpl" % "jafpl_2.12" % "0.0.10"
+  "com.jafpl" % "jafpl_2.12" % "0.0.11"
 )
 
 // Yes, this is an odd place for local use, but it's where the website

@@ -2,10 +2,11 @@ package com.xmlcalabash.test
 
 import javax.xml.transform.sax.SAXSource
 
+import com.jafpl.messages.Metadata
 import com.jafpl.runtime.GraphRuntime
 import com.xmlcalabash.model.util.DefaultParserConfiguration
 import com.xmlcalabash.model.xml.Parser
-import com.xmlcalabash.runtime.{BufferingConsumer, SaxonRuntimeConfiguration}
+import com.xmlcalabash.runtime.{BufferingConsumer, SaxonRuntimeConfiguration, XmlMetadata}
 import net.sf.saxon.s9api.Processor
 import org.scalatest.FlatSpec
 import org.xml.sax.InputSource
@@ -34,12 +35,12 @@ class SimpleSpec extends FlatSpec {
     val runtime = new GraphRuntime(graph, runtimeConfig)
 
     for (port <- pipeline.inputPorts) {
-      runtime.inputs(port).send(data)
+      runtime.inputs(port).receive("source", data, new XmlMetadata("text/plain"))
     }
 
     val bc = new BufferingConsumer()
     for (port <- pipeline.outputPorts) {
-      runtime.outputs(port).setProvider(bc)
+      runtime.outputs(port).setConsumer(bc)
     }
 
     runtime.run()
