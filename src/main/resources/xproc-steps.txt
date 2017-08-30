@@ -1,4 +1,7 @@
-step add-attribute
+prefix p = "{http://www.w3.org/ns/xproc}"
+prefix xc = "com.xmlcalabash.steps."
+
+step p:add-attribute has implementation xc:AddAttribute
   input source
   output result
   option match as XSLTMatchPattern
@@ -7,42 +10,42 @@ step add-attribute
   option attribute-namespace? as anyURI
   option attribute-value
 
-step add-xml-base
+step p:add-xml-base has implementation xc:AddXmlBase
   input source
   output result
   option all? as boolean = 'false'
   option relative? as boolean = 'true'
 
-step compare
+step p:compare has implementation xc:Compare
   primary input source
   input alternate
   output result
   option fail-if-not-equal? as boolean = 'false'
 
-step count
+step p:count has implementation xc:Count
   input source*
   output result
   option limit? as integer = "0"
 
-step delete
+step p:delete has implementation xc:Delete
   input source
   output result
   option match as XSLTMatchPattern
 
-step directory-list
+step p:directory-list has implementation xc:DirectoryList
   output result
   option path as anyURI
   option include-filter? as RegularExpression
   option exclude-filter? as RegularExpression
 
-step error
+step p:error has implementation xc:Error
   input source
   output result*
   option code as QName
   option code-prefix? as NCName
   option code-namespace? as anyURI
 
-step escape-markup
+step p:escape-markup has implementation xc:EscapeMarkup
   input source
   output result
   option cdata-section-elements?
@@ -54,16 +57,16 @@ step escape-markup
   option media-type?
   option method? as QName = 'xml'
   option omit-xml-declaration? as boolean = 'true'
-  option standalone? as (true|false|omit) = 'omit'
+  option standalone? of (true|false|omit) = 'omit'
   option undeclare-prefixes? as boolean
-  option version? = '1.0'
+  option version? as string = '1.0'
 
-step filter
+step p:filter has implementation xc:Filter
   input source
   output result*
   option select as XPathExpression
 
-step http-request
+step p:http-request has implementation xc:HttpRequest
   input source
   output result
   option byte-order-mark? as boolean
@@ -76,52 +79,52 @@ step http-request
   option indent? as boolean = 'false'
   option media-type?
   option method? as QName = 'xml'
-  option normalization-form? = 'none'
+  option normalization-form? as string = 'none'
   option omit-xml-declaration? as boolean = 'true'
-  option standalone? as (true|false|omit) = 'omit'
+  option standalone? of (true|false|omit) = 'omit'
   option undeclare-prefixes? as boolean
-  option version? = '1.0'
+  option version? as string = '1.0'
 
-step identity
+step p:identity has implementation xc:Identity
   input source*
   output result*
 
-step insert
+step p:insert has implementation xc:Insert
   primary input source
   input insertion*
   output result
   option match? as XSLTMatchPattern = '/*'
-  option position as (first-child|last-child|before|after)
+  option position of (first-child|last-child|before|after)
 
-step label-elements
+step p:label-elements has implementation xc:LabelElements
   input source
   output result
   option attribute? as QName = 'xml:id'
   option attribute-prefix? as NCName
   option attribute-namespace? as anyURI
-  option label? as XPathExpression = concat("_",$p:index)
+  option label? as XPathExpression = 'concat("_",$p:index)'
   option match? as XSLTMatchPattern = '*'
   option replace? as boolean = 'true'
 
-step load
+step p:load has implementation xc:Load
   output result
   option href as anyURI
   option dtd-validate? as boolean = 'false'
 
-step make-absolute-uris
+step p:make-absolute-uris has implementation xc:MakeAbsoluteUris
   input source
   output result
   option match as XSLTMatchPattern
   option base-uri? as anyURI
 
-step namespace-rename
+step p:namespace-rename has implementation xc:NamespaceRename
   input source
   output result
   option from? as anyURI
   option to? as anyURI
-  option apply-to? as (all|elements|attributes) = 'all'
+  option apply-to? of (all|elements|attributes) = 'all'
 
-step pack
+step p:pack has implementation xc:Pack
   primary input source*
   input alternate*
   output result*
@@ -129,11 +132,10 @@ step pack
   option wrapper-prefix? as NCName
   option wrapper-namespace? as anyURI
 
-step parameters
-  input parameters
+step p:parameters has implementation xc:Parameters
   output result
 
-step rename
+step p:rename has implementation xc:Rename
   input source
   output result
   option match as XSLTMatchPattern
@@ -141,29 +143,29 @@ step rename
   option new-prefix? as NCName
   option new-namespace? as anyURI
 
-step replace
+step p:replace has implementation xc:Replace
   primary input source
   input replacement
   output result
   option match as XSLTMatchPattern
 
-step set-attributes
+step p:set-attributes has implementation xc:SetAttributes
   primary input source
   input attributes
   output result
   option match as XSLTMatchPattern
 
-step sink
+step p:sink has implementation xc:Sink
   input source*
 
-step split-sequence
+step p:split-sequence has implementation xc:SplitSequence
   input source*
   primary output matched*
   output not-matched*
   option initial-only? as boolean = 'false'
   option test as XPathExpression
 
-step store
+step p:store has implementation xc:Store
   input source
   output result
   option href as anyURI
@@ -179,30 +181,30 @@ step store
   option method? as QName = 'xml'
   option normalization-form? as NormalizationForm = 'none'
   option omit-xml-declaration? as boolean = 'true'
-  option standalone? as (true|false|omit) = 'omit'
+  option standalone? of (true|false|omit) = 'omit'
   option undeclare-prefixes? as boolean
-  option version? = '1.0'
+  option version? as string = '1.0'
 
-step string-replace
+step p:string-replace has implementation xc:StringReplace
   input source
   output result
   option match as XSLTMatchPattern
   option replace as XPathExpression
 
-step unescape-markup
+step p:unescape-markup has implementation xc:UnescapeMarkup
   input source
   output result
   option namespace? as anyURI
-  option content-type? = 'application/xml'
+  option content-type? as string = 'application/xml'
   option encoding?
   option charset?
 
-step unwrap
+step p:unwrap has implementation xc:Unwrap
   input source
   output result
   option match as XSLTMatchPattern
 
-step wrap
+step p:wrap has implementation xc:Wrap
   input source
   output result
   option wrapper as QName
@@ -211,7 +213,7 @@ step wrap
   option match as XSLTMatchPattern
   option group-adjacent? as XPathExpression
 
-step wrap-sequence
+step p:wrap-sequence has implementation xc:WrapSequence
   input source*
   output result*
   option wrapper as QName
@@ -219,16 +221,15 @@ step wrap-sequence
   option wrapper-namespace? as anyURI
   option group-adjacent? as XPathExpression
 
-step xinclude
+step p:xinclude has implementation xc:XInclude
   input source
   output result
   option fixup-xml-base? as boolean = 'false'
   option fixup-xml-lang? as boolean = 'false'
 
-step xslt
+step p:xslt has implementation xc:Xslt
   primary input source*
   input stylesheet
-  input parameters
   primary output result
   output secondary*
   option initial-mode? as QName
@@ -236,13 +237,13 @@ step xslt
   option output-base-uri? as anyURI
   option version?
 
-step exec
+step p:exec has implementation xc:Exec
   primary input source*
   primary output result
   output errors
   output exit-status
   option command
-  option args? = ''
+  option args? as string = ''
   option cwd?
   option source-is-xml? as boolean = 'true'
   option result-is-xml? as boolean = 'true'
@@ -251,7 +252,7 @@ step exec
   option wrap-error-lines? as boolean = 'false'
   option path-separator?
   option failure-threshold? as integer
-  option arg-separator? = ' '
+  option arg-separator? as string = ' '
   option byte-order-mark? as boolean
   option cdata-section-elements?
   option doctype-public?
@@ -264,26 +265,25 @@ step exec
   option method? as QName = 'xml'
   option normalization-form? as NormalizationForm = 'none'
   option omit-xml-declaration? as boolean = 'true'
-  option standalone? as (true|false|omit) = 'omit'
+  option standalone? of (true|false|omit) = 'omit'
   option undeclare-prefixes? as boolean
-  option version? = '1.0'
+  option version? as string = '1.0'
 
-step hash
+step p:hash has implementation xc:Hash
   primary input source
   output result
-  input parameters
   option value
   option algorithm as QName
   option match as XSLTMatchPattern
   option version?
 
-step uuid
+step p:uuid has implementation xc:Uuid
   primary input source
   output result
   option match as XSLTMatchPattern
   option version? as integer
 
-step validate-with-relax-ng
+step p:validate-with-relax-ng has implementation xc:ValidateWithRelaxNG
   primary input source
   input schema
   output result
@@ -291,44 +291,39 @@ step validate-with-relax-ng
   option dtd-id-idref-warnings? as boolean = 'false'
   option assert-valid? as boolean = 'true'
 
-step validate-with-schematron
-  input parameters
+step p:validate-with-schematron has implementation xc:ValidateWithSchematron
   primary input source
   input schema
   primary output result
   output report*
-  option phase? = '#ALL'
+  option phase? as string = '#ALL'
   option assert-valid? as boolean = 'true'
 
-step validate-with-xml-schema
+step p:validate-with-xml-schema has implementation xc:ValidateWithXmlSchema
   primary input source
   input schema*
   output result
   option use-location-hints? as boolean = 'false'
   option try-namespaces? as boolean = 'false'
   option assert-valid? as boolean = 'true'
-  option mode? as (strict|lax) = 'strict'
+  option mode? of (strict|lax) = 'strict'
 
-step www-form-urldecode
+step p:www-form-urldecode has implementation xc:WwwFormUrldecode
   output result
   option value
 
-step www-form-urlencode
+step p:www-form-urlencode has implementation xc:WwwFormUrlencode
   primary input source
   output result
-  input parameters
   option match as XSLTMatchPattern
 
-step xquery
+step p:xquery has implementation xc:XQuery
   primary input source*
   input query
-  input parameters
   output result*
 
-step xsl-formatter
+step p:xsl-formatter has implementation xc:XslFormatter
   input source
-  input parameters
   output result
   option href as anyURI
   option content-type?
-

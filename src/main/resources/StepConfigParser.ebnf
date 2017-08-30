@@ -2,7 +2,9 @@
 //
 // It is designed to be fed to http://www.bottlecaps.de/rex/
 
-Steps          ::= Step* EOF
+Config         ::= Prefix* Step* EOF
+
+Prefix         ::= "prefix" Macro "=" Expansion
 
 Step           ::= "step" StepName
                    Implementation*
@@ -12,12 +14,13 @@ Step           ::= "step" StepName
 
 Implementation ::= "has" "implementation" ClassName
 
-Input          ::= "primary"? "input" "*"? PortName
-Output         ::= "primary"? "output" "*"? PortName
+Input          ::= "primary"? "input" PortName "*"?
+Output         ::= "primary"? "output" PortName "*"?
 
-Option         ::= "option" OptionName "?"? DeclaredType ("=" StringLiteral)?
+Option         ::= "option" OptionName "?"? DeclaredType? ("=" StringLiteral)?
 
-DeclaredType   ::= TypeName | '(' Literal ('|' Literal)* ')'
+DeclaredType   ::=  ("as" TypeName) | ("of" TokenList)
+TokenList      ::= '(' Literal ('|' Literal)* ')'
 
 // ...
 
@@ -52,17 +55,19 @@ EscapeApos             ::= "''"
 EOF                    ::= $
 
 NameString             ::= NameStartChar NameChar*
+QName                  ::= NameStartChar NameChar* (":" NameChar+) | NameChar*
 
 PortName               ::= NameString
-StepName               ::= NameString
+StepName               ::= QName
 OptionName             ::= NameString
-ClassName              ::= NameString
+ClassName              ::= QName
 TypeName               ::= NameString
 Literal                ::= NameString
+Macro                  ::= NameString
+Expansion              ::= StringLiteral
 
 NameStartChar
-         ::=
-           | [A-Z]
+         ::= [A-Z]
            | '_'
            | [a-z]
            | [#x00C0-#x00D6]
