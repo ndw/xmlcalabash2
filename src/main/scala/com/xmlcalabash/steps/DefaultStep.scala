@@ -5,8 +5,10 @@ import com.jafpl.messages.Metadata
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortSpecification, Step}
 import com.xmlcalabash.runtime.{SaxonRuntimeConfiguration, XmlPortSpecification, XmlStep}
+import org.slf4j.{Logger, LoggerFactory}
 
 class DefaultStep extends XmlStep {
+  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
   protected var config: Option[SaxonRuntimeConfiguration] = None
 
