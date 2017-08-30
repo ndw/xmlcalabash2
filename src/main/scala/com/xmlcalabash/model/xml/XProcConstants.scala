@@ -4,6 +4,8 @@ import net.sf.saxon.s9api.QName
 
 object XProcConstants {
   val ns_p = "http://www.w3.org/ns/xproc"
+  val ns_cx = "http://xmlcalabash.com/ns/extensions"
+
   val p_catch = new QName("p", ns_p, "catch")
   val p_choose = new QName("p", ns_p, "choose")
   val p_declare_step = new QName("p", ns_p, "declare-step")
@@ -37,6 +39,9 @@ object XProcConstants {
 
   // Extras for testing
   val p_producer = new QName("p", ns_p, "producer")
+
+  val cx_document = new QName("cx", ns_cx, "document")
+
 
   val _byte_order_mark = new QName("", "byte-order-mark")
   val _cdata_section_elements = new QName("", "cdata-section-elements")

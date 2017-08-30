@@ -40,7 +40,7 @@ class Document(override val config: ParserConfiguration,
     val container = this.parent.get.parent.get.parent.get
     val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
     val hrefBinding = cnode.addVariable("href", _href.get)
-    val docReader = cnode.addAtomic(config.stepImplementation(XProcConstants.p_document))
+    val docReader = cnode.addAtomic(config.stepImplementation(XProcConstants.cx_document))
     graph.addBindingEdge(hrefBinding, docReader)
     graphNode = Some(docReader)
   }

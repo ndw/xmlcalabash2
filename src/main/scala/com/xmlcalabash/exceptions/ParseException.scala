@@ -1,7 +1,17 @@
 package com.xmlcalabash.exceptions
 
-class ParseException(val begin: Int, val message: String) extends Throwable {
+import com.xmlcalabash.model.util.Location
+
+class ParseException(val message: String, val location: Option[Location]) extends Throwable {
+  def this(msg: String, loc: Location) {
+    this(msg, Some(loc))
+  }
+
   override def toString: String = {
-    s"ParseException('$begin','$message')"
+    if (location.isDefined) {
+      s"ParseException('$message', ${location.get})"
+    } else {
+      s"ParseException('$message')"
+    }
   }
 }

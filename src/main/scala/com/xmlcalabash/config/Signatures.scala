@@ -1,16 +1,17 @@
-package com.xmlcalabash.model.config
+package com.xmlcalabash.config
 
-import com.xmlcalabash.exceptions.ModelException
 import net.sf.saxon.s9api.QName
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 
 class Signatures {
+  private val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _steps = mutable.HashMap.empty[QName, StepSignature]
 
   def addStep(step: StepSignature): Unit = {
     if (_steps.contains(step.stepType)) {
-      throw new ModelException("dupstep", s"Duplicate step type: ${step.stepType}")
+      logger.warn(s"Duplicate definition of ${step.stepType}")
     }
     _steps.put(step.stepType, step)
   }

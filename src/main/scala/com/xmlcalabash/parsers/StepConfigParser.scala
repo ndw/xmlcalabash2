@@ -1,4 +1,4 @@
-package com.xmlcalabash.config
+package com.xmlcalabash.parsers
 
 // This file was generated on Tue Aug 29, 2017 19:50 (UTC-05) by REx v5.45 which is Copyright (c) 1979-2017 by Gunther Rademacher <grd@gmx.net>
 // REx command line: StepConfigParser.ebnf -ll 2 -scala -tree

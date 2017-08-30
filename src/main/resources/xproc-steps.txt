@@ -1,4 +1,5 @@
 prefix p = "{http://www.w3.org/ns/xproc}"
+prefix cx = "{http://xmlcalabash.com/ns/extensions}"
 prefix xc = "com.xmlcalabash.steps."
 
 step p:add-attribute has implementation xc:AddAttribute
@@ -327,3 +328,8 @@ step p:xsl-formatter has implementation xc:XslFormatter
   output result
   option href as anyURI
   option content-type?
+
+// ============================================================
+
+step cx:document has implementation xc:Document
+  output result

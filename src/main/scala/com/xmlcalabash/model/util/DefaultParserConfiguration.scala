@@ -1,47 +1,43 @@
 package com.xmlcalabash.model.util
 
 import com.jafpl.steps.Step
-import com.xmlcalabash.model.config.{OptionSignature, PortSignature, Signatures, StepSignature}
+import com.xmlcalabash.config.Signatures
 import com.xmlcalabash.exceptions.ModelException
-import com.xmlcalabash.model.xml.XProcConstants
-import com.xmlcalabash.steps.{Document, Identity, Producer, Sink}
+import com.xmlcalabash.parsers.StepConfigBuilder
 import net.sf.saxon.s9api.QName
+import org.slf4j.{Logger, LoggerFactory}
 
 class DefaultParserConfiguration extends ParserConfiguration {
+  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _errorListener = new DefaultErrorListener()
   private val _signatures = new Signatures()
 
-  var sig = new StepSignature(XProcConstants.p_identity)
-  sig.addInput(new PortSignature("source", primary=true, sequence=true))
-  sig.addOutput(new PortSignature("result", primary=true, sequence=true))
-  _signatures.addStep(sig)
-
-  sig = new StepSignature(XProcConstants.p_producer)
-  sig.addOutput(new PortSignature("result", primary=true, sequence=true))
-  _signatures.addStep(sig)
-
-  sig = new StepSignature(XProcConstants.p_sink)
-  sig.addInput(new PortSignature("source", primary=true, sequence=true))
-  _signatures.addStep(sig)
-
-  sig = new StepSignature(XProcConstants.p_document)
-  sig.addInput(new PortSignature("result", primary=true, sequence=true))
-  sig.addOption(new OptionSignature("href", "anyURI", required=true))
-  _signatures.addStep(sig)
+  private val builder = new StepConfigBuilder()
+  private val sigs = builder.parse(getClass.getResourceAsStream("/xproc-steps.txt"))
+  for (name <- sigs.stepTypes) {
+    _signatures.addStep(sigs.step(name))
+  }
 
   override def errorListener: ErrorListener = _errorListener
 
   override def stepSignatures: Signatures = _signatures
 
   override def stepImplementation(stepType: QName): Step = {
-    stepType match {
-      case XProcConstants.p_identity => new Identity()
-      case XProcConstants.p_sink => new Sink()
-      case XProcConstants.p_producer => new Producer()
-      case XProcConstants.p_document => new Document()
-      case _ => throw new ModelException("badtype", "Unexpected step type: $stepType")
+    if (!_signatures.stepTypes.contains(stepType)) {
+      throw new ModelException("notype", s"Step type '$stepType' is unknown")
+    }
+
+    val implClass = _signatures.step(stepType).implementation
+    if (implClass.isEmpty) {
+      throw new ModelException("noimpl", s"Step type '$stepType' has no known implementation")
+    }
+
+    val klass = Class.forName(implClass.get).newInstance()
+    klass match {
+      case step: Step =>
+        step
+      case _ =>
+        throw new ModelException("nostep", s"The implementation of '$stepType' is not a step")
     }
   }
-
-
 }
