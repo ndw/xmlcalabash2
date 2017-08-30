@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.exceptions.ModelException
 import com.xmlcalabash.model.util.{ErrorListener, ParserConfiguration}
 import com.xmlcalabash.model.xml.datasource.{Document, Inline}
 import net.sf.saxon.s9api.{Axis, XdmNode, XdmNodeKind}

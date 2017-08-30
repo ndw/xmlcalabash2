@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
-import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.exceptions.ModelException
 import com.xmlcalabash.model.util.ParserConfiguration
 import net.sf.saxon.s9api.QName
 

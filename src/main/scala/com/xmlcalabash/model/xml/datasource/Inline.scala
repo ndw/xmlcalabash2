@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml.datasource
 
-import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.exceptions.ModelException
 import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.{Artifact, XProcConstants}
 

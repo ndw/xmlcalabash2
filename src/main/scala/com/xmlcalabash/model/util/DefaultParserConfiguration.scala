@@ -2,7 +2,7 @@ package com.xmlcalabash.model.util
 
 import com.jafpl.steps.Step
 import com.xmlcalabash.model.config.{OptionSignature, PortSignature, Signatures, StepSignature}
-import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.exceptions.ModelException
 import com.xmlcalabash.model.xml.XProcConstants
 import com.xmlcalabash.steps.{Document, Identity, Producer, Sink}
 import net.sf.saxon.s9api.QName
@@ -42,5 +42,6 @@ class DefaultParserConfiguration extends ParserConfiguration {
       case _ => throw new ModelException("badtype", "Unexpected step type: $stepType")
     }
   }
+
 
 }

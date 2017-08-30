@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.tpl
 
-import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.exceptions.ModelException
 import com.xmlcalabash.model.tpl.TplParser.EventHandler
 import com.xmlcalabash.model.tpl.containers.{Choose, Container, Group, Otherwise, When}
 import com.xmlcalabash.model.util.ParserConfiguration

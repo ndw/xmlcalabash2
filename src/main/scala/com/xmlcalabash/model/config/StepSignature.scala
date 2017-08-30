@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.config
 
-import com.xmlcalabash.model.exceptions.ModelException
+import com.xmlcalabash.exceptions.ModelException
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
