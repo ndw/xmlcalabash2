@@ -1,64 +1,9 @@
-package com.xmlcalabash.drivers
-
-import com.xmlcalabash.exceptions.ParseException
-import com.xmlcalabash.model.util.DefaultParserConfiguration
-import com.xmlcalabash.parsers.XPathParser
-import com.xmlcalabash.runtime.SaxonRuntimeConfiguration
-import net.sf.saxon.s9api.Processor
+package com.xmlcalabash.model.util
 
 import scala.collection.mutable.ListBuffer
 
-object XPathDriver extends App {
-  val config = new DefaultParserConfiguration()
-
-  var expr = ""
-  for (arg <- args) {
-    expr += (arg + " ")
-  }
-
-  val parser = new XPathParser(config)
-
-  /*
-  expr = "3 + 4 * f($x) idiv g($y + $z)"
-
-  parser.parse(expr)
-
-  println("E: " + expr)
-  for (varname <- parser.variableRefs()) {
-    println("V: " + varname)
-  }
-  for (fname <- parser.functionRefs()) {
-    println("F: " + fname)
-  }
-  */
-
-  /*
-  expr = "$foo/test[. = f($x)]"
-
-  parser.parse(expr)
-
-  println("E: " + expr)
-  for (varname <- parser.variableRefs()) {
-    println("V: " + varname)
-  }
-  for (fname <- parser.functionRefs()) {
-    println("F: " + fname)
-  }
-  */
-
-  expr = "Test "
-  val list = parseAVT(expr)
-  if (list.isDefined) {
-    var avt = false
-    for (item <- list.get) {
-      println((if (avt) "AVT:" else "STR: ") + item)
-      avt = !avt
-    }
-  } else {
-    println("ERROR: invalid expression")
-  }
-
-  def parseAVT(value: String): Option[List[String]] = {
+object AvtParser {
+  def parse(value: String): Option[List[String]] = {
     val list = ListBuffer.empty[String]
     var state = StateChange.STRING
     var pos = 0
@@ -125,8 +70,5 @@ object XPathDriver extends App {
   object StateChange {
     val STRING = 0
     val EXPR = 1
-  }
-
-  class StateChange(state: Int, pos: Int) {
   }
 }

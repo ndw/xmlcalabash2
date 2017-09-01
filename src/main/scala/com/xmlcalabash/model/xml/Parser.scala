@@ -1,12 +1,11 @@
 package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.exceptions.ModelException
-import com.xmlcalabash.model.util.{ErrorListener, ParserConfiguration}
-import com.xmlcalabash.model.xml.datasource.{Document, Inline}
+import com.xmlcalabash.model.util.ParserConfiguration
+import com.xmlcalabash.model.xml.datasource.{Document, Inline, Pipe}
 import net.sf.saxon.s9api.{Axis, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable.ListBuffer
-import scala.reflect.macros.ParseException
 
 class Parser(config: ParserConfiguration) {
   private var exception: Option[Throwable] = None
@@ -16,7 +15,7 @@ class Parser(config: ParserConfiguration) {
     art match {
       case step: DeclareStep =>
         step
-      case _ => throw new ModelException("badroot", s"Node did not define a pipeline: $node")
+      case _ => throw new ModelException("badroot", s"Node did not define a pipeline: $node", None)
     }
   }
 
@@ -66,11 +65,19 @@ class Parser(config: ParserConfiguration) {
           case XProcConstants.p_serialization => Some(parseSerialization(parent, node))
           case XProcConstants.p_output => Some(parseOutput(parent, node))
           case XProcConstants.p_input => Some(parseInput(parent, node))
+          case XProcConstants.p_option => Some(parseOption(parent, node))
+          case XProcConstants.p_variable => Some(parseVariable(parent, node))
           case XProcConstants.p_inline => Some(parseInline(parent, node))
+          case XProcConstants.p_pipe => Some(parsePipe(parent, node))
           case XProcConstants.p_document => Some(parseDocument(parent, node))
           case XProcConstants.p_documentation => Some(parseDocumentation(parent, node))
           case XProcConstants.p_pipeinfo => Some(parsePipeInfo(parent, node))
-          case _ => Some(parseAtomicStep(parent, node))
+          case _ =>
+            if (config.stepSignatures.stepTypes.contains(node.getNodeName)) {
+              Some(parseAtomicStep(parent, node))
+            } else {
+              throw new ModelException("notstep", s"${node.getNodeName} does not appear to be a step", None)
+            }
         }
         art
       case _ => None
@@ -116,7 +123,6 @@ class Parser(config: ParserConfiguration) {
   }
 
   private def parseAtomicStep(parent: Option[Artifact], node: XdmNode): Artifact = {
-    println(s"Assuming atomic step: ${node.getNodeName}")
     val art = new AtomicStep(config, parent, node.getNodeName)
     art.parse(node)
     parseChildren(art, node)
@@ -153,6 +159,27 @@ class Parser(config: ParserConfiguration) {
 
   private def parseDocument(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new Document(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
+  private def parsePipe(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new Pipe(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
+  private def parseOption(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new OptionDecl(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
+  private def parseVariable(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new Variable(config, parent)
     art.parse(node)
     parseChildren(art, node)
     art

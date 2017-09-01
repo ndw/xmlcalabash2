@@ -41,14 +41,14 @@ class Container(override val config: ParserConfiguration,
       child match {
         case input: Input =>
           if (ports.contains(input.port.get)) {
-            throw new ModelException("dupport", s"Duplicate port: ${input.port.get}")
+            throw new ModelException("dupport", s"Duplicate port: ${input.port.get}", location)
           }
           ports += input.port.get
 
           if (input.primary) {
             if (primary.isDefined) {
               throw new ModelException("dupprimary",
-                s"Multiple primary ports: ${input.port.get} and ${primary.get.port.get}")
+                s"Multiple primary ports: ${input.port.get} and ${primary.get.port.get}", location)
             }
             primary = Some(input)
           }
@@ -71,14 +71,14 @@ class Container(override val config: ParserConfiguration,
       child match {
         case output: Output =>
           if (ports.contains(output.port.get)) {
-            throw new ModelException("dupport", s"Duplicate port: ${output.port.get}")
+            throw new ModelException("dupport", s"Duplicate port: ${output.port.get}", location)
           }
           ports += output.port.get
 
           if (output.primary) {
             if (primary.isDefined) {
               throw new ModelException("dupprimary",
-                s"Multiple primary ports: ${output.port.get} and ${primary.get.port.get}")
+                s"Multiple primary ports: ${output.port.get} and ${primary.get.port.get}", location)
             }
             primary = Some(output)
           }
@@ -123,10 +123,10 @@ class Container(override val config: ParserConfiguration,
             val pipe = new Pipe(config, out, last.get.name, output.get.port.get)
             out.addChild(pipe)
           } else {
-            throw new ModelException("nooutput", "No output binding")
+            throw new ModelException("nooutput", "No output binding", location)
           }
         } else {
-          throw new ModelException("nooutput", "No output binding")
+          throw new ModelException("nooutput", "No output binding", location)
         }
       }
     }

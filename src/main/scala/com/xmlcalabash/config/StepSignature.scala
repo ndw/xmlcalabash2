@@ -13,7 +13,7 @@ class StepSignature(val stepType: QName) {
 
   def addInput(port: PortSignature): Unit = {
     if (_inputPorts.contains(port.name)) {
-      throw new ModelException("dupport", s"Attempt to specify duplicate input port: ${port.name}")
+      throw new ModelException("dupport", s"Attempt to specify duplicate input port: ${port.name}", None)
     } else {
       _inputPorts.put(port.name, port)
     }
@@ -21,7 +21,7 @@ class StepSignature(val stepType: QName) {
 
   def addOutput(port: PortSignature): Unit = {
     if (_outputPorts.contains(port.name)) {
-      throw new ModelException("dupport", s"Attempt to specify duplicate output port: ${port.name}")
+      throw new ModelException("dupport", s"Attempt to specify duplicate output port: ${port.name}", None)
     } else {
       _outputPorts.put(port.name, port)
     }
@@ -29,7 +29,7 @@ class StepSignature(val stepType: QName) {
 
   def addOption(opt: OptionSignature): Unit = {
     if (_options.contains(opt.name)) {
-      throw new ModelException("dupopt", s"Attempt to specify duplicate option: ${opt.name}")
+      throw new ModelException("dupopt", s"Attempt to specify duplicate option: ${opt.name}", None)
     } else {
       _options.put(opt.name, opt)
     }
@@ -51,7 +51,7 @@ class StepSignature(val stepType: QName) {
     if (_inputPorts.contains(port)) {
       _inputPorts(port)
     } else {
-      throw new ModelException("badport", s"Step $stepType has no input port named $port")
+      throw new ModelException("badport", s"Step $stepType has no input port named $port", None)
     }
   }
 
@@ -59,7 +59,7 @@ class StepSignature(val stepType: QName) {
     if (_outputPorts.contains(port)) {
       _outputPorts(port)
     } else {
-      throw new ModelException("badport", s"Step $stepType has no output port named $port")
+      throw new ModelException("badport", s"Step $stepType has no output port named $port", None)
     }
   }
 
@@ -67,7 +67,7 @@ class StepSignature(val stepType: QName) {
     if (_options.contains(name)) {
       _options(name)
     } else {
-      throw new ModelException("badport", s"Step $stepType has no option named $name")
+      throw new ModelException("badport", s"Step $stepType has no option named $name", None)
     }
   }
 }

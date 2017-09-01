@@ -2,9 +2,10 @@ package com.xmlcalabash.parsers
 
 import java.io.InputStream
 
+import com.jafpl.graph.Location
 import com.xmlcalabash.config.{OptionSignature, PortSignature, Signatures, StepSignature}
 import com.xmlcalabash.exceptions.ParseException
-import com.xmlcalabash.model.util.{DefaultLocation, Location}
+import com.xmlcalabash.model.util.DefaultLocation
 import com.xmlcalabash.parsers.StepConfigParser.EventHandler
 import net.sf.saxon.s9api.QName
 

@@ -1,5 +1,7 @@
 package com.xmlcalabash.model.util
 
+import com.jafpl.graph.Location
+
 class DefaultLocation(href: Option[String], lnum: Long, cnum: Option[Long]) extends Location {
   def this(lnum: Long) {
     this(None, lnum, None)

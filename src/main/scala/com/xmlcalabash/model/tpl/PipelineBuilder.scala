@@ -51,7 +51,7 @@ class PipelineBuilder(config: ParserConfiguration) extends EventHandler {
       case "Opts" => Unit
       case "OptionBinding" => Unit
       case _ =>
-        throw new ModelException("badnt", s"Start of unexpected non-terminal: $name")
+        throw new ModelException("badnt", s"Start of unexpected non-terminal: $name", None)
     }
   }
 
@@ -59,30 +59,30 @@ class PipelineBuilder(config: ParserConfiguration) extends EventHandler {
     name match {
       case "Pipeline" =>
         if (stack.isEmpty) {
-          throw new ModelException("stack", s"Stack empty at end of cut?")
+          throw new ModelException("stack", s"Stack empty at end of cut?", None)
         }
 
 
         val pipe = stack.last match {
           case art: Pipeline =>
             art
-          case _ => throw new ModelException("badnt", s"Unexpected stack at end of pipeline: ${stack.last}")
+          case _ => throw new ModelException("badnt", s"Unexpected stack at end of pipeline: ${stack.last}", None)
         }
         stack.remove(stack.size - 1)
         println("POP " + pipe + ": " + stack.size)
 
         if (stack.nonEmpty) {
-          throw new ModelException("stack", s"Stack is not empty after Pipeline: ${stack.size}")
+          throw new ModelException("stack", s"Stack is not empty after Pipeline: ${stack.size}", None)
         }
       case "Cut" =>
         if (stack.isEmpty) {
-          throw new ModelException("stack", s"Stack empty at end of cut?")
+          throw new ModelException("stack", s"Stack empty at end of cut?", None)
         }
 
         val cut = stack.last match {
           case art: Cut =>
             art
-          case _ => throw new ModelException("badnt", s"Unexpected stack at end of cut: ${stack.last}")
+          case _ => throw new ModelException("badnt", s"Unexpected stack at end of cut: ${stack.last}", None)
         }
         stack.remove(stack.size - 1)
         println("POP " + cut + ": " + stack.size)
@@ -90,7 +90,7 @@ class PipelineBuilder(config: ParserConfiguration) extends EventHandler {
         stack.last match {
           case container: Container =>
             container.addCut(cut)
-          case _ => throw new ModelException("badnt", s"Unexpected stack at end of cut: ${stack.last}")
+          case _ => throw new ModelException("badnt", s"Unexpected stack at end of cut: ${stack.last}", None)
         }
       case "Step" => Unit
       case "AtomicStep" => endStep("atomic")
@@ -104,42 +104,42 @@ class PipelineBuilder(config: ParserConfiguration) extends EventHandler {
       case "BindingList" => Unit
       case "SourceBindingList" =>
         if (stack.isEmpty) {
-          throw new ModelException("stack", s"Stack empty at end of source binding list?")
+          throw new ModelException("stack", s"Stack empty at end of source binding list?", None)
         }
         val item = stack.last match {
           case art: SourceBindingList =>
             art
-          case _ => throw new ModelException("badnt", s"Unexpected stack at end of source binding list: ${stack.last}")
+          case _ => throw new ModelException("badnt", s"Unexpected stack at end of source binding list: ${stack.last}", None)
         }
         stack.remove(stack.size - 1)
         println("POP " + item + ": " + stack.size)
       case "ResultBindingList" =>
         if (stack.isEmpty) {
-          throw new ModelException("stack", s"Stack empty at end of result binding list?")
+          throw new ModelException("stack", s"Stack empty at end of result binding list?", None)
         }
         val item = stack.last match {
           case art: ResultBindingList =>
             art
-          case _ => throw new ModelException("badnt", s"Unexpected stack at end of result binding list: ${stack.last}")
+          case _ => throw new ModelException("badnt", s"Unexpected stack at end of result binding list: ${stack.last}", None)
         }
         stack.remove(stack.size - 1)
         println("POP " + item + ": " + stack.size)
       case "PortBinding" =>
         if (stack.size < 3) {
-          throw new ModelException("stack", s"Stack too short at end of port binding?")
+          throw new ModelException("stack", s"Stack too short at end of port binding?", None)
         }
 
         var binding = stack.last match {
           case terminal: Terminal =>
             terminal
-          case _ => throw new ModelException("badnt", s"Unexpected stack at end of port binding: ${stack.last}")
+          case _ => throw new ModelException("badnt", s"Unexpected stack at end of port binding: ${stack.last}", None)
         }
         stack.remove(stack.size - 1)
 
         var portname = stack.last match {
           case terminal: Terminal =>
             terminal
-          case _ => throw new ModelException("badnt", s"Unexpected stack at end of port binding: ${stack.last}")
+          case _ => throw new ModelException("badnt", s"Unexpected stack at end of port binding: ${stack.last}", None)
         }
         stack.remove(stack.size - 1)
 
@@ -161,26 +161,26 @@ class PipelineBuilder(config: ParserConfiguration) extends EventHandler {
               step.addResultBinding(pbind)
             }
           case _ => throw new ModelException("badnt",
-            s"Unexpected stack for port binding list: ${stack(stack.size - 2)}")
+            s"Unexpected stack for port binding list: ${stack(stack.size - 2)}", None)
 
         }
       case "Opts" => Unit
       case "OptionBinding" =>
         if (stack.size < 3) {
-          throw new ModelException("stack", s"Stack too short at end of port binding?")
+          throw new ModelException("stack", s"Stack too short at end of port binding?", None)
         }
 
         var binding = stack.last match {
           case terminal: Terminal =>
             terminal
-          case _ => throw new ModelException("badnt", s"Unexpected stack at end of port binding: ${stack.last}")
+          case _ => throw new ModelException("badnt", s"Unexpected stack at end of port binding: ${stack.last}", None)
         }
         stack.remove(stack.size - 1)
 
         var varname = stack.last match {
           case terminal: Terminal =>
             terminal
-          case _ => throw new ModelException("badnt", s"Unexpected stack at end of port binding: ${stack.last}")
+          case _ => throw new ModelException("badnt", s"Unexpected stack at end of port binding: ${stack.last}", None)
         }
         stack.remove(stack.size - 1)
 
@@ -189,11 +189,11 @@ class PipelineBuilder(config: ParserConfiguration) extends EventHandler {
             val optbind = new OptionBinding(varname.text, binding.text)
             step.addOptionBinding(optbind)
           case _ => throw new ModelException("badnt",
-            s"Unexpected stack for port binding list: ${stack(stack.size - 2)}")
+            s"Unexpected stack for port binding list: ${stack(stack.size - 2)}", None)
 
         }
       case _ =>
-        throw new ModelException("badnt", s"End of unexpected non-terminal: $name")
+        throw new ModelException("badnt", s"End of unexpected non-terminal: $name", None)
     }
   }
 
@@ -205,13 +205,13 @@ class PipelineBuilder(config: ParserConfiguration) extends EventHandler {
       case "TOKEN" => Unit
       case "StepName" =>
         if (stack.isEmpty) {
-          throw new ModelException("stack", s"Stack empty at StepName?")
+          throw new ModelException("stack", s"Stack empty at StepName?", None)
         }
 
         val step = stack.last match {
           case step: AtomicStep =>
             step
-          case _ => throw new ModelException("badnt", s"Unexpected stack StepName: ${stack.last}")
+          case _ => throw new ModelException("badnt", s"Unexpected stack StepName: ${stack.last}", None)
         }
 
         step.name = text
@@ -240,7 +240,7 @@ class PipelineBuilder(config: ParserConfiguration) extends EventHandler {
   private def startStep(name: String): Unit = {
     // This should replace the placeholder step on the stack
     if (stack.isEmpty) {
-      throw new ModelException("stack", s"Stack empty at start of $name?")
+      throw new ModelException("stack", s"Stack empty at start of $name?", None)
     }
 
     val step = stack.last match {
@@ -249,7 +249,7 @@ class PipelineBuilder(config: ParserConfiguration) extends EventHandler {
       case step: Step =>
         stack.remove(stack.size - 1)
         step
-      case _ => throw new ModelException("badnt", s"Unexpected stack at start of $name: ${stack.last}")
+      case _ => throw new ModelException("badnt", s"Unexpected stack at start of $name: ${stack.last}", None)
     }
 
     val astep = name match {
@@ -258,7 +258,7 @@ class PipelineBuilder(config: ParserConfiguration) extends EventHandler {
       case "choose" => new Choose(config, Some(stack.last))
       case "when" => new When(config, Some(stack.last))
       case "otherwise" => new Otherwise(config, Some(stack.last))
-      case _ => throw new ModelException("badtype", s"Unknown container type: $name")
+      case _ => throw new ModelException("badtype", s"Unknown container type: $name", None)
     }
 
     astep.sourceBindings = step.sourceBindings
@@ -270,13 +270,13 @@ class PipelineBuilder(config: ParserConfiguration) extends EventHandler {
 
   private def endStep(name: String): Unit = {
     if (stack.isEmpty) {
-      throw new ModelException("stack", s"Stack empty at end of $name?")
+      throw new ModelException("stack", s"Stack empty at end of $name?", None)
     }
 
     val step = stack.last match {
       case step: Step =>
         step
-      case _ => throw new ModelException("badnt", s"Unexpected stack at end of $name: ${stack.last}")
+      case _ => throw new ModelException("badnt", s"Unexpected stack at end of $name: ${stack.last}", None)
     }
     stack.remove(stack.size - 1)
     println("POP " + step + ": " + stack.size)
@@ -290,9 +290,9 @@ class PipelineBuilder(config: ParserConfiguration) extends EventHandler {
             container.addWhen(child)
           case child: Otherwise =>
             container.addOtherwise(child)
-          case _ => throw new ModelException("badnt", s"Unexpected child of choose $step")
+          case _ => throw new ModelException("badnt", s"Unexpected child of choose $step", None)
         }
-      case _ => throw new ModelException("badnt", s"Unexpected stack at end of $name: ${stack.last}")
+      case _ => throw new ModelException("badnt", s"Unexpected stack at end of $name: ${stack.last}", None)
     }
   }
 }

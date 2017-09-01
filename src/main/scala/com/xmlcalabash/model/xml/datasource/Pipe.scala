@@ -40,7 +40,7 @@ class Pipe(override val config: ParserConfiguration,
 
     if (properties.nonEmpty) {
       val key = properties.keySet.head
-      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}")
+      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
     }
 
     valid

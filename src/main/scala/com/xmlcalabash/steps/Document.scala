@@ -12,7 +12,7 @@ class Document extends DefaultStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
   override def receiveBinding(variable: String, value: Any): Unit = {
-    println(s"Document receives binding: $variable: $value")
+    config.get.trace("debug", s"Document receives binding: $variable: $value", "stepBindings")
     if (variable == "href") {
       _href = value.toString
     }

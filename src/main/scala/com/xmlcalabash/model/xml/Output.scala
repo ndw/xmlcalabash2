@@ -26,7 +26,7 @@ class Output(override val config: ParserConfiguration,
 
     if (properties.nonEmpty) {
       val key = properties.keySet.head
-      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}")
+      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
     }
 
     if (parent.isDefined && parent.get.isInstanceOf[Container]) {
@@ -34,12 +34,12 @@ class Output(override val config: ParserConfiguration,
         if (dataSourceClasses.contains(child.getClass)) {
           valid = valid && child.validate()
         } else {
-          throw new ModelException("badelem", s"Unexpected element: ${child}")
+          throw new ModelException("badelem", s"Unexpected element: ${child}", location)
         }
       }
     } else {
       if (children.nonEmpty) {
-        throw new ModelException("badelem", s"Unexpected element: ${children.head}")
+        throw new ModelException("badelem", s"Unexpected element: ${children.head}", location)
       }
     }
 

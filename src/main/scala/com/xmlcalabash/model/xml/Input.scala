@@ -31,7 +31,7 @@ class Input(override val config: ParserConfiguration,
 
     if (properties.nonEmpty) {
       val key = properties.keySet.head
-      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}")
+      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
     }
 
     if (parent.isDefined && parent.get.isInstanceOf[Container]) {
@@ -39,27 +39,27 @@ class Input(override val config: ParserConfiguration,
         child match {
           case ds: DataSource =>
             if (child.isInstanceOf[Pipe]) {
-              throw new ModelException("nopipe", "Pipe not allowed here")
+              throw new ModelException("nopipe", "Pipe not allowed here", location)
             }
             valid = valid && child.validate()
           case doc: Documentation => Unit
           case info: PipeInfo => Unit
           case _ =>
-            throw new ModelException("badelem", s"Unexpected element: $child")
+            throw new ModelException("badelem", s"Unexpected element: $child", location)
         }
       }
     } else {
       if (_sequence.isDefined) {
-        throw new ModelException("noseq", "Sequence not allowed here")
+        throw new ModelException("noseq", "Sequence not allowed here", location)
       }
       if (_primary.isDefined) {
-        throw new ModelException("noprim", "Primary not allowed here")
+        throw new ModelException("noprim", "Primary not allowed here", location)
       }
       for (child <- children) {
         if (dataSourceClasses.contains(child.getClass)) {
           valid = valid && child.validate()
         } else {
-          throw new ModelException("badelem", s"Unexpected element: $child")
+          throw new ModelException("badelem", s"Unexpected element: $child", location)
         }
       }
     }

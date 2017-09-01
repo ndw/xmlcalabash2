@@ -1,6 +1,8 @@
 package com.xmlcalabash.exceptions
 
-class ModelException(val code: String, val message: String) extends Throwable {
+import com.jafpl.graph.Location
+
+class ModelException(val code: String, val message: String, val location: Option[Location]) extends Throwable {
   override def toString: String = {
     s"Exception('$code','$message')"
   }

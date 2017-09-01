@@ -1,13 +1,15 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{ContainerStart, Graph, Node}
+import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.exceptions.ModelException
 import com.xmlcalabash.model.util.{ParserConfiguration, UniqueId}
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport}
 import com.xmlcalabash.model.xml.datasource.{Data, Document, Empty, Inline, Pipe}
+import com.xmlcalabash.runtime.NodeLocation
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
   protected[xml] var id: Long = UniqueId.nextId
@@ -15,28 +17,26 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
   protected[xml] val children: mutable.ListBuffer[Artifact] = mutable.ListBuffer.empty[Artifact]
   protected[xml] var inScopeNS = Map.empty[String,String]
   protected[xml] val subpiplineClasses = List(classOf[ForEach], classOf[Viewport],
-    classOf[Choose], classOf[Group], classOf[Try], classOf[AtomicStep])
+    classOf[Choose], classOf[Group], classOf[Try], classOf[AtomicStep], classOf[Variable])
   protected[xml] val dataSourceClasses = List(classOf[Empty], classOf[Pipe],
     classOf[Document], classOf[Inline], classOf[Data])
   protected[xml] var _label = Option.empty[String]
   protected[xml] var valid = true
   protected[xml] var graphNode = Option.empty[Node]
   protected[xml] var dump_attr = Option.empty[xml.MetaData]
+  protected[xml] var _location = Option.empty[Location]
 
   def label: Option[String] = _label
   protected[xml] def label_=(label: String): Unit = {
     _label = Some(label)
   }
 
-  def name: String = {
-    if (_label.isDefined) {
-      _label.get + "_" + id
-    } else {
-      "_" + id
-    }
-  }
+  def name: String = _label.getOrElse("_" + id)
+
+  def location: Option[Location] = _location
 
   protected[xml] def parse(node: XdmNode): Unit = {
+    _location = Some(new NodeLocation(node))
     // Parse namespaces
     val aiter = node.axisIterator(Axis.ATTRIBUTE)
     while (aiter.hasNext) {
@@ -105,7 +105,7 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
       if (value.get == "true" || value.get == "false") {
         Some(value.get == "true")
       } else {
-        throw new ModelException("badboolean", s"Not a boolean: $value")
+        throw new ModelException("badboolean", s"Not a boolean: $value", location)
       }
     } else {
       None
@@ -121,7 +121,7 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
         if (inScopeNS.contains(prefix)) {
           Some(new QName(prefix, inScopeNS(prefix), local))
         } else {
-          throw new ModelException("badns", s"No in-scope namespace for prefix: $prefix")
+          throw new ModelException("badns", s"No in-scope namespace for prefix: $prefix", location)
         }
       } else {
         Some(new QName("", name.get))
@@ -139,13 +139,25 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
         if (inScopeNS.contains(prefix)) {
           set += prefix
         } else {
-          throw new ModelException("badns", s"No in-scope namespace for prefix: $prefix")
+          throw new ModelException("badns", s"No in-scope namespace for prefix: $prefix", location)
         }
       }
       set.toSet
     } else {
       Set()
     }
+  }
+
+  def relevantChildren(): List[Artifact] = {
+    val list = ListBuffer.empty[Artifact]
+    for (node <- children) {
+      node match {
+        case e: PipeInfo => Unit
+        case e: Documentation => Unit
+        case _ => list += node
+      }
+    }
+    list.toList
   }
 
   def inputPorts: List[String] = {
@@ -228,14 +240,28 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
     None
   }
 
+  def bindings: List[QName] = {
+    val list = mutable.ListBuffer.empty[QName]
+    for (child <- children) {
+      child match {
+        case opt: OptionDecl =>
+          list += opt.optionName
+        case _ => Unit
+      }
+    }
+    list.toList
+  }
+
   def findStep(stepName: String): Option[Artifact] = {
     if (name == stepName) {
       Some(this)
     } else {
       var step = Option.empty[Artifact]
       for (child <- children) {
-        if (step.isEmpty && (child.name == stepName)) {
-          step = Some(child)
+        if (step.isEmpty) {
+          if (child.name == stepName) {
+            step = Some(child)
+          }
         }
       }
       if (step.isDefined) {
@@ -254,11 +280,11 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
     if (parent.isDefined) {
       var preceding = Option.empty[Artifact]
       for (child <- parent.get.children) {
+        if (this == child) {
+          return preceding
+        }
         child match {
           case step: PipelineStep =>
-            if (child == this) {
-              return preceding
-            }
             preceding = Some(child)
           case _ => Unit
         }
@@ -271,29 +297,59 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
 
   def defaultReadablePort(): Option[IOPort] = {
     if (parent.isDefined) {
-      this match {
-        case step: PipelineStep =>
-          val ps = precedingSibling()
-          if (ps.isDefined) {
-            for (port <- ps.get.outputPorts) {
-              val out = ps.get.output(port)
-              if (out.get.primary) {
-                return out
-              }
-            }
-          } else {
-            for (port <- parent.get.inputPorts) {
-              val in = parent.get.input(port)
-              if (in.get.primary) {
-                return in
-              }
+      val drpIsPrecedingSibling =
+        this match {
+          case step: PipelineStep => true
+          case variable: Variable => true
+          case _ => false
+        }
+
+      if (drpIsPrecedingSibling) {
+        val ps = precedingSibling()
+        if (ps.isDefined) {
+          for (port <- ps.get.outputPorts) {
+            val out = ps.get.output(port)
+            if (out.get.primary) {
+              return out
             }
           }
-          None
-        case _ => None
+        } else {
+          for (port <- parent.get.inputPorts) {
+            val in = parent.get.input(port)
+            if (in.get.primary) {
+              return in
+            }
+          }
+        }
+        None
+      } else {
+        None
       }
     } else {
       None
+    }
+  }
+
+  def findBinding(varname: QName): Option[Artifact] = {
+    if (parent.isEmpty) {
+      Some(this)
+    } else {
+      var binding = Option.empty[Artifact]
+      for (child <- parent.get.children) {
+        child match {
+          case varbind: Variable =>
+            binding = Some(varbind)
+          case art: Artifact =>
+            if (art == this) {
+              if (binding.isDefined) {
+                return binding
+              } else {
+                return parent.get.findBinding(varname)
+              }
+            }
+        }
+      }
+      throw new ModelException("missed", "Graph navigation error???", location)
     }
   }
 

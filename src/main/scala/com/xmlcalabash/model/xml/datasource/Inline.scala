@@ -18,7 +18,7 @@ class Inline(override val config: ParserConfiguration,
 
     if (properties.nonEmpty) {
       throw new ModelException("badopt",
-        s"Unexpected attribute: ${properties.keySet.head.getLocalName}")
+        s"Unexpected attribute: ${properties.keySet.head.getLocalName}", location)
     }
 
     valid

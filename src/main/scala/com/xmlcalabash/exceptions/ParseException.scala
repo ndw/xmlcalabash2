@@ -1,6 +1,6 @@
 package com.xmlcalabash.exceptions
 
-import com.xmlcalabash.model.util.Location
+import com.jafpl.graph.Location
 
 class ParseException(val message: String, val location: Option[Location]) extends Throwable {
   def this(msg: String, loc: Location) {

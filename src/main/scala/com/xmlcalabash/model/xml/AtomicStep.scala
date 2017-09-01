@@ -13,8 +13,12 @@ class AtomicStep(override val config: ParserConfiguration,
   private var _name: Option[String] = None
 
   override def validate(): Boolean = {
-    _name = properties.get(XProcConstants._name)
     var valid = true
+
+    _name = properties.get(XProcConstants._name)
+    if (_name.isDefined) {
+      label = _name.get
+    }
 
     for (key <- List(XProcConstants._name)) {
       if (properties.contains(key)) {
@@ -24,14 +28,14 @@ class AtomicStep(override val config: ParserConfiguration,
 
     for (key <- properties.keySet) {
       if (key.getNamespaceURI == "") {
-        throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}")
+        throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
       }
     }
 
     val okChildren = List(classOf[Input], classOf[WithOption], classOf[Log])
-    for (child <- children) {
+    for (child <- relevantChildren()) {
       if (!okChildren.contains(child.getClass)) {
-        throw new ModelException("badelem", s"Unexpected element: $child")
+        throw new ModelException("badelem", s"Unexpected element: $child", location)
       }
       valid = valid && child.validate()
     }
@@ -56,7 +60,7 @@ class AtomicStep(override val config: ParserConfiguration,
 
     for (port <- inputPorts) {
       if (!sig.inputPorts.contains(port)) {
-        throw new ModelException("noport", s"Step has no port named $port")
+        throw new ModelException("noport", s"Step has no port named $port", location)
       }
     }
 
@@ -80,7 +84,7 @@ class AtomicStep(override val config: ParserConfiguration,
 
     for (port <- outputPorts) {
       if (!sig.outputPorts.contains(port)) {
-        throw new ModelException("noport", s"Step has no port named $port")
+        throw new ModelException("noport", s"Step has no port named $port", location)
       }
     }
 
@@ -92,7 +96,7 @@ class AtomicStep(override val config: ParserConfiguration,
       case start: ContainerStart =>
         start.addAtomic(config.stepImplementation(stepType), name)
       case _ =>
-        throw new ModelException("badparent", "Atomic step parent isn't a container?")
+        throw new ModelException("badparent", "Atomic step parent isn't a container?", location)
     }
     graphNode = Some(node)
 

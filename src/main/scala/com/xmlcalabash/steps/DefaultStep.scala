@@ -51,4 +51,18 @@ class DefaultStep extends XmlStep {
   override def stop(): Unit = {
     // nop
   }
+
+  override def toString: String = {
+    val defStr = super.toString
+    if (defStr.startsWith("com.xmlcalabash.steps")) {
+      val objstr = ".*\\.([^\\.]+)@[0-9a-f]+$".r
+      defStr match {
+        case objstr(name) => name
+        case _ => defStr
+
+      }
+    } else {
+      defStr
+    }
+  }
 }

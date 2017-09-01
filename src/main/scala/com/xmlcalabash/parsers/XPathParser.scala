@@ -1,12 +1,12 @@
 package com.xmlcalabash.parsers
 
-import com.jafpl.runtime.RuntimeConfiguration
+import com.xmlcalabash.model.util.{ExpressionParser, ParserConfiguration}
 import com.xmlcalabash.parsers.XPath31.EventHandler
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 
-class XPathParser(config: RuntimeConfiguration) {
+class XPathParser(config: ParserConfiguration) extends ExpressionParser {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val handler = new FindRefs()
   private val parser = new XPath31()
@@ -25,11 +25,11 @@ class XPathParser(config: RuntimeConfiguration) {
 
   def errors: Boolean = _errors
 
-  def variableRefs(): List[String] = {
+  def variableRefs: List[String] = {
     handler.variableRefs()
   }
 
-  def functionRefs(): List[String] = {
+  def functionRefs: List[String] = {
     handler.functionRefs()
   }
 

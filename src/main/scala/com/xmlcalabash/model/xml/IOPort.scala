@@ -53,7 +53,7 @@ class IOPort(override val config: ParserConfiguration,
       case info: PipeInfo =>
         super.addChild(info)
       case _ =>
-        throw new ModelException("invalid", s"Invalid child of input: $child")
+        throw new ModelException("invalid", s"Invalid child of input: $child", location)
     }
   }
 
@@ -63,7 +63,7 @@ class IOPort(override val config: ParserConfiguration,
     _primary = lexicalBoolean(properties.get(XProcConstants._primary))
 
     if (_port.isEmpty) {
-      throw new ModelException("portreq", "Port is required")
+      throw new ModelException("portreq", "Port is required", location)
     }
 
     valid

@@ -57,7 +57,7 @@ class DeclareStep(override val config: ParserConfiguration,
 
     for (key <- properties.keySet) {
       if (key.getNamespaceURI == "") {
-        throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}")
+        throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
       }
     }
 
@@ -81,7 +81,7 @@ class DeclareStep(override val config: ParserConfiguration,
       index += 1
     }
     if (index < children.length) {
-      throw new ModelException("badelem", s"Unexpected element: ${children(index)}")
+      throw new ModelException("badelem", s"Unexpected element: ${children(index)}", location)
     }
 
     valid = valid && makePortsExplicit()

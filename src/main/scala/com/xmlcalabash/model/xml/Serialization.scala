@@ -62,24 +62,24 @@ class Serialization(override val config: ParserConfiguration,
 
     if (properties.nonEmpty) {
       val key = properties.keySet.head
-      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}")
+      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
     }
 
     if (_port.isEmpty) {
-      throw new ModelException("portreq", "Port is required")
+      throw new ModelException("portreq", "Port is required", location)
     }
 
     if (parent.isDefined && !parent.get.outputPorts.contains(_port.get)) {
-      throw new ModelException("badport", s"No such port: ${_port.get}")
+      throw new ModelException("badport", s"No such port: ${_port.get}", location)
     }
 
     if (_standalone.isDefined) {
       if (!List("true", "false", "omit").contains(_standalone.get)) {
         throw new ModelException("badstandalone",
-          s"Invalid standalone value: ${_standalone.get}")
+          s"Invalid standalone value: ${_standalone.get}", location)
       }
       if (children.nonEmpty) {
-        throw new ModelException("badelem", s"Unexpected element: ${children.head}")
+        throw new ModelException("badelem", s"Unexpected element: ${children.head}", location)
       }
     }
 
