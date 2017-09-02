@@ -1,0 +1,6 @@
+<test-suite xmlns='http://xproc.org/ns/testsuite/3.0'>
+
+  <test src="inline-avt.xml"/>
+  <test src="not-a-pipeline.xml"/>
+
+</test-suite>

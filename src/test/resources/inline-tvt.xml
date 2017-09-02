@@ -1,0 +1,19 @@
+<test xmlns='http://xproc.org/ns/testsuite/3.0' expected="pass">
+  <pipeline src="inline-avt.xpl"/>
+  <schematron>
+    <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron"
+              xmlns:p="http://www.w3.org/ns/xproc"
+              xmlns:rng="http://relaxng.org/ns/structure/1.0">
+      <s:ns prefix="p" uri="http://www.w3.org/ns/xproc"/>
+
+      <s:pattern>
+        <s:rule context="/*">
+          <s:assert test="self::doc">The pipeline root is not doc.</s:assert>
+        </s:rule>
+        <s:rule context="number">
+          <s:assert test=". = 9">The number of nodes in the TVT is incorrect.</s:assert>
+        </s:rule>
+      </s:pattern>
+    </s:schema>
+  </schematron>
+</test>
