@@ -338,7 +338,9 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
       for (child <- parent.get.children) {
         child match {
           case varbind: Variable =>
-            binding = Some(varbind)
+            if (varbind.variableName == varname) {
+              binding = Some(varbind)
+            }
           case art: Artifact =>
             if (art == this) {
               if (binding.isDefined) {

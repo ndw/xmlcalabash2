@@ -35,7 +35,7 @@ object XmlDriver extends App {
 
     graph.close()
     //dumpRaw(graph)
-    //dumpGraph(graph)
+    dumpGraph(graph)
 
     //System.exit(0)
 
@@ -61,6 +61,7 @@ object XmlDriver extends App {
     runtime.run()
   } catch {
     case t: Throwable =>
+      println(t)
       errored = true
   }
 

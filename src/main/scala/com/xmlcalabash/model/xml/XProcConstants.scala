@@ -42,14 +42,15 @@ object XProcConstants {
 
   val cx_document = new QName("cx", ns_cx, "document")
 
-
   val _byte_order_mark = new QName("", "byte-order-mark")
   val _cdata_section_elements = new QName("", "cdata-section-elements")
   val _doctype_public = new QName("", "doctype-public")
   val _doctype_system = new QName("", "doctype-system")
+  val _document_properties = new QName("", "document-properties")
   val _encoding = new QName("", "encoding")
   val _escape_uri_attributes = new QName("", "escape-uri-attributes")
   val _exclude_inline_prefixes = new QName("", "exclude-inline-prefixes")
+  val _expand_text = new QName("", "expand-text")
   val _href = new QName("", "href")
   val _include_content_type = new QName("", "include-content-type")
   val _indent = new QName("", "indent")
@@ -70,4 +71,7 @@ object XProcConstants {
   val _undeclare_prefixes = new QName("", "undeclare-prefixes")
   val _version = new QName("", "version")
   val _xpath_version = new QName("", "xpath-version")
+
+  // For non-XProc namespaced places
+  val p_expand_text = new QName("p", ns_p, "expand-text")
 }

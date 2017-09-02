@@ -151,9 +151,12 @@ class Parser(config: ParserConfiguration) {
   }
 
   private def parseInline(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Inline(config, parent)
-    art.parse(node)
-    parseChildren(art, node)
+    val nodes = ListBuffer.empty[XdmNode]
+    val iter = node.axisIterator(Axis.CHILD)
+    while (iter.hasNext) {
+      nodes += iter.next().asInstanceOf[XdmNode]
+    }
+    val art = new Inline(config, parent, nodes.toList)
     art
   }
 

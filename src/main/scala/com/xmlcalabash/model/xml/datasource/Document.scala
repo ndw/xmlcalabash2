@@ -71,7 +71,7 @@ class Document(override val config: ParserConfiguration,
     val docReader = cnode.addAtomic(config.stepImplementation(XProcConstants.cx_document))
 
     val hrefBinding = if (hrefAvt.size > 1) {
-      cnode.addVariable("href", new XProcAvtExpression(inScopeNS, hrefAvt))
+      cnode.addVariable("href", new XProcAvtExpression(inScopeNS, hrefAvt.toList))
     } else {
       cnode.addVariable("href", new XProcXPathExpression(inScopeNS, _href.get))
     }
