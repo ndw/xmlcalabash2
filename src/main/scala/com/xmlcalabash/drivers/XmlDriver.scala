@@ -3,11 +3,9 @@ package com.xmlcalabash.drivers
 import java.io.{File, PrintWriter}
 import javax.xml.transform.sax.SAXSource
 
-import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.Graph
 import com.jafpl.messages.Metadata
 import com.jafpl.runtime.GraphRuntime
-import com.xmlcalabash.exceptions.ModelException
 import com.xmlcalabash.model.util.DefaultParserConfiguration
 import com.xmlcalabash.model.xml.Parser
 import com.xmlcalabash.runtime.{PrintingConsumer, SaxonRuntimeConfiguration}
