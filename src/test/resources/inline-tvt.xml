@@ -13,6 +13,12 @@
         <s:rule context="number">
           <s:assert test=". = 9">The number of nodes in the TVT is incorrect.</s:assert>
         </s:rule>
+        <s:rule context="toggle">
+          <s:assert test="@class = 9">The number of nodes in the toggle AVT is incorrect.</s:assert>
+        </s:rule>
+        <s:rule context="toggle">
+          <s:assert test=". = '{{$bar}}'">The toggled content is incorrect.</s:assert>
+        </s:rule>
       </s:pattern>
     </s:schema>
   </schematron>
