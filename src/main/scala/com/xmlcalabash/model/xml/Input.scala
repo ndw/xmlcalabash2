@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
@@ -31,7 +31,7 @@ class Input(override val config: ParserConfiguration,
 
     if (properties.nonEmpty) {
       val key = properties.keySet.head
-      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
+      throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
     if (parent.isDefined && parent.get.isInstanceOf[Container]) {
@@ -39,27 +39,27 @@ class Input(override val config: ParserConfiguration,
         child match {
           case ds: DataSource =>
             if (child.isInstanceOf[Pipe]) {
-              throw new ModelException("nopipe", "Pipe not allowed here", location)
+              throw new ModelException(ExceptionCode.BADPIPE, this.toString, location)
             }
             valid = valid && child.validate()
           case doc: Documentation => Unit
           case info: PipeInfo => Unit
           case _ =>
-            throw new ModelException("badelem", s"Unexpected element: $child", location)
+            throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
         }
       }
     } else {
       if (_sequence.isDefined) {
-        throw new ModelException("noseq", "Sequence not allowed here", location)
+        throw new ModelException(ExceptionCode.BADSEQ, "sequence", location)
       }
       if (_primary.isDefined) {
-        throw new ModelException("noprim", "Primary not allowed here", location)
+        throw new ModelException(ExceptionCode.BADPRIMARY, "primary", location)
       }
       for (child <- children) {
         if (dataSourceClasses.contains(child.getClass)) {
           valid = valid && child.validate()
         } else {
-          throw new ModelException("badelem", s"Unexpected element: $child", location)
+          throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
         }
       }
     }

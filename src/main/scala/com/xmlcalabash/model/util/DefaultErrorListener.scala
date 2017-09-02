@@ -13,6 +13,15 @@ class DefaultErrorListener extends ErrorListener {
     msg("error", cause, location)
   }
 
+  override def error(cause: Throwable): Unit = {
+    val location = cause match {
+      case model: ModelException => model.location
+      case pipe: PipelineException => pipe.location
+      case _ => None
+    }
+    msg("error", cause, location)
+  }
+
   override def warning(message: String, location: Option[Location]): Unit = {
     msg("warn", message, location)
   }

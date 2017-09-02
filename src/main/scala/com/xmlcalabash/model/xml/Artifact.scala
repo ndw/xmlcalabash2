@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{ParserConfiguration, UniqueId}
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport}
 import com.xmlcalabash.model.xml.datasource.{Data, Document, Empty, Inline, Pipe}
@@ -105,7 +105,7 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
       if (value.get == "true" || value.get == "false") {
         Some(value.get == "true")
       } else {
-        throw new ModelException("badboolean", s"Not a boolean: $value", location)
+        throw new ModelException(ExceptionCode.BADBOOLEAN, value.get, location)
       }
     } else {
       None
@@ -121,7 +121,7 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
         if (inScopeNS.contains(prefix)) {
           Some(new QName(prefix, inScopeNS(prefix), local))
         } else {
-          throw new ModelException("badns", s"No in-scope namespace for prefix: $prefix", location)
+          throw new ModelException(ExceptionCode.NOPREFIX, prefix , location)
         }
       } else {
         Some(new QName("", name.get))
@@ -139,7 +139,7 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
         if (inScopeNS.contains(prefix)) {
           set += prefix
         } else {
-          throw new ModelException("badns", s"No in-scope namespace for prefix: $prefix", location)
+          throw new ModelException(ExceptionCode.NOPREFIX, prefix , location)
         }
       }
       set.toSet
@@ -351,7 +351,7 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
             }
         }
       }
-      throw new ModelException("missed", "Graph navigation error???", location)
+      throw new ModelException(ExceptionCode.INTERNAL, "Graph navigation error???", location)
     }
   }
 

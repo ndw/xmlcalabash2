@@ -7,7 +7,7 @@
    <s:pattern>
      <s:rule context="/*">
        <s:assert test="self::doc">The pipeline root is not doc.</s:assert>
-       <s:assert test="@count = 9">The number of nodes in the AVT is incorrect.</s:assert>
+       <s:assert test="@count = 3">The number of nodes in the AVT is incorrect.</s:assert>
      </s:rule>
    </s:pattern>
 </s:schema>

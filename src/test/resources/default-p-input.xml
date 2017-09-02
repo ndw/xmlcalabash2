@@ -1,5 +1,19 @@
 <test xmlns='http://xproc.org/ns/testsuite/3.0' expected="pass">
-  <pipeline src="inline-avt.xpl"/>
+  <pipeline>
+    <p:declare-step xmlns:p="http://www.w3.org/ns/xproc"
+                    xmlns:ex="http://xmlcalabash.com/ext/foo"
+                    name="main"
+                    version="1.0">
+      <p:output port="result"/>
+
+      <p:identity name="two">
+        <p:input port="source">
+          <doc xmlns="">The p:inline element can be defaulted.</doc>
+        </p:input>
+      </p:identity>
+    </p:declare-step>
+  </pipeline>
+
   <schematron>
     <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron"
               xmlns:p="http://www.w3.org/ns/xproc"
@@ -9,15 +23,6 @@
       <s:pattern>
         <s:rule context="/*">
           <s:assert test="self::doc">The pipeline root is not doc.</s:assert>
-        </s:rule>
-        <s:rule context="number">
-          <s:assert test=". = 3">The number of nodes in the TVT is incorrect.</s:assert>
-        </s:rule>
-        <s:rule context="toggle">
-          <s:assert test="@class = 3">The number of nodes in the toggle AVT is incorrect.</s:assert>
-        </s:rule>
-        <s:rule context="toggle">
-          <s:assert test=". = '{{$bar}}'">The toggled content is incorrect.</s:assert>
         </s:rule>
       </s:pattern>
     </s:schema>

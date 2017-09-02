@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.runtime.XProcXPathExpression
 import net.sf.saxon.s9api.QName
@@ -18,13 +18,13 @@ class Variable(override val config: ParserConfiguration,
   override def validate(): Boolean = {
     val qname = lexicalQName(properties.get(XProcConstants._name))
     if (qname.isEmpty) {
-      throw new ModelException("namereqd", "An variable name is required", location)
+      throw new ModelException(ExceptionCode.NAMEATTRREQ, this.toString, location)
     }
     _name = qname.get
 
     _select = properties.get(XProcConstants._select)
     if (_select.isEmpty) {
-      throw new ModelException("selectrequired", "A select expression is required", location)
+      throw new ModelException(ExceptionCode.SELECTATTRREQ, this.toString, location)
     }
 
     for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._select)) {
@@ -35,11 +35,11 @@ class Variable(override val config: ParserConfiguration,
 
     if (properties.nonEmpty) {
       val key = properties.keySet.head
-      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
+      throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
     if (relevantChildren().nonEmpty) {
-      throw new ModelException("badelem", s"Unexpected element: ${children.head}", location)
+      throw new ModelException(ExceptionCode.BADCHILD, children.head.toString, location)
     }
 
     valid

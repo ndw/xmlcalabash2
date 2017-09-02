@@ -25,6 +25,10 @@ class TestSuiteSpec extends FlatSpec {
     test("src/test/resources/inline-tvt.xml")
   }
 
+  "A p:inline " should " be defaulted " in {
+    test("src/test/resources/default-p-input.xml")
+  }
+
   def test(fn: String) {
     val runner = new TestRunner(parserConfig, runtimeConfig, fn)
     try {

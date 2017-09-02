@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
@@ -57,7 +57,7 @@ class DeclareStep(override val config: ParserConfiguration,
 
     for (key <- properties.keySet) {
       if (key.getNamespaceURI == "") {
-        throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
+        throw new ModelException(ExceptionCode.BADCONTAINERATTR, key.getLocalName, location)
       }
     }
 
@@ -81,7 +81,7 @@ class DeclareStep(override val config: ParserConfiguration,
       index += 1
     }
     if (index < children.length) {
-      throw new ModelException("badelem", s"Unexpected element: ${children(index)}", location)
+      throw new ModelException(ExceptionCode.BADCHILD, children(index).toString, location)
     }
 
     valid = valid && makePortsExplicit()

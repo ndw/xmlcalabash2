@@ -1,13 +1,14 @@
 package com.xmlcalabash.model.xml.datasource
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{AvtParser, ParserConfiguration}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, Variable, XProcConstants}
 import com.xmlcalabash.steps.ProduceInline
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class Inline(override val config: ParserConfiguration,
              override val parent: Option[Artifact],
@@ -32,8 +33,7 @@ class Inline(override val config: ParserConfiguration,
     }
 
     if (properties.nonEmpty) {
-      throw new ModelException("badopt",
-        s"Unexpected attribute: ${properties.keySet.head.getLocalName}", location)
+      throw new ModelException(ExceptionCode.BADATTR, properties.keySet.head.toString, location)
     }
 
     for (node <- nodes) {
@@ -73,7 +73,7 @@ class Inline(override val config: ParserConfiguration,
   private def findVariableRefsInString(text: String): Unit = {
     val list = AvtParser.parse(text)
     if (list.isEmpty) {
-      throw new ModelException("badexpr", s"Error in AVT: $text", location)
+      throw new ModelException(ExceptionCode.BADAVT, text, location)
     }
 
     var avt = false
@@ -100,7 +100,7 @@ class Inline(override val config: ParserConfiguration,
     for (ref <- variableRefs) {
       val bind = findBinding(ref)
       if (bind.isEmpty) {
-        throw new ModelException("nobind", s"No binding for $ref", location)
+        throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
       }
 
       bind.get match {
@@ -116,13 +116,13 @@ class Inline(override val config: ParserConfiguration,
             }
           }
           if (optDecl.isEmpty) {
-            throw new ModelException("nobind", s"No binding for $ref", location)
+            throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
           }
           graph.addBindingEdge(optDecl.get.graphNode.get.asInstanceOf[Binding], inlineProducer)
         case varDecl: Variable =>
           graph.addBindingEdge(varDecl.graphNode.get.asInstanceOf[Binding], inlineProducer)
         case _ =>
-          throw new ModelException("unexpected", s"Unexpected $ref binding: ${bind.get}", location)
+          throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
       }
     }
   }
@@ -131,5 +131,14 @@ class Inline(override val config: ParserConfiguration,
     val toStep = this.parent.get.parent
     val toPort = this.parent.get.asInstanceOf[IOPort].port.get
     graph.addEdge(graphNode.get, "result", toStep.get.graphNode.get, toPort)
+  }
+
+  override def asXML: xml.Elem = {
+    val nodes = ListBuffer.empty[xml.Node]
+    nodes += xml.Text("\n")
+    nodes += xml.Comment("FIXME: implement serialization of inline content")
+    nodes += xml.Text("\n")
+    new xml.Elem("p", "inline", dump_attr.getOrElse(xml.Null),
+      namespaceScope, false, nodes:_*)
   }
 }

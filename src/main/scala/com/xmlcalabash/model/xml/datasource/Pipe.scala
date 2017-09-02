@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml.datasource
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.{Artifact, Documentation, IOPort, PipeInfo, XProcConstants}
 
@@ -40,7 +40,7 @@ class Pipe(override val config: ParserConfiguration,
 
     if (properties.nonEmpty) {
       val key = properties.keySet.head
-      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
+      throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
     valid

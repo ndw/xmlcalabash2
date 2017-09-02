@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
 import net.sf.saxon.s9api.QName
 
@@ -18,7 +18,7 @@ class OptionDecl(override val config: ParserConfiguration,
   override def validate(): Boolean = {
     val qname = lexicalQName(properties.get(XProcConstants._name))
     if (qname.isEmpty) {
-      throw new ModelException("namereqd", "An option name is required", location)
+      throw new ModelException(ExceptionCode.NAMEATTRREQ, this.toString, location)
     }
 
     _name = qname.get
@@ -33,11 +33,11 @@ class OptionDecl(override val config: ParserConfiguration,
 
     if (properties.nonEmpty) {
       val key = properties.keySet.head
-      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
+      throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
     if (children.nonEmpty) {
-      throw new ModelException("badelem", s"Unexpected element: ${children.head}", location)
+      throw new ModelException(ExceptionCode.BADCHILD, children.head.toString, location)
     }
 
     valid
@@ -49,7 +49,7 @@ class OptionDecl(override val config: ParserConfiguration,
     if (cnode.parent.isEmpty) {
       graphNode = Some(graph.addBinding(_name.getClarkName))
     } else {
-      throw new ModelException("badopt", "Don't know what to do about opts here", location)
+      throw new ModelException(ExceptionCode.INTERNAL, "Don't know what to do about opts here", location)
     }
   }
 

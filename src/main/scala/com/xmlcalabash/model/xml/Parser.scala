@@ -1,48 +1,47 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.datasource.{Document, Inline, Pipe}
 import net.sf.saxon.s9api.{Axis, XdmNode, XdmNodeKind}
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ListBuffer
 
 class Parser(config: ParserConfiguration) {
+  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private var exception: Option[Throwable] = None
 
   def parsePipeline(node: XdmNode): DeclareStep = {
     val art = parse(node)
-    art match {
-      case step: DeclareStep =>
-        step
-      case _ => throw new ModelException("badroot", s"Node did not define a pipeline: $node", None)
-    }
-  }
+    if (exception.isEmpty) {
+      if (art.isEmpty) {
+        exception = Some(new ModelException(ExceptionCode.INTERNAL, "This can't happen", node))
+        config.errorListener.error(exception.get)
+        throw exception.get
+      }
 
-  private def parse(node: XdmNode): Artifact = {
-    val root = parse(None, node)
-    if (root.isDefined) {
-      try {
-        if (!root.get.validate()) {
-          // throw new ModelException("invalid", "Pipeline is invalid")
-          println("PIPELINE IS INVALID")
-        }
-      } catch {
-        case cause: Throwable => error(cause)
-        case _: Throwable => Unit
+      art.get match {
+        case step: DeclareStep =>
+          return step
+        case _ =>
+          val badroot = new ModelException(ExceptionCode.BADPIPELINEROOT, node.toString, node)
+          config.errorListener.error(badroot)
+          exception = Some(badroot)
       }
     }
 
-    if (exception.isDefined) {
-      throw exception.get
-    } else {
-      root.get
-    }
+    throw exception.get
   }
 
-  private def error(cause: Throwable): Unit = {
-    exception = Some(cause)
-    config.errorListener.error(cause, None)
+  private def parse(node: XdmNode): Option[Artifact] = {
+    val root = parse(None, node)
+    if (exception.isEmpty) {
+      if (!root.get.validate()) {
+        config.errorListener.error(new ModelException(ExceptionCode.INVALIDPIPELINE, List(), node))
+      }
+    }
+    root
   }
 
   private def parse(parent: Option[Artifact], node: XdmNode): Option[Artifact] = {
@@ -59,29 +58,47 @@ class Parser(config: ParserConfiguration) {
         art
 
       case XdmNodeKind.ELEMENT =>
-        val art: Option[Artifact] = node.getNodeName match {
-          case XProcConstants.p_declare_step => Some(parseDeclareStep(parent, node))
-          case XProcConstants.p_pipeline => Some(parsePipeline(parent, node))
-          case XProcConstants.p_serialization => Some(parseSerialization(parent, node))
-          case XProcConstants.p_output => Some(parseOutput(parent, node))
-          case XProcConstants.p_input => Some(parseInput(parent, node))
-          case XProcConstants.p_option => Some(parseOption(parent, node))
-          case XProcConstants.p_variable => Some(parseVariable(parent, node))
-          case XProcConstants.p_inline => Some(parseInline(parent, node))
-          case XProcConstants.p_pipe => Some(parsePipe(parent, node))
-          case XProcConstants.p_document => Some(parseDocument(parent, node))
-          case XProcConstants.p_documentation => Some(parseDocumentation(parent, node))
-          case XProcConstants.p_pipeinfo => Some(parsePipeInfo(parent, node))
-          case _ =>
-            if (config.stepSignatures.stepTypes.contains(node.getNodeName)) {
-              Some(parseAtomicStep(parent, node))
-            } else {
-              throw new ModelException("notstep", s"${node.getNodeName} does not appear to be a step", None)
+        try {
+          val art: Option[Artifact] = node.getNodeName match {
+            case XProcConstants.p_declare_step => Some(parseDeclareStep(parent, node))
+            case XProcConstants.p_pipeline => Some(parsePipeline(parent, node))
+            case XProcConstants.p_serialization => Some(parseSerialization(parent, node))
+            case XProcConstants.p_output => Some(parseOutput(parent, node))
+            case XProcConstants.p_input => Some(parseInput(parent, node))
+            case XProcConstants.p_option => Some(parseOption(parent, node))
+            case XProcConstants.p_variable => Some(parseVariable(parent, node))
+            case XProcConstants.p_inline => Some(parseInline(parent, node))
+            case XProcConstants.p_pipe => Some(parsePipe(parent, node))
+            case XProcConstants.p_document => Some(parseDocument(parent, node))
+            case XProcConstants.p_documentation => Some(parseDocumentation(parent, node))
+            case XProcConstants.p_pipeinfo => Some(parsePipeInfo(parent, node))
+            case _ =>
+              if (config.stepSignatures.stepTypes.contains(node.getNodeName)) {
+                Some(parseAtomicStep(parent, node))
+              } else {
+                if (parent.isDefined) {
+                  parent.get match {
+                    case input: Input =>
+                      logger.debug("Interpreting naked content of p:input as a p:inline")
+                      Some(parseInline(parent, node))
+                    case _ =>
+                      throw new ModelException(ExceptionCode.NOTASTEP, node.getNodeName.toString, node)
+                  }
+                } else {
+                  throw new ModelException(ExceptionCode.NOTASTEP, node.getNodeName.toString, node)
+                }
+              }
+          }
+          art
+        } catch {
+          case t: Throwable =>
+            if (exception.isEmpty) {
+              exception = Some(t)
             }
+            config.errorListener.error(t)
+            None
         }
-        art
       case _ => None
-
     }
   }
 
@@ -152,10 +169,18 @@ class Parser(config: ParserConfiguration) {
 
   private def parseInline(parent: Option[Artifact], node: XdmNode): Artifact = {
     val nodes = ListBuffer.empty[XdmNode]
-    val iter = node.axisIterator(Axis.CHILD)
-    while (iter.hasNext) {
-      nodes += iter.next().asInstanceOf[XdmNode]
+    if (node.getNodeName == XProcConstants.p_inline) {
+      val iter = node.axisIterator(Axis.CHILD)
+      while (iter.hasNext) {
+        nodes += iter.next().asInstanceOf[XdmNode]
+      }
+    } else {
+      val iter = node.getParent.axisIterator(Axis.CHILD)
+      while (iter.hasNext) {
+        nodes += iter.next().asInstanceOf[XdmNode]
+      }
     }
+
     val art = new Inline(config, parent, nodes.toList)
     art
   }

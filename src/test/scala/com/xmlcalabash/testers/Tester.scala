@@ -102,6 +102,8 @@ class Tester(parserConfig: ParserConfiguration, runtimeConfig: SaxonRuntimeConfi
 
       val resultDoc = result.get.items.head.asInstanceOf[XdmNode]
 
+      //println(resultDoc)
+
       if (_schematron.isDefined) {
         val schematest = new Schematron(runtimeConfig)
         val results = schematest.test(resultDoc, schematron.get)
@@ -122,7 +124,7 @@ class Tester(parserConfig: ParserConfiguration, runtimeConfig: SaxonRuntimeConfi
       }
     } catch {
       case model: ModelException =>
-        Some(model.code)
+        Some(model.code.toString)
       case t: Throwable => throw t
     }
   }

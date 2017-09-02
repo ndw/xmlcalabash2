@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
 import net.sf.saxon.s9api.QName
 
@@ -28,14 +28,14 @@ class AtomicStep(override val config: ParserConfiguration,
 
     for (key <- properties.keySet) {
       if (key.getNamespaceURI == "") {
-        throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
+        throw new ModelException(ExceptionCode.BADATOMICATTR, key.getLocalName, location)
       }
     }
 
     val okChildren = List(classOf[Input], classOf[WithOption], classOf[Log])
     for (child <- relevantChildren()) {
       if (!okChildren.contains(child.getClass)) {
-        throw new ModelException("badelem", s"Unexpected element: $child", location)
+        throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
       }
       valid = valid && child.validate()
     }
@@ -47,7 +47,7 @@ class AtomicStep(override val config: ParserConfiguration,
     val sig = config.stepSignatures.step(stepType)
 
     for (port <- sig.inputPorts) {
-      val siginput = sig.input(port)
+      val siginput = sig.input(port, location.get)
       if (input(port).isEmpty) {
         val in = new Input(config, this, port, primary=siginput.primary, sequence=siginput.sequence)
         addChild(in)
@@ -60,7 +60,7 @@ class AtomicStep(override val config: ParserConfiguration,
 
     for (port <- inputPorts) {
       if (!sig.inputPorts.contains(port)) {
-        throw new ModelException("noport", s"Step has no port named $port", location)
+        throw new ModelException(ExceptionCode.BADATOMICINPUTPORT, List(stepType.toString, port), location)
       }
     }
 
@@ -71,7 +71,7 @@ class AtomicStep(override val config: ParserConfiguration,
     val sig = config.stepSignatures.step(stepType)
 
     for (port <- sig.outputPorts) {
-      val sigoutput = sig.output(port)
+      val sigoutput = sig.output(port, location.get)
       if (output(port).isEmpty) {
         val out = new Output(config, this, port, primary=sigoutput.primary, sequence=sigoutput.sequence)
         addChild(out)
@@ -84,7 +84,7 @@ class AtomicStep(override val config: ParserConfiguration,
 
     for (port <- outputPorts) {
       if (!sig.outputPorts.contains(port)) {
-        throw new ModelException("noport", s"Step has no port named $port", location)
+        throw new ModelException(ExceptionCode.BADATOMICINPUTPORT, List(stepType.toString, port), location)
       }
     }
 
@@ -94,9 +94,9 @@ class AtomicStep(override val config: ParserConfiguration,
   override def makeGraph(graph: Graph, parent: Node) {
     val node = parent match {
       case start: ContainerStart =>
-        start.addAtomic(config.stepImplementation(stepType), name)
+        start.addAtomic(config.stepImplementation(stepType, location.get), name)
       case _ =>
-        throw new ModelException("badparent", "Atomic step parent isn't a container?", location)
+        throw new ModelException(ExceptionCode.INTERNAL, "Atomic step parent isn't a container???", location)
     }
     graphNode = Some(node)
 

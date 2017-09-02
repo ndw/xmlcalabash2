@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
 import net.sf.saxon.s9api.QName
 
@@ -62,24 +62,23 @@ class Serialization(override val config: ParserConfiguration,
 
     if (properties.nonEmpty) {
       val key = properties.keySet.head
-      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
+      throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
     if (_port.isEmpty) {
-      throw new ModelException("portreq", "Port is required", location)
+      throw new ModelException(ExceptionCode.PORTATTRREQ, this.toString, location)
     }
 
     if (parent.isDefined && !parent.get.outputPorts.contains(_port.get)) {
-      throw new ModelException("badport", s"No such port: ${_port.get}", location)
+      throw new ModelException(ExceptionCode.BADSERPORT, _port.get, location)
     }
 
     if (_standalone.isDefined) {
       if (!List("true", "false", "omit").contains(_standalone.get)) {
-        throw new ModelException("badstandalone",
-          s"Invalid standalone value: ${_standalone.get}", location)
+        throw new ModelException(ExceptionCode.BADSERSTANDALONE, _standalone.get, location)
       }
       if (children.nonEmpty) {
-        throw new ModelException("badelem", s"Unexpected element: ${children.head}", location)
+        throw new ModelException(ExceptionCode.BADCHILD, children.head.toString, location)
       }
     }
 

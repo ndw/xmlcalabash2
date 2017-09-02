@@ -91,6 +91,7 @@ class StepConfigBuilder() extends EventHandler {
   }
 
   def endNonterminal(name: String, end: Int) {
+    val loc = location(end)
     name match {
       case "Config" => Unit
       case "Prefix" => Unit
@@ -101,10 +102,10 @@ class StepConfigBuilder() extends EventHandler {
         var count = 0
         for (name <- step.get.inputPorts) {
           count += 1
-          if (step.get.input(name).primary) {
-            port = Some(step.get.input(name))
+          if (step.get.input(name, loc).primary) {
+            port = Some(step.get.input(name, loc))
           } else if (port.isEmpty) {
-            port = Some(step.get.input(name))
+            port = Some(step.get.input(name, loc))
           }
         }
         if (count == 1 && !port.get.primaryDeclared) {
@@ -115,10 +116,10 @@ class StepConfigBuilder() extends EventHandler {
         count = 0
         for (name <- step.get.outputPorts) {
           count += 1
-          if (step.get.output(name).primary) {
-            port = Some(step.get.output(name))
+          if (step.get.output(name, loc).primary) {
+            port = Some(step.get.output(name, loc))
           } else if (port.isEmpty) {
-            port = Some(step.get.output(name))
+            port = Some(step.get.output(name, loc))
           }
         }
         if (count == 1 && !port.get.primaryDeclared) {
@@ -127,9 +128,9 @@ class StepConfigBuilder() extends EventHandler {
 
         signatures.addStep(step.get)
       case "Implementation" => Unit
-      case "Input" => step.get.addInput(port.get)
-      case "Output" => step.get.addOutput(port.get)
-      case "Option" => step.get.addOption(opt.get)
+      case "Input" => step.get.addInput(port.get, location(end))
+      case "Output" => step.get.addOutput(port.get, location(end))
+      case "Option" => step.get.addOption(opt.get, location(end))
       case "TokenList" =>
         opt.get.tokenList = tokenList.toList
         tokenList.clear()
@@ -256,15 +257,18 @@ class StepConfigBuilder() extends EventHandler {
       line0 += 1
     }
 
-    // If we've passed the position, back up one line
-    if (cfgOffsets(line0) > pos) {
-      line0 -= 1
+    if (line0 < cfgOffsets.length) {
+      // If we've passed the position, back up one line
+      if (cfgOffsets(line0) > pos) {
+        line0 -= 1
+      }
+
+      // The column is the position on this line
+      val col0 = pos - cfgOffsets(line0)
+
+      new DefaultLocation(href, (line0+1).toLong, (col0+1).toLong)
+    } else {
+      new DefaultLocation(href, -1, -1)
     }
-
-    // The column is the position on this line
-    val col0 = pos - cfgOffsets(line0)
-
-    new DefaultLocation(href, (line0+1).toLong, (col0+1).toLong)
   }
-
 }

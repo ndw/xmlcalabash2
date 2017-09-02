@@ -1,8 +1,11 @@
 package com.xmlcalabash.model.util
 
+import javax.xml.crypto.dsig.spec.ExcC14NParameterSpec
+
+import com.jafpl.graph.Location
 import com.jafpl.steps.Step
 import com.xmlcalabash.config.Signatures
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.parsers.{StepConfigBuilder, XPathParser}
 import net.sf.saxon.s9api.QName
 import org.slf4j.{Logger, LoggerFactory}
@@ -22,14 +25,14 @@ class DefaultParserConfiguration extends ParserConfiguration {
 
   override def stepSignatures: Signatures = _signatures
 
-  override def stepImplementation(stepType: QName): Step = {
+  override def stepImplementation(stepType: QName, location: Location): Step = {
     if (!_signatures.stepTypes.contains(stepType)) {
-      throw new ModelException("notype", s"Step type '$stepType' is unknown", None)
+      throw new ModelException(ExceptionCode.NOTYPE, stepType.toString, location)
     }
 
     val implClass = _signatures.step(stepType).implementation
     if (implClass.isEmpty) {
-      throw new ModelException("noimpl", s"Step type '$stepType' has no known implementation", None)
+      throw new ModelException(ExceptionCode.NOIMPL, stepType.toString, location)
     }
 
     val klass = Class.forName(implClass.get).newInstance()
@@ -37,7 +40,7 @@ class DefaultParserConfiguration extends ParserConfiguration {
       case step: Step =>
         step
       case _ =>
-        throw new ModelException("nostep", s"The implementation of '$stepType' is not a step", None)
+        throw new ModelException(ExceptionCode.IMPLNOTSTEP, stepType.toString, location)
     }
   }
 

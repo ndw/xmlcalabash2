@@ -7,11 +7,13 @@
 
   <p:identity name="one">
     <p:input port="source">
-      <p:document href="pipe.xpl"/>
+      <p:inline>
+        <doc>There are <t>elements</t> in here. A couple of <t>elements</t>.</doc>
+      </p:inline>
     </p:input>
   </p:identity>
 
-  <p:variable name="bar" select="count(//p:*)"/>
+  <p:variable name="bar" select="count(//*)"/>
 
   <p:identity name="two">
     <p:input port="source">

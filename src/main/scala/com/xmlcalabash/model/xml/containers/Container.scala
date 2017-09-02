@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml.containers
 
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.datasource.Pipe
 import com.xmlcalabash.model.xml.{Artifact, Input, Output, PipelineStep}
@@ -41,14 +41,13 @@ class Container(override val config: ParserConfiguration,
       child match {
         case input: Input =>
           if (ports.contains(input.port.get)) {
-            throw new ModelException("dupport", s"Duplicate port: ${input.port.get}", location)
+            throw new ModelException(ExceptionCode.DUPCONTAINERINPUTPORT, input.port.get, location)
           }
           ports += input.port.get
 
           if (input.primary) {
             if (primary.isDefined) {
-              throw new ModelException("dupprimary",
-                s"Multiple primary ports: ${input.port.get} and ${primary.get.port.get}", location)
+              throw new ModelException(ExceptionCode.DUPPRIMARYINPUT, List(input.port.get, primary.get.port.get), location)
             }
             primary = Some(input)
           }
@@ -71,14 +70,13 @@ class Container(override val config: ParserConfiguration,
       child match {
         case output: Output =>
           if (ports.contains(output.port.get)) {
-            throw new ModelException("dupport", s"Duplicate port: ${output.port.get}", location)
+            throw new ModelException(ExceptionCode.DUPCONTAINEROUTPUTPORT, output.port.get, location)
           }
           ports += output.port.get
 
           if (output.primary) {
             if (primary.isDefined) {
-              throw new ModelException("dupprimary",
-                s"Multiple primary ports: ${output.port.get} and ${primary.get.port.get}", location)
+              throw new ModelException(ExceptionCode.DUPPRIMARYINPUT, List(output.port.get, primary.get.port.get), location)
             }
             primary = Some(output)
           }
@@ -123,10 +121,10 @@ class Container(override val config: ParserConfiguration,
             val pipe = new Pipe(config, out, last.get.name, output.get.port.get)
             out.addChild(pipe)
           } else {
-            throw new ModelException("nooutput", "No output binding", location)
+            throw new ModelException(ExceptionCode.NOCONTAINEROUTPUT, port, location)
           }
         } else {
-          throw new ModelException("nooutput", "No output binding", location)
+          throw new ModelException(ExceptionCode.NOCONTAINEROUTPUT, port, location)
         }
       }
     }

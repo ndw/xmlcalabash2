@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
 
@@ -53,7 +53,7 @@ class IOPort(override val config: ParserConfiguration,
       case info: PipeInfo =>
         super.addChild(info)
       case _ =>
-        throw new ModelException("invalid", s"Invalid child of input: $child", location)
+        throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
     }
   }
 
@@ -63,7 +63,7 @@ class IOPort(override val config: ParserConfiguration,
     _primary = lexicalBoolean(properties.get(XProcConstants._primary))
 
     if (_port.isEmpty) {
-      throw new ModelException("portreq", "Port is required", location)
+      throw new ModelException(ExceptionCode.PORTATTRREQ, this.toString, location)
     }
 
     valid

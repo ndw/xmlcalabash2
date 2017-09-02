@@ -6,6 +6,7 @@ import javax.xml.transform.sax.SAXSource
 import com.jafpl.graph.Graph
 import com.jafpl.messages.Metadata
 import com.jafpl.runtime.GraphRuntime
+import com.xmlcalabash.exceptions.{ModelException, ParseException}
 import com.xmlcalabash.model.util.DefaultParserConfiguration
 import com.xmlcalabash.model.xml.Parser
 import com.xmlcalabash.runtime.{PrintingConsumer, SaxonRuntimeConfiguration}
@@ -59,7 +60,12 @@ object XmlDriver extends App {
     runtime.run()
   } catch {
     case t: Throwable =>
-      println(t)
+      println(s"caught error:$t")
+      t match {
+        case model: ModelException => Unit
+        case parse: ParseException => Unit
+        case _ => throw t
+      }
       errored = true
   }
 

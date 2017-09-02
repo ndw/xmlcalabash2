@@ -2,7 +2,7 @@ package com.xmlcalabash.model.util
 
 import java.net.URI
 
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.runtime.SaxonRuntimeConfiguration
 import net.sf.saxon.Controller
 import net.sf.saxon.`type`.{BuiltInType, SchemaType, SimpleType}
@@ -101,7 +101,7 @@ class SaxonTreeBuilder(runtime: SaxonRuntimeConfiguration) {
       case XdmNodeKind.PROCESSING_INSTRUCTION =>
         addPI(node.getNodeName.getLocalName, node.getStringValue)
       case _ =>
-        throw new ModelException("unexpected", s"Unexpected child node: $node", None)
+        throw new ModelException(ExceptionCode.BADTREENODE, List(node.getNodeKind.toString, node.getNodeName.toString), node)
     }
   }
 

@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml.datasource
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{AvtParser, ParserConfiguration}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, XProcConstants}
 import com.xmlcalabash.runtime.{XProcAvtExpression, XProcXPathExpression}
@@ -28,21 +28,21 @@ class Document(override val config: ParserConfiguration,
     }
 
     if (_href.isEmpty) {
-      throw new ModelException("hrefreq", "Href is required", location)
+      throw new ModelException(ExceptionCode.ATTRREQ, "href", location)
     }
 
     if (properties.nonEmpty) {
       val key = properties.keySet.head
-      throw new ModelException("badopt", s"Unexpected attribute: ${key.getLocalName}", location)
+      throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
     if (children.nonEmpty) {
-      throw new ModelException("badelem", s"Unexpected element: ${children.head}", location)
+      throw new ModelException(ExceptionCode.BADCHILD, children.head.toString, location)
     }
 
     val list = AvtParser.parse(_href.get)
     if (list.isEmpty) {
-      throw new ModelException("badexpr", s"Error in AVT: ${_href.get}", location)
+      throw new ModelException(ExceptionCode.BADAVT, _href.get, location)
     } else {
       for (item <- list.get) {
         hrefAvt += item
@@ -68,7 +68,7 @@ class Document(override val config: ParserConfiguration,
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get.parent.get.parent.get
     val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
-    val docReader = cnode.addAtomic(config.stepImplementation(XProcConstants.cx_document))
+    val docReader = cnode.addAtomic(config.stepImplementation(XProcConstants.cx_document, location.get))
 
     val hrefBinding = cnode.addVariable("href", new XProcAvtExpression(inScopeNS, hrefAvt.toList))
 
@@ -78,7 +78,7 @@ class Document(override val config: ParserConfiguration,
     for (ref <- bindingRefs) {
       val bind = findBinding(ref)
       if (bind.isEmpty) {
-        throw new ModelException("nobind", s"No binding for $ref", location)
+        throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
       }
       bind.get match {
         case declStep: DeclareStep =>
@@ -93,12 +93,12 @@ class Document(override val config: ParserConfiguration,
             }
           }
           if (optDecl.isEmpty) {
-            throw new ModelException("nobind", s"No binding for $ref", location)
+            throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
           }
           graph.addBindingEdge(optDecl.get.graphNode.get.asInstanceOf[Binding], hrefBinding)
 
         case _ =>
-          throw new ModelException("unexpected", s"Unexpected $ref binding: ${bind.get}", location)
+          throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
       }
     }
   }
