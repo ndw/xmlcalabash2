@@ -29,6 +29,10 @@ class SaxonTreeBuilder(runtime: SaxonRuntimeConfiguration) {
 
   def inDocument: Boolean = _inDocument
 
+  def startDocument(baseURI: URI): Unit = {
+    startDocument(Some(baseURI))
+  }
+
   def startDocument(baseURI: Option[URI]): Unit = {
     if (baseURI.isDefined) {
       trace(s"startDocument: ${baseURI.get}")

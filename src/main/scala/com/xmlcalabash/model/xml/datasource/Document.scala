@@ -70,11 +70,7 @@ class Document(override val config: ParserConfiguration,
     val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
     val docReader = cnode.addAtomic(config.stepImplementation(XProcConstants.cx_document))
 
-    val hrefBinding = if (hrefAvt.size > 1) {
-      cnode.addVariable("href", new XProcAvtExpression(inScopeNS, hrefAvt.toList))
-    } else {
-      cnode.addVariable("href", new XProcXPathExpression(inScopeNS, _href.get))
-    }
+    val hrefBinding = cnode.addVariable("href", new XProcAvtExpression(inScopeNS, hrefAvt.toList))
 
     graph.addBindingEdge(hrefBinding, docReader)
     graphNode = Some(docReader)
