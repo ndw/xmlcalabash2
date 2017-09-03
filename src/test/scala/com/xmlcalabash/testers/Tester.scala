@@ -72,7 +72,7 @@ class Tester(parserConfig: ParserConfiguration, runtimeConfig: SaxonRuntimeConfi
       for (port <- pipeline.inputPorts) {
         if (_inputs.contains(port)) {
           for (item <- _inputs(port)) {
-            runtime.inputs(port).receive("source", item, new XmlMetadata())
+            runtime.inputs(port).send(item, new XmlMetadata())
           }
         } else {
           logger.warn(s"No inputs specified for $port")

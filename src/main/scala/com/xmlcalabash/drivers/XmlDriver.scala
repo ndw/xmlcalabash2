@@ -43,7 +43,7 @@ object XmlDriver extends App {
 
     for (port <- pipeline.inputPorts) {
       runtimeConfig.trace(s"Binding input port $port to 'Hello, world.'", "ExternalBindings")
-      runtime.inputs(port).receive("source", "Hello, world.", Metadata.STRING)
+      runtime.inputs(port).send("Hello, world.", Metadata.STRING)
     }
 
     for (port <- pipeline.outputPorts) {

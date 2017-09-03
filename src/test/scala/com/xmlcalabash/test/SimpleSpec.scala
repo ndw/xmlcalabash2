@@ -35,7 +35,7 @@ class SimpleSpec extends FlatSpec {
     val runtime = new GraphRuntime(graph, runtimeConfig)
 
     for (port <- pipeline.inputPorts) {
-      runtime.inputs(port).receive("source", data, new XmlMetadata("text/plain"))
+      runtime.inputs(port).send(data, new XmlMetadata("text/plain"))
     }
 
     val bc = new BufferingConsumer()
