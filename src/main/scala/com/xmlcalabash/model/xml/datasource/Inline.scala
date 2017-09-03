@@ -93,7 +93,9 @@ class Inline(override val config: ParserConfiguration,
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get.parent.get.parent.get
     val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
-    val produceInline = new ProduceInline(nodes, _expandText)
+
+    val produceInline = new ProduceInline(nodes, inScopeNS, _expandText, _excludeInlinePrefixes, _documentProperties, _encoding)
+
     val inlineProducer = cnode.addAtomic(produceInline)
     graphNode = Some(inlineProducer)
 

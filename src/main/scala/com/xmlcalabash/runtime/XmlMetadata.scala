@@ -14,7 +14,7 @@ class XmlMetadata(private val initialContentType: Option[String],
     }
   }
 
-  if (initialContentType.isDefined) {
+  if (initialContentType.isDefined && !_properties.contains("content-type")) {
     _properties.put("content-type", initialContentType.get)
   }
 

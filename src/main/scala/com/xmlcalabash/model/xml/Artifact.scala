@@ -38,13 +38,6 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
   protected[xml] def parse(node: XdmNode): Unit = {
     _location = Some(new NodeLocation(node))
     // Parse namespaces
-    val aiter = node.axisIterator(Axis.ATTRIBUTE)
-    while (aiter.hasNext) {
-      val attr = aiter.next().asInstanceOf[XdmNode]
-      properties.put(attr.getNodeName, attr.getStringValue)
-    }
-
-    // Parse attributes
     val nsiter = node.axisIterator(Axis.NAMESPACE)
     val ns = mutable.HashMap.empty[String,String]
     while (nsiter.hasNext) {
@@ -56,6 +49,13 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
       }
       val uri = attr.getStringValue
       ns.put(prefix, uri)
+    }
+
+    // Parse attributes
+    val aiter = node.axisIterator(Axis.ATTRIBUTE)
+    while (aiter.hasNext) {
+      val attr = aiter.next().asInstanceOf[XdmNode]
+      properties.put(attr.getNodeName, attr.getStringValue)
     }
 
     var same = parent.isDefined

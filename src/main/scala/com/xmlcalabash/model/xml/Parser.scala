@@ -182,6 +182,7 @@ class Parser(config: ParserConfiguration) {
     }
 
     val art = new Inline(config, parent, nodes.toList)
+    art.parse(node)
     art
   }
 

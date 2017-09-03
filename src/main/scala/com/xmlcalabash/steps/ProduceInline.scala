@@ -2,16 +2,23 @@ package com.xmlcalabash.steps
 
 import java.net.URI
 
+import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.model.util.{AvtParser, SaxonTreeBuilder}
 import com.xmlcalabash.model.xml.XProcConstants
-import com.xmlcalabash.runtime.{XProcAvtExpression, XmlMetadata, XmlPortSpecification}
-import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
+import com.xmlcalabash.runtime.{XProcAvtExpression, XProcXPathExpression, XmlMetadata, XmlPortSpecification}
+import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
 
-class ProduceInline(private val nodes: List[XdmNode], private val expandText: Boolean) extends DefaultStep {
+class ProduceInline(private val nodes: List[XdmNode],
+                    private val nsBindings: Map[String,String],
+                    private val expandText: Boolean,
+                    private val excludeInlinePrefixes: Set[String],
+                    private val docPropsExpr: Option[String],
+                    private val encoding: Option[String]) extends DefaultStep {
   private val bindings = mutable.HashMap.empty[String,Any]
   private val include_expand_text_attribute = false
+  private val docProps = mutable.HashMap.empty[String, String]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
@@ -22,6 +29,31 @@ class ProduceInline(private val nodes: List[XdmNode], private val expandText: Bo
   }
 
   override def run(): Unit = {
+    if (docPropsExpr.isDefined) {
+      val expr = new XProcXPathExpression(nsBindings, docPropsExpr.get)
+      val result = config.get.expressionEvaluator().value(expr, List.empty[Any], bindings.toMap)
+      result match {
+        case map: XdmMap =>
+          // Grovel through a Java Map
+          val iter = map.keySet().iterator()
+          while (iter.hasNext) {
+            val key = iter.next()
+            val value = map.get(key)
+
+            // XProc document property map values are strings
+            var strvalue = ""
+            val viter = value.iterator()
+            while (viter.hasNext) {
+              val item = viter.next()
+              strvalue += item.getStringValue
+            }
+            docProps.put(key.getStringValue, strvalue)
+          }
+        case _ =>
+          throw new PipelineException("notmap", "The document-properties attribute must be a map", None)
+      }
+    }
+
     val builder = new SaxonTreeBuilder(config.get)
     builder.startDocument(Some(URI.create("http://example.com/")))
     builder.startContent()
@@ -29,7 +61,7 @@ class ProduceInline(private val nodes: List[XdmNode], private val expandText: Bo
       expandTVT(node, builder, expandText)
     }
     builder.endDocument()
-    consumer.get.receive("result", builder.result, new XmlMetadata("application/xml"))
+    consumer.get.receive("result", builder.result, new XmlMetadata("application/xml", docProps.toMap))
   }
 
   private def expandTVT(node: XdmNode, builder: SaxonTreeBuilder, expandText: Boolean): Unit = {

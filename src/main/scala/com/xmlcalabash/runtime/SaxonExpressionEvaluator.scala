@@ -11,7 +11,7 @@ import scala.collection.mutable.ListBuffer
 
 class SaxonExpressionEvaluator(runtime: SaxonRuntimeConfiguration) extends ExpressionEvaluator {
   override def value(xpath: Any, context: List[Any], bindings: Map[String, Any]): Any = {
-    var result = ""
+    var result = ListBuffer.empty[XdmItem]
     xpath match {
       case avtexpr: XProcAvtExpression =>
         var evalAvt = false
@@ -19,27 +19,31 @@ class SaxonExpressionEvaluator(runtime: SaxonRuntimeConfiguration) extends Expre
           if (evalAvt) {
             val epart = computeValue(part, context, avtexpr.nsbindings, bindings, avtexpr.extensionFunctionsAllowed)
             for (item <- epart.asInstanceOf[ListBuffer[XdmItem]]) {
-              result += item.getStringValue
+              result += item
             }
           } else {
-            result += part
+            result += new XdmAtomicValue(part)
           }
           evalAvt = !evalAvt
         }
       case xpathexpr: XProcXPathExpression =>
         val epart = computeValue(xpathexpr.expr, context, xpathexpr.nsbindings, bindings, xpathexpr.extensionFunctionsAllowed)
         for (item <- epart.asInstanceOf[ListBuffer[XdmItem]]) {
-          result += item.getStringValue
+          result += item
         }
       case str: String =>
         val epart = computeValue(str, context, Map.empty[String,String], bindings, false)
         for (item <- epart.asInstanceOf[ListBuffer[XdmItem]]) {
-          result += item.getStringValue
+          result += item
         }
       case _ => throw new PipelineException("unexpected", "Unexpected type passed to value", None)
     }
 
-    result
+    if (result.size == 1) {
+      result.head
+    } else {
+      result.toList
+    }
   }
 
   private def computeValue(xpath: Any,
