@@ -1,8 +1,11 @@
 package com.xmlcalabash.runtime
 
+import java.net.URI
+
 import com.jafpl.messages.ItemMessage
 import com.jafpl.runtime.{ExpressionEvaluator, RuntimeConfiguration}
 import com.jafpl.steps.DataConsumer
+import com.xmlcalabash.functions.Cwd
 import net.sf.saxon.s9api.Processor
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -14,6 +17,14 @@ class SaxonRuntimeConfiguration(val processor: Processor) extends RuntimeConfigu
   private val enabledTraces = mutable.HashSet.empty[String]
   private val disabledTraces = mutable.HashSet.empty[String]
   private val badTraceLevels = mutable.HashSet.empty[String]
+
+  private val extensionFunctions = List(
+    new Cwd(this)
+  )
+
+  for (f <- extensionFunctions) {
+    processor.registerExtensionFunction(f)
+  }
 
   private val prop = Option(System.getProperty("com.xmlcalabash.trace"))
   if (prop.isDefined) {
@@ -86,5 +97,9 @@ class SaxonRuntimeConfiguration(val processor: Processor) extends RuntimeConfigu
           logger.info(msg)
       }
     }
+  }
+
+  def staticBaseURI: URI = {
+    URIUtils.cwdAsURI
   }
 }

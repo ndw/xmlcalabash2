@@ -3,8 +3,9 @@ package com.xmlcalabash.model.xml
 import net.sf.saxon.s9api.QName
 
 object XProcConstants {
-  val ns_p = "http://www.w3.org/ns/xproc"
-  val ns_cx = "http://xmlcalabash.com/ns/extensions"
+  val ns_p   = "http://www.w3.org/ns/xproc"
+  val ns_cx  = "http://xmlcalabash.com/ns/extensions"
+  val ns_exf = "http://exproc.org/standard/functions"
 
   val p_catch = new QName("p", ns_p, "catch")
   val p_choose = new QName("p", ns_p, "choose")
