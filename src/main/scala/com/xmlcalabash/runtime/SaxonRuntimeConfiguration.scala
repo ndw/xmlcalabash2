@@ -5,7 +5,7 @@ import java.net.URI
 import com.jafpl.messages.ItemMessage
 import com.jafpl.runtime.{ExpressionEvaluator, RuntimeConfiguration}
 import com.jafpl.steps.DataConsumer
-import com.xmlcalabash.functions.Cwd
+import com.xmlcalabash.functions.{Cwd, SystemProperty}
 import net.sf.saxon.s9api.Processor
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -19,7 +19,8 @@ class SaxonRuntimeConfiguration(val processor: Processor) extends RuntimeConfigu
   private val badTraceLevels = mutable.HashSet.empty[String]
 
   private val extensionFunctions = List(
-    new Cwd(this)
+    new Cwd(this),
+    new SystemProperty(this)
   )
 
   for (f <- extensionFunctions) {
