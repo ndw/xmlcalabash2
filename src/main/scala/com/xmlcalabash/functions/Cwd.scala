@@ -1,7 +1,8 @@
 package com.xmlcalabash.functions
 
+import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.model.xml.XProcConstants
-import com.xmlcalabash.runtime.SaxonRuntimeConfiguration
+import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, SaxonRuntimeConfiguration}
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
 import net.sf.saxon.om.{Sequence, StructuredQName}
@@ -29,9 +30,13 @@ class Cwd private extends ExtensionFunctionDefinition {
 
   class CwdCall(val xdef: ExtensionFunctionDefinition) extends ExtensionFunctionCall {
     override def call(context: XPathContext, arguments: Array[Sequence]): Sequence = {
+      val exprEval = runtime.expressionEvaluator().asInstanceOf[SaxonExpressionEvaluator]
+      if (exprEval.stepContext() == null) {
+        throw new PipelineException("notallowed", s"You cannot call the XProc extension function $funcname here", None)
+      }
+
       val cwd = runtime.staticBaseURI.toASCIIString
       new AnyURIValue(cwd)
     }
   }
-
 }

@@ -4,13 +4,16 @@ import com.jafpl.exceptions.StepException
 import com.jafpl.messages.Metadata
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortSpecification, Step}
-import com.xmlcalabash.runtime.{SaxonRuntimeConfiguration, XmlPortSpecification, XmlStep}
+import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, SaxonRuntimeConfiguration, XProcExpression, XmlPortSpecification, XmlStep}
 import org.slf4j.{Logger, LoggerFactory}
+
+import scala.collection.mutable
 
 class DefaultStep extends XmlStep {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
   protected var config: Option[SaxonRuntimeConfiguration] = None
+  protected val bindings = mutable.HashMap.empty[String,Any]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.NONE
@@ -64,5 +67,15 @@ class DefaultStep extends XmlStep {
     } else {
       defStr
     }
+  }
+
+  def xpathValue(expr: XProcExpression): Any = {
+    val eval = config.get.expressionEvaluator().asInstanceOf[SaxonExpressionEvaluator]
+    eval.withContext(this) { eval.value(expr, List.empty[Any], bindings.toMap) }
+  }
+
+  def xpathValue(expr: XProcExpression, context: Any): Any = {
+    val eval = config.get.expressionEvaluator().asInstanceOf[SaxonExpressionEvaluator]
+    eval.withContext(this) { eval.value(expr, List(context), bindings.toMap) }
   }
 }

@@ -5,8 +5,8 @@ import java.net.URI
 import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.model.util.{AvtParser, SaxonTreeBuilder}
 import com.xmlcalabash.model.xml.XProcConstants
-import com.xmlcalabash.runtime.{XProcAvtExpression, XProcXPathExpression, XmlMetadata, XmlPortSpecification}
-import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcAvtExpression, XProcXPathExpression, XmlMetadata, XmlPortSpecification}
+import net.sf.saxon.s9api.{Axis, QName, XdmMap, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
 
@@ -16,7 +16,6 @@ class ProduceInline(private val nodes: List[XdmNode],
                     private val excludeInlinePrefixes: Set[String],
                     private val docPropsExpr: Option[String],
                     private val encoding: Option[String]) extends DefaultStep {
-  private val bindings = mutable.HashMap.empty[String,Any]
   private val include_expand_text_attribute = false
   private val docProps = mutable.HashMap.empty[String, String]
 
@@ -31,7 +30,7 @@ class ProduceInline(private val nodes: List[XdmNode],
   override def run(): Unit = {
     if (docPropsExpr.isDefined) {
       val expr = new XProcXPathExpression(nsBindings, docPropsExpr.get)
-      val result = config.get.expressionEvaluator().value(expr, List.empty[Any], bindings.toMap)
+      val result = xpathValue(expr)
       result match {
         case map: XdmMap =>
           // Grovel through a Java Map

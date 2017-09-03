@@ -8,8 +8,15 @@ import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException,
 import net.sf.saxon.trans.XPathException
 
 import scala.collection.mutable.ListBuffer
+import scala.util.DynamicVariable
 
 class SaxonExpressionEvaluator(runtime: SaxonRuntimeConfiguration) extends ExpressionEvaluator {
+  private val _stepContext = new DynamicVariable[XmlStep](null)
+
+  def withContext[T](context: XmlStep)(thunk: => T): T = _stepContext.withValue(context)(thunk)
+
+  def stepContext(): Option[XmlStep] = Option(_stepContext.value)
+
   override def value(xpath: Any, context: List[Any], bindings: Map[String, Any]): Any = {
     var result = ListBuffer.empty[XdmItem]
     xpath match {
