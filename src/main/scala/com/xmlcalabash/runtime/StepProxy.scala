@@ -1,6 +1,7 @@
 package com.xmlcalabash.runtime
 
 import com.jafpl.exceptions.{PipelineException, StepException}
+import com.jafpl.graph.Location
 import com.jafpl.messages.Metadata
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
@@ -14,6 +15,7 @@ class StepProxy(step: Step,
                 options: Map[QName, XProcExpression],
                 withOptions: List[WithOptionData],
                 nsBindings: Map[String,String]) extends XmlStep {
+  private var location = Option.empty[Location]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
   protected var config: Option[SaxonRuntimeConfiguration] = None
@@ -86,6 +88,10 @@ class StepProxy(step: Step,
   override def setConsumer(consumer: DataConsumer): Unit = {
     this.consumer = Some(consumer)
     step.setConsumer(consumer)
+  }
+  override def setLocation(location: Location): Unit = {
+    this.location = Some(location)
+    step.setLocation(location)
   }
   override def receiveBinding(variable: String, value: Any): Unit = {
     val clarkName = "{(.*)}(.*)".r
