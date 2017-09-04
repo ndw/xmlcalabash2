@@ -27,26 +27,26 @@ class Serialization(override val config: ParserConfiguration,
   var _version: Option[String] = None
 
   override def validate(): Boolean = {
-    _port = properties.get(XProcConstants._port)
-    _byte_order_mark = lexicalBoolean(properties.get(XProcConstants._byte_order_mark))
-    _cdata_section_elements = if (properties.contains(XProcConstants._cdata_section_elements)) {
-      properties(XProcConstants._cdata_section_elements).split("\\s+").toList
+    _port = attributes.get(XProcConstants._port)
+    _byte_order_mark = lexicalBoolean(attributes.get(XProcConstants._byte_order_mark))
+    _cdata_section_elements = if (attributes.contains(XProcConstants._cdata_section_elements)) {
+      attributes(XProcConstants._cdata_section_elements).split("\\s+").toList
     } else {
       List()
     }
-    _doctype_public = properties.get(XProcConstants._doctype_public)
-    _doctype_system = properties.get(XProcConstants._doctype_system)
-    _encoding = properties.get(XProcConstants._encoding)
-    _escape_uri_attributes = lexicalBoolean(properties.get(XProcConstants._escape_uri_attributes))
-    _include_content_type = lexicalBoolean(properties.get(XProcConstants._include_content_type))
-    _indent = lexicalBoolean(properties.get(XProcConstants._indent))
-    _media_type = properties.get(XProcConstants._media_type)
-    _method = lexicalQName(properties.get(XProcConstants._method))
-    _normalization_form = properties.get(XProcConstants._normalization_form)
-    _omit_xml_declaration = lexicalBoolean(properties.get(XProcConstants._omit_xml_declaration))
-    _standalone = properties.get(XProcConstants._standalone)
-    _undeclare_prefixes = lexicalBoolean(properties.get(XProcConstants._undeclare_prefixes))
-    _version = properties.get(XProcConstants._version)
+    _doctype_public = attributes.get(XProcConstants._doctype_public)
+    _doctype_system = attributes.get(XProcConstants._doctype_system)
+    _encoding = attributes.get(XProcConstants._encoding)
+    _escape_uri_attributes = lexicalBoolean(attributes.get(XProcConstants._escape_uri_attributes))
+    _include_content_type = lexicalBoolean(attributes.get(XProcConstants._include_content_type))
+    _indent = lexicalBoolean(attributes.get(XProcConstants._indent))
+    _media_type = attributes.get(XProcConstants._media_type)
+    _method = lexicalQName(attributes.get(XProcConstants._method))
+    _normalization_form = attributes.get(XProcConstants._normalization_form)
+    _omit_xml_declaration = lexicalBoolean(attributes.get(XProcConstants._omit_xml_declaration))
+    _standalone = attributes.get(XProcConstants._standalone)
+    _undeclare_prefixes = lexicalBoolean(attributes.get(XProcConstants._undeclare_prefixes))
+    _version = attributes.get(XProcConstants._version)
 
     for (key <- List(XProcConstants._port, XProcConstants._byte_order_mark,
       XProcConstants._cdata_section_elements, XProcConstants._doctype_public,
@@ -55,13 +55,13 @@ class Serialization(override val config: ParserConfiguration,
       XProcConstants._indent, XProcConstants._media_type, XProcConstants._method,
       XProcConstants._normalization_form, XProcConstants._omit_xml_declaration,
       XProcConstants._standalone, XProcConstants._undeclare_prefixes, XProcConstants._version)) {
-      if (properties.contains(key)) {
-        properties.remove(key)
+      if (attributes.contains(key)) {
+        attributes.remove(key)
       }
     }
 
-    if (properties.nonEmpty) {
-      val key = properties.keySet.head
+    if (attributes.nonEmpty) {
+      val key = attributes.keySet.head
       throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 

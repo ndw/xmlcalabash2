@@ -1,5 +1,6 @@
 package com.xmlcalabash.model.xml
 
+import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.containers.Container
@@ -19,13 +20,13 @@ class Output(override val config: ParserConfiguration,
     super.validate()
 
     for (key <- List(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary)) {
-      if (properties.contains(key)) {
-        properties.remove(key)
+      if (attributes.contains(key)) {
+        attributes.remove(key)
       }
     }
 
-    if (properties.nonEmpty) {
-      val key = properties.keySet.head
+    if (attributes.nonEmpty) {
+      val key = attributes.keySet.head
       throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
@@ -44,6 +45,13 @@ class Output(override val config: ParserConfiguration,
     }
 
     valid
+  }
+
+  override def makeGraph(graph: Graph, parent: Node) {
+    // Process the children in the context of our parent
+    for (child <- children) {
+      child.makeGraph(graph, parent)
+    }
   }
 
   override def asXML: xml.Elem = {

@@ -6,18 +6,35 @@ import com.jafpl.exceptions.PipelineException
 import com.jafpl.runtime.ExpressionEvaluator
 import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem}
 import net.sf.saxon.trans.XPathException
+import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.util.DynamicVariable
 
 class SaxonExpressionEvaluator(runtime: SaxonRuntimeConfiguration) extends ExpressionEvaluator {
+  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _stepContext = new DynamicVariable[XmlStep](null)
-
   def withContext[T](context: XmlStep)(thunk: => T): T = _stepContext.withValue(context)(thunk)
-
   def stepContext(): Option[XmlStep] = Option(_stepContext.value)
 
   override def value(xpath: Any, context: List[Any], bindings: Map[String, Any]): Any = {
+    xpath match {
+      case expr: XProcExpression =>
+        val patchBindings = mutable.HashMap.empty[QName, XdmItem]
+        for ((str,value) <- bindings) {
+          println(s"??? $str=$value")
+        }
+        value(expr, context, patchBindings.toMap)
+      case str: String =>
+        str
+      case _ =>
+        logger.warn("Unexpected expression type, returning string value: " + xpath)
+        xpath.toString
+    }
+  }
+
+  def value(xpath: XProcExpression, context: List[Any], bindings: Map[QName, XdmItem]): XdmItem = {
     var result = ListBuffer.empty[XdmItem]
     xpath match {
       case avtexpr: XProcAvtExpression =>
@@ -29,17 +46,14 @@ class SaxonExpressionEvaluator(runtime: SaxonRuntimeConfiguration) extends Expre
               result += item
             }
           } else {
-            result += new XdmAtomicValue(part)
+            if (part != "") {
+              result += new XdmAtomicValue(part)
+            }
           }
           evalAvt = !evalAvt
         }
       case xpathexpr: XProcXPathExpression =>
         val epart = computeValue(xpathexpr.expr, context, xpathexpr.nsbindings, bindings, xpathexpr.extensionFunctionsAllowed)
-        for (item <- epart.asInstanceOf[ListBuffer[XdmItem]]) {
-          result += item
-        }
-      case str: String =>
-        val epart = computeValue(str, context, Map.empty[String,String], bindings, false)
         for (item <- epart.asInstanceOf[ListBuffer[XdmItem]]) {
           result += item
         }
@@ -49,14 +63,14 @@ class SaxonExpressionEvaluator(runtime: SaxonRuntimeConfiguration) extends Expre
     if (result.size == 1) {
       result.head
     } else {
-      result.toList
+      throw new PipelineException("unimpl", "Support for sequence results not yet implemented", None)
     }
   }
 
-  private def computeValue(xpath: Any,
+  private def computeValue(xpath: String,
                            context: List[Any],
-                           nsbindings: Map[String,String],
-                           bindings: Map[String, Any],
+                           nsbindings: Map[String, String],
+                           bindings: Map[QName,XdmItem],
                            extensionsOk: Boolean): Any = {
     val results = ListBuffer.empty[XdmItem]
     val config = runtime.processor.getUnderlyingConfiguration
@@ -79,8 +93,7 @@ class SaxonExpressionEvaluator(runtime: SaxonRuntimeConfiguration) extends Expre
       }
 
       for (varname <- bindings.keySet) {
-        // FIXME: parse Clark names
-        xcomp.declareVariable(new QName("", varname))
+        xcomp.declareVariable(varname)
       }
 
       for ((prefix, uri) <- nsbindings) {
@@ -89,7 +102,7 @@ class SaxonExpressionEvaluator(runtime: SaxonRuntimeConfiguration) extends Expre
 
       var xexec: XPathExecutable = null // Yes, I know.
       try {
-        xexec = xcomp.compile(xpath.toString)
+        xexec = xcomp.compile(xpath)
       } catch {
         case sae: SaxonApiException =>
           sae.getCause match {
@@ -110,7 +123,7 @@ class SaxonExpressionEvaluator(runtime: SaxonRuntimeConfiguration) extends Expre
       for ((varname, varvalue) <- bindings) {
         // FIXME: parse Clark names
         val avalue: XdmAtomicValue = new XdmAtomicValue(varvalue.toString) // FIXME: handle other types
-        selector.setVariable(new QName("", varname), avalue)
+        selector.setVariable(varname, avalue)
       }
 
       if (context.nonEmpty) {

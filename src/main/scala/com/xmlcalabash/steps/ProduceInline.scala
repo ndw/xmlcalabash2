@@ -22,11 +22,6 @@ class ProduceInline(private val nodes: List[XdmNode],
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
-  override def receiveBinding(variable: String, value: Any): Unit = {
-    config.get.trace("debug", s"Document receives binding: $variable: $value", "stepBindings")
-    bindings.put(new QName("", variable).getClarkName, value)
-  }
-
   override def run(): Unit = {
     if (docPropsExpr.isDefined) {
       val expr = new XProcXPathExpression(nsBindings, docPropsExpr.get)
@@ -109,9 +104,8 @@ class ProduceInline(private val nodes: List[XdmNode],
   }
 
   // FIXME: should return a list of XdmNode
-  // FIXME: what about namespace bindings?
   private def expandString(text: String): String = {
-    val evaluator = config.get.expressionEvaluator()
+    val evaluator = config.get.expressionEvaluator().asInstanceOf[SaxonExpressionEvaluator]
     val list = AvtParser.parse(text)
     val expr = new XProcAvtExpression(Map.empty[String,String], list.get)
     evaluator.value(expr, List.empty[Any], bindings.toMap).toString

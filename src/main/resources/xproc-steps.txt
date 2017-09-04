@@ -135,6 +135,7 @@ step p:pack has implementation xc:Pack
 
 step p:parameters has implementation xc:Parameters
   output result
+  option parameters
 
 step p:rename has implementation xc:Rename
   input source

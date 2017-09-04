@@ -1,7 +1,5 @@
 package com.xmlcalabash.runtime
 
-import scala.collection.mutable.ListBuffer
-
 class XProcAvtExpression(override val nsbindings: Map[String,String], val avt:List[String])
   extends XProcExpression(nsbindings) {
 

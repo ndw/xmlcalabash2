@@ -58,9 +58,9 @@ class IOPort(override val config: ParserConfiguration,
   }
 
   override def validate(): Boolean = {
-    _port = properties.get(XProcConstants._port)
-    _sequence = lexicalBoolean(properties.get(XProcConstants._sequence))
-    _primary = lexicalBoolean(properties.get(XProcConstants._primary))
+    _port = attributes.get(XProcConstants._port)
+    _sequence = lexicalBoolean(attributes.get(XProcConstants._sequence))
+    _primary = lexicalBoolean(attributes.get(XProcConstants._primary))
 
     if (_port.isEmpty) {
       throw new ModelException(ExceptionCode.PORTATTRREQ, this.toString, location)

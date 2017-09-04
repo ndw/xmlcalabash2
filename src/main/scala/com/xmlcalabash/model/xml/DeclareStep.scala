@@ -5,8 +5,10 @@ import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
+import com.xmlcalabash.runtime.XProcExpression
 import net.sf.saxon.s9api.QName
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class DeclareStep(override val config: ParserConfiguration,
@@ -17,6 +19,7 @@ class DeclareStep(override val config: ParserConfiguration,
   private var _xpathVersion: Option[String] = None
   private var _excludeInlinePrefixes: Set[String] = Set()
   private var _version: Option[String] = None
+  private val options = mutable.HashMap.empty[QName, XProcExpression]
 
   def pipelineGraph(): Graph = {
     val graph = new Graph()
@@ -41,23 +44,25 @@ class DeclareStep(override val config: ParserConfiguration,
   }
 
   override def validate(): Boolean = {
-    _name = properties.get(XProcConstants._name)
-    _type = lexicalQName(properties.get(XProcConstants._type))
-    _psviRequired = lexicalBoolean(properties.get(XProcConstants._psvi_required))
-    _xpathVersion = properties.get(XProcConstants._xpath_version)
-    _excludeInlinePrefixes = lexicalPrefixes(properties.get(XProcConstants._exclude_inline_prefixes))
-    _version = properties.get(XProcConstants._version)
+    _name = attributes.get(XProcConstants._name)
+    _type = lexicalQName(attributes.get(XProcConstants._type))
+    _psviRequired = lexicalBoolean(attributes.get(XProcConstants._psvi_required))
+    _xpathVersion = attributes.get(XProcConstants._xpath_version)
+    _excludeInlinePrefixes = lexicalPrefixes(attributes.get(XProcConstants._exclude_inline_prefixes))
+    _version = attributes.get(XProcConstants._version)
     for (key <- List(XProcConstants._name, XProcConstants._type, XProcConstants._psvi_required,
       XProcConstants._xpath_version, XProcConstants._exclude_inline_prefixes,
       XProcConstants._version)) {
-      if (properties.contains(key)) {
-        properties.remove(key)
+      if (attributes.contains(key)) {
+        attributes.remove(key)
       }
     }
 
-    for (key <- properties.keySet) {
+    for (key <- attributes.keySet) {
       if (key.getNamespaceURI == "") {
         throw new ModelException(ExceptionCode.BADCONTAINERATTR, key.getLocalName, location)
+      } else {
+        options.put(key, lexicalAvt(key.toString, attributes(key)))
       }
     }
 

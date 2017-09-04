@@ -70,6 +70,7 @@ class Parser(config: ParserConfiguration) {
             case XProcConstants.p_inline => Some(parseInline(parent, node))
             case XProcConstants.p_pipe => Some(parsePipe(parent, node))
             case XProcConstants.p_document => Some(parseDocument(parent, node))
+            case XProcConstants.p_with_option => Some(parseWithOption(parent, node))
             case XProcConstants.p_documentation => Some(parseDocumentation(parent, node))
             case XProcConstants.p_pipeinfo => Some(parsePipeInfo(parent, node))
             case _ =>
@@ -125,13 +126,13 @@ class Parser(config: ParserConfiguration) {
   private def parsePipeline(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new DeclareStep(config, parent)
     val input = new Input(config, Some(art))
-    input.properties.put(XProcConstants._port, "source")
-    input.properties.put(XProcConstants._primary, "true")
+    input.attributes.put(XProcConstants._port, "source")
+    input.attributes.put(XProcConstants._primary, "true")
     art.children += input
 
     val output = new Output(config, Some(art))
-    output.properties.put(XProcConstants._port, "result")
-    output.properties.put(XProcConstants._primary, "true")
+    output.attributes.put(XProcConstants._port, "result")
+    output.attributes.put(XProcConstants._primary, "true")
     art.children += output
 
     art.parse(node)
@@ -209,6 +210,13 @@ class Parser(config: ParserConfiguration) {
 
   private def parseVariable(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new Variable(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
+  private def parseWithOption(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new WithOption(config, parent)
     art.parse(node)
     parseChildren(art, node)
     art

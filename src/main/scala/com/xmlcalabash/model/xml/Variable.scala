@@ -8,7 +8,6 @@ import net.sf.saxon.s9api.QName
 
 class Variable(override val config: ParserConfiguration,
                override val parent: Option[Artifact]) extends Artifact(config, parent) {
-
   private var _name: QName = new QName("", "UNINITIALIZED")
   private var _select = Option.empty[String]
 
@@ -16,25 +15,25 @@ class Variable(override val config: ParserConfiguration,
   def select: Option[String] = _select
 
   override def validate(): Boolean = {
-    val qname = lexicalQName(properties.get(XProcConstants._name))
+    val qname = lexicalQName(attributes.get(XProcConstants._name))
     if (qname.isEmpty) {
       throw new ModelException(ExceptionCode.NAMEATTRREQ, this.toString, location)
     }
     _name = qname.get
 
-    _select = properties.get(XProcConstants._select)
+    _select = attributes.get(XProcConstants._select)
     if (_select.isEmpty) {
       throw new ModelException(ExceptionCode.SELECTATTRREQ, this.toString, location)
     }
 
     for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._select)) {
-      if (properties.contains(key)) {
-        properties.remove(key)
+      if (attributes.contains(key)) {
+        attributes.remove(key)
       }
     }
 
-    if (properties.nonEmpty) {
-      val key = properties.keySet.head
+    if (attributes.nonEmpty) {
+      val key = attributes.keySet.head
       throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 

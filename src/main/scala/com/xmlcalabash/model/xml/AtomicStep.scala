@@ -2,33 +2,56 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.ParserConfiguration
+import com.xmlcalabash.model.util.{AvtParser, ParserConfiguration}
+import com.xmlcalabash.model.xml.util.WithOptionData
+import com.xmlcalabash.runtime.{StepProxy, XProcAvtExpression, XProcExpression, XmlStep}
 import net.sf.saxon.s9api.QName
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class AtomicStep(override val config: ParserConfiguration,
                  override val parent: Option[Artifact],
                  val stepType: QName) extends PipelineStep(config, parent) {
   private var _name: Option[String] = None
+  private val options = mutable.HashMap.empty[QName, XProcExpression]
 
   override def validate(): Boolean = {
+    val sig = config.stepSignatures.step(stepType)
     var valid = true
 
-    _name = properties.get(XProcConstants._name)
+    _name = attributes.get(XProcConstants._name)
     if (_name.isDefined) {
       label = _name.get
+    } else {
+      label = stepType.getLocalName
     }
 
     for (key <- List(XProcConstants._name)) {
-      if (properties.contains(key)) {
-        properties.remove(key)
+      if (attributes.contains(key)) {
+        attributes.remove(key)
       }
     }
 
-    for (key <- properties.keySet) {
+    for (key <- attributes.keySet) {
       if (key.getNamespaceURI == "") {
-        throw new ModelException(ExceptionCode.BADATOMICATTR, key.getLocalName, location)
+        if (sig.options.contains(key)) {
+          val avt = AvtParser.parse(attributes(key))
+          if (avt.isDefined) {
+            options.put(key, new XProcAvtExpression(inScopeNS, avt.get))
+          } else {
+            throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), location)
+          }
+        } else {
+          throw new ModelException(ExceptionCode.BADATOMICATTR, key.getLocalName, location)
+        }
+      } else {
+        val avt = AvtParser.parse(attributes(key))
+        if (avt.isDefined) {
+          options.put(key, new XProcAvtExpression(inScopeNS, avt.get))
+        } else {
+          throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), location)
+        }
       }
     }
 
@@ -94,7 +117,17 @@ class AtomicStep(override val config: ParserConfiguration,
   override def makeGraph(graph: Graph, parent: Node) {
     val node = parent match {
       case start: ContainerStart =>
-        start.addAtomic(config.stepImplementation(stepType, location.get), name)
+        val impl = config.stepImplementation(stepType, location.get)
+        val withOptions = ListBuffer.empty[WithOptionData]
+        for (child <- children) {
+          child match {
+            case opt: WithOption =>
+              withOptions += new WithOptionData(opt.optionName, opt.dataPort, opt.select, inScopeNS)
+            case _ => Unit
+          }
+        }
+        val proxy = new StepProxy(impl, options.toMap, withOptions.toList, inScopeNS)
+        start.addAtomic(proxy, name)
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "Atomic step parent isn't a container???", location)
     }
@@ -119,7 +152,7 @@ class AtomicStep(override val config: ParserConfiguration,
   override def asXML: xml.Elem = {
     dumpAttr("name", _name.getOrElse(name))
     dumpAttr("id", id.toString)
-    dumpAttr(properties.toMap)
+    dumpAttr(attributes.toMap)
 
     val nodes = ListBuffer.empty[xml.Node]
     if (children.nonEmpty) {

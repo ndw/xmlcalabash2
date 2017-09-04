@@ -2,10 +2,10 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{ParserConfiguration, UniqueId}
+import com.xmlcalabash.model.util.{AvtParser, ParserConfiguration, UniqueId}
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport}
 import com.xmlcalabash.model.xml.datasource.{Data, Document, Empty, Inline, Pipe}
-import com.xmlcalabash.runtime.NodeLocation
+import com.xmlcalabash.runtime.{NodeLocation, XProcAvtExpression, XProcExpression}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 
 import scala.collection.mutable
@@ -13,7 +13,7 @@ import scala.collection.mutable.ListBuffer
 
 class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
   protected[xml] var id: Long = UniqueId.nextId
-  protected[xml] val properties = mutable.HashMap.empty[QName,String]
+  protected[xml] val attributes = mutable.HashMap.empty[QName, String]
   protected[xml] val children: mutable.ListBuffer[Artifact] = mutable.ListBuffer.empty[Artifact]
   protected[xml] var inScopeNS = Map.empty[String,String]
   protected[xml] val subpiplineClasses = List(classOf[ForEach], classOf[Viewport],
@@ -55,7 +55,7 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
     val aiter = node.axisIterator(Axis.ATTRIBUTE)
     while (aiter.hasNext) {
       val attr = aiter.next().asInstanceOf[XdmNode]
-      properties.put(attr.getNodeName, attr.getStringValue)
+      attributes.put(attr.getNodeName, attr.getStringValue)
     }
 
     var same = parent.isDefined
@@ -145,6 +145,15 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
       set.toSet
     } else {
       Set()
+    }
+  }
+
+  def lexicalAvt(name: String, value: String): XProcAvtExpression = {
+    val avt = AvtParser.parse(value)
+    if (avt.isDefined) {
+      new XProcAvtExpression(inScopeNS, avt.get)
+    } else {
+      throw new ModelException(ExceptionCode.BADAVT, List(name, value), location)
     }
   }
 
@@ -371,8 +380,14 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
   }
 
   def makeGraph(graph: Graph, parent: Node) {
-    for (child <- children) {
-      child.makeGraph(graph, parent)
+    if (children.nonEmpty) {
+      if (graphNode.isDefined) {
+        for (child <- children) {
+          child.makeGraph(graph, graphNode.get)
+        }
+      } else {
+        println("cannot process children of " + this)
+      }
     }
   }
 

@@ -1,10 +1,11 @@
 package com.xmlcalabash.steps
 
-import com.jafpl.exceptions.StepException
+import com.jafpl.exceptions.{PipelineException, StepException}
 import com.jafpl.messages.Metadata
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortSpecification, Step}
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, SaxonRuntimeConfiguration, XProcExpression, XmlPortSpecification, XmlStep}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -13,14 +14,31 @@ class DefaultStep extends XmlStep {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
   protected var config: Option[SaxonRuntimeConfiguration] = None
-  protected val bindings = mutable.HashMap.empty[String,Any]
+  protected val bindings = mutable.HashMap.empty[QName,XdmItem]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def bindingSpec: BindingSpecification = BindingSpecification.ANY
 
   override def receiveBinding(variable: String, value: Any): Unit = {
-    // nop
+    if (variable.startsWith("{")) {
+      val clarkName = "\\{(.*)\\}(.*)".r
+      val qname = variable match {
+        case clarkName(uri,name) => new QName(uri,name)
+        case _ => throw new PipelineException("badname", s"Name isn't a Clark name: $variable", None)
+      }
+      // FIXME: deal with other types
+      val xvalue = new XdmAtomicValue(value.toString)
+      receiveBinding(qname, xvalue)
+    } else {
+      // FIXME: deal with other types
+      val xvalue = new XdmAtomicValue(value.toString)
+      receiveBinding(new QName("", variable), xvalue)
+    }
+  }
+
+  override def receiveBinding(variable: QName, value: XdmItem): Unit = {
+    bindings.put(variable, value)
   }
 
   override def setConsumer(consumer: DataConsumer): Unit = {

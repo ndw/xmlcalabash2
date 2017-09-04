@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml.datasource
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{AvtParser, ParserConfiguration}
-import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, Variable, XProcConstants}
+import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, Variable, WithOption, XProcConstants}
 import com.xmlcalabash.steps.ProduceInline
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 
@@ -20,20 +20,20 @@ class Inline(override val config: ParserConfiguration,
   private val variableRefs = mutable.HashSet.empty[QName]
 
   override def validate(): Boolean = {
-    _excludeInlinePrefixes = lexicalPrefixes(properties.get(XProcConstants._exclude_inline_prefixes))
-    _expandText = lexicalBoolean(properties.get(XProcConstants._expand_text)).getOrElse(true)
-    _documentProperties = properties.get(XProcConstants._document_properties)
-    _encoding = properties.get(XProcConstants._encoding)
+    _excludeInlinePrefixes = lexicalPrefixes(attributes.get(XProcConstants._exclude_inline_prefixes))
+    _expandText = lexicalBoolean(attributes.get(XProcConstants._expand_text)).getOrElse(true)
+    _documentProperties = attributes.get(XProcConstants._document_properties)
+    _encoding = attributes.get(XProcConstants._encoding)
 
     for (key <- List(XProcConstants._exclude_inline_prefixes, XProcConstants._expand_text,
       XProcConstants._document_properties, XProcConstants._encoding)) {
-      if (properties.contains(key)) {
-        properties.remove(key)
+      if (attributes.contains(key)) {
+        attributes.remove(key)
       }
     }
 
-    if (properties.nonEmpty) {
-      throw new ModelException(ExceptionCode.BADATTR, properties.keySet.head.toString, location)
+    if (attributes.nonEmpty) {
+      throw new ModelException(ExceptionCode.BADATTR, attributes.keySet.head.toString, location)
     }
 
     for (node <- nodes) {
@@ -73,7 +73,7 @@ class Inline(override val config: ParserConfiguration,
   private def findVariableRefsInString(text: String): Unit = {
     val list = AvtParser.parse(text)
     if (list.isEmpty) {
-      throw new ModelException(ExceptionCode.BADAVT, text, location)
+      throw new ModelException(ExceptionCode.BADAVT, List("TVT", text), location)
     }
 
     var avt = false
@@ -129,9 +129,17 @@ class Inline(override val config: ParserConfiguration,
     }
   }
 
-  override def makeEdges(graph: Graph, parent: Node): Unit = {
+  override def makeEdges(graph: Graph, parNode: Node): Unit = {
     val toStep = this.parent.get.parent
-    val toPort = this.parent.get.asInstanceOf[IOPort].port.get
+    val toPort = parent.get match {
+      case port: IOPort =>
+        port.port.get
+      case wopt: WithOption =>
+        wopt.dataPort
+      case _ =>
+        throw new ModelException(ExceptionCode.INTERNAL, "p:pipe points to " + parent.get, location)
+    }
+
     graph.addEdge(graphNode.get, "result", toStep.get.graphNode.get, toPort)
   }
 

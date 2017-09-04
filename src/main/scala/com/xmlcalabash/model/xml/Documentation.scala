@@ -20,7 +20,7 @@ class Documentation(override val config: ParserConfiguration,
   }
 
   override def asXML: xml.Elem = {
-    dumpAttr(properties.toMap)
+    dumpAttr(attributes.toMap)
     val nodes = ListBuffer.empty[xml.Node]
     if (children.nonEmpty) {
       nodes += xml.Text("\n")

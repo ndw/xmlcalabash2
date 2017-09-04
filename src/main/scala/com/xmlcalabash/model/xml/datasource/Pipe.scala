@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml.datasource
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
-import com.xmlcalabash.model.xml.{Artifact, Documentation, IOPort, PipeInfo, XProcConstants}
+import com.xmlcalabash.model.xml.{Artifact, Documentation, IOPort, PipeInfo, WithOption, XProcConstants}
 
 import scala.collection.mutable.ListBuffer
 
@@ -29,28 +29,35 @@ class Pipe(override val config: ParserConfiguration,
   }
 
   override def validate(): Boolean = {
-    _step = properties.get(XProcConstants._step)
-    _port = properties.get(XProcConstants._port)
+    _step = attributes.get(XProcConstants._step)
+    _port = attributes.get(XProcConstants._port)
 
     for (key <- List(XProcConstants._port, XProcConstants._step)) {
-      if (properties.contains(key)) {
-        properties.remove(key)
+      if (attributes.contains(key)) {
+        attributes.remove(key)
       }
     }
 
-    if (properties.nonEmpty) {
-      val key = properties.keySet.head
+    if (attributes.nonEmpty) {
+      val key = attributes.keySet.head
       throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
     valid
   }
 
-  override def makeEdges(graph: Graph, parent: Node): Unit = {
+  override def makeEdges(graph: Graph, parNode: Node): Unit = {
     val fromStep = findStep(step.get)
     val fromPort = port.get
-    val toStep = this.parent.get.parent
-    val toPort = this.parent.get.asInstanceOf[IOPort].port.get
+    val toStep = parent.get.parent
+    val toPort = parent.get match {
+      case port: IOPort =>
+        port.port.get
+      case wopt: WithOption =>
+        wopt.dataPort
+      case _ =>
+        throw new ModelException(ExceptionCode.INTERNAL, "p:pipe points to " + parent.get, location)
+    }
 
     graph.addEdge(fromStep.get.graphNode.get, fromPort,
       toStep.get.graphNode.get, toPort)

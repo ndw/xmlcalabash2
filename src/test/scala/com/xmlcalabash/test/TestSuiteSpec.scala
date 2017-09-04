@@ -29,6 +29,18 @@ class TestSuiteSpec extends FlatSpec {
     test("src/test/resources/default-p-input.xml")
   }
 
+  "A p:parameters " should " read an AVT map " in {
+    test("src/test/resources/parameters-001.xml")
+  }
+
+  "A p:parameters " should " read an inline with-option " in {
+    test("src/test/resources/parameters-002.xml")
+  }
+
+  "A p:parameters " should " read a piped with-option " in {
+    test("src/test/resources/parameters-003.xml")
+  }
+
   def test(fn: String) {
     val runner = new TestRunner(parserConfig, runtimeConfig, fn)
     try {

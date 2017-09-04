@@ -41,7 +41,7 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
       case ExceptionCode.BADINPUTSIG =>
         val stepType = data.head
         val port = data(1)
-        s"Step $stepType has no input port named $port"
+        s"Step $stepType has n o input port named $port"
       case ExceptionCode.BADOUTPUTSIG =>
         val stepType = data.head
         val port = data(1)
@@ -98,9 +98,11 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
         s"Step already has primary output port: $curport; cannot make $newport primary"
       case ExceptionCode.NOCONTAINEROUTPUT => s"No output connection for port: ${data.head}"
       case ExceptionCode.ATTRREQ => s"Required attribute is missing: ${data.head}"
-      case ExceptionCode.BADAVT => s"XPath syntax error in attribute value template: ${data.head}"
+      case ExceptionCode.BADAVT =>
+        val name = data.head
+        val expr = data(1)
+        s"XPath syntax error in attribute value template for $name: $expr"
       case ExceptionCode.NOBINDING => s"Expression references variable not in-scope: ${data.head}"
-
 
       case ExceptionCode.INTERNAL => data.head
       case _ => "INTERNAL ERROR: No message for $code"

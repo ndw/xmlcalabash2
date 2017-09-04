@@ -19,11 +19,11 @@ class Document(override val config: ParserConfiguration,
   private val bindingRefs = mutable.HashSet.empty[QName]
 
   override def validate(): Boolean = {
-    _href = properties.get(XProcConstants._href)
+    _href = attributes.get(XProcConstants._href)
 
     for (key <- List(XProcConstants._href)) {
-      if (properties.contains(key)) {
-        properties.remove(key)
+      if (attributes.contains(key)) {
+        attributes.remove(key)
       }
     }
 
@@ -31,8 +31,8 @@ class Document(override val config: ParserConfiguration,
       throw new ModelException(ExceptionCode.ATTRREQ, "href", location)
     }
 
-    if (properties.nonEmpty) {
-      val key = properties.keySet.head
+    if (attributes.nonEmpty) {
+      val key = attributes.keySet.head
       throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
@@ -42,7 +42,7 @@ class Document(override val config: ParserConfiguration,
 
     val list = AvtParser.parse(_href.get)
     if (list.isEmpty) {
-      throw new ModelException(ExceptionCode.BADAVT, _href.get, location)
+      throw new ModelException(ExceptionCode.BADAVT, List("href", _href.get), location)
     } else {
       for (item <- list.get) {
         hrefAvt += item
