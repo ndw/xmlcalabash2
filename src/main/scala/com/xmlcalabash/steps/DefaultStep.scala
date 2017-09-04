@@ -1,6 +1,7 @@
 package com.xmlcalabash.steps
 
 import com.jafpl.exceptions.{PipelineException, StepException}
+import com.jafpl.graph.Location
 import com.jafpl.messages.Metadata
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortSpecification, Step}
@@ -11,11 +12,21 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 
 class DefaultStep extends XmlStep {
+  private var _location = Option.empty[Location]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
   protected var config: Option[SaxonRuntimeConfiguration] = None
   protected val bindings = mutable.HashMap.empty[QName,XdmItem]
 
+  def location: Option[Location] = _location
+
+  def dynamicError(code: Int): Unit = {
+    throw new PipelineException("notimpl", "dynamic error isn't implemented yet", location)
+  }
+
+  override def setLocation(location: Location): Unit = {
+    _location = Some(location)
+  }
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def bindingSpec: BindingSpecification = BindingSpecification.ANY
@@ -85,15 +96,5 @@ class DefaultStep extends XmlStep {
     } else {
       defStr
     }
-  }
-
-  def xpathValue(expr: XProcExpression): Any = {
-    val eval = config.get.expressionEvaluator().asInstanceOf[SaxonExpressionEvaluator]
-    eval.withContext(this) { eval.value(expr, List.empty[Any], bindings.toMap) }
-  }
-
-  def xpathValue(expr: XProcExpression, context: Any): Any = {
-    val eval = config.get.expressionEvaluator().asInstanceOf[SaxonExpressionEvaluator]
-    eval.withContext(this) { eval.value(expr, List(context), bindings.toMap) }
   }
 }

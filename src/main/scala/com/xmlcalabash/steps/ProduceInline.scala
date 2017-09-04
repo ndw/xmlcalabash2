@@ -5,7 +5,7 @@ import java.net.URI
 import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.model.util.{AvtParser, SaxonTreeBuilder}
 import com.xmlcalabash.model.xml.XProcConstants
-import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcAvtExpression, XProcXPathExpression, XmlMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcXPathExpression, XmlMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{Axis, QName, XdmMap, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
@@ -109,5 +109,10 @@ class ProduceInline(private val nodes: List[XdmNode],
     val list = AvtParser.parse(text)
     val expr = new XProcAvtExpression(Map.empty[String,String], list.get)
     evaluator.value(expr, List.empty[Any], bindings.toMap).toString
+  }
+
+  def xpathValue(expr: XProcExpression): Any = {
+    val eval = config.get.expressionEvaluator().asInstanceOf[SaxonExpressionEvaluator]
+    eval.withContext(this) { eval.value(expr, List.empty[Any], bindings.toMap) }
   }
 }
