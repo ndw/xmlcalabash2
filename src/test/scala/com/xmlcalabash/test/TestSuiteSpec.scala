@@ -41,6 +41,10 @@ class TestSuiteSpec extends FlatSpec {
     test("src/test/resources/parameters-003.xml")
   }
 
+  "The context for step option AVTs " should " be the default readable port" in {
+    test("src/test/resources/opt-drp.xml")
+  }
+
   def test(fn: String) {
     val runner = new TestRunner(parserConfig, runtimeConfig, fn)
     try {

@@ -1,5 +1,6 @@
 package com.xmlcalabash.model.xml
 
+import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{AvtParser, ParserConfiguration}
@@ -139,6 +140,19 @@ class AtomicStep(override val config: ParserConfiguration,
   }
 
   override def makeEdges(graph: Graph, parent: Node) {
+    for (opt <- options.keySet) {
+      val drp = defaultReadablePort()
+      if (drp.isDefined) {
+        val port = "#" + opt.toString
+        drp.get match {
+          case out: Output =>
+            graph.addEdge(out.parent.get.graphNode.get, out.port.get, graphNode.get, port)
+          case _ =>
+            throw new PipelineException("notimpl", "not implemented reading from: " + drp.get, location)
+        }
+      }
+    }
+
     for (child <- children) {
       child match {
         case doc: Documentation => Unit

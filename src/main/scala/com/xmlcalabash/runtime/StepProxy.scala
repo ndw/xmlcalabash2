@@ -24,7 +24,12 @@ class StepProxy(step: Step,
 
   def computeOptions(): Unit = {
     for ((name, value) <- options) {
-      val result = xpathValue(value)
+      val port = "#" + name.toString
+      val result = if (cache.contains(port)) {
+        xpathValue(value, cache(port))
+      } else {
+        xpathValue(value)
+      }
       step match {
         case xstep: XmlStep =>
           xstep.receiveBinding(name, result)
