@@ -13,7 +13,7 @@ import scala.collection.mutable.ListBuffer
 class Inline(override val config: ParserConfiguration,
              override val parent: Option[Artifact],
              val nodes: List[XdmNode]) extends DataSource(config, parent) {
-  private var _excludeInlinePrefixes: Set[String] = Set()
+  private var _excludeInlinePrefixes = Map.empty[String,String]
   private var _expandText = true
   private var _documentProperties = Option.empty[String]
   private var _encoding = Option.empty[String]

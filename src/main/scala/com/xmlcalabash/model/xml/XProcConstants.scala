@@ -42,6 +42,7 @@ object XProcConstants {
   // Extras for testing
   val p_producer = new QName("p", ns_p, "producer")
 
+  val c_error = new QName("c", ns_c, "error")
   val c_param_set = new QName("c", ns_c, "param-set")
   val c_param = new QName("c", ns_c, "param")
 

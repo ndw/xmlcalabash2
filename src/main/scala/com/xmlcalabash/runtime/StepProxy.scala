@@ -32,7 +32,7 @@ class StepProxy(step: Step,
       }
       step match {
         case xstep: XmlStep =>
-          xstep.receiveBinding(name, result)
+          xstep.receiveBinding(name, result, nsBindings)
         case _ =>
           step.receiveBinding(name.getClarkName, result)
       }
@@ -43,7 +43,7 @@ class StepProxy(step: Step,
       val result = xpathValue(expr, cache(data.port))
       step match {
         case xstep: XmlStep =>
-          xstep.receiveBinding(data.name, result)
+          xstep.receiveBinding(data.name, result, nsBindings)
         case _ =>
           step.receiveBinding(data.name.getClarkName, result)
       }
@@ -106,9 +106,9 @@ class StepProxy(step: Step,
     }
     // FIXME: deal with other types
     val xvalue = new XdmAtomicValue(value.toString)
-    receiveBinding(qname, xvalue)
+    receiveBinding(qname, xvalue, nsBindings)
   }
-  override def receiveBinding(variable: QName, value: XdmItem): Unit = {
+  override def receiveBinding(variable: QName, value: XdmItem, nsBindings: Map[String,String]): Unit = {
     bindings.put(variable, value)
   }
   override def initialize(config: RuntimeConfiguration): Unit = {

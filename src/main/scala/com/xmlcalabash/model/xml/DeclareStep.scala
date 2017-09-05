@@ -17,7 +17,7 @@ class DeclareStep(override val config: ParserConfiguration,
   private var _type: Option[QName] = None
   private var _psviRequired: Option[Boolean] = None
   private var _xpathVersion: Option[String] = None
-  private var _excludeInlinePrefixes: Set[String] = Set()
+  private var _excludeInlinePrefixes = Map.empty[String,String]
   private var _version: Option[String] = None
   private val options = mutable.HashMap.empty[QName, XProcExpression]
 

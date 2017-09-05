@@ -13,11 +13,12 @@ import scala.collection.mutable
 class ProduceInline(private val nodes: List[XdmNode],
                     private val nsBindings: Map[String,String],
                     private val expandText: Boolean,
-                    private val excludeInlinePrefixes: Set[String],
+                    private val excludeInlinePrefixes: Map[String,String],
                     private val docPropsExpr: Option[String],
                     private val encoding: Option[String]) extends DefaultStep {
   private val include_expand_text_attribute = false
   private val docProps = mutable.HashMap.empty[String, String]
+  private val excludeURIs = excludeInlinePrefixes.values.toSet
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
@@ -55,7 +56,8 @@ class ProduceInline(private val nodes: List[XdmNode],
       expandTVT(node, builder, expandText)
     }
     builder.endDocument()
-    consumer.get.receive("result", builder.result, new XmlMetadata("application/xml", docProps.toMap))
+    val result = builder.result
+    consumer.get.receive("result", result, new XmlMetadata("application/xml", docProps.toMap))
   }
 
   private def expandTVT(node: XdmNode, builder: SaxonTreeBuilder, expandText: Boolean): Unit = {
@@ -68,8 +70,15 @@ class ProduceInline(private val nodes: List[XdmNode],
         }
       case XdmNodeKind.ELEMENT =>
         builder.addStartElement(node.getNodeName)
+        var iter = node.axisIterator(Axis.NAMESPACE)
+        while (iter.hasNext) {
+          val ns = iter.next().asInstanceOf[XdmNode]
+          if (!excludeURIs.contains(ns.getStringValue)) {
+            builder.addNamespace(ns.getNodeName.getLocalName, ns.getStringValue)
+          }
+        }
         var newExpand = expandText
-        var iter = node.axisIterator(Axis.ATTRIBUTE)
+        iter = node.axisIterator(Axis.ATTRIBUTE)
         while (iter.hasNext) {
           val attr = iter.next().asInstanceOf[XdmNode]
           if (attr.getNodeName == XProcConstants.p_expand_text) {

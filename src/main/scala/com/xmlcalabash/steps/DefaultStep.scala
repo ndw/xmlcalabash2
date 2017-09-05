@@ -24,6 +24,23 @@ class DefaultStep extends XmlStep {
     throw new PipelineException("notimpl", "dynamic error isn't implemented yet", location)
   }
 
+  def lexicalQName(name: String, bindings: Map[String,String]): QName = {
+    if (name.contains(":")) {
+      val pos = name.indexOf(":")
+      val pfx = name.substring(0, pos)
+      val lcl = name.substring(pos+1)
+      if (bindings.contains(pfx)) {
+        new QName(pfx, bindings(pfx), lcl)
+      } else {
+        throw new PipelineException("badqname", "Unparsable qname: " + name, None)
+      }
+    } else {
+      new QName("", name)
+    }
+  }
+
+  // ==========================================================================
+
   override def setLocation(location: Location): Unit = {
     _location = Some(location)
   }
@@ -40,15 +57,15 @@ class DefaultStep extends XmlStep {
       }
       // FIXME: deal with other types
       val xvalue = new XdmAtomicValue(value.toString)
-      receiveBinding(qname, xvalue)
+      receiveBinding(qname, xvalue, Map.empty[String,String])
     } else {
       // FIXME: deal with other types
       val xvalue = new XdmAtomicValue(value.toString)
-      receiveBinding(new QName("", variable), xvalue)
+      receiveBinding(new QName("", variable), xvalue, Map.empty[String,String])
     }
   }
 
-  override def receiveBinding(variable: QName, value: XdmItem): Unit = {
+  override def receiveBinding(variable: QName, value: XdmItem, nsBindings: Map[String,String]): Unit = {
     bindings.put(variable, value)
   }
 

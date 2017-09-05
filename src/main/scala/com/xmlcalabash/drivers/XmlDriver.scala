@@ -15,7 +15,7 @@ import org.xml.sax.InputSource
 
 object XmlDriver extends App {
 
-  runTwo()
+  runOne()
 
   def runTwo(): Unit = {
     val data = "Hello, world."

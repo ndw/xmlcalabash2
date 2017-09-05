@@ -131,20 +131,36 @@ class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
     }
   }
 
-  def lexicalPrefixes(value: Option[String]): Set[String] = {
+  def lexicalPrefixes(value: Option[String]): Map[String,String] = {
     if (value.isDefined) {
-      val set = mutable.HashSet.empty[String]
+      val set = mutable.HashMap.empty[String,String]
       val prefixes = value.get.split("\\s+")
-      for (prefix <- prefixes) {
-        if (inScopeNS.contains(prefix)) {
-          set += prefix
+      if (prefixes.contains("#default")) {
+        if (inScopeNS.contains("")) {
+          set.put("", inScopeNS(""))
         } else {
-          throw new ModelException(ExceptionCode.NOPREFIX, prefix , location)
+          throw new ModelException(ExceptionCode.NOPREFIX, "", location)
         }
       }
-      set.toSet
+      if (prefixes.contains("#all")) {
+        for ((pfx,uri) <- inScopeNS) {
+          set.put(pfx,uri)
+        }
+      }
+      for (prefix <- prefixes) {
+        if ((prefix == "#all") || (prefix == "#default")) {
+          // nop
+        } else {
+          if (inScopeNS.contains(prefix)) {
+            set.put(prefix, inScopeNS(prefix))
+          } else {
+            throw new ModelException(ExceptionCode.NOPREFIX, prefix, location)
+          }
+        }
+      }
+      set.toMap
     } else {
-      Set()
+      Map.empty[String,String]
     }
   }
 

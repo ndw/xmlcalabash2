@@ -6,5 +6,5 @@ import net.sf.saxon.s9api.{QName, XdmItem}
 trait XmlStep extends Step {
   override def inputSpec: XmlPortSpecification
   override def outputSpec: XmlPortSpecification
-  def receiveBinding(variable: QName, value: XdmItem)
+  def receiveBinding(variable: QName, value: XdmItem, nsBindings: Map[String,String])
 }
