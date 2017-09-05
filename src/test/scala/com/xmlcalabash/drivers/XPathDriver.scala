@@ -1,10 +1,7 @@
 package com.xmlcalabash.drivers
 
-import com.xmlcalabash.exceptions.ParseException
 import com.xmlcalabash.model.util.DefaultParserConfiguration
 import com.xmlcalabash.parsers.XPathParser
-import com.xmlcalabash.runtime.SaxonRuntimeConfiguration
-import net.sf.saxon.s9api.Processor
 
 import scala.collection.mutable.ListBuffer
 
