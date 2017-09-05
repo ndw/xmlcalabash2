@@ -51,12 +51,12 @@ class StepProxy(step: Step,
   }
 
   def xpathValue(expr: XProcExpression): XdmItem = {
-    val eval = config.get.expressionEvaluator().asInstanceOf[SaxonExpressionEvaluator]
+    val eval = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
     eval.withContext(this) { eval.value(expr, List.empty[Any], bindings.toMap) }
   }
 
   def xpathValue(expr: XProcExpression, context: Any): XdmItem = {
-    val eval = config.get.expressionEvaluator().asInstanceOf[SaxonExpressionEvaluator]
+    val eval = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
     eval.withContext(this) { eval.value(expr, List(context), bindings.toMap) }
   }
 

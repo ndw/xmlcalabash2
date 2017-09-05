@@ -234,6 +234,7 @@ step p:xslt has implementation xc:Xslt
   input stylesheet
   primary output result
   output secondary*
+  option parameters
   option initial-mode? as QName
   option template-name? as QName
   option output-base-uri? as anyURI

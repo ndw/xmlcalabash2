@@ -6,7 +6,8 @@ import com.jafpl.messages.ItemMessage
 import com.jafpl.runtime.{ExpressionEvaluator, RuntimeConfiguration}
 import com.jafpl.steps.DataConsumer
 import com.xmlcalabash.functions.{Cwd, SystemProperty}
-import net.sf.saxon.s9api.Processor
+import com.xmlcalabash.model.util.XProcURIResolver
+import net.sf.saxon.s9api.{Processor, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -14,9 +15,11 @@ import scala.collection.mutable
 class SaxonRuntimeConfiguration(val processor: Processor) extends RuntimeConfiguration {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _expressionEvaluator = new SaxonExpressionEvaluator(this)
+  private var _uriResolver: XProcURIResolver = new XProcURIResolver(this)
   private val enabledTraces = mutable.HashSet.empty[String]
   private val disabledTraces = mutable.HashSet.empty[String]
   private val badTraceLevels = mutable.HashSet.empty[String]
+  private val collections = mutable.HashMap.empty[String, List[XdmNode]]
 
   private val extensionFunctions = List(
     new Cwd(this),
@@ -50,7 +53,10 @@ class SaxonRuntimeConfiguration(val processor: Processor) extends RuntimeConfigu
     }
   }
 
-  override def expressionEvaluator(): ExpressionEvaluator = _expressionEvaluator
+  def uriResolver: XProcURIResolver = _uriResolver
+  def htmlSerializer: Boolean = true // FIXME:
+
+  override def expressionEvaluator: ExpressionEvaluator = _expressionEvaluator
 
   override def traceEnabled(trace: String): Boolean = {
     if (enabledTraces.contains("ALL")) {
@@ -103,4 +109,13 @@ class SaxonRuntimeConfiguration(val processor: Processor) extends RuntimeConfigu
   def staticBaseURI: URI = {
     URIUtils.cwdAsURI
   }
+
+  def setCollection(href: URI, docs: List[XdmNode]): Unit = {
+    collections.put(href.toASCIIString, docs)
+  }
+
+  def collection(href: URI): List[XdmNode] = {
+    collections.getOrElse(href.toASCIIString, List.empty[XdmNode])
+  }
+
 }

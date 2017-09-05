@@ -18,7 +18,12 @@ class ProduceInline(private val nodes: List[XdmNode],
                     private val encoding: Option[String]) extends DefaultStep {
   private val include_expand_text_attribute = false
   private val docProps = mutable.HashMap.empty[String, String]
-  private val excludeURIs = excludeInlinePrefixes.values.toSet
+  private val excludeURIs = mutable.HashSet.empty[String]
+
+  excludeURIs += XProcConstants.ns_p
+  for (uri <- excludeInlinePrefixes.values) {
+    excludeURIs += uri
+  }
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
@@ -114,14 +119,14 @@ class ProduceInline(private val nodes: List[XdmNode],
 
   // FIXME: should return a list of XdmNode
   private def expandString(text: String): String = {
-    val evaluator = config.get.expressionEvaluator().asInstanceOf[SaxonExpressionEvaluator]
+    val evaluator = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
     val list = AvtParser.parse(text)
     val expr = new XProcAvtExpression(Map.empty[String,String], list.get)
     evaluator.value(expr, List.empty[Any], bindings.toMap).toString
   }
 
   def xpathValue(expr: XProcExpression): Any = {
-    val eval = config.get.expressionEvaluator().asInstanceOf[SaxonExpressionEvaluator]
+    val eval = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
     eval.withContext(this) { eval.value(expr, List.empty[Any], bindings.toMap) }
   }
 }

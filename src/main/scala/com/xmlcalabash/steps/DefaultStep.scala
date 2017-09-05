@@ -6,7 +6,7 @@ import com.jafpl.messages.Metadata
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortSpecification, Step}
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, SaxonRuntimeConfiguration, XProcExpression, XmlPortSpecification, XmlStep}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -37,6 +37,27 @@ class DefaultStep extends XmlStep {
     } else {
       new QName("", name)
     }
+  }
+
+  def parseParameters(value: XdmItem, nsBindings: Map[String,String]): Map[QName, XdmValue] = {
+    val params = mutable.HashMap.empty[QName, XdmValue]
+
+    value match {
+      case map: XdmMap =>
+        // Grovel through a Java Map
+        val iter = map.keySet().iterator()
+        while (iter.hasNext) {
+          val key = iter.next()
+          val value = map.get(key)
+
+          val qname = lexicalQName(key.getStringValue, nsBindings)
+          params.put(qname, value)
+        }
+      case _ =>
+        throw new PipelineException("notmap", "The parameters must be a map", None)
+    }
+
+    params.toMap
   }
 
   // ==========================================================================

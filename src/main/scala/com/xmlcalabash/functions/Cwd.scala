@@ -30,7 +30,7 @@ class Cwd private extends ExtensionFunctionDefinition {
 
   class CwdCall(val xdef: ExtensionFunctionDefinition) extends ExtensionFunctionCall {
     override def call(context: XPathContext, arguments: Array[Sequence]): Sequence = {
-      val exprEval = runtime.expressionEvaluator().asInstanceOf[SaxonExpressionEvaluator]
+      val exprEval = runtime.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
       if (exprEval.stepContext() == null) {
         throw new PipelineException("notallowed", s"You cannot call the XProc extension function $funcname here", None)
       }

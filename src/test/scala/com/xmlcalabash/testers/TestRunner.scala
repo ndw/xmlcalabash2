@@ -336,7 +336,7 @@ class TestRunner(parserConfig: ParserConfiguration, runtimeConfig: SaxonRuntimeC
     val src = node.getAttributeValue(_src)
     if ((src == null) && children.isEmpty) {
       val value = node.getAttributeValue(_select)
-      val eval = runtimeConfig.expressionEvaluator()
+      val eval = runtimeConfig.expressionEvaluator
       val context = inlineDocument(node)
       val nsBindings = Map.empty[String,String]
       val result = eval.value(new XProcXPathExpression(nsBindings, value), List(context), nsBindings)
