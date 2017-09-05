@@ -147,6 +147,8 @@ class AtomicStep(override val config: ParserConfiguration,
         drp.get match {
           case out: Output =>
             graph.addEdge(out.parent.get.graphNode.get, out.port.get, graphNode.get, port)
+          case in: Input =>
+            graph.addEdge(in.parent.get.graphNode.get, in.port.get, graphNode.get, port)
           case _ =>
             throw new PipelineException("notimpl", "not implemented reading from: " + drp.get, location)
         }

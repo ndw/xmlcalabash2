@@ -139,7 +139,8 @@ class StepProxy(step: Step,
         throw new PipelineException("badcontext", s"A sequence is not allowed: $port", None)
       }
       cache.put(port, item)
+    } else {
+      step.receive(port, item, metadata)
     }
-    step.receive(port, item, metadata)
   }
 }
