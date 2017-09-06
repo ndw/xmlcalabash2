@@ -1,12 +1,12 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.model.util.ParserConfiguration
+import com.xmlcalabash.config.XMLCalabash
 import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable.ListBuffer
 
-class PipeInfo(override val config: ParserConfiguration,
+class PipeInfo(override val config: XMLCalabash,
                override val parent: Option[Artifact],
                val content: List[XdmNode]) extends Artifact(config, parent) {
   override def validate(): Boolean = {

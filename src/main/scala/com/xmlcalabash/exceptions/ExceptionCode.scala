@@ -2,7 +2,12 @@ package com.xmlcalabash.exceptions
 
 object ExceptionCode extends Enumeration {
   type ExceptionCode = Value
-  val INTERNAL,
+  val
+      // Configuration exception codes
+      CFGINCOMPLETE, MUSTBEABS, CLOSED,
+
+      // Model exception codes
+      INTERNAL,
       DUPINPUTSIG, DUPOUTPUTSIG, DUPOPTSIG, BADINPUTSIG, BADOUTPUTSIG, BADOPTSIG,
       NOTYPE, NOIMPL, IMPLNOTSTEP,
       BADTREENODE,

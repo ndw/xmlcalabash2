@@ -1,5 +1,6 @@
 package com.xmlcalabash.model.tpl
 
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ModelException, ParseException}
 import com.xmlcalabash.model.tpl.TplParser.EventHandler
 import com.xmlcalabash.model.tpl.containers.{Choose, Container, Group, Otherwise, When}
@@ -7,7 +8,7 @@ import com.xmlcalabash.model.util.ParserConfiguration
 
 import scala.collection.mutable
 
-class PipelineBuilder(config: ParserConfiguration) extends EventHandler {
+class PipelineBuilder(config: XMLCalabash) extends EventHandler {
   private var input: String = null
 
   val stack: mutable.ListBuffer[Artifact] = mutable.ListBuffer.empty[Artifact]

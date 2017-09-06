@@ -1,13 +1,13 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{ContainerStart, Graph, Node}
+import com.jafpl.graph.{Graph, Node}
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.ParserConfiguration
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer
 
-class Serialization(override val config: ParserConfiguration,
+class Serialization(override val config: XMLCalabash,
                     override val parent: Option[Artifact]) extends Artifact(config, parent) {
   var _port: Option[String] = None
   var _byte_order_mark: Option[Boolean] = None

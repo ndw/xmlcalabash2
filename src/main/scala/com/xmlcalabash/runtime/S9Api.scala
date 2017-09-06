@@ -2,6 +2,7 @@ package com.xmlcalabash.runtime
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileNotFoundException, FileOutputStream, OutputStream, Writer}
 
+import com.xmlcalabash.config.XMLCalabash
 import net.sf.saxon.Configuration
 import net.sf.saxon.s9api.{Axis, SAXDestination, SaxonApiException, Serializer, XdmNode, XdmNodeKind}
 import nu.validator.htmlparser.sax.HtmlSerializer
@@ -29,7 +30,7 @@ object S9Api {
   }
 
   // FIXME: THIS METHOD IS A GROTESQUE HACK!
-  def xdmToInputSource(config: SaxonRuntimeConfiguration, node: XdmNode): InputSource = {
+  def xdmToInputSource(config: XMLCalabash, node: XdmNode): InputSource = {
     val out = new ByteArrayOutputStream()
     val serializer = config.processor.newSerializer
     serializer.setOutputStream(out)
@@ -41,16 +42,16 @@ object S9Api {
     isource
   }
 
-  def serialize(config: SaxonRuntimeConfiguration, node: XdmNode, serializer: Serializer): Unit = {
+  def serialize(config: XMLCalabash, node: XdmNode, serializer: Serializer): Unit = {
     val nodes = ListBuffer.empty[XdmNode]
     nodes += node
     serialize(config, nodes.toList, serializer)
   }
 
-  def serialize(xproc: SaxonRuntimeConfiguration, nodes: List[XdmNode], serializer: Serializer): Unit = {
+  def serialize(xproc: XMLCalabash, nodes: List[XdmNode], serializer: Serializer): Unit = {
     val qtproc = xproc.processor
     val xqcomp = qtproc.newXQueryCompiler
-    xqcomp.setModuleURIResolver(xproc.uriResolver)
+    xqcomp.setModuleURIResolver(xproc.moduleURIResolver)
     // Patch suggested by oXygen to avoid errors that result from attempting to serialize
     // a schema-valid document with a schema-naive query
     xqcomp.getUnderlyingStaticContext.setSchemaAware(xqcomp.getProcessor.getUnderlyingConfiguration.isLicensedFeature(Configuration.LicenseFeature.ENTERPRISE_XQUERY))

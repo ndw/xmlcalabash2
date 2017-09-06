@@ -1,17 +1,17 @@
 package com.xmlcalabash.test
 
-import com.xmlcalabash.model.util.DefaultParserConfiguration
-import com.xmlcalabash.runtime.SaxonRuntimeConfiguration
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.testers.TestRunner
-import net.sf.saxon.s9api.Processor
 import org.scalatest.FlatSpec
 
 class TestSuiteSpec extends FlatSpec {
-  val processor = new Processor(false)
-  val parserConfig = new DefaultParserConfiguration()
-  val runtimeConfig = new SaxonRuntimeConfiguration(processor)
+  val runtimeConfig = XMLCalabash.newInstance()
 
   var error = Option.empty[String]
+
+  "A simple identity pipeline" should " run" in {
+    test("src/test/resources/simple.xml")
+  }
 
   "A non-pipeline document " should " fail " in {
     test("src/test/resources/not-a-pipeline.xml")
@@ -46,11 +46,16 @@ class TestSuiteSpec extends FlatSpec {
   }
 
   def test(fn: String) {
-    val runner = new TestRunner(parserConfig, runtimeConfig, fn)
+    val runner = new TestRunner(runtimeConfig, fn)
     try {
       error = runner.run()
     } catch {
-      case t: Throwable => throw t
+      case t: Throwable =>
+        println(t)
+        throw t
+    }
+    if (error.isDefined) {
+      println(error.toString)
     }
     assert(error.isEmpty)
   }

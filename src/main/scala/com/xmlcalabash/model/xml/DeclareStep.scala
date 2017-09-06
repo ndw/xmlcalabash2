@@ -1,17 +1,17 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{Graph, Node}
+import com.jafpl.config.Jafpl
+import com.jafpl.graph.Graph
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.containers.Container
-import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
 import com.xmlcalabash.runtime.XProcExpression
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class DeclareStep(override val config: ParserConfiguration,
+class DeclareStep(override val config: XMLCalabash,
                   override val parent: Option[Artifact]) extends Container(config, parent) {
   private var _name: Option[String] = None
   private var _type: Option[QName] = None
@@ -22,7 +22,8 @@ class DeclareStep(override val config: ParserConfiguration,
   private val options = mutable.HashMap.empty[QName, XProcExpression]
 
   def pipelineGraph(): Graph = {
-    val graph = new Graph()
+    val jafpl = Jafpl.newInstance()
+    val graph = jafpl.newGraph()
     val pipeline = graph.addPipeline(name)
 
     for (port <- inputPorts) {

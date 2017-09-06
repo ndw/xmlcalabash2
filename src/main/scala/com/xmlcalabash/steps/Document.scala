@@ -19,11 +19,7 @@ class Document extends DefaultStep {
   }
 
   override def run(): Unit = {
-    val builder = config.get.processor.newDocumentBuilder()
-    val source = new SAXSource(new InputSource(_href))
-    builder.setDTDValidation(false)
-    builder.setLineNumbering(true)
-    val node = builder.build(source)
+    val node = config.get.documentManager.parse(_href)
     consumer.get.receive("result", node, new XmlMetadata("application/xml"))
   }
 

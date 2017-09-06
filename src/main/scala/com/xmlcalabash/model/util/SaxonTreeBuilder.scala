@@ -2,8 +2,8 @@ package com.xmlcalabash.model.util
 
 import java.net.URI
 
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.runtime.SaxonRuntimeConfiguration
 import net.sf.saxon.Controller
 import net.sf.saxon.`type`.{BuiltInType, SchemaType, SimpleType}
 import net.sf.saxon.event.{NamespaceReducer, Receiver}
@@ -14,7 +14,7 @@ import net.sf.saxon.tree.util.NamespaceIterator
 
 import scala.collection.mutable.ListBuffer
 
-class SaxonTreeBuilder(runtime: SaxonRuntimeConfiguration) {
+class SaxonTreeBuilder(runtime: XMLCalabash) {
   private val config = runtime.processor.getUnderlyingConfiguration
   private val pool = config.getNamePool
   private val controller = new Controller(config)
@@ -168,19 +168,6 @@ class SaxonTreeBuilder(runtime: SaxonRuntimeConfiguration) {
     val newNameOfNode = new FingerprintedQName(newName.getPrefix, newName.getNamespaceURI, newName.getLocalName)
     addStartElement(newNameOfNode, inode.getSchemaType, inscopeNS.toList)
   }
-
-  /*
-  def addStartElement(elemName: NodeName, typeCode: SchemaType, nscodes: Array[NamespaceBinding]) {
-    trace(s"addStartElement: ${elemName}")
-    val loc = new DefaultLocation(receiver.getSystemId)
-    receiver.startElement(elemName, typeCode, loc, 0)
-    if (nscodes != null) {
-      for (ns <- nscodes) {
-        receiver.namespace(ns, 0)
-      }
-    }
-  }
-  */
 
   def addStartElement(elemName: NodeName, typeCode: SchemaType, nscodes: List[NamespaceBinding]): Unit = {
     trace(s"addStartElement: ${elemName}")

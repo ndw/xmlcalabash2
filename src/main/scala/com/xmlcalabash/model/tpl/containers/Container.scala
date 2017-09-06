@@ -1,11 +1,11 @@
 package com.xmlcalabash.model.tpl.containers
 
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.model.tpl.{Artifact, Cut, Step, VariableBinding}
-import com.xmlcalabash.model.util.ParserConfiguration
 
 import scala.collection.mutable.ListBuffer
 
-class Container(override val config: ParserConfiguration, override val parent: Option[Artifact]) extends Step(config,parent) {
+class Container(override val config: XMLCalabash, override val parent: Option[Artifact]) extends Step(config,parent) {
   protected val _children = ListBuffer.empty[Artifact]
 
   def children: List[Artifact] = _children.toList

@@ -7,12 +7,13 @@ import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class StepSignature(val stepType: QName) {
   private var _inputPorts = mutable.HashMap.empty[String, PortSignature]
   private var _outputPorts = mutable.HashMap.empty[String, PortSignature]
   private var _options = mutable.HashMap.empty[QName, OptionSignature]
-  private var _implementation: Option[String] = None
+  private var _implementation = ListBuffer.empty[String]
 
   def addInput(port: PortSignature, location: Location): Unit = {
     if (_inputPorts.contains(port.name)) {
@@ -39,10 +40,10 @@ class StepSignature(val stepType: QName) {
   }
 
   def implementation_=(className: String) {
-    _implementation = Some(className)
+    _implementation += className
   }
 
-  def implementation: Option[String] = _implementation
+  def implementation: List[String] = _implementation.toList
 
   def inputPorts: Set[String] = _inputPorts.keySet.toSet
 

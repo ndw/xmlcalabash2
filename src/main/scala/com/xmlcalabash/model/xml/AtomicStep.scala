@@ -2,23 +2,24 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.{ContainerStart, Graph, Node}
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{AvtParser, ParserConfiguration}
+import com.xmlcalabash.model.util.AvtParser
 import com.xmlcalabash.model.xml.util.WithOptionData
-import com.xmlcalabash.runtime.{StepProxy, XProcAvtExpression, XProcExpression, XmlStep}
+import com.xmlcalabash.runtime.{StepProxy, XProcAvtExpression, XProcExpression}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class AtomicStep(override val config: ParserConfiguration,
+class AtomicStep(override val config: XMLCalabash,
                  override val parent: Option[Artifact],
                  val stepType: QName) extends PipelineStep(config, parent) {
   private var _name: Option[String] = None
   private val options = mutable.HashMap.empty[QName, XProcExpression]
 
   override def validate(): Boolean = {
-    val sig = config.stepSignatures.step(stepType)
+    val sig = config.signatures.step(stepType)
     var valid = true
 
     _name = attributes.get(XProcConstants._name)
@@ -68,7 +69,7 @@ class AtomicStep(override val config: ParserConfiguration,
   }
 
   override def makeInputPortsExplicit(): Boolean = {
-    val sig = config.stepSignatures.step(stepType)
+    val sig = config.signatures.step(stepType)
 
     for (port <- sig.inputPorts) {
       val siginput = sig.input(port, location.get)
@@ -92,7 +93,7 @@ class AtomicStep(override val config: ParserConfiguration,
   }
 
   override def makeOutputPortsExplicit(): Boolean = {
-    val sig = config.stepSignatures.step(stepType)
+    val sig = config.signatures.step(stepType)
 
     for (port <- sig.outputPorts) {
       val sigoutput = sig.output(port, location.get)

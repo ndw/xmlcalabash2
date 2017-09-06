@@ -1,10 +1,10 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
-import com.xmlcalabash.model.util.ParserConfiguration
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
 
-class PipelineStep(override val config: ParserConfiguration,
+class PipelineStep(override val config: XMLCalabash,
                    override val parent: Option[Artifact]) extends Artifact(config, parent) {
 
   def makeInputPortsExplicit(): Boolean = {

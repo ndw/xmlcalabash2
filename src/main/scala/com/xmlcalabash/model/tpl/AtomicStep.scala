@@ -1,8 +1,8 @@
 package com.xmlcalabash.model.tpl
 
-import com.xmlcalabash.model.util.ParserConfiguration
+import com.xmlcalabash.config.XMLCalabash
 
-class AtomicStep(override val config: ParserConfiguration, override val parent: Option[Artifact])
+class AtomicStep(override val config: XMLCalabash, override val parent: Option[Artifact])
   extends Step(config,parent) {
 
   protected[tpl] var _name = ""

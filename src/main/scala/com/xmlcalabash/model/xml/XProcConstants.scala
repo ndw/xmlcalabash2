@@ -64,6 +64,7 @@ object XProcConstants {
   val _media_type = new QName("", "media-type")
   val _method = new QName("", "method")
   val _name = new QName("", "name")
+  val _namespace = new QName("", "namespace")
   val _normalization_form = new QName("", "normalization-form")
   val _omit_xml_declaration = new QName("", "omit-xml-declaration")
   val _required = new QName("", "required")

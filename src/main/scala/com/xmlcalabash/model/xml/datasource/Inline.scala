@@ -1,6 +1,7 @@
 package com.xmlcalabash.model.xml.datasource
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{AvtParser, ParserConfiguration}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, Variable, WithOption, XProcConstants}
@@ -10,7 +11,7 @@ import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Inline(override val config: ParserConfiguration,
+class Inline(override val config: XMLCalabash,
              override val parent: Option[Artifact],
              val nodes: List[XdmNode]) extends DataSource(config, parent) {
   private var _excludeInlinePrefixes = Map.empty[String,String]

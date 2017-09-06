@@ -4,8 +4,9 @@ import com.jafpl.exceptions.{PipelineException, StepException}
 import com.jafpl.graph.Location
 import com.jafpl.messages.Metadata
 import com.jafpl.runtime.RuntimeConfiguration
-import com.jafpl.steps.{BindingSpecification, DataConsumer, PortSpecification, Step}
-import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, SaxonRuntimeConfiguration, XProcExpression, XmlPortSpecification, XmlStep}
+import com.jafpl.steps.{BindingSpecification, DataConsumer}
+import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.runtime.{XmlPortSpecification, XmlStep}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -15,7 +16,7 @@ class DefaultStep extends XmlStep {
   private var _location = Option.empty[Location]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
-  protected var config: Option[SaxonRuntimeConfiguration] = None
+  protected var config: Option[XMLCalabash] = None
   protected val bindings = mutable.HashMap.empty[QName,XdmItem]
 
   def location: Option[Location] = _location
@@ -100,7 +101,7 @@ class DefaultStep extends XmlStep {
 
   override def initialize(config: RuntimeConfiguration): Unit = {
     config match {
-      case saxon: SaxonRuntimeConfiguration =>
+      case saxon: XMLCalabash =>
         this.config = Some(saxon)
       case _ => throw new StepException("badconfig", "Supplied configuration is unusable")
     }

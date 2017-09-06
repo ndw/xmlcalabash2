@@ -1,18 +1,18 @@
 package com.xmlcalabash.model.xml.datasource
 
-import com.jafpl.graph.{ContainerStart, Graph, Node}
+import com.jafpl.graph.{Graph, Node}
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.ParserConfiguration
-import com.xmlcalabash.model.xml.{Artifact, Documentation, IOPort, PipeInfo, WithOption, XProcConstants}
+import com.xmlcalabash.model.xml.{Artifact, IOPort, WithOption, XProcConstants}
 
 import scala.collection.mutable.ListBuffer
 
-class Pipe(override val config: ParserConfiguration,
+class Pipe(override val config: XMLCalabash,
            override val parent: Option[Artifact]) extends DataSource(config, parent) {
   private var _step = Option.empty[String]
   private var _port = Option.empty[String]
 
-  def this(config: ParserConfiguration, parent: Artifact, step: String, port: String) = {
+  def this(config: XMLCalabash, parent: Artifact, step: String, port: String) = {
     this(config, Some(parent))
     _step = Some(step)
     _port = Some(port)

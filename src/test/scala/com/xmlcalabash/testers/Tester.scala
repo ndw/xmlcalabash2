@@ -1,10 +1,10 @@
 package com.xmlcalabash.testers
 
 import com.jafpl.runtime.GraphRuntime
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ModelException, TestException}
-import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.Parser
-import com.xmlcalabash.runtime.{BufferingConsumer, DevNullConsumer, SaxonRuntimeConfiguration, XmlMetadata}
+import com.xmlcalabash.runtime.{BufferingConsumer, DevNullConsumer, XmlMetadata}
 import com.xmlcalabash.util.Schematron
 import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
@@ -12,7 +12,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Tester(parserConfig: ParserConfiguration, runtimeConfig: SaxonRuntimeConfiguration) {
+class Tester(runtimeConfig: XMLCalabash) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private var _pipeline = Option.empty[XdmNode]
   private var _schematron = Option.empty[XdmNode]
@@ -62,7 +62,7 @@ class Tester(parserConfig: ParserConfiguration, runtimeConfig: SaxonRuntimeConfi
     val builder = processor.newDocumentBuilder()
 
     try {
-      val parser = new Parser(parserConfig)
+      val parser = new Parser(runtimeConfig)
       val pipeline = parser.parsePipeline(_pipeline.get)
       val graph = pipeline.pipelineGraph()
       graph.close()
@@ -105,18 +105,26 @@ class Tester(parserConfig: ParserConfiguration, runtimeConfig: SaxonRuntimeConfi
       //println(resultDoc)
 
       if (_schematron.isDefined) {
+        var fail = ""
         val schematest = new Schematron(runtimeConfig)
         val results = schematest.test(resultDoc, schematron.get)
         for (result <- results) {
           val xpath = result.getAttributeValue(_test)
           val text = result.getStringValue
+          if (fail == "") {
+            fail = s"$xpath: $text"
+          }
           logger.info(s"FAIL: ${_pipeline.get.getBaseURI}: $xpath: $text")
         }
         if (results.isEmpty) {
           logger.info(s"PASS: ${_pipeline.get.getBaseURI}")
           None
         } else {
-          Some("SCHEMATRON")
+          if (fail == "") {
+            Some("SCHEMATRON")
+          } else {
+            Some(fail)
+          }
         }
       } else {
         logger.info(s"NONE: ${_pipeline.get.getBaseURI}")

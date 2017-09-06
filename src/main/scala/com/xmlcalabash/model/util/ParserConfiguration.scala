@@ -2,6 +2,7 @@ package com.xmlcalabash.model.util
 
 import com.jafpl.graph.Location
 import com.jafpl.steps.Step
+import com.jafpl.util.ErrorListener
 import com.xmlcalabash.config.Signatures
 import net.sf.saxon.s9api.QName
 

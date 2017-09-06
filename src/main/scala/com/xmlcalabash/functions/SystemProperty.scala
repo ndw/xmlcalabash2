@@ -1,19 +1,20 @@
 package com.xmlcalabash.functions
 
 import com.jafpl.exceptions.PipelineException
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.model.xml.XProcConstants
-import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, SaxonRuntimeConfiguration}
+import com.xmlcalabash.runtime.SaxonExpressionEvaluator
 import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
 import net.sf.saxon.om.{Sequence, StructuredQName}
-import net.sf.saxon.value.{AnyURIValue, SequenceType, StringValue}
+import net.sf.saxon.value.{SequenceType, StringValue}
 
 class SystemProperty private extends ExtensionFunctionDefinition {
   private val funcname = new StructuredQName("exf", XProcConstants.ns_p, "system-property")
 
-  private var runtime: SaxonRuntimeConfiguration = _
+  private var runtime: XMLCalabash = _
 
-  def this(runtime: SaxonRuntimeConfiguration) = {
+  def this(runtime: XMLCalabash) = {
     this()
     this.runtime = runtime
   }
@@ -52,23 +53,23 @@ class SystemProperty private extends ExtensionFunctionDefinition {
         case XProcConstants.ns_p =>
           local match {
             case "episode" =>
-              value = "???"
+              value = runtime.episode
             case "language" =>
-              value = "???"
+              value = runtime.language
             case "product-name" =>
-              value = "XML Calabash"
+              value = runtime.productName
             case "product-version" =>
-              value = "0.0.0"
+              value = runtime.productVersion
             case "vendor" =>
-              value = "Norman Walsh"
+              value = runtime.vendor
             case "vendor-uri" =>
-              value = "http://xmlcalabash.com/"
+              value = runtime.vendorURI
             case "version" =>
-              value = "3.0"
+              value = runtime.xprocVersion
             case "xpath-version" =>
-              value = "3.1"
+              value = runtime.xpathVersion
             case "psvi-supported" =>
-              value = "true'"
+              value = runtime.psviSupported.toString
             case _ =>
               Unit
           }

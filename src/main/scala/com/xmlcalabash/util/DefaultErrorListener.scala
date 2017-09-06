@@ -1,7 +1,8 @@
-package com.xmlcalabash.model.util
+package com.xmlcalabash.util
 
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.Location
+import com.jafpl.util.ErrorListener
 import com.xmlcalabash.exceptions.ModelException
 
 class DefaultErrorListener extends ErrorListener {
@@ -27,6 +28,15 @@ class DefaultErrorListener extends ErrorListener {
   }
 
   override def warning(cause: Throwable, location: Option[Location]): Unit = {
+    msg("warn", cause, location)
+  }
+
+  override def warning(cause: Throwable): Unit = {
+    val location = cause match {
+      case model: ModelException => model.location
+      case pipe: PipelineException => pipe.location
+      case _ => None
+    }
     msg("warn", cause, location)
   }
 
@@ -58,27 +68,7 @@ class DefaultErrorListener extends ErrorListener {
   }
 
   private def msg(level: String, message: String, location: Option[Location]): Unit = {
-      var prefix = ""
-
-      print(level)
-      prefix = ":"
-
-      if (location.isDefined) {
-        val loc = location.get
-        if (loc.uri.isDefined) {
-          print(loc.uri.get)
-          prefix = ":"
-        }
-        if (loc.line.isDefined) {
-          print(prefix, loc.line.get)
-          prefix = ":"
-        }
-        if (loc.column.isDefined) {
-          print(prefix, loc.column.get)
-          prefix = ":"
-        }
-      }
-
-      println(prefix, message)
+    val sloc = location.getOrElse("")
+    println(s"$level:$sloc:$message")
   }
 }

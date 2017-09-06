@@ -4,9 +4,10 @@ import java.net.URI
 import javax.xml.transform.{Result, SourceLocator}
 
 import com.jafpl.messages.Metadata
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcCollectionFinder}
+import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.model.xml.XProcConstants
 import com.xmlcalabash.runtime.{S9Api, XmlMetadata, XmlPortSpecification}
+import com.xmlcalabash.util.XProcCollectionFinder
 import net.sf.saxon.lib.OutputURIResolver
 import net.sf.saxon.s9api.{MessageListener, QName, ValidationMode, XdmDestination, XdmItem, XdmNode, XdmValue}
 
@@ -72,7 +73,7 @@ class Xslt extends DefaultStep {
 
     val runtime = this.config.get
     val processor = runtime.processor
-    val config = this.config.get.processor.getUnderlyingConfiguration
+    val config = processor.getUnderlyingConfiguration
     // FIXME: runtime.getConfigurer().getSaxonConfigurer().configXSLT(config);
 
 

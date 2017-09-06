@@ -1,14 +1,10 @@
 package com.xmlcalabash.drivers
 
-import com.xmlcalabash.model.util.DefaultParserConfiguration
-import com.xmlcalabash.runtime.SaxonRuntimeConfiguration
-import com.xmlcalabash.testers.{TestRunner, Tester}
-import net.sf.saxon.s9api.Processor
+import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.testers.TestRunner
 
 object TestDriver extends App {
-  private val processor = new Processor(false)
-  val parserConfig = new DefaultParserConfiguration()
-  val runtimeConfig = new SaxonRuntimeConfiguration(processor)
+  private val xmlCalabash = XMLCalabash.newInstance()
 
   /*
   val tester = new Tester(parserConfig, runtimeConfig)
@@ -17,7 +13,7 @@ object TestDriver extends App {
   tester.run()
   */
 
-  val runner = new TestRunner(parserConfig, runtimeConfig, "src/test/resources")
+  val runner = new TestRunner(xmlCalabash, "src/test/resources")
   try {
     runner.run()
   } catch {

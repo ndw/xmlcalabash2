@@ -3,9 +3,10 @@ package com.xmlcalabash.testers
 import java.io.File
 import javax.xml.transform.sax.SAXSource
 
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.TestException
-import com.xmlcalabash.model.util.{ParserConfiguration, SaxonTreeBuilder}
-import com.xmlcalabash.runtime.{S9Api, SaxonRuntimeConfiguration, XProcXPathExpression}
+import com.xmlcalabash.model.util.SaxonTreeBuilder
+import com.xmlcalabash.runtime.{S9Api, XProcXPathExpression}
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.InputSource
@@ -13,7 +14,7 @@ import org.xml.sax.InputSource
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class TestRunner(parserConfig: ParserConfiguration, runtimeConfig: SaxonRuntimeConfiguration, testloc: String) {
+class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val testFiles = ListBuffer.empty[String]
   private val dir = new File(testloc)
@@ -72,6 +73,7 @@ class TestRunner(parserConfig: ParserConfiguration, runtimeConfig: SaxonRuntimeC
     if (node.getNodeKind != XdmNodeKind.DOCUMENT) {
       throw new TestException("Unexpected node type in runTestSuite(): " + node.getNodeKind)
     }
+
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
       val child = iter.next().asInstanceOf[XdmNode]
@@ -272,7 +274,7 @@ class TestRunner(parserConfig: ParserConfiguration, runtimeConfig: SaxonRuntimeC
       }
     }
 
-    val tester = new Tester(parserConfig, runtimeConfig)
+    val tester = new Tester(runtimeConfig)
 
     if (pipeline.isEmpty) {
       throw new TestException("No pipeline for test")
@@ -284,6 +286,10 @@ class TestRunner(parserConfig: ParserConfiguration, runtimeConfig: SaxonRuntimeC
       logger.warn("No schematron for test result.")
     } else {
       tester.schematron = schematron.get
+    }
+
+    for ((port,doc) <- inputs) {
+      tester.addInput(port,doc)
     }
 
     val result = tester.run()

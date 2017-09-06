@@ -1,13 +1,13 @@
 package com.xmlcalabash.model.xml.containers
 
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.datasource.Pipe
 import com.xmlcalabash.model.xml.{Artifact, Input, Output, PipelineStep}
 
 import scala.collection.mutable
 
-class Container(override val config: ParserConfiguration,
+class Container(override val config: XMLCalabash,
                 override val parent: Option[Artifact]) extends PipelineStep(config, parent) {
 
 

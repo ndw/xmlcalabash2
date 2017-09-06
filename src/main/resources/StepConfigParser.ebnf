@@ -2,7 +2,7 @@
 //
 // It is designed to be fed to http://www.bottlecaps.de/rex/
 
-Config         ::= Prefix* Step* EOF
+Config         ::= Prefix* (Step|Function)* EOF
 
 Prefix         ::= "prefix" Macro "=" Expansion
 
@@ -11,6 +11,8 @@ Step           ::= "step" StepName
                    Input*
                    Output*
                    Option*
+
+Function       ::= "function" FunctionName Implementation*
 
 Implementation ::= "has" "implementation" ClassName
 
@@ -64,6 +66,7 @@ ClassName              ::= QName
 TypeName               ::= NameString
 Literal                ::= NameString
 Macro                  ::= NameString
+FunctionName           ::= QName
 Expansion              ::= StringLiteral
 
 NameStartChar

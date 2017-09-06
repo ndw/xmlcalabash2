@@ -1,8 +1,8 @@
 package com.xmlcalabash.model.tpl
 
-import com.xmlcalabash.model.util.ParserConfiguration
+import com.xmlcalabash.config.XMLCalabash
 
-class ResultBindingList(override val config: ParserConfiguration,
+class ResultBindingList(override val config: XMLCalabash,
                         override val parent: Option[Artifact]) extends Artifact(config, parent) {
 
 }

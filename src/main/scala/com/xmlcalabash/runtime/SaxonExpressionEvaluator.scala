@@ -4,6 +4,7 @@ import java.net.URI
 
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.runtime.ExpressionEvaluator
+import com.xmlcalabash.config.XMLCalabash
 import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem}
 import net.sf.saxon.trans.XPathException
 import org.slf4j.{Logger, LoggerFactory}
@@ -12,7 +13,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.util.DynamicVariable
 
-class SaxonExpressionEvaluator(runtime: SaxonRuntimeConfiguration) extends ExpressionEvaluator {
+class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvaluator {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _stepContext = new DynamicVariable[XmlStep](null)
   def withContext[T](context: XmlStep)(thunk: => T): T = _stepContext.withValue(context)(thunk)
@@ -73,7 +74,7 @@ class SaxonExpressionEvaluator(runtime: SaxonRuntimeConfiguration) extends Expre
                            bindings: Map[QName,XdmItem],
                            extensionsOk: Boolean): Any = {
     val results = ListBuffer.empty[XdmItem]
-    val config = runtime.processor.getUnderlyingConfiguration
+    val config = xmlCalabash.processor.getUnderlyingConfiguration
 
     // FIXME: Add a dynamic context object.
 
@@ -82,7 +83,7 @@ class SaxonExpressionEvaluator(runtime: SaxonRuntimeConfiguration) extends Expre
     }
 
     try {
-      val xcomp = runtime.processor.newXPathCompiler()
+      val xcomp = xmlCalabash.processor.newXPathCompiler()
       val baseURI: URI = new URI("") // FIXME: get baseURI from dynamic context
       if (baseURI.toASCIIString != "") {
         xcomp.setBaseURI(baseURI)

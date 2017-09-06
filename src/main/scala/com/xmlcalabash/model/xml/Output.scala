@@ -1,15 +1,16 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.containers.Container
 
 import scala.collection.mutable.ListBuffer
 
-class Output(override val config: ParserConfiguration,
+class Output(override val config: XMLCalabash,
              override val parent: Option[Artifact]) extends IOPort(config, parent) {
-  protected[xml] def this(config: ParserConfiguration, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
+  protected[xml] def this(config: XMLCalabash, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
     this(config, Some(parent))
     _port = Some(port)
     _primary = Some(primary)

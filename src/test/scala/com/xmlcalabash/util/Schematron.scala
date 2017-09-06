@@ -1,19 +1,20 @@
 package com.xmlcalabash.util
 
 import java.net.URI
-import javax.xml.transform.{Source, URIResolver}
 import javax.xml.transform.sax.SAXSource
+import javax.xml.transform.{Source, URIResolver}
 
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.TestException
-import com.xmlcalabash.runtime.{S9Api, SaxonRuntimeConfiguration}
+import com.xmlcalabash.runtime.S9Api
 import net.sf.saxon.om.StructuredQName
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmDestination, XdmItem, XdmNode, XsltCompiler, XsltExecutable}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmDestination, XdmNode}
 import org.xml.sax.InputSource
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Schematron(runtimeConfig: SaxonRuntimeConfiguration) {
+class Schematron(runtimeConfig: XMLCalabash) {
   private val _untyped = StructuredQName.fromClarkName("{http://www.w3.org/2001/XMLSchema}untyped")
   private val uResolver = new UResolver()
 

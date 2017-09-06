@@ -8,6 +8,7 @@ import scala.collection.mutable
 class Signatures {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _steps = mutable.HashMap.empty[QName, StepSignature]
+  private val _functions = mutable.HashMap.empty[QName, List[String]]
 
   def addStep(step: StepSignature): Unit = {
     if (_steps.contains(step.stepType)) {
@@ -18,4 +19,12 @@ class Signatures {
 
   def stepTypes: Set[QName] = _steps.keySet.toSet
   def step(stepType: QName): StepSignature = _steps(stepType)
+
+  def addFunction(name: QName, className: String): Unit = {
+    val list = _functions.getOrElse(name, List.empty[String])
+    _functions.put(name, list ++ List(className))
+  }
+
+  def functions: Set[QName] = _functions.keySet.toSet
+  def function(name: QName): List[String] = _functions(name)
 }

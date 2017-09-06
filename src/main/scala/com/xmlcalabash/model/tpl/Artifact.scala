@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.tpl
 
-import com.xmlcalabash.model.util.ParserConfiguration
+import com.xmlcalabash.config.XMLCalabash
 
-class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
+class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
 
 }

@@ -1,12 +1,13 @@
 package com.xmlcalabash.parsers
 
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.model.util.{ExpressionParser, ParserConfiguration}
 import com.xmlcalabash.parsers.XPath31.EventHandler
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 
-class XPathParser(config: ParserConfiguration) extends ExpressionParser {
+class XPathParser(config: XMLCalabash) extends ExpressionParser {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val handler = new FindRefs()
   private val parser = new XPath31()
@@ -64,7 +65,7 @@ class XPathParser(config: ParserConfiguration) extends ExpressionParser {
     }
 
     override def startNonterminal(name: String, begin: Int): Unit = {
-      if (config.traceEnabled("XPathParser")) {
+      if (config.traceEventManager.traceEnabled("XPathParser")) {
         logger.info("XPathParser:  NT: {}", name)
       }
       if (name == "FunctionCall") {
@@ -76,7 +77,7 @@ class XPathParser(config: ParserConfiguration) extends ExpressionParser {
     }
 
     override def endNonterminal(name: String, end: Int): Unit = {
-      if (config.traceEnabled("XPathParser")) {
+      if (config.traceEventManager.traceEnabled("XPathParser")) {
         logger.info("XPathParser: /NT: {}", name)
       }
       if (name == "FunctionCall") {
@@ -88,7 +89,7 @@ class XPathParser(config: ParserConfiguration) extends ExpressionParser {
     }
 
     override def terminal(name: String, begin: Int, end: Int): Unit = {
-      if (config.traceEnabled("XPathParser")) {
+      if (config.traceEventManager.traceEnabled("XPathParser")) {
         logger.info(s"XPathParser:   T: $name: ${characters(begin,end)}")
       }
       if (sawDollar) {

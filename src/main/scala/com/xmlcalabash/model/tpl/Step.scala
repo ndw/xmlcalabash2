@@ -1,10 +1,10 @@
 package com.xmlcalabash.model.tpl
 
-import com.xmlcalabash.model.util.ParserConfiguration
+import com.xmlcalabash.config.XMLCalabash
 
 import scala.collection.mutable.ListBuffer
 
-class Step(override val config: ParserConfiguration, override val parent: Option[Artifact]) extends Artifact(config,parent) {
+class Step(override val config: XMLCalabash, override val parent: Option[Artifact]) extends Artifact(config,parent) {
   private var _sourceBindings = ListBuffer.empty[PortBinding]
   private var _resultBindings = ListBuffer.empty[PortBinding]
   private var _optionBindings = ListBuffer.empty[OptionBinding]

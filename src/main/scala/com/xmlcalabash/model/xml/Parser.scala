@@ -1,14 +1,14 @@
 package com.xmlcalabash.model.xml
 
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.datasource.{Document, Inline, Pipe}
 import net.sf.saxon.s9api.{Axis, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ListBuffer
 
-class Parser(config: ParserConfiguration) {
+class Parser(config: XMLCalabash) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private var exception: Option[Throwable] = None
 
@@ -74,7 +74,7 @@ class Parser(config: ParserConfiguration) {
             case XProcConstants.p_documentation => Some(parseDocumentation(parent, node))
             case XProcConstants.p_pipeinfo => Some(parsePipeInfo(parent, node))
             case _ =>
-              if (config.stepSignatures.stepTypes.contains(node.getNodeName)) {
+              if (config.signatures.stepTypes.contains(node.getNodeName)) {
                 Some(parseAtomicStep(parent, node))
               } else {
                 if (parent.isDefined) {

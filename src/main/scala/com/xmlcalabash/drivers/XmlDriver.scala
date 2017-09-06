@@ -6,16 +6,16 @@ import javax.xml.transform.sax.SAXSource
 import com.jafpl.graph.Graph
 import com.jafpl.messages.Metadata
 import com.jafpl.runtime.GraphRuntime
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ModelException, ParseException}
-import com.xmlcalabash.model.util.DefaultParserConfiguration
 import com.xmlcalabash.model.xml.Parser
-import com.xmlcalabash.runtime.{BufferingConsumer, PrintingConsumer, SaxonRuntimeConfiguration, XmlMetadata}
-import net.sf.saxon.s9api.Processor
+import com.xmlcalabash.runtime.PrintingConsumer
 import org.xml.sax.InputSource
 
 object XmlDriver extends App {
-  val processor = new Processor(false)
-  val builder = processor.newDocumentBuilder()
+  private val xmlCalabash = XMLCalabash.newInstance()
+
+  val builder = xmlCalabash.processor.newDocumentBuilder()
   val fn = "pipe.xpl"
   val source = new SAXSource(new InputSource(fn))
 
@@ -26,7 +26,7 @@ object XmlDriver extends App {
 
   var errored = false
   try {
-    val parserConfig = new DefaultParserConfiguration()
+    val parserConfig = XMLCalabash.newInstance()
     val parser = new Parser(parserConfig)
     val pipeline = parser.parsePipeline(node)
     //println(pipeline.asXML)
@@ -38,22 +38,22 @@ object XmlDriver extends App {
 
     //System.exit(0)
 
-    val runtimeConfig = new SaxonRuntimeConfiguration(processor)
-    val runtime = new GraphRuntime(graph, runtimeConfig)
+    val xmlCalabash = XMLCalabash.newInstance()
+    val runtime = new GraphRuntime(graph, xmlCalabash)
 
     for (port <- pipeline.inputPorts) {
-      runtimeConfig.trace(s"Binding input port $port to 'Hello, world.'", "ExternalBindings")
+      xmlCalabash.trace(s"Binding input port $port to 'Hello, world.'", "ExternalBindings")
       runtime.inputs(port).send("Hello, world.", Metadata.STRING)
     }
 
     for (port <- pipeline.outputPorts) {
-      runtimeConfig.trace(s"Binding output port stdout", "ExternalBindings")
+      xmlCalabash.trace(s"Binding output port stdout", "ExternalBindings")
       val pc = new PrintingConsumer()
       runtime.outputs(port).setConsumer(pc)
     }
 
     for (bind <- pipeline.bindings) {
-      runtimeConfig.trace(s"Binding option {$bind} to 'pipe'", "ExternalBindings")
+      xmlCalabash.trace(s"Binding option {$bind} to 'pipe'", "ExternalBindings")
       runtime.bindings(bind.getClarkName).set("pipe")
     }
 

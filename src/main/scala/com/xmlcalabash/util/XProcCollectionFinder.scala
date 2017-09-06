@@ -1,22 +1,22 @@
-package com.xmlcalabash.model.util
+package com.xmlcalabash.util
 
-import java.net.{URI, URISyntaxException}
+import java.net.URI
 
-import com.xmlcalabash.runtime.SaxonRuntimeConfiguration
+import com.xmlcalabash.config.XMLCalabash
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.lib.{CollectionFinder, Resource, ResourceCollection}
 import net.sf.saxon.om.{Item, SpaceStrippingRule}
 import net.sf.saxon.s9api.XdmNode
 import org.slf4j.{Logger, LoggerFactory}
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
 object XProcCollectionFinder {
   val DEFAULT = "http://xmlcalabash.com/saxon-default-collection"
 }
 
-class XProcCollectionFinder(config: SaxonRuntimeConfiguration, docs: List[XdmNode], chainedFinder: CollectionFinder)
+class XProcCollectionFinder(config: XMLCalabash, docs: List[XdmNode], chainedFinder: CollectionFinder)
   extends CollectionFinder {
 
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)

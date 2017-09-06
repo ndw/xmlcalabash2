@@ -1,16 +1,17 @@
 package com.xmlcalabash.model.xml.datasource
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{AvtParser, ParserConfiguration}
+import com.xmlcalabash.model.util.AvtParser
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, XProcConstants}
-import com.xmlcalabash.runtime.{XProcAvtExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.XProcAvtExpression
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Document(override val config: ParserConfiguration,
+class Document(override val config: XMLCalabash,
                override val parent: Option[Artifact])
   extends DataSource(config, parent) {
 

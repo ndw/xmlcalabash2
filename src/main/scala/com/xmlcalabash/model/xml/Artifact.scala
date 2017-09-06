@@ -1,17 +1,18 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{AvtParser, ParserConfiguration, UniqueId}
+import com.xmlcalabash.model.util.{AvtParser, UniqueId}
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport}
 import com.xmlcalabash.model.xml.datasource.{Data, Document, Empty, Inline, Pipe}
-import com.xmlcalabash.runtime.{NodeLocation, XProcAvtExpression, XProcExpression}
+import com.xmlcalabash.runtime.{NodeLocation, XProcAvtExpression}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Artifact(val config: ParserConfiguration, val parent: Option[Artifact]) {
+class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   protected[xml] var id: Long = UniqueId.nextId
   protected[xml] val attributes = mutable.HashMap.empty[QName, String]
   protected[xml] val children: mutable.ListBuffer[Artifact] = mutable.ListBuffer.empty[Artifact]

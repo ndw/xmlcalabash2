@@ -6,11 +6,10 @@ import javax.xml.transform.sax.SAXSource
 import com.jafpl.graph.Graph
 import com.jafpl.messages.Metadata
 import com.jafpl.runtime.GraphRuntime
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ModelException, ParseException}
-import com.xmlcalabash.model.util.DefaultParserConfiguration
 import com.xmlcalabash.model.xml.Parser
-import com.xmlcalabash.runtime.{BufferingConsumer, PrintingConsumer, SaxonRuntimeConfiguration, XmlMetadata}
-import net.sf.saxon.s9api.Processor
+import com.xmlcalabash.runtime.{BufferingConsumer, PrintingConsumer, XmlMetadata}
 import org.xml.sax.InputSource
 
 object XmlTesting extends App {
@@ -19,8 +18,8 @@ object XmlTesting extends App {
 
   def runTwo(): Unit = {
     val data = "Hello, world."
-    val processor = new Processor(false)
-    val builder = processor.newDocumentBuilder()
+    val xmlCalabash = XMLCalabash.newInstance()
+    val builder = xmlCalabash.processor.newDocumentBuilder()
     val fn = "src/test/resources/simple.xpl"
     val source = new SAXSource(new InputSource(fn))
 
@@ -29,7 +28,7 @@ object XmlTesting extends App {
 
     val node = builder.build(source)
 
-    val parserConfig = new DefaultParserConfiguration()
+    val parserConfig = XMLCalabash.newInstance()
 
     val parser = new Parser(parserConfig)
     val pipeline = parser.parsePipeline(node)
@@ -39,8 +38,7 @@ object XmlTesting extends App {
     //dumpRaw(graph)
     dumpGraph(graph)
 
-    val runtimeConfig = new SaxonRuntimeConfiguration(processor)
-    val runtime = new GraphRuntime(graph, runtimeConfig)
+    val runtime = new GraphRuntime(graph, xmlCalabash)
 
     for (port <- pipeline.inputPorts) {
       runtime.inputs(port).send(data, new XmlMetadata("text/plain"))
@@ -60,8 +58,8 @@ object XmlTesting extends App {
   }
 
   def runOne(): Unit = {
-    val processor = new Processor(false)
-    val builder = processor.newDocumentBuilder()
+    val xmlCalabash = XMLCalabash.newInstance()
+    val builder = xmlCalabash.processor.newDocumentBuilder()
     val fn = "pipe.xpl"
     val source = new SAXSource(new InputSource(fn))
 
@@ -72,7 +70,7 @@ object XmlTesting extends App {
 
     var errored = false
     try {
-      val parserConfig = new DefaultParserConfiguration()
+      val parserConfig = XMLCalabash.newInstance()
       val parser = new Parser(parserConfig)
       val pipeline = parser.parsePipeline(node)
       //println(pipeline.asXML)
@@ -84,22 +82,21 @@ object XmlTesting extends App {
 
       //System.exit(0)
 
-      val runtimeConfig = new SaxonRuntimeConfiguration(processor)
-      val runtime = new GraphRuntime(graph, runtimeConfig)
+      val runtime = new GraphRuntime(graph, xmlCalabash)
 
       for (port <- pipeline.inputPorts) {
-        runtimeConfig.trace(s"Binding input port $port to 'Hello, world.'", "ExternalBindings")
+        xmlCalabash.trace(s"Binding input port $port to 'Hello, world.'", "ExternalBindings")
         runtime.inputs(port).send("Hello, world.", Metadata.STRING)
       }
 
       for (port <- pipeline.outputPorts) {
-        runtimeConfig.trace(s"Binding output port stdout", "ExternalBindings")
+        xmlCalabash.trace(s"Binding output port stdout", "ExternalBindings")
         val pc = new PrintingConsumer()
         runtime.outputs(port).setConsumer(pc)
       }
 
       for (bind <- pipeline.bindings) {
-        runtimeConfig.trace(s"Binding option {$bind} to 'pipe'", "ExternalBindings")
+        xmlCalabash.trace(s"Binding option {$bind} to 'pipe'", "ExternalBindings")
         runtime.bindings(bind.getClarkName).set("pipe")
       }
 

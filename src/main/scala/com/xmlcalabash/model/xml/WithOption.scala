@@ -1,13 +1,13 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.exceptions.PipelineException
-import com.jafpl.graph.{ContainerStart, Graph, Node}
+import com.jafpl.graph.{Graph, Node}
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.ParserConfiguration
 import com.xmlcalabash.model.xml.datasource.{Data, Document, Empty, Inline, Pipe}
 import net.sf.saxon.s9api.QName
 
-class WithOption(override val config: ParserConfiguration,
+class WithOption(override val config: XMLCalabash,
                  override val parent: Option[Artifact]) extends Artifact(config, parent) {
   private var _name: QName = new QName("", "UNINITIALIZED")
   private var _select = ""

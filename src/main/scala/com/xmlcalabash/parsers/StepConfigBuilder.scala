@@ -8,13 +8,15 @@ import com.xmlcalabash.exceptions.ParseException
 import com.xmlcalabash.model.util.DefaultLocation
 import com.xmlcalabash.parsers.StepConfigParser.EventHandler
 import net.sf.saxon.s9api.QName
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 class StepConfigBuilder() extends EventHandler {
-  private var input: String = null
+  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
+  private var input: String = _
   private var step = Option.empty[StepSignature]
   private var port = Option.empty[PortSignature]
   private var opt = Option.empty[OptionSignature]
@@ -23,9 +25,10 @@ class StepConfigBuilder() extends EventHandler {
   private var prefixes = mutable.HashMap.empty[String,String]
   private var prefix = ""
   private var href = Option.empty[String]
+  private var functionName = Option.empty[QName]
   private val cfgOffsets = ListBuffer.empty[Int]
   private var cfgOffset: Int = 0
-  private var signatures: Signatures = null
+  private var signatures: Signatures = _
 
   def parse(in: InputStream, href: Option[String]): Signatures = {
     input = null
@@ -75,6 +78,8 @@ class StepConfigBuilder() extends EventHandler {
   }
 
   def startNonterminal(name: String, begin: Int) {
+    //println(" nt " + name)
+
     name match {
       case "Config" => Unit
       case "Prefix" => Unit
@@ -86,11 +91,14 @@ class StepConfigBuilder() extends EventHandler {
       case "Option" => Unit
       case "DeclaredType" => Unit
       case "TokenList" => Unit
+      case "Function" => Unit
       case _ => println(s"Unexpected NT: $name")
     }
   }
 
   def endNonterminal(name: String, end: Int) {
+    //println("/nt " + name)
+
     val loc = location(end)
     name match {
       case "Config" => Unit
@@ -126,6 +134,10 @@ class StepConfigBuilder() extends EventHandler {
           port.get.primary = true
         }
 
+        if (step.get.implementation.isEmpty) {
+          logger.debug("No implementation for step: " + step.get.stepType)
+        }
+
         signatures.addStep(step.get)
       case "Implementation" => Unit
       case "Input" => step.get.addInput(port.get, location(end))
@@ -135,6 +147,11 @@ class StepConfigBuilder() extends EventHandler {
         opt.get.tokenList = tokenList.toList
         tokenList.clear()
       case "DeclaredType" => Unit
+      case "Function" =>
+        if (!signatures.functions.contains(functionName.get)) {
+          logger.debug("No implementation for extension function: " + functionName.get)
+        }
+        functionName = None
       case _ => println("Unexpected /NT: " + name)
     }
   }
@@ -143,6 +160,8 @@ class StepConfigBuilder() extends EventHandler {
     val tag = if (name(0) == '\'') "TOKEN" else name
     val text = characters(begin, end)
 
+    //println(tag + ": " + text)
+
     if (tag == "TOKEN") {
       text match {
         case "*" => port.get.cardinality = "*"
@@ -150,6 +169,7 @@ class StepConfigBuilder() extends EventHandler {
         case "=" => Unit
         case "prefix" => Unit
         case "step" => Unit
+        case "function" => Unit
         case "primary" => primary = Some(true)
         case "input" => Unit
         case "output" => Unit
@@ -190,18 +210,31 @@ class StepConfigBuilder() extends EventHandler {
         case "TypeName" => opt.get.declaredType = text
         case "StringLiteral" => opt.get.defaultValue = text.substring(1, text.length - 1)
         case "Literal" => tokenList += text
+        case "FunctionName" =>
+          val name = if (text.contains(":")) {
+            val pfx = text.substring(0, text.indexOf(':'))
+            parseClarkName(begin, pfx, expandedText(begin, text))
+          } else {
+            parseClarkName(begin, "", text)
+          }
+          functionName = Some(name)
         case "ClassName" =>
-          if (text.contains(":")) {
+          val name = if (text.contains(":")) {
             val pos = text.indexOf(':')
             val pfx = text.substring(0, pos)
             val name = text.substring(pos+1)
             if (prefixes.contains(pfx)) {
-              step.get.implementation = s"${prefixes(pfx)}$name"
+              s"${prefixes(pfx)}$name"
             } else {
               throw new ParseException(s"Invalid prefix: $pfx:", location(begin))
             }
           } else {
-            step.get.implementation = text
+            text
+          }
+          if (functionName.isDefined) {
+            signatures.addFunction(functionName.get, name)
+          } else {
+            step.get.implementation = name
           }
         case "Macro" => prefix = text
         case "Expansion" => prefixes.put(prefix, text.substring(1, text.length - 1))
