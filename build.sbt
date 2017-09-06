@@ -1,8 +1,14 @@
-name := "meerschaum"
-
+name         := "XML Calabash"
 organization := "com.xmlcalabash"
-version      := "2.0.0"
+version      := "1.9.0"
 scalaVersion := "2.12.3"
+
+lazy val root = (project in file(".")).
+  enablePlugins(BuildInfoPlugin).
+  settings(
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion),
+    buildInfoPackage := "com.xmlcalabash.sbt"
+  )
 
 resolvers += DefaultMavenRepository
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"

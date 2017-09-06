@@ -8,6 +8,7 @@ import com.jafpl.messages.ItemMessage
 import com.jafpl.runtime.{ExpressionEvaluator, RuntimeConfiguration}
 import com.jafpl.steps.{DataConsumer, Step}
 import com.jafpl.util.{ErrorListener, TraceEventManager}
+import com.xmlcalabash.sbt.BuildInfo
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.parsers.XPathParser
@@ -56,11 +57,11 @@ class XMLCalabash extends RuntimeConfiguration {
   private var _language = defaultLocale
   private var _episode = defaultEpisode
 
-  def productName: String = "XML Calabash"
+  def productName: String = BuildInfo.name
   def productVersion: String = {
     val sver = processor.getSaxonProductVersion
     val sed = processor.getUnderlyingConfiguration.getEditionCode
-    "0.0.0" + " (for Saxon " + sver + "/" + sed + ")"
+    BuildInfo.version + " (for Saxon " + sver + "/" + sed + ")"
   }
   def vendor: String = "Norman Walsh"
   def vendorURI: String = "http://xmlcalabash.com/"
