@@ -6,8 +6,8 @@ import javax.xml.transform.{Result, SourceLocator}
 import com.jafpl.messages.Metadata
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.model.xml.XProcConstants
-import com.xmlcalabash.runtime.{S9Api, XmlMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.XProcCollectionFinder
+import com.xmlcalabash.runtime.{XmlMetadata, XmlPortSpecification}
+import com.xmlcalabash.util.{S9Api, XProcCollectionFinder}
 import net.sf.saxon.lib.OutputURIResolver
 import net.sf.saxon.s9api.{MessageListener, QName, ValidationMode, XdmDestination, XdmItem, XdmNode, XdmValue}
 

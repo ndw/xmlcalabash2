@@ -2,14 +2,12 @@ package com.xmlcalabash.steps
 
 import java.net.URI
 
-import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.model.xml.XProcConstants
 import com.xmlcalabash.runtime.{XmlMetadata, XmlPortSpecification}
-import net.sf.saxon.s9api.{QName, XdmItem, XdmMap, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmItem, XdmValue}
 
 class Parameters() extends DefaultStep {
-  private val _parameters = new QName("", "parameters")
   private var parameters = Map.empty[QName, XdmValue]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
@@ -17,7 +15,7 @@ class Parameters() extends DefaultStep {
 
   override def receiveBinding(variable: QName, value: XdmItem, nsBindings: Map[String,String]): Unit = {
     variable match {
-      case `_parameters` => parameters = parseParameters(value, nsBindings)
+      case XProcConstants._parameters => parameters = parseParameters(value, nsBindings)
       case _ =>
         logger.info("Ignoring unexpected option to p:parameters: " + variable)
     }

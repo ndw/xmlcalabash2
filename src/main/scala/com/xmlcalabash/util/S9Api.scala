@@ -1,10 +1,10 @@
-package com.xmlcalabash.runtime
+package com.xmlcalabash.util
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileNotFoundException, FileOutputStream, OutputStream, Writer}
 
 import com.xmlcalabash.config.XMLCalabash
 import net.sf.saxon.Configuration
-import net.sf.saxon.s9api.{Axis, SAXDestination, SaxonApiException, Serializer, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api.{Axis, SAXDestination, Serializer, XdmNode, XdmNodeKind}
 import nu.validator.htmlparser.sax.HtmlSerializer
 import org.xml.sax.{ContentHandler, InputSource}
 

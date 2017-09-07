@@ -61,6 +61,33 @@ class DefaultStep extends XmlStep {
     params.toMap
   }
 
+  def parseDocumentProperties(value: XdmItem): Map[String, String] = {
+    val params = mutable.HashMap.empty[String, String]
+
+    value match {
+      case map: XdmMap =>
+        // Grovel through a Java Map
+        val iter = map.keySet().iterator()
+        while (iter.hasNext) {
+          val key = iter.next()
+          val value = map.get(key)
+
+          var strvalue = ""
+          val viter = value.iterator()
+          while (viter.hasNext) {
+            val item = viter.next()
+            strvalue += item.getStringValue
+          }
+
+          params.put(key.asInstanceOf[XdmAtomicValue].getStringValue, strvalue)
+        }
+      case _ =>
+        throw new PipelineException("notmap", "The document properties must be a map", None)
+    }
+
+    params.toMap
+  }
+
   // ==========================================================================
 
   override def setLocation(location: Location): Unit = {

@@ -6,6 +6,7 @@ import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.AvtParser
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, XProcConstants}
 import com.xmlcalabash.runtime.XProcAvtExpression
+import com.xmlcalabash.steps.internal.FileLoader
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -15,14 +16,17 @@ class Document(override val config: XMLCalabash,
                override val parent: Option[Artifact])
   extends DataSource(config, parent) {
 
-  private var _href: Option[String] = None
-  private val hrefAvt = ListBuffer.empty[String]
+  private var _href = Option.empty[String]
+  private var _docProps = Option.empty[String]
+  private var hrefAvt = List.empty[String]
+  private var docPropsAvt = List.empty[String]
   private val bindingRefs = mutable.HashSet.empty[QName]
 
   override def validate(): Boolean = {
     _href = attributes.get(XProcConstants._href)
+    _docProps = attributes.get(XProcConstants._document_properties)
 
-    for (key <- List(XProcConstants._href)) {
+    for (key <- List(XProcConstants._href, XProcConstants._document_properties)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -41,13 +45,18 @@ class Document(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.BADCHILD, children.head.toString, location)
     }
 
-    val list = AvtParser.parse(_href.get)
+    hrefAvt = parseAvt("href", _href.get)
+    if (_docProps.isDefined) {
+      docPropsAvt = parseAvt("document-properties", _docProps.get)
+    }
+
+    valid
+  }
+
+  private def parseAvt(name: String, expr: String): List[String] = {
+    val list = AvtParser.parse(expr)
     if (list.isEmpty) {
-      throw new ModelException(ExceptionCode.BADAVT, List("href", _href.get), location)
-    } else {
-      for (item <- list.get) {
-        hrefAvt += item
-      }
+      throw new ModelException(ExceptionCode.BADAVT, List(name, expr), location)
     }
 
     var avt = false
@@ -63,18 +72,27 @@ class Document(override val config: XMLCalabash,
       avt = !avt
     }
 
-    valid
+    list.get
   }
 
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get.parent.get.parent.get
     val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
-    val docReader = cnode.addAtomic(config.stepImplementation(XProcConstants.cx_document, location.get))
+    val step = new FileLoader()
+    val docReader = cnode.addAtomic(step, "document")
 
-    val hrefBinding = cnode.addVariable("href", new XProcAvtExpression(inScopeNS, hrefAvt.toList))
-
+    val hrefBinding = cnode.addVariable("href", new XProcAvtExpression(inScopeNS, hrefAvt))
     graph.addBindingEdge(hrefBinding, docReader)
     graphNode = Some(docReader)
+
+    val docPropsBinding =  if (_docProps.isDefined) {
+      val docPropsBinding = cnode.addVariable("document-properties", new XProcAvtExpression(inScopeNS, docPropsAvt))
+      graph.addBindingEdge(docPropsBinding, docReader)
+      graphNode = Some(docReader)
+      Some(docPropsBinding)
+    } else {
+      None
+    }
 
     for (ref <- bindingRefs) {
       val bind = findBinding(ref)
@@ -97,6 +115,9 @@ class Document(override val config: XMLCalabash,
             throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
           }
           graph.addBindingEdge(optDecl.get.graphNode.get.asInstanceOf[Binding], hrefBinding)
+          if (docPropsBinding.isDefined) {
+            graph.addBindingEdge(optDecl.get.graphNode.get.asInstanceOf[Binding], docPropsBinding.get)
+          }
 
         case _ =>
           throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
@@ -112,6 +133,7 @@ class Document(override val config: XMLCalabash,
 
   override def asXML: xml.Elem = {
     dumpAttr("href", _href)
+    dumpAttr("document-properties", _docProps)
 
     val nodes = ListBuffer.empty[xml.Node]
     nodes += xml.Text("\n")

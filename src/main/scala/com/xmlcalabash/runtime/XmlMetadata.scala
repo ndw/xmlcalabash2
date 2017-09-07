@@ -5,13 +5,11 @@ import com.jafpl.messages.Metadata
 import scala.collection.mutable
 
 class XmlMetadata(private val initialContentType: Option[String],
-                  private val initialProperties: Option[Map[String,String]]) extends Metadata {
+                  private val initialProperties: Map[String,String]) extends Metadata {
   private val _properties = mutable.HashMap.empty[String,String]
 
-  if (initialProperties.isDefined) {
-    for ((key,value) <- initialProperties.get) {
-      _properties.put(key, value)
-    }
+  for ((key,value) <- initialProperties) {
+    _properties.put(key, value)
   }
 
   if (initialContentType.isDefined && !_properties.contains("content-type")) {
@@ -19,13 +17,13 @@ class XmlMetadata(private val initialContentType: Option[String],
   }
 
   def this() {
-    this(None, None)
+    this(None, Map.empty[String,String])
   }
   def this(contentType: String) {
-    this(Some(contentType), None)
+    this(Some(contentType), Map.empty[String,String])
   }
   def this(contentType: String, initProp: Map[String,String]) {
-    this(Some(contentType), Some(initProp))
+    this(Some(contentType), initProp)
   }
 
   def properties: Map[String,String] = _properties.toMap

@@ -5,7 +5,6 @@ import javax.xml.transform.sax.SAXSource
 
 import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.config.{DocumentManager, XMLCalabash}
-import com.xmlcalabash.runtime.URIUtils
 import net.sf.saxon.s9api.{SaxonApiException, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.helpers.XMLReaderFactory

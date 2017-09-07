@@ -5,7 +5,7 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{AvtParser, UniqueId}
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport}
-import com.xmlcalabash.model.xml.datasource.{Data, Document, Empty, Inline, Pipe}
+import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.{NodeLocation, XProcAvtExpression}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 
@@ -20,7 +20,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   protected[xml] val subpiplineClasses = List(classOf[ForEach], classOf[Viewport],
     classOf[Choose], classOf[Group], classOf[Try], classOf[AtomicStep], classOf[Variable])
   protected[xml] val dataSourceClasses = List(classOf[Empty], classOf[Pipe],
-    classOf[Document], classOf[Inline], classOf[Data])
+    classOf[Document], classOf[Inline])
   protected[xml] var _label = Option.empty[String]
   protected[xml] var valid = true
   protected[xml] var graphNode = Option.empty[Node]

@@ -336,8 +336,3 @@ step p:xsl-formatter
   output result
   option href as anyURI
   option content-type?
-
-// ============================================================
-
-step cx:document has implementation xc:Document
-  output result

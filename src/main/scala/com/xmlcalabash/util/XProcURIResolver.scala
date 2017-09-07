@@ -9,7 +9,6 @@ import javax.xml.transform.{Source, URIResolver}
 
 import com.sun.org.apache.xml.internal.utils.URI.MalformedURIException
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.runtime.S9Api
 import net.sf.saxon.Configuration
 import net.sf.saxon.lib.{ModuleURIResolver, StandardModuleURIResolver, StandardUnparsedTextResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.XdmNode

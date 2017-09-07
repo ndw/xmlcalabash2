@@ -2,7 +2,6 @@ package com.xmlcalabash.util
 
 import java.io.File
 
-import com.xmlcalabash.runtime.URIUtils
 import net.sf.saxon.s9api.{Processor, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 

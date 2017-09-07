@@ -6,7 +6,8 @@ import javax.xml.transform.sax.SAXSource
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.TestException
 import com.xmlcalabash.model.util.SaxonTreeBuilder
-import com.xmlcalabash.runtime.{S9Api, XProcXPathExpression}
+import com.xmlcalabash.runtime.XProcXPathExpression
+import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.InputSource

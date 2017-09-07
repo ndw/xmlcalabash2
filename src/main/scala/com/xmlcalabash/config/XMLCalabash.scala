@@ -12,7 +12,8 @@ import com.xmlcalabash.sbt.BuildInfo
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.parsers.XPathParser
-import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, URIUtils}
+import com.xmlcalabash.runtime.SaxonExpressionEvaluator
+import com.xmlcalabash.util.URIUtils
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.{Processor, QName, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}

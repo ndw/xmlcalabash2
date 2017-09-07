@@ -5,7 +5,7 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{AvtParser, ParserConfiguration}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, Variable, WithOption, XProcConstants}
-import com.xmlcalabash.steps.ProduceInline
+import com.xmlcalabash.steps.internal.InlineLoader
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
@@ -95,7 +95,7 @@ class Inline(override val config: XMLCalabash,
     val container = this.parent.get.parent.get.parent.get
     val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
 
-    val produceInline = new ProduceInline(nodes, inScopeNS, _expandText, _excludeInlinePrefixes, _documentProperties, _encoding)
+    val produceInline = new InlineLoader(nodes, inScopeNS, _expandText, _excludeInlinePrefixes, _documentProperties, _encoding)
 
     val inlineProducer = cnode.addAtomic(produceInline)
     graphNode = Some(inlineProducer)

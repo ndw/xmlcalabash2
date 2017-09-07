@@ -4,7 +4,7 @@ import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.xml.datasource.{Data, Document, Empty, Inline, Pipe}
+import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import net.sf.saxon.s9api.QName
 
 class WithOption(override val config: XMLCalabash,
@@ -45,7 +45,7 @@ class WithOption(override val config: XMLCalabash,
 
     _dataPort = "#" + _name.toString + "_" + id
 
-    val okChildren = List(classOf[Empty], classOf[Inline], classOf[Pipe], classOf[Document], classOf[Data])
+    val okChildren = List(classOf[Empty], classOf[Inline], classOf[Pipe], classOf[Document])
     for (child <- relevantChildren()) {
       if (!okChildren.contains(child.getClass)) {
         throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)

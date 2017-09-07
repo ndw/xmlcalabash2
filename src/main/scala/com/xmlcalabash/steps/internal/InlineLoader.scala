@@ -1,4 +1,4 @@
-package com.xmlcalabash.steps
+package com.xmlcalabash.steps.internal
 
 import java.net.URI
 
@@ -6,18 +6,19 @@ import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.model.util.{AvtParser, SaxonTreeBuilder}
 import com.xmlcalabash.model.xml.XProcConstants
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcXPathExpression, XmlMetadata, XmlPortSpecification}
-import net.sf.saxon.s9api.{Axis, QName, XdmMap, XdmNode, XdmNodeKind}
+import com.xmlcalabash.steps.DefaultStep
+import net.sf.saxon.s9api.{Axis, XdmMap, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
 
-class ProduceInline(private val nodes: List[XdmNode],
-                    private val nsBindings: Map[String,String],
-                    private val expandText: Boolean,
-                    private val excludeInlinePrefixes: Map[String,String],
-                    private val docPropsExpr: Option[String],
-                    private val encoding: Option[String]) extends DefaultStep {
+class InlineLoader(private val nodes: List[XdmNode],
+                   private val nsBindings: Map[String,String],
+                   private val expandText: Boolean,
+                   private val excludeInlinePrefixes: Map[String,String],
+                   private val docPropsExpr: Option[String],
+                   private val encoding: Option[String]) extends DefaultStep {
   private val include_expand_text_attribute = false
-  private val docProps = mutable.HashMap.empty[String, String]
+  private var docProps = Map.empty[String, String]
   private val excludeURIs = mutable.HashSet.empty[String]
 
   excludeURIs += XProcConstants.ns_p
@@ -32,23 +33,9 @@ class ProduceInline(private val nodes: List[XdmNode],
     if (docPropsExpr.isDefined) {
       val expr = new XProcXPathExpression(nsBindings, docPropsExpr.get)
       val result = xpathValue(expr)
-      result match {
+      docProps = result match {
         case map: XdmMap =>
-          // Grovel through a Java Map
-          val iter = map.keySet().iterator()
-          while (iter.hasNext) {
-            val key = iter.next()
-            val value = map.get(key)
-
-            // XProc document property map values are strings
-            var strvalue = ""
-            val viter = value.iterator()
-            while (viter.hasNext) {
-              val item = viter.next()
-              strvalue += item.getStringValue
-            }
-            docProps.put(key.getStringValue, strvalue)
-          }
+          parseDocumentProperties(map)
         case _ =>
           throw new PipelineException("notmap", "The document-properties attribute must be a map", None)
       }

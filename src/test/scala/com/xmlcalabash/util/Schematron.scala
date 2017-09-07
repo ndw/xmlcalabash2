@@ -6,7 +6,6 @@ import javax.xml.transform.{Source, URIResolver}
 
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.TestException
-import com.xmlcalabash.runtime.S9Api
 import net.sf.saxon.om.StructuredQName
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmDestination, XdmNode}
 import org.xml.sax.InputSource
