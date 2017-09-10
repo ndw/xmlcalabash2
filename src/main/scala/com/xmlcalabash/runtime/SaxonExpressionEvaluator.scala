@@ -3,9 +3,12 @@ package com.xmlcalabash.runtime
 import java.net.URI
 
 import com.jafpl.exceptions.PipelineException
+import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.runtime.ExpressionEvaluator
 import com.xmlcalabash.config.XMLCalabash
-import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem}
+import com.xmlcalabash.model.util.SaxonTreeBuilder
+import com.xmlcalabash.model.xml.XProcConstants
+import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
 import net.sf.saxon.trans.XPathException
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -15,27 +18,93 @@ import scala.util.DynamicVariable
 
 class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvaluator {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  private val _stepContext = new DynamicVariable[XmlStep](null)
-  def withContext[T](context: XmlStep)(thunk: => T): T = _stepContext.withValue(context)(thunk)
-  def stepContext(): Option[XmlStep] = Option(_stepContext.value)
+  private val _dynContext = new DynamicVariable[DynamicContext](null)
+  private val proxies = mutable.HashMap.empty[Any, XdmNode]
 
-  override def value(xpath: Any, context: List[Any], bindings: Map[String, Any]): Any = {
+  def withContext[T](context: DynamicContext)(thunk: => T): T = _dynContext.withValue(context)(thunk)
+  def dynContext: Option[DynamicContext] = Option(_dynContext.value)
+
+  override def value(xpath: Any, context: List[Message], bindings: Map[String, Message]): Any = {
+    val newContext = new DynamicContext()
+    if (context.nonEmpty) {
+      context.head match {
+        case item: ItemMessage =>
+          val node = proxy(item)
+          proxies.put(item.item, node)
+          checkDocument(newContext, node, context.head)
+        case _ => Unit
+      }
+    }
+
+    for ((str, value) <- bindings) {
+      value match {
+        case item: ItemMessage =>
+          item.item match {
+            case xitem: XdmNode =>
+              checkDocument(newContext, xitem, context.head)
+            case _ => Unit
+          }
+        case _ => Unit
+      }
+    }
+
+    withContext(newContext) { do_value(xpath, context, bindings) }
+  }
+
+  override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message]): Boolean = {
+    val newContext = new DynamicContext()
+    if (context.nonEmpty) {
+      context.head match {
+        case item: ItemMessage =>
+          val node = proxy(item)
+          proxies.put(item.item, node)
+          checkDocument(newContext, node, context.head)
+        case _ => Unit
+      }
+    }
+
+    for ((str, value) <- bindings) {
+      value match {
+        case item: ItemMessage =>
+          item.item match {
+            case xitem: XdmNode =>
+              checkDocument(newContext, xitem, context.head)
+            case _ => Unit
+          }
+        case _ => Unit
+      }
+    }
+
+    val item = withContext(newContext) { do_value(xpath, context, bindings) }
+    item match {
+      case atomic: XdmAtomicValue =>
+        atomic.getBooleanValue
+      case _ => true
+    }
+  }
+
+  def do_value(xpath: Any, context: List[Message], bindings: Map[String, Message]): XdmItem = {
     xpath match {
       case expr: XProcExpression =>
         val patchBindings = mutable.HashMap.empty[QName, XdmItem]
         for ((str,value) <- bindings) {
-          println(s"??? $str=$value")
+          value match {
+            case item: ItemMessage =>
+              patchBindings.put(new QName("", str), item.item.asInstanceOf[XdmItem])
+            case _ => Unit
+          }
         }
-        value(expr, context, patchBindings.toMap)
+        val result = value(expr, context, patchBindings.toMap)
+        result
       case str: String =>
-        str
+        new XdmAtomicValue(str)
       case _ =>
         logger.warn("Unexpected expression type, returning string value: " + xpath)
-        xpath.toString
+        new XdmAtomicValue(xpath.toString)
     }
   }
 
-  def value(xpath: XProcExpression, context: List[Any], bindings: Map[QName, XdmItem]): XdmItem = {
+  def value(xpath: XProcExpression, context: List[Message], bindings: Map[QName, XdmItem]): XdmItem = {
     var result = ListBuffer.empty[XdmItem]
     xpath match {
       case avtexpr: XProcAvtExpression =>
@@ -69,7 +138,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
   }
 
   private def computeValue(xpath: String,
-                           context: List[Any],
+                           context: List[Message],
                            nsbindings: Map[String, String],
                            bindings: Map[QName,XdmItem],
                            extensionsOk: Boolean): Any = {
@@ -123,15 +192,13 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
       for ((varname, varvalue) <- bindings) {
         // FIXME: parse Clark names
-        val avalue: XdmAtomicValue = new XdmAtomicValue(varvalue.toString) // FIXME: handle other types
-        selector.setVariable(varname, avalue)
+        selector.setVariable(varname, varvalue)
       }
 
       if (context.nonEmpty) {
         context.head match {
-          case item: XdmItem =>
-            selector.setContextItem(item)
-          case _ => throw new PipelineException("badcontext", "Expression context is not an XML item", None)
+          case item: ItemMessage =>
+            selector.setContextItem(proxies(item.item))
         }
       }
 
@@ -166,8 +233,55 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     results
   }
 
-  override def booleanValue(expr: Any, context: List[Any], bindings: Map[String, Any]): Boolean = {
-    println("EVALBOO: false")
-    false
+  def checkDocument(dynContext: DynamicContext, node: XdmNode, msg: Message): Unit = {
+    var p: XdmNode = node
+    while (Option(p.getParent).isDefined) {
+      p = p.getParent
+    }
+
+    if (p.getNodeKind == XdmNodeKind.DOCUMENT) {
+      dynContext.addDocument(p.getUnderlyingNode, msg)
+    }
   }
+
+  private def proxy(message: Message): XdmNode = {
+    message match {
+      case item: ItemMessage =>
+        if (item.item.isInstanceOf[XdmNode]) {
+          return item.item.asInstanceOf[XdmNode]
+        }
+
+        item.metadata match {
+          case xproc: XProcMetadata =>
+            val props = xproc.properties
+            val builder = new SaxonTreeBuilder(xmlCalabash)
+            builder.startDocument(None)
+            builder.addStartElement(XProcConstants.c_document_properties)
+            builder.startContent()
+            for ((key,value) <- props) {
+              builder.addStartElement(XProcConstants.c_property)
+              builder.addAttribute(XProcConstants._name, key)
+              builder.addAttribute(XProcConstants._value, value)
+              builder.startContent()
+              builder.addEndElement()
+            }
+            builder.addEndElement()
+            builder.endDocument()
+            builder.result
+          case _ => emptyProxy()
+        }
+      case _ => emptyProxy()
+    }
+  }
+
+  private def emptyProxy(): XdmNode = {
+    val builder = new SaxonTreeBuilder(xmlCalabash)
+    builder.startDocument(None)
+    builder.addStartElement(XProcConstants.c_document_properties)
+    builder.startContent()
+    builder.addEndElement()
+    builder.endDocument()
+    builder.result
+  }
+
 }

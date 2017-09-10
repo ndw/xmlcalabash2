@@ -3,11 +3,40 @@ prefix cx = "{http://xmlcalabash.com/ns/extensions}"
 prefix xc = "com.xmlcalabash.steps."
 prefix xf = "com.xmlcalabash.functions."
 
-function p:system-property has implementation xf:SystemProperty
-function cx:cwd            has implementation xf:Cwd
-function cx:cwd            has implementation xf:Cwd2
-function p:q
+function p:system-property     has implementation xf:SystemProperty
+function p:document-properties has implementation xf:DocumentProperties
+function cx:cwd                has implementation xf:Cwd
 
+step p:identity has implementation xc:Identity
+  input source*
+  output result*
+
+step p:parameters has implementation xc:Parameters
+  output result
+  option parameters
+
+step p:xslt has implementation xc:Xslt
+  primary input source*
+  input stylesheet
+  primary output result
+  output secondary*
+  option parameters
+  option initial-mode? as QName
+  option template-name? as QName
+  option output-base-uri? as anyURI
+  option version?
+
+// ============================================================
+
+step cx:peephole has implementation xc:Peephole
+  input source
+  output result
+
+step cx:option-value has implementation xc:OptionValue
+  output result
+  option option
+
+/*
 step p:add-attribute
   input source
   output result
@@ -92,10 +121,6 @@ step p:http-request
   option undeclare-prefixes? as boolean
   option version? as string = '1.0'
 
-step p:identity has implementation xc:Identity
-  input source*
-  output result*
-
 step p:insert
   primary input source
   input insertion*
@@ -138,10 +163,6 @@ step p:pack
   option wrapper as QName
   option wrapper-prefix? as NCName
   option wrapper-namespace? as anyURI
-
-step p:parameters has implementation xc:Parameters
-  output result
-  option parameters
 
 step p:rename
   input source
@@ -235,17 +256,6 @@ step p:xinclude
   option fixup-xml-base? as boolean = 'false'
   option fixup-xml-lang? as boolean = 'false'
 
-step p:xslt has implementation xc:Xslt
-  primary input source*
-  input stylesheet
-  primary output result
-  output secondary*
-  option parameters
-  option initial-mode? as QName
-  option template-name? as QName
-  option output-base-uri? as anyURI
-  option version?
-
 step p:exec
   primary input source*
   primary output result
@@ -336,3 +346,4 @@ step p:xsl-formatter
   output result
   option href as anyURI
   option content-type?
+*/

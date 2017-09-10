@@ -4,8 +4,8 @@ import com.jafpl.messages.Metadata
 
 import scala.collection.mutable
 
-class XmlMetadata(private val initialContentType: Option[String],
-                  private val initialProperties: Map[String,String]) extends Metadata {
+class XProcMetadata(private val initialContentType: Option[String],
+                    private val initialProperties: Map[String,String]) extends Metadata {
   private val _properties = mutable.HashMap.empty[String,String]
 
   for ((key,value) <- initialProperties) {

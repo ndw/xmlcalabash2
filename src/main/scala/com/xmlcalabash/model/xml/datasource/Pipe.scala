@@ -49,18 +49,22 @@ class Pipe(override val config: XMLCalabash,
   override def makeEdges(graph: Graph, parNode: Node): Unit = {
     val fromStep = findStep(step.get)
     val fromPort = port.get
-    val toStep = parent.get.parent
-    val toPort = parent.get match {
+
+    var toNode = Option.empty[Node]
+    var toPort = ""
+
+    parent.get match {
+      case opt: WithOption =>
+        toNode = opt.graphNode
+        toPort = "source"
       case port: IOPort =>
-        port.port.get
-      case wopt: WithOption =>
-        wopt.dataPort
+        toNode = parent.get.parent.get.graphNode
+        toPort = port.port.get
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "p:pipe points to " + parent.get, location)
     }
 
-    graph.addEdge(fromStep.get.graphNode.get, fromPort,
-      toStep.get.graphNode.get, toPort)
+    graph.addEdge(fromStep.get.graphNode.get, fromPort, toNode.get, toPort)
   }
 
   override def asXML: xml.Elem = {

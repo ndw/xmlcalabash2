@@ -1,10 +1,10 @@
-package com.xmlcalabash.steps
+package com.xmlcalabash.steps.internal
 
 import com.jafpl.exceptions.{PipelineException, StepException}
 import com.jafpl.graph.Location
-import com.jafpl.messages.Metadata
+import com.jafpl.messages.{BindingMessage, Message, Metadata}
 import com.jafpl.runtime.RuntimeConfiguration
-import com.jafpl.steps.{BindingSpecification, DataConsumer}
+import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.runtime.{XmlPortSpecification, XmlStep}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
@@ -12,12 +12,12 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 
-class DefaultStep extends XmlStep {
+class DefaultStep extends Step {
   private var _location = Option.empty[Location]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
   protected var config: Option[XMLCalabash] = None
-  protected val bindings = mutable.HashMap.empty[QName,XdmItem]
+  protected val bindings = mutable.HashMap.empty[String,Message]
 
   def location: Option[Location] = _location
 
@@ -97,32 +97,15 @@ class DefaultStep extends XmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def bindingSpec: BindingSpecification = BindingSpecification.ANY
 
-  override def receiveBinding(variable: String, value: Any): Unit = {
-    if (variable.startsWith("{")) {
-      val clarkName = "\\{(.*)\\}(.*)".r
-      val qname = variable match {
-        case clarkName(uri,name) => new QName(uri,name)
-        case _ => throw new PipelineException("badname", s"Name isn't a Clark name: $variable", None)
-      }
-      // FIXME: deal with other types
-      val xvalue = new XdmAtomicValue(value.toString)
-      receiveBinding(qname, xvalue, Map.empty[String,String])
-    } else {
-      // FIXME: deal with other types
-      val xvalue = new XdmAtomicValue(value.toString)
-      receiveBinding(new QName("", variable), xvalue, Map.empty[String,String])
-    }
-  }
-
-  override def receiveBinding(variable: QName, value: XdmItem, nsBindings: Map[String,String]): Unit = {
-    bindings.put(variable, value)
+  override def receiveBinding(bindmsg: BindingMessage): Unit = {
+    bindings.put(bindmsg.name, bindmsg.message)
   }
 
   override def setConsumer(consumer: DataConsumer): Unit = {
     this.consumer = Some(consumer)
   }
 
-  override def receive(port: String, item: Any, metadata: Metadata): Unit = {
+  override def receive(port: String, message: Message): Unit = {
     // nop
   }
 

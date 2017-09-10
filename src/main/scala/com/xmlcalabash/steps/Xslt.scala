@@ -3,10 +3,9 @@ package com.xmlcalabash.steps
 import java.net.URI
 import javax.xml.transform.{Result, SourceLocator}
 
-import com.jafpl.messages.Metadata
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.model.xml.XProcConstants
-import com.xmlcalabash.runtime.{XmlMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{S9Api, XProcCollectionFinder}
 import net.sf.saxon.lib.OutputURIResolver
 import net.sf.saxon.s9api.{MessageListener, QName, ValidationMode, XdmDestination, XdmItem, XdmNode, XdmValue}
@@ -14,7 +13,7 @@ import net.sf.saxon.s9api.{MessageListener, QName, ValidationMode, XdmDestinatio
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Xslt extends DefaultStep {
+class Xslt extends DefaultXmlStep {
   private val _initial_mode = new QName("", "initial-mode")
   private val _template_name = new QName("", "template-name")
   private val _output_base_uri = new QName("", "output-base-uri")
@@ -43,7 +42,7 @@ class Xslt extends DefaultStep {
       "secondary" -> List("application/xml", "text/plain"))
   )
 
-  override def receive(port: String, item: Any, metadata: Metadata): Unit = {
+  override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     port match {
       case "source" => defaultCollection += item.asInstanceOf[XdmNode]
       case "stylesheet" => stylesheet = Some(item.asInstanceOf[XdmNode])
@@ -71,7 +70,7 @@ class Xslt extends DefaultStep {
       version = Option(root.get.getAttributeValue(_version))
     }
 
-    val runtime = this.config.get
+    val runtime = this.config
     val processor = runtime.processor
     val config = processor.getUnderlyingConfiguration
     // FIXME: runtime.getConfigurer().getSaxonConfigurer().configXSLT(config);
@@ -123,7 +122,7 @@ class Xslt extends DefaultStep {
 
     val xformed = Option(result.getXdmNode)
     if (xformed.isDefined) {
-      consumer.get.receive("result", xformed.get, new XmlMetadata("application/xml"))
+      consumer.get.receive("result", xformed.get, new XProcMetadata("application/xml"))
     }
   }
 
@@ -140,7 +139,7 @@ class Xslt extends DefaultStep {
 
       secondaryResults.put(baseURI.toASCIIString, xdmResult)
 
-      val receiver = xdmResult.getReceiver(config.get.processor.getUnderlyingConfiguration)
+      val receiver = xdmResult.getReceiver(config.processor.getUnderlyingConfiguration)
       receiver.setSystemId(baseURI.toASCIIString)
       receiver
     }
@@ -149,13 +148,13 @@ class Xslt extends DefaultStep {
       val href = result.getSystemId
       val xdmResult = secondaryResults(href)
       val doc = xdmResult.getXdmNode
-      consumer.get.receive("secondary", doc, new XmlMetadata("application/xml"))
+      consumer.get.receive("secondary", doc, new XProcMetadata("application/xml"))
     }
   }
 
   class CatchMessages extends MessageListener {
     override def message(content: XdmNode, terminate: Boolean, locator: SourceLocator): Unit = {
-      val treeWriter = new SaxonTreeBuilder(config.get)
+      val treeWriter = new SaxonTreeBuilder(config)
       treeWriter.startDocument(content.getBaseURI)
       treeWriter.addStartElement(XProcConstants.c_error)
       treeWriter.startContent()

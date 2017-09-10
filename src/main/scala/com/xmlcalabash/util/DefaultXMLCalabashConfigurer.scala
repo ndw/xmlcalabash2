@@ -13,15 +13,22 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
     configuration.processor = new Processor(false)
     configuration.errorListener = new DefaultErrorListener()
 
-    val signatures = new Signatures()
     val builder = new StepConfigBuilder()
-    val sigs = builder.parse(getClass.getResourceAsStream("/xproc-steps.txt"))
-    for (name <- sigs.stepTypes) {
-      signatures.addStep(sigs.step(name))
-    }
-    configuration.signatures = signatures
+    configuration.signatures = builder.parse(getClass.getResourceAsStream("/xproc-steps.txt"))
 
     configuration.traceEventManager = new DefaultTraceEventManager()
+    val traces = Option(System.getProperty("com.xmlcalabash.trace")).getOrElse("")
+    for (trace <- traces.split("\\s*,\\s*")) {
+      if (trace.startsWith("-")) {
+        configuration.traceEventManager.disableTrace(trace.substring(1))
+      } else {
+        if (trace.startsWith("+")) {
+          configuration.traceEventManager.enableTrace(trace.substring(1))
+        } else {
+          configuration.traceEventManager.enableTrace(trace)
+        }
+      }
+    }
 
     val resolver = new XProcURIResolver(configuration)
     configuration.uriResolver = resolver

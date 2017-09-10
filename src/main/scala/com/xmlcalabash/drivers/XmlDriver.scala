@@ -4,7 +4,7 @@ import java.io.{File, PrintWriter}
 import javax.xml.transform.sax.SAXSource
 
 import com.jafpl.graph.Graph
-import com.jafpl.messages.Metadata
+import com.jafpl.messages.{ItemMessage, Metadata}
 import com.jafpl.runtime.GraphRuntime
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ModelException, ParseException}
@@ -26,8 +26,7 @@ object XmlDriver extends App {
 
   var errored = false
   try {
-    val parserConfig = XMLCalabash.newInstance()
-    val parser = new Parser(parserConfig)
+    val parser = new Parser(xmlCalabash)
     val pipeline = parser.parsePipeline(node)
     //println(pipeline.asXML)
     val graph = pipeline.pipelineGraph()
@@ -38,12 +37,12 @@ object XmlDriver extends App {
 
     //System.exit(0)
 
-    val xmlCalabash = XMLCalabash.newInstance()
     val runtime = new GraphRuntime(graph, xmlCalabash)
+    runtime.traceEventManager = xmlCalabash.traceEventManager
 
     for (port <- pipeline.inputPorts) {
       xmlCalabash.trace(s"Binding input port $port to 'Hello, world.'", "ExternalBindings")
-      runtime.inputs(port).send("Hello, world.", Metadata.STRING)
+      runtime.inputs(port).send(new ItemMessage("Hello, world.", Metadata.STRING))
     }
 
     for (port <- pipeline.outputPorts) {

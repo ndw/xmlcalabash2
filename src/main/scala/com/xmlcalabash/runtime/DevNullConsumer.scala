@@ -1,12 +1,10 @@
 package com.xmlcalabash.runtime
 
-import com.jafpl.messages.Metadata
+import com.jafpl.messages.Message
 import com.jafpl.steps.DataConsumer
 
-import scala.collection.mutable.ListBuffer
-
 class DevNullConsumer extends DataConsumer {
-  override def receive(port: String, item: Any, metadata: Metadata): Unit = {
+  override def receive(port: String, message: Message): Unit = {
     // drop on the floor
   }
 }

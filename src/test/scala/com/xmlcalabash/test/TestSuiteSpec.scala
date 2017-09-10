@@ -1,14 +1,8 @@
 package com.xmlcalabash.test
 
-import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.testers.TestRunner
-import org.scalatest.FlatSpec
+import com.xmlcalabash.testers.XProcTestSpec
 
-class TestSuiteSpec extends FlatSpec {
-  val runtimeConfig = XMLCalabash.newInstance()
-
-  var error = Option.empty[String]
-
+class TestSuiteSpec extends XProcTestSpec {
   "A simple identity pipeline" should " run" in {
     test("src/test/resources/simple.xml")
   }
@@ -43,20 +37,5 @@ class TestSuiteSpec extends FlatSpec {
 
   "The context for step option AVTs " should " be the default readable port" in {
     test("src/test/resources/opt-drp.xml")
-  }
-
-  def test(fn: String) {
-    val runner = new TestRunner(runtimeConfig, fn)
-    try {
-      error = runner.run()
-    } catch {
-      case t: Throwable =>
-        println(t)
-        throw t
-    }
-    if (error.isDefined) {
-      println(error.toString)
-    }
-    assert(error.isEmpty)
   }
 }

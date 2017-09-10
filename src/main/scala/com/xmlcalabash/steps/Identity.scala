@@ -1,13 +1,13 @@
 package com.xmlcalabash.steps
 
-import com.jafpl.messages.Metadata
-import com.xmlcalabash.runtime.XmlPortSpecification
+import com.jafpl.messages.{ItemMessage, Message, Metadata}
+import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
 
-class Identity() extends DefaultStep {
+class Identity() extends DefaultXmlStep {
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCESEQ
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULTSEQ
 
-  override def receive(port: String, item: Any, metadata: Metadata): Unit = {
+  override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     consumer.get.receive("result", item, metadata)
   }
 }

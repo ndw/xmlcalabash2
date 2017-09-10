@@ -3,10 +3,11 @@ package com.xmlcalabash.testers
 import java.io.File
 import javax.xml.transform.sax.SAXSource
 
+import com.jafpl.messages.{ItemMessage, Message}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.TestException
 import com.xmlcalabash.model.util.SaxonTreeBuilder
-import com.xmlcalabash.runtime.XProcXPathExpression
+import com.xmlcalabash.runtime.{XProcXPathExpression, XProcMetadata}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
@@ -345,8 +346,8 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       val value = node.getAttributeValue(_select)
       val eval = runtimeConfig.expressionEvaluator
       val context = inlineDocument(node)
-      val nsBindings = Map.empty[String,String]
-      val result = eval.value(new XProcXPathExpression(nsBindings, value), List(context), nsBindings)
+      val message = new ItemMessage(context, new XProcMetadata("application/xml"))
+      val result = eval.value(new XProcXPathExpression(Map.empty[String,String], value), List(message), Map.empty[String,Message])
       Some(new XdmAtomicValue(result.toString))
     } else {
       loadResource(node)

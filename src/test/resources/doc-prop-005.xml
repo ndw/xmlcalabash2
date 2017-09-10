@@ -1,0 +1,3 @@
+<test xmlns='http://xproc.org/ns/testsuite/3.0' expected="fail" code="ERROR">
+  <pipeline src="doc-prop-005.xpl"/>
+</test>

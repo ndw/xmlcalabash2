@@ -1,10 +1,10 @@
 package com.xmlcalabash.steps
 
-import com.xmlcalabash.runtime.{XmlMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
 
 import scala.collection.mutable
 
-class Producer() extends DefaultStep {
+class Producer() extends DefaultXmlStep {
   private val _items = mutable.ListBuffer.empty[String]
 
   def items: List[String] = _items.toList
@@ -20,7 +20,7 @@ class Producer() extends DefaultStep {
 
   override def run(): Unit = {
     for (item <- items) {
-      consumer.get.receive("result", item, new XmlMetadata("text/plain"))
+      consumer.get.receive("result", item, new XProcMetadata("text/plain"))
     }
   }
 }

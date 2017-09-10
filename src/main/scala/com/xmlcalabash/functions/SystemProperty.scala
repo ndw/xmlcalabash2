@@ -10,7 +10,7 @@ import net.sf.saxon.om.{Sequence, StructuredQName}
 import net.sf.saxon.value.{SequenceType, StringValue}
 
 class SystemProperty private extends ExtensionFunctionDefinition {
-  private val funcname = new StructuredQName("exf", XProcConstants.ns_p, "system-property")
+  private val funcname = new StructuredQName("p", XProcConstants.ns_p, "system-property")
 
   private var runtime: XMLCalabash = _
 
@@ -38,7 +38,7 @@ class SystemProperty private extends ExtensionFunctionDefinition {
 
     override def call(context: XPathContext, arguments: Array[Sequence]): Sequence = {
       val exprEval = runtime.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
-      if (exprEval.stepContext() == null) {
+      if (exprEval.dynContext == null) {
         throw new PipelineException("notallowed", s"You cannot call the XProc extension function $funcname here", None)
       }
 

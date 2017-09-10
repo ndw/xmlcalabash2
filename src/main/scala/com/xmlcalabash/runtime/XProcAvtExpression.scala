@@ -1,7 +1,27 @@
 package com.xmlcalabash.runtime
 
-class XProcAvtExpression(override val nsbindings: Map[String,String], val avt:List[String])
+import com.jafpl.exceptions.PipelineException
+import com.xmlcalabash.model.util.AvtParser
+
+class XProcAvtExpression private (override val nsbindings: Map[String,String])
   extends XProcExpression(nsbindings) {
+  private var _avt: List[String] = _
+
+  def this(nsbindings: Map[String,String], avt: List[String]) {
+    this(nsbindings)
+    _avt = avt
+  }
+
+  def this(nsbindings: Map[String,String], expr: String) {
+    this(nsbindings)
+    val avt = AvtParser.parse(expr)
+    if (avt.isEmpty) {
+      throw new PipelineException("invalid", "Invalid AVT expression: " + expr, None)
+    }
+    _avt = avt.get
+  }
+
+  def avt: List[String] = _avt
 
   override def toString: String = {
     var str = ""

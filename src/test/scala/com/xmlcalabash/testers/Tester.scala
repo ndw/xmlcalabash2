@@ -1,10 +1,11 @@
 package com.xmlcalabash.testers
 
+import com.jafpl.messages.ItemMessage
 import com.jafpl.runtime.GraphRuntime
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ModelException, TestException}
 import com.xmlcalabash.model.xml.Parser
-import com.xmlcalabash.runtime.{BufferingConsumer, DevNullConsumer, XmlMetadata}
+import com.xmlcalabash.runtime.{BufferingConsumer, DevNullConsumer, XProcMetadata}
 import com.xmlcalabash.util.Schematron
 import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
@@ -72,7 +73,7 @@ class Tester(runtimeConfig: XMLCalabash) {
       for (port <- pipeline.inputPorts) {
         if (_inputs.contains(port)) {
           for (item <- _inputs(port)) {
-            runtime.inputs(port).send(item, new XmlMetadata())
+            runtime.inputs(port).send(new ItemMessage(item, new XProcMetadata()))
           }
         } else {
           logger.warn(s"No inputs specified for $port")
@@ -133,7 +134,8 @@ class Tester(runtimeConfig: XMLCalabash) {
     } catch {
       case model: ModelException =>
         Some(model.code.toString)
-      case t: Throwable => throw t
+      case t: Throwable =>
+        Some(Option(t.getMessage).getOrElse("ERROR"))
     }
   }
 }

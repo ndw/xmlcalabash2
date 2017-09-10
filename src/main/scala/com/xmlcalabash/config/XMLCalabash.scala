@@ -4,17 +4,18 @@ import java.net.URI
 import javax.xml.transform.URIResolver
 
 import com.jafpl.graph.Location
-import com.jafpl.messages.ItemMessage
+import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.runtime.{ExpressionEvaluator, RuntimeConfiguration}
 import com.jafpl.steps.{DataConsumer, Step}
 import com.jafpl.util.{ErrorListener, TraceEventManager}
-import com.xmlcalabash.sbt.BuildInfo
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException}
+import com.xmlcalabash.functions.{Cwd, DocumentProperties, SystemProperty}
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.parsers.XPathParser
-import com.xmlcalabash.runtime.SaxonExpressionEvaluator
+import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XmlStep}
+import com.xmlcalabash.sbt.BuildInfo
 import com.xmlcalabash.util.URIUtils
-import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
+import net.sf.saxon.lib.{ExtensionFunctionDefinition, ModuleURIResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.{Processor, QName, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.EntityResolver
@@ -217,7 +218,7 @@ class XMLCalabash extends RuntimeConfiguration {
 
   // ==============================================================================================
 
-  def stepImplementation(stepType: QName, location: Location): Step = {
+  def stepImplementation(stepType: QName, location: Location): XmlStep = {
     if (!_signatures.stepTypes.contains(stepType)) {
       throw new ModelException(ExceptionCode.NOTYPE, stepType.toString, location)
     }
@@ -229,7 +230,7 @@ class XMLCalabash extends RuntimeConfiguration {
 
     val klass = Class.forName(implClass.head).newInstance()
     klass match {
-      case step: Step =>
+      case step: XmlStep =>
         step
       case _ =>
         throw new ModelException(ExceptionCode.IMPLNOTSTEP, stepType.toString, location)
@@ -243,7 +244,7 @@ class XMLCalabash extends RuntimeConfiguration {
 
   override def expressionEvaluator: ExpressionEvaluator = _expressionEvaluator
 
-  override def deliver(message: ItemMessage, consumer: DataConsumer, port: String): Unit = {
+  override def deliver(message: Message, consumer: DataConsumer, port: String): Unit = {
     _deliveryAgent.deliver(message, consumer, port)
   }
 
@@ -290,6 +291,19 @@ class XMLCalabash extends RuntimeConfiguration {
 
   def close(): Unit = {
     closed = true
+    // This doesn't work because I don't know how to dynamically call the constructor that has an argument
+    /*
+    for (xf <- signatures.functions) {
+      val impl = signatures.function(xf).head
+      trace("debug", s"Registering $xf with implementation $impl", "config")
+      println(s"Registering $xf with implementation $impl")
+      val f = Class.forName(impl).newInstance()
+      processor.registerExtensionFunction(f.asInstanceOf[ExtensionFunctionDefinition])
+    }
+    */
+    processor.registerExtensionFunction(new DocumentProperties(this))
+    processor.registerExtensionFunction(new SystemProperty(this))
+    processor.registerExtensionFunction(new Cwd(this))
   }
   private def checkClosed(): Unit = {
     if (closed) {

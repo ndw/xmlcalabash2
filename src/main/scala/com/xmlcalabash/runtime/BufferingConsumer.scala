@@ -1,6 +1,6 @@
 package com.xmlcalabash.runtime
 
-import com.jafpl.messages.Metadata
+import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.steps.DataConsumer
 
 import scala.collection.mutable.ListBuffer
@@ -10,7 +10,11 @@ class BufferingConsumer extends DataConsumer {
 
   def items: List[Any] = _items.toList
 
-  override def receive(port: String, item: Any, metadata: Metadata): Unit = {
-    _items += item
+  override def receive(port: String, message: Message): Unit = {
+    message match {
+      case item: ItemMessage =>
+        _items += item.item
+      case _ => Unit
+    }
   }
 }

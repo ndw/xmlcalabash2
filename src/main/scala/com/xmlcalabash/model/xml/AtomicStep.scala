@@ -1,11 +1,9 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.AvtParser
-import com.xmlcalabash.model.xml.util.WithOptionData
 import com.xmlcalabash.runtime.{StepProxy, XProcAvtExpression, XProcExpression}
 import net.sf.saxon.s9api.QName
 
@@ -117,18 +115,27 @@ class AtomicStep(override val config: XMLCalabash,
   }
 
   override def makeGraph(graph: Graph, parent: Node) {
+    for (opt <- options.keySet) {
+      val withOpt = new WithOption(config, this, opt, options(opt))
+      addChild(withOpt)
+    }
+
     val node = parent match {
       case start: ContainerStart =>
         val impl = config.stepImplementation(stepType, location.get)
+        /*
         val withOptions = ListBuffer.empty[WithOptionData]
         for (child <- children) {
           child match {
             case opt: WithOption =>
-              withOptions += new WithOptionData(opt.optionName, opt.dataPort, opt.select, inScopeNS)
+              println("withopt: " + opt.optionName)
+              withOptions += new WithOptionData(opt.optionName, opt.dataPort)
             case _ => Unit
           }
         }
-        val proxy = new StepProxy(impl, options.toMap, withOptions.toList, inScopeNS)
+        val proxy = new StepProxy(impl, options.toMap, inScopeNS)
+        */
+        val proxy = new StepProxy(impl)
         start.addAtomic(proxy, name)
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "Atomic step parent isn't a container???", location)
@@ -141,6 +148,7 @@ class AtomicStep(override val config: XMLCalabash,
   }
 
   override def makeEdges(graph: Graph, parent: Node) {
+    /*
     for (opt <- options.keySet) {
       val drp = defaultReadablePort()
       if (drp.isDefined) {
@@ -155,6 +163,7 @@ class AtomicStep(override val config: XMLCalabash,
         }
       }
     }
+    */
 
     for (child <- children) {
       child match {

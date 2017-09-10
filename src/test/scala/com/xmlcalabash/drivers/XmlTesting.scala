@@ -4,12 +4,12 @@ import java.io.{File, PrintWriter}
 import javax.xml.transform.sax.SAXSource
 
 import com.jafpl.graph.Graph
-import com.jafpl.messages.Metadata
+import com.jafpl.messages.{ItemMessage, Metadata}
 import com.jafpl.runtime.GraphRuntime
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ModelException, ParseException}
 import com.xmlcalabash.model.xml.Parser
-import com.xmlcalabash.runtime.{BufferingConsumer, PrintingConsumer, XmlMetadata}
+import com.xmlcalabash.runtime.{BufferingConsumer, PrintingConsumer, XProcMetadata}
 import org.xml.sax.InputSource
 
 object XmlTesting extends App {
@@ -41,7 +41,7 @@ object XmlTesting extends App {
     val runtime = new GraphRuntime(graph, xmlCalabash)
 
     for (port <- pipeline.inputPorts) {
-      runtime.inputs(port).send(data, new XmlMetadata("text/plain"))
+      runtime.inputs(port).send(new ItemMessage(data, new XProcMetadata("text/plain")))
     }
 
     val bc = new BufferingConsumer()
@@ -86,7 +86,7 @@ object XmlTesting extends App {
 
       for (port <- pipeline.inputPorts) {
         xmlCalabash.trace(s"Binding input port $port to 'Hello, world.'", "ExternalBindings")
-        runtime.inputs(port).send("Hello, world.", Metadata.STRING)
+        runtime.inputs(port).send(new ItemMessage("Hello, world.", Metadata.STRING))
       }
 
       for (port <- pipeline.outputPorts) {

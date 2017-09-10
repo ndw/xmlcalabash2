@@ -5,8 +5,8 @@ import java.net.URLConnection
 import java.nio.file.Files
 
 import com.jafpl.exceptions.PipelineException
-import com.xmlcalabash.runtime.{XmlMetadata, XmlPortSpecification}
-import com.xmlcalabash.steps.DefaultStep
+import com.jafpl.messages.{BindingMessage, ItemMessage}
+import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.XdmItem
 
 class FileLoader() extends DefaultStep {
@@ -16,18 +16,29 @@ class FileLoader() extends DefaultStep {
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
-  override def receiveBinding(variable: String, value: Any): Unit = {
-    config.get.trace("debug", s"FileLoader receives binding: $variable: $value", "stepBindings")
+  override def receiveBinding(bindmsg: BindingMessage): Unit = {
+    val variable = bindmsg.name
+
+    var valueitem = Option.empty[XdmItem]
+    bindmsg.message match {
+      case itemmsg: ItemMessage =>
+        itemmsg.item match {
+          case item: XdmItem =>
+            valueitem = Some(item)
+          case _ => Unit
+        }
+      case _ => Unit
+    }
+
+    if (valueitem.isEmpty) {
+      throw new PipelineException("badtype", s"binding for $variable must be an item", None)
+    }
 
     variable match {
       case "document-properties" =>
-        value match {
-          case item: XdmItem =>
-            docProps = parseDocumentProperties(item)
-          case _ => throw new PipelineException("badtype", "document properties must be an item", None)
-        }
+        docProps = parseDocumentProperties(valueitem.get)
       case "href" =>
-        _href = value.toString
+        _href = valueitem.get.getStringValue
       case _ =>
         logger.info("Ignoring unexpected option to p:document: " + variable)
     }
@@ -44,13 +55,15 @@ class FileLoader() extends DefaultStep {
     try {
       val node = config.get.documentManager.parse(_href)
       val ctype = contentType.getOrElse("application/xml")
-      consumer.get.receive("result", node, new XmlMetadata(ctype, docProps))
+      logger.debug(s"Loaded ${_href} as $ctype")
+      consumer.get.receive("result", new ItemMessage(node, new XProcMetadata(ctype, docProps)))
     } catch {
       case t: Throwable =>
         // What should the representation of non-XML data be?
         val bytes = Files.readAllBytes(new File(_href).toPath)
         val ctype = contentType.getOrElse("application/octet-stream")
-        consumer.get.receive("result", bytes, new XmlMetadata(ctype))
+        logger.debug(s"Loaded ${_href} as $ctype")
+        consumer.get.receive("result", new ItemMessage(bytes, new XProcMetadata(ctype, docProps)))
     }
   }
 }

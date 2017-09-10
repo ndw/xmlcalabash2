@@ -2,12 +2,13 @@ package com.xmlcalabash.steps
 
 import java.net.URI
 
+import com.jafpl.messages.ItemMessage
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.model.xml.XProcConstants
-import com.xmlcalabash.runtime.{XmlMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmValue}
 
-class Parameters() extends DefaultStep {
+class Parameters() extends DefaultXmlStep {
   private var parameters = Map.empty[QName, XdmValue]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
@@ -22,7 +23,7 @@ class Parameters() extends DefaultStep {
   }
 
   override def run(): Unit = {
-    val builder = new SaxonTreeBuilder(config.get)
+    val builder = new SaxonTreeBuilder(config)
     builder.startDocument(URI.create("http://example.com/"))
     builder.addStartElement(XProcConstants.c_param_set)
 
@@ -49,7 +50,7 @@ class Parameters() extends DefaultStep {
     builder.addEndElement()
     builder.endDocument()
 
-    consumer.get.receive("result", builder.result, new XmlMetadata("application/xml"))
+    consumer.get.receive("result", builder.result, new XProcMetadata("application/xml"))
   }
 
 

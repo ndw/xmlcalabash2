@@ -131,17 +131,21 @@ class Inline(override val config: XMLCalabash,
   }
 
   override def makeEdges(graph: Graph, parNode: Node): Unit = {
-    val toStep = this.parent.get.parent
-    val toPort = parent.get match {
+    var toNode = Option.empty[Node]
+    var toPort = ""
+
+    parent.get match {
+      case opt: WithOption =>
+        toNode = opt.graphNode
+        toPort = "source"
       case port: IOPort =>
-        port.port.get
-      case wopt: WithOption =>
-        wopt.dataPort
+        toNode = parent.get.parent.get.graphNode
+        toPort = port.port.get
       case _ =>
-        throw new ModelException(ExceptionCode.INTERNAL, "p:pipe points to " + parent.get, location)
+        throw new ModelException(ExceptionCode.INTERNAL, "p:inline points to " + parent.get, location)
     }
 
-    graph.addEdge(graphNode.get, "result", toStep.get.graphNode.get, toPort)
+    graph.addEdge(graphNode.get, "result", toNode.get, toPort)
   }
 
   override def asXML: xml.Elem = {
