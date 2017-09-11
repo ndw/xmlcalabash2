@@ -2,6 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.model.xml.containers.{Choose, Otherwise, When}
 import com.xmlcalabash.model.xml.datasource.{Document, Inline, Pipe}
 import net.sf.saxon.s9api.{Axis, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
@@ -71,6 +72,9 @@ class Parser(config: XMLCalabash) {
             case XProcConstants.p_pipe => Some(parsePipe(parent, node))
             case XProcConstants.p_document => Some(parseDocument(parent, node))
             case XProcConstants.p_with_option => Some(parseWithOption(parent, node))
+            case XProcConstants.p_choose => Some(parseChoose(parent, node))
+            case XProcConstants.p_when => Some(parseWhen(parent, node))
+            case XProcConstants.p_otherwise => Some(parseOtherwise(parent, node))
             case XProcConstants.p_documentation => Some(parseDocumentation(parent, node))
             case XProcConstants.p_pipeinfo => Some(parsePipeInfo(parent, node))
             case _ =>
@@ -217,6 +221,27 @@ class Parser(config: XMLCalabash) {
 
   private def parseWithOption(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new WithOption(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
+  private def parseChoose(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new Choose(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
+  private def parseWhen(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new When(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
+  private def parseOtherwise(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new Otherwise(config, parent)
     art.parse(node)
     parseChildren(art, node)
     art

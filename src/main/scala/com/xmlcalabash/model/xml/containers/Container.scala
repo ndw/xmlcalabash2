@@ -3,13 +3,13 @@ package com.xmlcalabash.model.xml.containers
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.xml.datasource.Pipe
-import com.xmlcalabash.model.xml.{Artifact, Input, Output, PipelineStep}
+import com.xmlcalabash.model.xml.{Artifact, Input, Output, PipelineStep, Variable, XProcConstants}
 
 import scala.collection.mutable
 
 class Container(override val config: XMLCalabash,
                 override val parent: Option[Artifact]) extends PipelineStep(config, parent) {
-
+  protected var _name: Option[String] = None
 
   def firstChildStep: Option[PipelineStep] = {
     for (child <- children) {
@@ -84,9 +84,17 @@ class Container(override val config: XMLCalabash,
       }
     }
 
-    if (primary.isEmpty && (outputPorts.size == 1)) {
-      primary = output(outputPorts.head)
-      primary.get.primary = true
+    if (outputPorts.isEmpty) {
+      val step = lastChildStep
+      if (step.isDefined && step.get.primaryOutput.isDefined) {
+        val output = new Output(config, this, "#result", primary=true, sequence=step.get.primaryOutput.get.sequence)
+        addChild(output)
+      }
+    } else {
+      if (primary.isEmpty && (outputPorts.size == 1)) {
+        primary = output(outputPorts.head)
+        primary.get.primary = true
+      }
     }
 
     valid

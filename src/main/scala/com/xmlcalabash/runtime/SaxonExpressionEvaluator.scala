@@ -16,15 +16,21 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.util.DynamicVariable
 
+// N.B. The evaluator must be reentrant because there can be only one instance of it because
+// it has a dynamic variable used to pass context to extension functions.
 class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvaluator {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _dynContext = new DynamicVariable[DynamicContext](null)
-  private val proxies = mutable.HashMap.empty[Any, XdmNode]
 
   def withContext[T](context: DynamicContext)(thunk: => T): T = _dynContext.withValue(context)(thunk)
   def dynContext: Option[DynamicContext] = Option(_dynContext.value)
 
+  override def newInstance(): SaxonExpressionEvaluator = {
+    this
+  }
+
   override def value(xpath: Any, context: List[Message], bindings: Map[String, Message]): Any = {
+    val proxies = mutable.HashMap.empty[Any, XdmNode]
     val newContext = new DynamicContext()
     if (context.nonEmpty) {
       context.head match {
@@ -48,10 +54,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       }
     }
 
-    withContext(newContext) { do_value(xpath, context, bindings) }
+    withContext(newContext) { do_value(xpath, context, bindings, proxies.toMap) }
   }
 
   override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message]): Boolean = {
+    val proxies = mutable.HashMap.empty[Any, XdmNode]
     val newContext = new DynamicContext()
     if (context.nonEmpty) {
       context.head match {
@@ -75,15 +82,17 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       }
     }
 
-    val item = withContext(newContext) { do_value(xpath, context, bindings) }
-    item match {
+    val item = withContext(newContext) { do_value(xpath, context, bindings, proxies.toMap) }
+    val result = item match {
       case atomic: XdmAtomicValue =>
         atomic.getBooleanValue
       case _ => true
     }
+
+    result
   }
 
-  def do_value(xpath: Any, context: List[Message], bindings: Map[String, Message]): XdmItem = {
+  def do_value(xpath: Any, context: List[Message], bindings: Map[String, Message], proxies: Map[Any,XdmNode]): XdmItem = {
     xpath match {
       case expr: XProcExpression =>
         val patchBindings = mutable.HashMap.empty[QName, XdmItem]
@@ -94,7 +103,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
             case _ => Unit
           }
         }
-        val result = value(expr, context, patchBindings.toMap)
+        val result = value(expr, context, patchBindings.toMap, proxies)
         result
       case str: String =>
         new XdmAtomicValue(str)
@@ -104,14 +113,14 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     }
   }
 
-  def value(xpath: XProcExpression, context: List[Message], bindings: Map[QName, XdmItem]): XdmItem = {
+  def value(xpath: XProcExpression, context: List[Message], bindings: Map[QName, XdmItem], proxies: Map[Any,XdmNode]): XdmItem = {
     var result = ListBuffer.empty[XdmItem]
     xpath match {
       case avtexpr: XProcAvtExpression =>
         var evalAvt = false
         for (part <- avtexpr.avt) {
           if (evalAvt) {
-            val epart = computeValue(part, context, avtexpr.nsbindings, bindings, avtexpr.extensionFunctionsAllowed)
+            val epart = computeValue(part, context, avtexpr.nsbindings, bindings, proxies, avtexpr.extensionFunctionsAllowed)
             for (item <- epart.asInstanceOf[ListBuffer[XdmItem]]) {
               result += item
             }
@@ -123,7 +132,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
           evalAvt = !evalAvt
         }
       case xpathexpr: XProcXPathExpression =>
-        val epart = computeValue(xpathexpr.expr, context, xpathexpr.nsbindings, bindings, xpathexpr.extensionFunctionsAllowed)
+        val epart = computeValue(xpathexpr.expr, context, xpathexpr.nsbindings, bindings, proxies, xpathexpr.extensionFunctionsAllowed)
         for (item <- epart.asInstanceOf[ListBuffer[XdmItem]]) {
           result += item
         }
@@ -141,11 +150,10 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
                            context: List[Message],
                            nsbindings: Map[String, String],
                            bindings: Map[QName,XdmItem],
+                           proxies: Map[Any, XdmNode],
                            extensionsOk: Boolean): Any = {
     val results = ListBuffer.empty[XdmItem]
     val config = xmlCalabash.processor.getUnderlyingConfiguration
-
-    // FIXME: Add a dynamic context object.
 
     if (context.size > 1) {
       throw new PipelineException("seq", "Sequence not allowed as context for expression", None)

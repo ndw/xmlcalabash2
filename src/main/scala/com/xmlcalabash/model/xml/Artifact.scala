@@ -321,7 +321,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     }
   }
 
-  def defaultReadablePort(): Option[IOPort] = {
+  def defaultReadablePort: Option[IOPort] = {
     if (parent.isDefined) {
       val drpIsPrecedingSibling =
         this match {

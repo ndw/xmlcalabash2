@@ -2,7 +2,6 @@ package com.xmlcalabash.runtime
 
 import com.jafpl.messages.Message
 import net.sf.saxon.om.NodeInfo
-import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
 

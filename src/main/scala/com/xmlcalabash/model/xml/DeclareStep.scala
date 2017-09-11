@@ -13,7 +13,6 @@ import scala.collection.mutable.ListBuffer
 
 class DeclareStep(override val config: XMLCalabash,
                   override val parent: Option[Artifact]) extends Container(config, parent) {
-  private var _name: Option[String] = None
   private var _type: Option[QName] = None
   private var _psviRequired: Option[Boolean] = None
   private var _xpathVersion: Option[String] = None

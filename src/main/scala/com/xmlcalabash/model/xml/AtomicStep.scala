@@ -123,18 +123,6 @@ class AtomicStep(override val config: XMLCalabash,
     val node = parent match {
       case start: ContainerStart =>
         val impl = config.stepImplementation(stepType, location.get)
-        /*
-        val withOptions = ListBuffer.empty[WithOptionData]
-        for (child <- children) {
-          child match {
-            case opt: WithOption =>
-              println("withopt: " + opt.optionName)
-              withOptions += new WithOptionData(opt.optionName, opt.dataPort)
-            case _ => Unit
-          }
-        }
-        val proxy = new StepProxy(impl, options.toMap, inScopeNS)
-        */
         val proxy = new StepProxy(impl)
         start.addAtomic(proxy, name)
       case _ =>
@@ -148,23 +136,6 @@ class AtomicStep(override val config: XMLCalabash,
   }
 
   override def makeEdges(graph: Graph, parent: Node) {
-    /*
-    for (opt <- options.keySet) {
-      val drp = defaultReadablePort()
-      if (drp.isDefined) {
-        val port = "#" + opt.toString
-        drp.get match {
-          case out: Output =>
-            graph.addEdge(out.parent.get.graphNode.get, out.port.get, graphNode.get, port)
-          case in: Input =>
-            graph.addEdge(in.parent.get.graphNode.get, in.port.get, graphNode.get, port)
-          case _ =>
-            throw new PipelineException("notimpl", "not implemented reading from: " + drp.get, location)
-        }
-      }
-    }
-    */
-
     for (child <- children) {
       child match {
         case doc: Documentation => Unit

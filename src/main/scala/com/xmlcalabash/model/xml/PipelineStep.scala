@@ -18,7 +18,7 @@ class PipelineStep(override val config: XMLCalabash,
   }
 
   def makeInputBindingsExplicit(): Boolean = {
-    val drp = defaultReadablePort()
+    val drp = defaultReadablePort
     if (drp.isDefined) {
       for (port <- inputPorts) {
         val in = input(port).get

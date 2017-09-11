@@ -6,6 +6,7 @@ import com.jafpl.messages.{BindingMessage, Message, Metadata}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
 import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.model.xml.XProcConstants
 import com.xmlcalabash.runtime.{XmlPortSpecification, XmlStep}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
@@ -72,14 +73,35 @@ class DefaultStep extends Step {
           val key = iter.next()
           val value = map.get(key)
 
+          val strkey = key match {
+            case atomic: XdmAtomicValue =>
+              val itype = atomic.getTypeName
+              if (itype != XProcConstants.xs_string) {
+                throw new PipelineException("notstring", "Map key is not a string", None)
+              }
+              atomic.getStringValue
+            case _ =>
+              throw new PipelineException("notstring", "Map key is not a string", None)
+          }
+
+          var count = 0
           var strvalue = ""
           val viter = value.iterator()
           while (viter.hasNext) {
             val item = viter.next()
+            item match {
+              case atomic: XdmAtomicValue =>
+                val itype = atomic.getTypeName
+                if (itype != XProcConstants.xs_string || (count > 0)) {
+                  throw new PipelineException("notstring", "Map value is not a string", None)
+                }
+              case _ =>
+            }
+            count += 1
             strvalue += item.getStringValue
           }
 
-          params.put(key.asInstanceOf[XdmAtomicValue].getStringValue, strvalue)
+          params.put(strkey, strvalue)
         }
       case _ =>
         throw new PipelineException("notmap", "The document properties must be a map", None)

@@ -107,7 +107,7 @@ class WithOption(override val config: XMLCalabash,
     }
 
     if (!explicit) {
-      val drp = this.parent.get.defaultReadablePort()
+      val drp = this.parent.get.defaultReadablePort
       if (drp.isDefined) {
         drp.get match {
           case out: Output =>

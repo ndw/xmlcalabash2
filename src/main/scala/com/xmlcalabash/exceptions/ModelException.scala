@@ -103,6 +103,12 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
         val expr = data(1)
         s"XPath syntax error in attribute value template for $name: $expr"
       case ExceptionCode.NOBINDING => s"Expression references variable not in-scope: ${data.head}"
+      case ExceptionCode.DUPOTHERWISE => s"A p:choose can have at most one p:otherwise"
+      case ExceptionCode.MISSINGWHEN => s"A p:choose must have at least one p:when or p:otherwise"
+      case ExceptionCode.BADCHOOSECHILD => s"A p:choose cannot contain ${data.head}"
+      case ExceptionCode.DIFFPRIMARYINPUT => s"Conflicting primary input port names: ${data.head} and ${data(1)}"
+      case ExceptionCode.DIFFPRIMARYOUTPUT => s"Conflicting primary output port names: ${data.head} and ${data(1)}"
+      case ExceptionCode.TESTREQUIRED => s"A test attribute is required on p:when"
 
       case ExceptionCode.INTERNAL => data.head
       case _ => "INTERNAL ERROR: No message for $code"

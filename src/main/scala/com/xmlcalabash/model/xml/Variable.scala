@@ -51,7 +51,7 @@ class Variable(override val config: XMLCalabash,
   }
 
   override def makeEdges(graph: Graph, parent: Node): Unit = {
-    val drp = defaultReadablePort()
+    val drp = defaultReadablePort
     if (drp.isDefined) {
       val src = drp.get.parent.get
       graph.addEdge(src.graphNode.get, drp.get.port.get, graphNode.get, "source")

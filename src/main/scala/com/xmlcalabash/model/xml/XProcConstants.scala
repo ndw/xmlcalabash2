@@ -5,6 +5,7 @@ import net.sf.saxon.s9api.QName
 object XProcConstants {
   val ns_p   = "http://www.w3.org/ns/xproc"
   val ns_c   = "http://www.w3.org/ns/xproc-step"
+  val ns_xs  = "http://www.w3.org/2001/XMLSchema"
   val ns_cx  = "http://xmlcalabash.com/ns/extensions"
   val ns_exf = "http://exproc.org/standard/functions"
 
@@ -39,6 +40,9 @@ object XProcConstants {
 
   val p_identity = new QName("p", ns_p, "identity")
   val p_sink = new QName("p", ns_p, "sink")
+
+  // The XML Schema type names must be defined somewhere in Saxon but...
+  val xs_string = new QName("xs", ns_xs, "string")
 
   // Extras for testing
   val p_producer = new QName("p", ns_p, "producer")
@@ -80,6 +84,7 @@ object XProcConstants {
   val _sequence = new QName("", "sequence")
   val _standalone = new QName("", "standalone")
   val _step = new QName("", "step")
+  val _test = new QName("", "test")
   val _type = new QName("", "type")
   val _undeclare_prefixes = new QName("", "undeclare-prefixes")
   val _value = new QName("", "value")
