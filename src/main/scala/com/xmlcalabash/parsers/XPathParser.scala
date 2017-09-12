@@ -66,7 +66,7 @@ class XPathParser(config: XMLCalabash) extends ExpressionParser {
 
     override def startNonterminal(name: String, begin: Int): Unit = {
       if (config.traceEventManager.traceEnabled("XPathParser")) {
-        logger.info("XPathParser:  NT: {}", name)
+        logger.debug("XPathParser:  NT: {}", name)
       }
       if (name == "FunctionCall") {
         functionCall = true
@@ -78,7 +78,7 @@ class XPathParser(config: XMLCalabash) extends ExpressionParser {
 
     override def endNonterminal(name: String, end: Int): Unit = {
       if (config.traceEventManager.traceEnabled("XPathParser")) {
-        logger.info("XPathParser: /NT: {}", name)
+        logger.debug("XPathParser: /NT: {}", name)
       }
       if (name == "FunctionCall") {
         functionCall = false
@@ -90,7 +90,7 @@ class XPathParser(config: XMLCalabash) extends ExpressionParser {
 
     override def terminal(name: String, begin: Int, end: Int): Unit = {
       if (config.traceEventManager.traceEnabled("XPathParser")) {
-        logger.info(s"XPathParser:   T: $name: ${characters(begin,end)}")
+        logger.debug(s"XPathParser:   T: $name: ${characters(begin,end)}")
       }
       if (sawDollar) {
         varlist += characters(begin, end)
