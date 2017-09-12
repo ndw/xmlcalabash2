@@ -3,10 +3,10 @@ package com.xmlcalabash.runtime
 import java.net.URI
 
 import com.jafpl.exceptions.PipelineException
-import com.jafpl.messages.{ItemMessage, Message}
+import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
 import com.jafpl.runtime.ExpressionEvaluator
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.model.util.SaxonTreeBuilder
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, StringParsers}
 import com.xmlcalabash.model.xml.XProcConstants
 import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
 import net.sf.saxon.trans.XPathException
@@ -44,13 +44,17 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
     for ((str, value) <- bindings) {
       value match {
-        case item: ItemMessage =>
-          item.item match {
-            case xitem: XdmNode =>
-              checkDocument(newContext, xitem, context.head)
-            case _ => Unit
+        case bind: BindingMessage =>
+          bind.message match {
+            case item: ItemMessage =>
+              item.item match {
+                case xitem: XdmNode =>
+                  checkDocument(newContext, xitem, context.head)
+                case _ => Unit
+              }
+            case _ => throw new PipelineException("unexpected", "Unexpected message in binding: " + bind.message, None)
           }
-        case _ => Unit
+        case _ => throw new PipelineException("unexpected", "Unexpected binding message: " + value, None)
       }
     }
 
@@ -72,15 +76,20 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
     for ((str, value) <- bindings) {
       value match {
-        case item: ItemMessage =>
-          item.item match {
-            case xitem: XdmNode =>
-              checkDocument(newContext, xitem, context.head)
-            case _ => Unit
+        case bind: BindingMessage =>
+          bind.message match {
+            case item: ItemMessage =>
+              item.item match {
+                case xitem: XdmNode =>
+                  checkDocument(newContext, xitem, context.head)
+                case _ => Unit
+              }
+            case _ => throw new PipelineException("unexpected", "Unexpected message in binding: " + bind.message, None)
           }
-        case _ => Unit
+        case _ => throw new PipelineException("unexpected", "Unexpected binding message: " + value, None)
       }
     }
+
 
     val item = withContext(newContext) { do_value(xpath, context, bindings, proxies.toMap) }
     val result = item match {
@@ -96,13 +105,24 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     xpath match {
       case expr: XProcExpression =>
         val patchBindings = mutable.HashMap.empty[QName, XdmItem]
-        for ((str,value) <- bindings) {
+
+        for ((str, value) <- bindings) {
           value match {
-            case item: ItemMessage =>
-              patchBindings.put(new QName("", str), item.item.asInstanceOf[XdmItem])
-            case _ => Unit
+            case bind: BindingMessage =>
+              bind.message match {
+                case item: ItemMessage =>
+                  item.item match {
+                    case xitem: XdmItem =>
+                      patchBindings.put(StringParsers.parseClarkName(str), xitem)
+                    case _ =>
+                      throw new PipelineException("unexpected", "Bound value is not XdmItem: " + item.item, None)
+                  }
+                case _ => throw new PipelineException("unexpected", "Unexpected message in binding: " + bind.message, None)
+              }
+            case _ => throw new PipelineException("unexpected", "Unexpected binding message: " + value, None)
           }
         }
+
         val result = value(expr, context, patchBindings.toMap, proxies)
         result
       case str: String =>

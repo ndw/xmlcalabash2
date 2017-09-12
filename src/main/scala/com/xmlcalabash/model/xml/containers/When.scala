@@ -1,14 +1,14 @@
 package com.xmlcalabash.model.xml.containers
 
-import com.jafpl.graph.{ChooseStart, ContainerStart, Graph, Node}
+import com.jafpl.graph.{Binding, ChooseStart, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.xml.{Artifact, Documentation, PipeInfo, XProcConstants}
-import com.xmlcalabash.runtime.XProcXPathExpression
+import com.xmlcalabash.model.xml.{Artifact, DeclareStep, Documentation, OptionDecl, PipeInfo, Variable, XProcConstants}
+import com.xmlcalabash.runtime.{XProcExpression, XProcXPathExpression}
 
 class When(override val config: XMLCalabash,
            override val parent: Option[Artifact]) extends Container(config, parent) {
-  private var testExpr: String = _
+  private var testExpr: XProcExpression = _
 
   override def validate(): Boolean = {
     var valid = true
@@ -22,7 +22,7 @@ class When(override val config: XMLCalabash,
 
     val test = attributes.get(XProcConstants._test)
     if (test.isDefined) {
-      testExpr = test.get
+      testExpr = new XProcXPathExpression(inScopeNS, test.get)
     } else {
       throw new ModelException(ExceptionCode.TESTREQUIRED, List.empty[String], location)
     }
@@ -51,8 +51,7 @@ class When(override val config: XMLCalabash,
   override def makeGraph(graph: Graph, parent: Node) {
     val node = parent match {
       case choose: ChooseStart =>
-        val expr = new XProcXPathExpression(inScopeNS, testExpr)
-        choose.addWhen(expr, name)
+        choose.addWhen(testExpr, name)
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "When parent isn't a choose???", location)
     }
@@ -84,6 +83,36 @@ class When(override val config: XMLCalabash,
         case pipe: PipeInfo => Unit
         case _ =>
           child.makeEdges(graph, graphNode.get)
+      }
+    }
+
+    val variableRefs = findVariableRefs(testExpr)
+    for (ref <- variableRefs) {
+      val bind = findBinding(ref)
+      if (bind.isEmpty) {
+        throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
+      }
+
+      bind.get match {
+        case declStep: DeclareStep =>
+          var optDecl = Option.empty[OptionDecl]
+          for (child <- declStep.children) {
+            child match {
+              case opt: OptionDecl =>
+                if (opt.optionName == ref) {
+                  optDecl = Some(opt)
+                }
+              case _ => Unit
+            }
+          }
+          if (optDecl.isEmpty) {
+            throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
+          }
+          graph.addBindingEdge(optDecl.get.graphNode.get.asInstanceOf[Binding], graphNode.get)
+        case varDecl: Variable =>
+          graph.addBindingEdge(varDecl.graphNode.get.asInstanceOf[Binding], graphNode.get)
+        case _ =>
+          throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
       }
     }
   }

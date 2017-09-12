@@ -13,9 +13,7 @@ import scala.collection.mutable
 class WithOption(override val config: XMLCalabash,
                  override val parent: Option[Artifact]) extends Artifact(config, parent) {
   private var _name: QName = _
-  private var _dataPort = ""
   private var _expression = Option.empty[XProcExpression]
-  private var variableRefs = mutable.HashSet.empty[QName]
 
   def this(config: XMLCalabash, parent: Artifact, name: QName, expr: XProcExpression) = {
     this(config, Some(parent))
@@ -25,12 +23,9 @@ class WithOption(override val config: XMLCalabash,
 
   def optionName: QName = _name
   def expression: XProcExpression = _expression.get
-  def dataPort: String = _dataPort
 
   override def validate(): Boolean = {
     if (_expression.isDefined) {
-      // This is a synthetic WithOption constructed from an option shortcut
-      _dataPort = "#" + _name.toString + "_" + id
       return true
     }
 
@@ -46,8 +41,6 @@ class WithOption(override val config: XMLCalabash,
     } else {
       _expression = Some(new XProcXPathExpression(inScopeNS, selattr.get))
     }
-
-    _dataPort = "#" + _name.toString + "_" + id
 
     for (key <- List(XProcConstants._name, XProcConstants._select)) {
       if (attributes.contains(key)) {
@@ -122,7 +115,7 @@ class WithOption(override val config: XMLCalabash,
 
     graph.addEdge(graphNode.get, "result", this.parent.get.graphNode.get, "#bindings")
 
-    findVariableRefs()
+    val variableRefs = findVariableRefs(expression)
     for (ref <- variableRefs) {
       val bind = findBinding(ref)
       if (bind.isEmpty) {
@@ -152,33 +145,4 @@ class WithOption(override val config: XMLCalabash,
       }
     }
   }
-
-  private def findVariableRefs(): Unit = {
-    expression match {
-      case expr: XProcXPathExpression =>
-        val parser = config.expressionParser
-        parser.parse(expr.expr)
-        for (ref <- parser.variableRefs) {
-          val qname = new QName("", ref)
-          variableRefs += qname
-        }
-      case expr: XProcAvtExpression =>
-        var avt = false
-        for (subexpr <- expr.avt) {
-          if (avt) {
-            val parser = config.expressionParser
-            parser.parse(subexpr)
-            for (ref <- parser.variableRefs) {
-              val qname = new QName("", ref)
-              variableRefs += qname
-            }
-          }
-          avt = !avt
-        }
-      case _ =>
-        throw new PipelineException("notimpl", "unknown expression type!", location)
-    }
-  }
-
-
 }

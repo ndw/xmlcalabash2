@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{ContainerStart, Graph, Node}
+import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import net.sf.saxon.s9api.QName
@@ -47,13 +47,16 @@ class OptionDecl(override val config: XMLCalabash,
     val container = this.parent.get
     val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
     if (cnode.parent.isEmpty) {
-      graphNode = Some(graph.addBinding(_name.getClarkName))
+      //graphNode = Some(graph.addBinding(_name.getClarkName))
     } else {
       throw new ModelException(ExceptionCode.INTERNAL, "Don't know what to do about opts here", location)
     }
   }
 
   override def makeEdges(graph: Graph, parent: Node): Unit = {
-    //graph.addBindingEdge(graphNode.get.asInstanceOf[Binding], parent)
+    if (parent.parent.isEmpty) {
+      graphNode = Some(graph.addBinding(_name.getClarkName))
+      //graph.addBindingEdge(graphNode.get.asInstanceOf[Binding], parent)
+    }
   }
 }

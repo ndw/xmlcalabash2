@@ -1,0 +1,17 @@
+package com.xmlcalabash.test
+
+import com.xmlcalabash.testers.XProcTestSpec
+
+class ChooseSpec extends XProcTestSpec {
+  "A choose " should " be able to match the first when" in {
+    test("src/test/resources/choose-001.xml")
+  }
+
+  "A choose " should " be able to match the second when" in {
+    test("src/test/resources/choose-002.xml")
+  }
+
+  "A choose " should " be able to match the otherwise" in {
+    test("src/test/resources/choose-003.xml")
+  }
+}

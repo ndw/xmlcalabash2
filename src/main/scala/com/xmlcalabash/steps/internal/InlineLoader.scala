@@ -5,7 +5,7 @@ import java.net.URI
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{ItemMessage, Message}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{AvtParser, SaxonTreeBuilder}
+import com.xmlcalabash.model.util.{StringParsers, SaxonTreeBuilder}
 import com.xmlcalabash.model.xml.XProcConstants
 import com.xmlcalabash.runtime.{DynamicContext, SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import net.sf.saxon.s9api.{Axis, XdmMap, XdmNode, XdmNodeKind}
@@ -32,7 +32,7 @@ class InlineLoader(private val nodes: List[XdmNode],
 
   override def run(): Unit = {
     if (docPropsExpr.isDefined) {
-      val avt = AvtParser.parse(docPropsExpr.get)
+      val avt = StringParsers.parseAvt(docPropsExpr.get)
       if (avt.isEmpty) {
         throw new ModelException(ExceptionCode.BADAVT, List("document-properties", docPropsExpr.get), location)
       }
@@ -54,7 +54,7 @@ class InlineLoader(private val nodes: List[XdmNode],
     }
     builder.endDocument()
     val result = builder.result
-    consumer.get.receive("result", new ItemMessage(result, new XProcMetadata("application/xml", docProps.toMap)))
+    consumer.get.receive("result", new ItemMessage(result, new XProcMetadata("application/xml", docProps)))
   }
 
   private def expandTVT(node: XdmNode, builder: SaxonTreeBuilder, expandText: Boolean): Unit = {
