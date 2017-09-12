@@ -14,4 +14,8 @@ class ChooseSpec extends XProcTestSpec {
   "A choose " should " be able to match the otherwise" in {
     test("src/test/resources/choose-003.xml")
   }
+
+  "A choose " should " fail if no conditions match and there is no otherwise" in {
+    test("src/test/resources/choose-004.xml")
+  }
 }
