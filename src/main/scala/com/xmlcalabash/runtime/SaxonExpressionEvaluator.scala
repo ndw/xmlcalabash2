@@ -44,15 +44,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
     for ((str, value) <- bindings) {
       value match {
-        case bind: BindingMessage =>
-          bind.message match {
-            case item: ItemMessage =>
-              item.item match {
-                case xitem: XdmNode =>
-                  checkDocument(newContext, xitem, context.head)
-                case _ => Unit
-              }
-            case _ => throw new PipelineException("unexpected", "Unexpected message in binding: " + bind.message, None)
+        case item: ItemMessage =>
+          item.item match {
+            case xitem: XdmNode =>
+              checkDocument(newContext, xitem, context.head)
+            case _ => Unit
           }
         case _ => throw new PipelineException("unexpected", "Unexpected binding message: " + value, None)
       }
@@ -76,15 +72,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
     for ((str, value) <- bindings) {
       value match {
-        case bind: BindingMessage =>
-          bind.message match {
-            case item: ItemMessage =>
-              item.item match {
-                case xitem: XdmNode =>
-                  checkDocument(newContext, xitem, context.head)
-                case _ => Unit
-              }
-            case _ => throw new PipelineException("unexpected", "Unexpected message in binding: " + bind.message, None)
+        case item: ItemMessage =>
+          item.item match {
+            case xitem: XdmNode =>
+              checkDocument(newContext, xitem, context.head)
+            case _ => Unit
           }
         case _ => throw new PipelineException("unexpected", "Unexpected binding message: " + value, None)
       }
@@ -108,18 +100,14 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
         for ((str, value) <- bindings) {
           value match {
-            case bind: BindingMessage =>
-              bind.message match {
-                case item: ItemMessage =>
-                  item.item match {
-                    case xitem: XdmItem =>
-                      patchBindings.put(StringParsers.parseClarkName(str), xitem)
-                    case _ =>
-                      throw new PipelineException("unexpected", "Bound value is not XdmItem: " + item.item, None)
-                  }
-                case _ => throw new PipelineException("unexpected", "Unexpected message in binding: " + bind.message, None)
+            case item: ItemMessage =>
+              item.item match {
+                case xitem: XdmItem =>
+                  patchBindings.put(StringParsers.parseClarkName(str), xitem)
+                case _ =>
+                  throw new PipelineException("unexpected", "Bound value is not XdmItem: " + item.item, None)
               }
-            case _ => throw new PipelineException("unexpected", "Unexpected binding message: " + value, None)
+            case _ => throw new PipelineException("unexpected", "Unexpected message: " + value, None)
           }
         }
 

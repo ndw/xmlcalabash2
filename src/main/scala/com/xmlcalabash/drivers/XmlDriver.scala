@@ -129,7 +129,7 @@ object XmlDriver extends App {
               val paramBind = mutable.HashMap.empty[String, Message]
               for ((qname, value) <- curParams) {
                 val clark = qname.getClarkName
-                val msg = new BindingMessage(clark, new ItemMessage(value, Metadata.ANY))
+                val msg = new ItemMessage(value, Metadata.ANY)
                 paramBind.put(clark, msg)
               }
 
