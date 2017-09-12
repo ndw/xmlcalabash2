@@ -3,7 +3,6 @@ package com.xmlcalabash.test
 import com.xmlcalabash.testers.XProcTestSpec
 
 class DocPropSpec extends XProcTestSpec {
-  /*
   "Document properties from an inline XML document" should " work" in {
     test("src/test/resources/doc-prop-001.xml")
   }
@@ -19,7 +18,7 @@ class DocPropSpec extends XProcTestSpec {
   "Document properties from a variable" should " work" in {
     test("src/test/resources/doc-prop-004.xml")
   }
-*/
+
   "Document properties from a non-document variable" should " fail" in {
     test("src/test/resources/doc-prop-005.xml")
   }
