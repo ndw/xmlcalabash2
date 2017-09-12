@@ -91,13 +91,17 @@ class DefaultStep extends Step {
             val item = viter.next()
             item match {
               case atomic: XdmAtomicValue =>
-                val itype = atomic.getTypeName
-                if (itype != XProcConstants.xs_string || (count > 0)) {
-                  throw new PipelineException("notstring", "Map value is not a string", None)
-                }
+                //val itype = atomic.getTypeName
+                // FIXME: make sure some keys have the proper value (base-uri, etc.)
               case _ =>
+                throw new PipelineException("notatomic", "Map value is not an atomic value: " + item, None)
             }
             count += 1
+
+            if (count > 1) {
+              throw new PipelineException("notatomic", "Map value is a sequence", None)
+            }
+
             strvalue += item.getStringValue
           }
 
