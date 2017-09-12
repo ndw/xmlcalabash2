@@ -3,7 +3,7 @@ organization := "com.xmlcalabash"
 version      := "1.9.0"
 scalaVersion := "2.12.3"
 
-lazy val root = (project in file(".")).
+lazy val meerschaum = (project in file(".")).
   enablePlugins(BuildInfoPlugin).
   settings(
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion),
@@ -40,7 +40,7 @@ libraryDependencies ++= Seq(
   "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
   "org.xmlresolver" % "xmlresolver" % "0.12.3",
   "nu.validator" % "htmlparser" % "1.4.6",
-  "com.jafpl" % "jafpl_2.12" % "0.0.18"
+  "com.jafpl" % "jafpl_2.12" % "0.0.19"
 )
 
 // Yes, this is an odd place for local use, but it's where the website
