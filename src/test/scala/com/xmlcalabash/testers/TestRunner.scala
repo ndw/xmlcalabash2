@@ -294,6 +294,10 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       tester.addInput(port,doc)
     }
 
+    for ((name,bind) <- bindings) {
+      tester.addBinding(name, bind)
+    }
+
     val result = tester.run()
 
     if (result.isEmpty) {
