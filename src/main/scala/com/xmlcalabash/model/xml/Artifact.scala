@@ -1,12 +1,13 @@
 package com.xmlcalabash.model.xml
 
+import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{AvtParser, UniqueId}
+import com.xmlcalabash.model.util.{StringParsers, UniqueId}
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
-import com.xmlcalabash.runtime.{NodeLocation, XProcAvtExpression}
+import com.xmlcalabash.runtime.{NodeLocation, XProcAvtExpression, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 
 import scala.collection.mutable
@@ -166,7 +167,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   }
 
   def lexicalAvt(name: String, value: String): XProcAvtExpression = {
-    val avt = AvtParser.parse(value)
+    val avt = StringParsers.parseAvt(value)
     if (avt.isDefined) {
       new XProcAvtExpression(inScopeNS, avt.get)
     } else {
@@ -380,6 +381,38 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
       throw new ModelException(ExceptionCode.INTERNAL, "Graph navigation error???", location)
     }
   }
+
+  def findVariableRefs(expression: XProcExpression): Set[QName] = {
+    val variableRefs = mutable.HashSet.empty[QName]
+
+    expression match {
+      case expr: XProcXPathExpression =>
+        val parser = config.expressionParser
+        parser.parse(expr.expr)
+        for (ref <- parser.variableRefs) {
+          val qname = StringParsers.parseClarkName(ref)
+          variableRefs += qname
+        }
+      case expr: XProcAvtExpression =>
+        var avt = false
+        for (subexpr <- expr.avt) {
+          if (avt) {
+            val parser = config.expressionParser
+            parser.parse(subexpr)
+            for (ref <- parser.variableRefs) {
+              val qname = StringParsers.parseClarkName(ref)
+              variableRefs += qname
+            }
+          }
+          avt = !avt
+        }
+      case _ =>
+        throw new PipelineException("notimpl", "unknown expression type!", location)
+    }
+
+    variableRefs.toSet
+  }
+
 
   def validate(): Boolean = {
     println(s"ERROR: $this doesn't override validate")

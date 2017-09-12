@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml.datasource
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.AvtParser
+import com.xmlcalabash.model.util.StringParsers
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, XProcConstants}
 import com.xmlcalabash.runtime.XProcAvtExpression
 import com.xmlcalabash.steps.internal.FileLoader
@@ -54,7 +54,7 @@ class Document(override val config: XMLCalabash,
   }
 
   private def parseAvt(name: String, expr: String): List[String] = {
-    val list = AvtParser.parse(expr)
+    val list = StringParsers.parseAvt(expr)
     if (list.isEmpty) {
       throw new ModelException(ExceptionCode.BADAVT, List(name, expr), location)
     }

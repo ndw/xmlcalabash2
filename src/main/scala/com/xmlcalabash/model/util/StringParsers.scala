@@ -1,9 +1,11 @@
 package com.xmlcalabash.model.util
 
+import net.sf.saxon.s9api.QName
+
 import scala.collection.mutable.ListBuffer
 
-object AvtParser {
-  def parse(value: String): Option[List[String]] = {
+object StringParsers {
+  def parseAvt(value: String): Option[List[String]] = {
     val list = ListBuffer.empty[String]
     var state = StateChange.STRING
     var pos = 0
@@ -64,6 +66,30 @@ object AvtParser {
         list += substr
       }
       Some(list.toList)
+    }
+  }
+
+  def parseClarkName(name: String): QName = {
+    parseClarkName(name, None)
+  }
+
+  def parseClarkName(name: String, prefix: String): QName = {
+    parseClarkName(name, Some(prefix))
+  }
+
+  private def parseClarkName(name: String, pfx: Option[String]): QName = {
+    // FIXME: Better error handling for ClarkName parsing
+    if (name.startsWith("{")) {
+      val pos = name.indexOf("}")
+      val uri = name.substring(1, pos)
+      val local = name.substring(pos + 1)
+      if (pfx.isDefined) {
+        new QName(pfx.get, uri, local)
+      } else {
+        new QName(uri, local)
+      }
+    } else {
+      new QName("", name)
     }
   }
 

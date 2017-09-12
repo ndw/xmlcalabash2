@@ -1,7 +1,7 @@
 package com.xmlcalabash.runtime
 
 import com.jafpl.exceptions.PipelineException
-import com.xmlcalabash.model.util.AvtParser
+import com.xmlcalabash.model.util.StringParsers
 
 class XProcAvtExpression private (override val nsbindings: Map[String,String])
   extends XProcExpression(nsbindings) {
@@ -14,7 +14,7 @@ class XProcAvtExpression private (override val nsbindings: Map[String,String])
 
   def this(nsbindings: Map[String,String], expr: String) {
     this(nsbindings)
-    val avt = AvtParser.parse(expr)
+    val avt = StringParsers.parseAvt(expr)
     if (avt.isEmpty) {
       throw new PipelineException("invalid", "Invalid AVT expression: " + expr, None)
     }

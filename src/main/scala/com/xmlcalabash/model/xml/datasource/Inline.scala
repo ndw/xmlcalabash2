@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml.datasource
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{AvtParser, ParserConfiguration}
+import com.xmlcalabash.model.util.{StringParsers, ParserConfiguration}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, Variable, WithOption, XProcConstants}
 import com.xmlcalabash.steps.internal.InlineLoader
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
@@ -72,7 +72,7 @@ class Inline(override val config: XMLCalabash,
   }
 
   private def findVariableRefsInString(text: String): Unit = {
-    val list = AvtParser.parse(text)
+    val list = StringParsers.parseAvt(text)
     if (list.isEmpty) {
       throw new ModelException(ExceptionCode.BADAVT, List("TVT", text), location)
     }

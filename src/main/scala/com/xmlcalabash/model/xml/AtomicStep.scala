@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.AvtParser
+import com.xmlcalabash.model.util.StringParsers
 import com.xmlcalabash.runtime.{StepProxy, XProcAvtExpression, XProcExpression}
 import net.sf.saxon.s9api.QName
 
@@ -36,7 +36,7 @@ class AtomicStep(override val config: XMLCalabash,
     for (key <- attributes.keySet) {
       if (key.getNamespaceURI == "") {
         if (sig.options.contains(key)) {
-          val avt = AvtParser.parse(attributes(key))
+          val avt = StringParsers.parseAvt(attributes(key))
           if (avt.isDefined) {
             options.put(key, new XProcAvtExpression(inScopeNS, avt.get))
           } else {
@@ -46,7 +46,7 @@ class AtomicStep(override val config: XMLCalabash,
           throw new ModelException(ExceptionCode.BADATOMICATTR, key.getLocalName, location)
         }
       } else {
-        val avt = AvtParser.parse(attributes(key))
+        val avt = StringParsers.parseAvt(attributes(key))
         if (avt.isDefined) {
           options.put(key, new XProcAvtExpression(inScopeNS, avt.get))
         } else {
