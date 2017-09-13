@@ -3,6 +3,7 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.model.util.XProcConstants
 import net.sf.saxon.s9api.QName
 
 class OptionDecl(override val config: XMLCalabash,

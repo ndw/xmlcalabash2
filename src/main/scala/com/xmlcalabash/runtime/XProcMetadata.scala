@@ -4,6 +4,11 @@ import com.jafpl.messages.Metadata
 
 import scala.collection.mutable
 
+object XProcMetadata {
+  private val _any = new XProcMetadata("application/octet-stream")
+  def ANY = _any
+}
+
 class XProcMetadata(private val initialContentType: Option[String],
                     private val initialProperties: Map[String,String]) extends Metadata {
   private val _properties = mutable.HashMap.empty[String,String]

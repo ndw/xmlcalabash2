@@ -1,5 +1,6 @@
 <test xmlns='http://xproc.org/ns/testsuite/3.0'
-      expected="fail" code="XXX">
+      xmlns:err="http://www.w3.org/ns/xproc-errors"
+      expected="fail" code="err:XD0004">
   <pipeline src="choose-004.xpl"/>
   <option name="match" select="'3'"/>
 </test>

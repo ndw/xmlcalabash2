@@ -3,7 +3,7 @@ package com.xmlcalabash.functions
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.ItemMessage
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.model.xml.XProcConstants
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcMetadata}
 import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}

@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml.containers
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.xml.datasource.Pipe
-import com.xmlcalabash.model.xml.{Artifact, Input, Output, PipelineStep, Variable, XProcConstants}
+import com.xmlcalabash.model.xml.{Artifact, Input, Output, PipelineStep, Variable}
 
 import scala.collection.mutable
 

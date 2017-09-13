@@ -3,7 +3,9 @@ package com.xmlcalabash.model.xml.containers
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.xml.{Artifact, Documentation, Input, PipeInfo, Variable, XProcConstants}
+import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.xml.datasource.Pipe
+import com.xmlcalabash.model.xml.{Artifact, AtomicStep, Documentation, Input, Output, PipeInfo, Variable}
 
 import scala.collection.mutable
 
@@ -68,12 +70,16 @@ class Choose(override val config: XMLCalabash,
 
     var primaryInputPort = Option.empty[String]
     var primaryOutputPort = Option.empty[String]
+
+    val impliedOutputs = mutable.HashSet.empty[String]
     for (child <- relevantChildren()) {
+      // We can do this in one pass because inputs and outputs are always first
       child match {
+        case output: Output =>
+          impliedOutputs += output.port.get
         case when: When =>
           if (when.primaryInput.isDefined) {
             if (primaryInputPort.isDefined) {
-              println("PI")
               if (when.primaryInput.get.port.get != primaryInputPort.get) {
                 throw new ModelException(ExceptionCode.DIFFPRIMARYINPUT,
                   List(primaryInputPort.get, when.primaryInput.get.port.get), when.location)
@@ -91,6 +97,15 @@ class Choose(override val config: XMLCalabash,
               }
             } else {
               primaryOutputPort = when.primaryOutput.get.port
+            }
+          }
+
+          for (port <- when.outputPorts) {
+            if (!impliedOutputs.contains(port)) {
+              impliedOutputs += port
+              val output = when.output(port).get
+              val out = new Output(config, this, port, primary=output.primary, sequence=output.sequence)
+              addChild(out)
             }
           }
         case when: Otherwise =>
@@ -115,6 +130,15 @@ class Choose(override val config: XMLCalabash,
               primaryOutputPort = when.primaryOutput.get.port
             }
           }
+
+          for (port <- when.outputPorts) {
+            if (!impliedOutputs.contains(port)) {
+              impliedOutputs += port
+              val output = when.output(port).get
+              val out = new Output(config, this, port, primary=output.primary, sequence=output.sequence)
+              addChild(out)
+            }
+          }
         case _ => Unit
       }
     }
@@ -122,20 +146,10 @@ class Choose(override val config: XMLCalabash,
     valid
   }
 
-  /*
-  override def makeInputPortsExplicit(): Boolean = {
-    var valid = super.makeInputPortsExplicit()
-
-    if (valid && inputPorts.isEmpty) {
-      if (defaultReadablePort.isDefined) {
-        val input = new Input(config, this, "#source", primary=true, sequence=false)
-        addChild(input)
-      }
-    }
-
-    valid
+  override def makeOutputBindingsExplicit(): Boolean = {
+    // These are conneced up by the when components
+    true
   }
-  */
 
   override def makeGraph(graph: Graph, parent: Node) {
     val node = parent match {

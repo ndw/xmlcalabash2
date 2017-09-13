@@ -1,10 +1,11 @@
-package com.xmlcalabash.model.xml
+package com.xmlcalabash.model.util
 
 import net.sf.saxon.s9api.QName
 
 object XProcConstants {
   val ns_p   = "http://www.w3.org/ns/xproc"
   val ns_c   = "http://www.w3.org/ns/xproc-step"
+  val ns_err = "http://www.w3.org/ns/xproc-errors"
   val ns_xs  = "http://www.w3.org/2001/XMLSchema"
   val ns_cx  = "http://xmlcalabash.com/ns/extensions"
   val ns_exf = "http://exproc.org/standard/functions"
@@ -38,6 +39,7 @@ object XProcConstants {
   val p_when = new QName("p", ns_p, "when")
   val p_with_option = new QName("p", ns_p, "with-option")
 
+  val p_error = new QName("p", ns_p, "error")
   val p_identity = new QName("p", ns_p, "identity")
   val p_sink = new QName("p", ns_p, "sink")
 
@@ -59,6 +61,7 @@ object XProcConstants {
 
   val _byte_order_mark = new QName("", "byte-order-mark")
   val _cdata_section_elements = new QName("", "cdata-section-elements")
+  val _code = new QName("", "code")
   val _doctype_public = new QName("", "doctype-public")
   val _doctype_system = new QName("", "doctype-system")
   val _document_properties = new QName("", "document-properties")

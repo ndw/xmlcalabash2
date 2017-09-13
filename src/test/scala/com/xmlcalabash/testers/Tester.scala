@@ -3,7 +3,7 @@ package com.xmlcalabash.testers
 import com.jafpl.messages.ItemMessage
 import com.jafpl.runtime.GraphRuntime
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ModelException, TestException}
+import com.xmlcalabash.exceptions.{ModelException, StepException, TestException}
 import com.xmlcalabash.model.xml.Parser
 import com.xmlcalabash.runtime.{BufferingConsumer, DevNullConsumer, XProcMetadata}
 import com.xmlcalabash.util.Schematron
@@ -134,6 +134,8 @@ class Tester(runtimeConfig: XMLCalabash) {
     } catch {
       case model: ModelException =>
         Some(model.code.toString)
+      case step: StepException =>
+        Some(step.code.getClarkName)
       case t: Throwable =>
         Some(Option(t.getMessage).getOrElse("ERROR"))
     }

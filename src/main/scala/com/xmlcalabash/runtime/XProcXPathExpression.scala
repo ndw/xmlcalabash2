@@ -1,7 +1,7 @@
 package com.xmlcalabash.runtime
 
-class XProcXPathExpression(override val nsbindings: Map[String,String], val expr: String)
-  extends XProcExpression(nsbindings) {
+class XProcXPathExpression(override val context: ExpressionContext, val expr: String)
+  extends XProcExpression(context) {
 
   override def toString: String = expr
 }

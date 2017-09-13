@@ -2,6 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Choose, Otherwise, When}
 import com.xmlcalabash.model.xml.datasource.{Document, Inline, Pipe}
 import net.sf.saxon.s9api.{Axis, XdmNode, XdmNodeKind}
@@ -230,6 +231,34 @@ class Parser(config: XMLCalabash) {
     val art = new Choose(config, parent)
     art.parse(node)
     parseChildren(art, node)
+
+    var hasOtherwise = false
+    for (child <- art.children) {
+      child match {
+        case other: Otherwise =>
+          hasOtherwise = true
+        case _ => Unit
+      }
+    }
+
+    if (!hasOtherwise) {
+      val builder = new SaxonTreeBuilder(config)
+      builder.startDocument(node.getBaseURI)
+      builder.addStartElement(XProcConstants.p_otherwise)
+      builder.startContent()
+      builder.addPI("_xmlcalabash", nodeLocationPItext(node))
+      builder.addStartElement(XProcConstants.p_error)
+      builder.addNamespace("err", XProcConstants.ns_err)
+      builder.addAttribute(XProcConstants._code, "err:XD0004")
+      builder.startContent()
+      builder.addEndElement()
+      builder.addEndElement()
+      builder.endDocument()
+      val synthetic = builder.result
+      val other = parse(Some(art), synthetic).get
+      art.addChild(other)
+    }
+
     art
   }
 
@@ -269,5 +298,17 @@ class Parser(config: XMLCalabash) {
     val art = new PipeInfo(config, parent,nodes.toList)
     art.parse(node)
     art
+  }
+
+  // =====================================================================================
+  private def nodeLocationPItext(node: XdmNode): String = {
+    var str = "uri=\"" + node.getBaseURI + "\""
+    if (node.getLineNumber > 0) {
+      str += " line=\"" + node.getLineNumber + "\""
+    }
+    if (node.getColumnNumber > 0) {
+      str += " column=\"" + node.getColumnNumber + "\""
+    }
+    str
   }
 }

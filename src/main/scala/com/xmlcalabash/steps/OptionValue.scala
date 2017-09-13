@@ -1,10 +1,7 @@
 package com.xmlcalabash.steps
 
-import java.net.URI
-
-import com.xmlcalabash.model.util.SaxonTreeBuilder
-import com.xmlcalabash.model.xml.XProcConstants
-import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
+import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
 
 class OptionValue extends DefaultXmlStep {
@@ -13,7 +10,7 @@ class OptionValue extends DefaultXmlStep {
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
-  override def receiveBinding(variable: QName, value: XdmItem, nsBindings: Map[String, String]): Unit = {
+  override def receiveBinding(variable: QName, value: XdmItem, context: ExpressionContext): Unit = {
     this.value = Some(value)
   }
 

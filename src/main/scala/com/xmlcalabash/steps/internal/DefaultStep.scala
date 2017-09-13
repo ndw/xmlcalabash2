@@ -6,7 +6,7 @@ import com.jafpl.messages.{BindingMessage, Message, Metadata}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.model.xml.XProcConstants
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{XmlPortSpecification, XmlStep}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}

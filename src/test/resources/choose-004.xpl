@@ -16,7 +16,6 @@
     </p:input>
   </p:identity>
 
-
   <p:choose name="choose">
     <p:when test="p:document-properties(., 'a') = $match">
       <p:identity>

@@ -51,6 +51,7 @@ class XMLCalabash extends RuntimeConfiguration {
   private var _entityResolver: EntityResolver = _
   private var _moduleURIResolver: ModuleURIResolver = _
   private var _unparsedTextURIResolver: UnparsedTextURIResolver = _
+  private var _errorExplanation: ErrorExplanation = _
   private var _deliveryAgent: DeliveryAgent = _
   private var _documentManager: DocumentManager = _
   private var _htmlSerializer = false
@@ -157,6 +158,17 @@ class XMLCalabash extends RuntimeConfiguration {
   def unparsedTextURIResolver_=(resolver: UnparsedTextURIResolver): Unit = {
     checkClosed()
     _unparsedTextURIResolver = resolver
+  }
+
+  def errorExplanation: ErrorExplanation = {
+    if (_errorExplanation == null) {
+      throw new ConfigurationException(ExceptionCode.CFGINCOMPLETE, "errorExplanation")
+    }
+    _errorExplanation
+  }
+  def errorExplanation_=(explain: ErrorExplanation): Unit = {
+    checkClosed()
+    _errorExplanation = explain
   }
 
   def deliveryAgent: DeliveryAgent = {

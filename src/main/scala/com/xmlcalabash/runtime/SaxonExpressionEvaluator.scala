@@ -6,8 +6,10 @@ import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
 import com.jafpl.runtime.ExpressionEvaluator
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, StringParsers}
-import com.xmlcalabash.model.xml.XProcConstants
+import com.xmlcalabash.exceptions.StepException
+import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, StringParsers, XProcConstants}
+import com.xmlcalabash.util.XProcVarValue
 import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
 import net.sf.saxon.trans.XPathException
 import org.slf4j.{Logger, LoggerFactory}
@@ -29,7 +31,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     this
   }
 
-  override def value(xpath: Any, context: List[Message], bindings: Map[String, Message]): Any = {
+  override def value(xpath: Any, context: List[Message], bindings: Map[String, Message]): XPathItemMessage = {
     val proxies = mutable.HashMap.empty[Any, XdmNode]
     val newContext = new DynamicContext()
     if (context.nonEmpty) {
@@ -84,7 +86,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
 
     val item = withContext(newContext) { do_value(xpath, context, bindings, proxies.toMap) }
-    val result = item match {
+    val result = item.item match {
       case atomic: XdmAtomicValue =>
         atomic.getBooleanValue
       case _ => true
@@ -93,7 +95,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     result
   }
 
-  def do_value(xpath: Any, context: List[Message], bindings: Map[String, Message], proxies: Map[Any,XdmNode]): XdmItem = {
+  def do_value(xpath: Any, context: List[Message], bindings: Map[String, Message], proxies: Map[Any,XdmNode]): XPathItemMessage = {
     xpath match {
       case expr: XProcExpression =>
         val patchBindings = mutable.HashMap.empty[QName, XdmItem]
@@ -104,6 +106,8 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
               item.item match {
                 case xitem: XdmItem =>
                   patchBindings.put(StringParsers.parseClarkName(str), xitem)
+                case value: XProcVarValue =>
+                  patchBindings.put(StringParsers.parseClarkName(str), value.value)
                 case _ =>
                   throw new PipelineException("unexpected", "Bound value is not XdmItem: " + item.item, None)
               }
@@ -112,12 +116,12 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         }
 
         val result = value(expr, context, patchBindings.toMap, proxies)
-        result
+        new XPathItemMessage(result, XProcMetadata.ANY, expr.context)
       case str: String =>
-        new XdmAtomicValue(str)
+        new XPathItemMessage(new XdmAtomicValue(str), XProcMetadata.ANY, ExpressionContext.NONE)
       case _ =>
         logger.warn("Unexpected expression type, returning string value: " + xpath)
-        new XdmAtomicValue(xpath.toString)
+        new XPathItemMessage(new XdmAtomicValue(xpath.toString), XProcMetadata.ANY, ExpressionContext.NONE)
     }
   }
 
@@ -128,7 +132,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         var evalAvt = false
         for (part <- avtexpr.avt) {
           if (evalAvt) {
-            val epart = computeValue(part, context, avtexpr.nsbindings, bindings, proxies, avtexpr.extensionFunctionsAllowed)
+            val epart = computeValue(part, context, avtexpr.context, bindings, proxies, avtexpr.extensionFunctionsAllowed)
             for (item <- epart.asInstanceOf[ListBuffer[XdmItem]]) {
               result += item
             }
@@ -140,7 +144,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
           evalAvt = !evalAvt
         }
       case xpathexpr: XProcXPathExpression =>
-        val epart = computeValue(xpathexpr.expr, context, xpathexpr.nsbindings, bindings, proxies, xpathexpr.extensionFunctionsAllowed)
+        val epart = computeValue(xpathexpr.expr, context, xpathexpr.context, bindings, proxies, xpathexpr.extensionFunctionsAllowed)
         for (item <- epart.asInstanceOf[ListBuffer[XdmItem]]) {
           result += item
         }
@@ -155,21 +159,25 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
   }
 
   private def computeValue(xpath: String,
-                           context: List[Message],
-                           nsbindings: Map[String, String],
+                           contextItem: List[Message],
+                           exprContext: ExpressionContext,
                            bindings: Map[QName,XdmItem],
                            proxies: Map[Any, XdmNode],
                            extensionsOk: Boolean): Any = {
     val results = ListBuffer.empty[XdmItem]
     val config = xmlCalabash.processor.getUnderlyingConfiguration
 
-    if (context.size > 1) {
+    if (contextItem.size > 1) {
       throw new PipelineException("seq", "Sequence not allowed as context for expression", None)
     }
 
     try {
       val xcomp = xmlCalabash.processor.newXPathCompiler()
-      val baseURI: URI = new URI("") // FIXME: get baseURI from dynamic context
+      val baseURI = if (exprContext.baseURI.isDefined) {
+        exprContext.baseURI.get
+      } else {
+        new URI("")
+      }
       if (baseURI.toASCIIString != "") {
         xcomp.setBaseURI(baseURI)
       }
@@ -182,7 +190,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         xcomp.declareVariable(varname)
       }
 
-      for ((prefix, uri) <- nsbindings) {
+      for ((prefix, uri) <- exprContext.nsBindings) {
         xcomp.declareNamespace(prefix, uri)
       }
 
@@ -211,8 +219,8 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         selector.setVariable(varname, varvalue)
       }
 
-      if (context.nonEmpty) {
-        context.head match {
+      if (contextItem.nonEmpty) {
+        contextItem.head match {
           case item: ItemMessage =>
             selector.setContextItem(proxies(item.item))
         }
@@ -231,7 +239,9 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
                    && xpe.getErrorCodeLocalPart == "XPDY0002") {
                 throw new PipelineException("nocontext","Expression refers to context when none is available: " + xpath, None)
               } else {
-                throw saue
+                val code = new QName(xpe.getErrorCodeNamespace, xpe.getErrorCodeLocalPart)
+                val msg = xpe.getMessage
+                throw new StepException(code, Some(msg), exprContext.location)
               }
             case _ => throw saue
           }

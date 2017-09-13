@@ -39,6 +39,8 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
     configuration.unparsedTextURIResolver = resolver
     configuration.moduleURIResolver = resolver
 
+    configuration.errorExplanation = new DefaultErrorExplanation(configuration)
+
     configuration.deliveryAgent = new DefaultDeliveryAgent(configuration)
     configuration.documentManager = new DefaultDocumentManager(configuration)
   }

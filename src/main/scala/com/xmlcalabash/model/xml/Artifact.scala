@@ -1,5 +1,7 @@
 package com.xmlcalabash.model.xml
 
+import java.net.URI
+
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.config.XMLCalabash
@@ -7,8 +9,9 @@ import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{StringParsers, UniqueId}
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
-import com.xmlcalabash.runtime.{NodeLocation, XProcAvtExpression, XProcExpression, XProcXPathExpression}
-import net.sf.saxon.s9api.{Axis, QName, XdmNode}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcAvtExpression, XProcExpression, XProcXPathExpression}
+import com.xmlcalabash.util.S9Api
+import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -27,6 +30,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   protected[xml] var graphNode = Option.empty[Node]
   protected[xml] var dump_attr = Option.empty[xml.MetaData]
   protected[xml] var _location = Option.empty[Location]
+  protected[xml] var _baseURI = Option.empty[URI]
 
   def label: Option[String] = _label
   protected[xml] def label_=(label: String): Unit = {
@@ -36,22 +40,42 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   def name: String = _label.getOrElse("_" + id)
 
   def location: Option[Location] = _location
+  def baseURI: Option[URI] = _baseURI
+
+  protected[xml] def setLocation(node: XdmNode): Unit = {
+    // What if the preceding node is a location PI?
+    var pi = Option.empty[XdmNode]
+    var found = false
+    val iter = node.axisIterator(Axis.PRECEDING_SIBLING)
+    while (iter.hasNext) {
+      val pnode = iter.next().asInstanceOf[XdmNode]
+      if (!found) {
+        pnode.getNodeKind match {
+          case XdmNodeKind.TEXT =>
+            if (pnode.getStringValue.trim != "") {
+              found = true
+            }
+          case XdmNodeKind.PROCESSING_INSTRUCTION =>
+            if (pnode.getNodeName.getLocalName == "_xmlcalabash") {
+              pi = Some(pnode)
+              found = true
+            }
+          case _ => found = true
+        }
+      }
+    }
+
+    if (found && pi.isDefined) {
+      println("OVERRIDE WITH " + pi)
+    }
+
+    _location = Some(new NodeLocation(node))
+  }
 
   protected[xml] def parse(node: XdmNode): Unit = {
     _location = Some(new NodeLocation(node))
-    // Parse namespaces
-    val nsiter = node.axisIterator(Axis.NAMESPACE)
-    val ns = mutable.HashMap.empty[String,String]
-    while (nsiter.hasNext) {
-      val attr = nsiter.next().asInstanceOf[XdmNode]
-      val prefix = if (attr.getNodeName == null) {
-        ""
-      } else {
-        attr.getNodeName.toString
-      }
-      val uri = attr.getStringValue
-      ns.put(prefix, uri)
-    }
+    _baseURI = Some(node.getBaseURI)
+    val ns = S9Api.inScopeNamespaces(node)
 
     // Parse attributes
     val aiter = node.axisIterator(Axis.ATTRIBUTE)
@@ -169,7 +193,8 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   def lexicalAvt(name: String, value: String): XProcAvtExpression = {
     val avt = StringParsers.parseAvt(value)
     if (avt.isDefined) {
-      new XProcAvtExpression(inScopeNS, avt.get)
+      val context = new ExpressionContext(_baseURI, inScopeNS, _location)
+      new XProcAvtExpression(context, avt.get)
     } else {
       throw new ModelException(ExceptionCode.BADAVT, List(name, value), location)
     }

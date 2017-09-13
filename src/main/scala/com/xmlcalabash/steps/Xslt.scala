@@ -3,9 +3,8 @@ package com.xmlcalabash.steps
 import java.net.URI
 import javax.xml.transform.{Result, SourceLocator}
 
-import com.xmlcalabash.model.util.SaxonTreeBuilder
-import com.xmlcalabash.model.xml.XProcConstants
-import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
+import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{S9Api, XProcCollectionFinder}
 import net.sf.saxon.lib.OutputURIResolver
 import net.sf.saxon.s9api.{MessageListener, QName, ValidationMode, XdmDestination, XdmItem, XdmNode, XdmValue}
@@ -50,12 +49,12 @@ class Xslt extends DefaultXmlStep {
     }
   }
 
-  override def receiveBinding(variable: QName, value: XdmItem, nsBindings: Map[String,String]): Unit = {
+  override def receiveBinding(variable: QName, value: XdmItem, context: ExpressionContext): Unit = {
     variable match {
-      case `_initial_mode` => initialMode = Some(lexicalQName(value.getStringValue, nsBindings))
-      case `_template_name` => templateName = Some(lexicalQName(value.getStringValue, nsBindings))
+      case `_initial_mode` => initialMode = Some(lexicalQName(value.getStringValue, context.nsBindings))
+      case `_template_name` => templateName = Some(lexicalQName(value.getStringValue, context.nsBindings))
       case `_output_base_uri` => outputBaseURI = Some(value.getStringValue)
-      case `_parameters` => parameters = parseParameters(value, nsBindings)
+      case `_parameters` => parameters = parseParameters(value, context.nsBindings)
       case `_version` => version = Some(value.getStringValue)
       case _ =>
         logger.info("Ignoring unexpected option to p:xslt: " + variable)

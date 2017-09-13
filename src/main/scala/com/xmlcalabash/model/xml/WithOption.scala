@@ -4,11 +4,10 @@ import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
-import com.xmlcalabash.runtime.{XProcAvtExpression, XProcExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
-
-import scala.collection.mutable
 
 class WithOption(override val config: XMLCalabash,
                  override val parent: Option[Artifact]) extends Artifact(config, parent) {
@@ -39,7 +38,8 @@ class WithOption(override val config: XMLCalabash,
     if (selattr.isEmpty) {
       throw new ModelException(ExceptionCode.SELECTATTRREQ, this.toString, location)
     } else {
-      _expression = Some(new XProcXPathExpression(inScopeNS, selattr.get))
+      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      _expression = Some(new XProcXPathExpression(context, selattr.get))
     }
 
     for (key <- List(XProcConstants._name, XProcConstants._select)) {

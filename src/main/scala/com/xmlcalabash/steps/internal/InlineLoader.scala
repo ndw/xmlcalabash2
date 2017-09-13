@@ -5,15 +5,15 @@ import java.net.URI
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{ItemMessage, Message}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{StringParsers, SaxonTreeBuilder}
-import com.xmlcalabash.model.xml.XProcConstants
-import com.xmlcalabash.runtime.{DynamicContext, SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
-import net.sf.saxon.s9api.{Axis, XdmMap, XdmNode, XdmNodeKind}
+import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, StringParsers, XProcConstants}
+import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import net.sf.saxon.s9api.{Axis, XdmItem, XdmMap, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
 
 class InlineLoader(private val nodes: List[XdmNode],
-                   private val nsBindings: Map[String,String],
+                   private val context: ExpressionContext,
                    private val expandText: Boolean,
                    private val excludeInlinePrefixes: Map[String,String],
                    private val docPropsExpr: Option[String],
@@ -36,7 +36,7 @@ class InlineLoader(private val nodes: List[XdmNode],
       if (avt.isEmpty) {
         throw new ModelException(ExceptionCode.BADAVT, List("document-properties", docPropsExpr.get), location)
       }
-      val expr = new XProcAvtExpression(nsBindings, avt.get)
+      val expr = new XProcAvtExpression(context, avt.get)
       val result = xpathValue(expr)
       docProps = result match {
         case map: XdmMap =>
@@ -112,13 +112,14 @@ class InlineLoader(private val nodes: List[XdmNode],
   // FIXME: should return a list of XdmNode
   private def expandString(text: String): String = {
     val evaluator = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
-    val expr = new XProcAvtExpression(Map.empty[String,String], text)
-    evaluator.value(expr, List.empty[Message], bindings.toMap).toString
+    val expr = new XProcAvtExpression(context, text)
+    evaluator.value(expr, List.empty[Message], bindings.toMap).item.toString
   }
 
-  def xpathValue(expr: XProcExpression): Any = {
+  def xpathValue(expr: XProcExpression): XdmItem = {
     val eval = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
     val dynContext = new DynamicContext()
-    eval.withContext(dynContext) { eval.value(expr, List.empty[Message], bindings.toMap) }
+    val msg = eval.withContext(dynContext) { eval.value(expr, List.empty[Message], bindings.toMap) }
+    msg.asInstanceOf[XPathItemMessage].item
   }
 }

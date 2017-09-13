@@ -3,7 +3,8 @@ package com.xmlcalabash.model.xml.datasource
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.xml.{Artifact, IOPort, WithOption, XProcConstants}
+import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.xml.{Artifact, IOPort, WithOption}
 
 import scala.collection.mutable.ListBuffer
 

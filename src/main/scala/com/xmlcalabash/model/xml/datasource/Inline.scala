@@ -3,8 +3,9 @@ package com.xmlcalabash.model.xml.datasource
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{StringParsers, ParserConfiguration}
-import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, Variable, WithOption, XProcConstants}
+import com.xmlcalabash.model.util.{ParserConfiguration, StringParsers, XProcConstants}
+import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, Variable, WithOption}
+import com.xmlcalabash.runtime.ExpressionContext
 import com.xmlcalabash.steps.internal.InlineLoader
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 
@@ -95,7 +96,8 @@ class Inline(override val config: XMLCalabash,
     val container = this.parent.get.parent.get.parent.get
     val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
 
-    val produceInline = new InlineLoader(nodes, inScopeNS, _expandText, _excludeInlinePrefixes, _documentProperties, _encoding)
+    val context = new ExpressionContext(baseURI, inScopeNS, location)
+    val produceInline = new InlineLoader(nodes, context, _expandText, _excludeInlinePrefixes, _documentProperties, _encoding)
 
     val inlineProducer = cnode.addAtomic(produceInline)
     graphNode = Some(inlineProducer)

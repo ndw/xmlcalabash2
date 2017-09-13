@@ -6,6 +6,7 @@ import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
 import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.messages.XPathItemMessage
 import net.sf.saxon.s9api.{QName, XdmItem}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -73,8 +74,10 @@ class StepProxy(step: XmlStep) extends Step with XProcDataConsumer {
     }
 
     bindmsg.message match {
+      case item: XPathItemMessage =>
+        step.receiveBinding(qname, item.item, item.context)
       case item: ItemMessage =>
-        step.receiveBinding(qname, item.item.asInstanceOf[XdmItem], Map.empty[String,String])
+        step.receiveBinding(qname, item.item.asInstanceOf[XdmItem], ExpressionContext.NONE)
       case _ =>
         throw new PipelineException("unkmsg", "Unexpected binding message: " + bindmsg.message, None)
     }

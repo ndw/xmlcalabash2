@@ -1,3 +1,5 @@
-<test xmlns='http://xproc.org/ns/testsuite/3.0' expected="fail" code="ERROR">
+<test xmlns='http://xproc.org/ns/testsuite/3.0'
+      xmlns:xqterr="http://www.w3.org/2005/xqt-errors"
+      expected="fail" code="xqterr:XPTY0004">
   <pipeline src="doc-prop-005.xpl"/>
 </test>

@@ -8,6 +8,7 @@ import net.sf.saxon.s9api.{Axis, SAXDestination, Serializer, XdmNode, XdmNodeKin
 import nu.validator.htmlparser.sax.HtmlSerializer
 import org.xml.sax.{ContentHandler, InputSource}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 object S9Api {
@@ -27,6 +28,22 @@ object S9Api {
       case _ =>
         None
     }
+  }
+
+  def inScopeNamespaces(node: XdmNode): Map[String,String] = {
+    val nsiter = node.axisIterator(Axis.NAMESPACE)
+    val ns = mutable.HashMap.empty[String,String]
+    while (nsiter.hasNext) {
+      val attr = nsiter.next().asInstanceOf[XdmNode]
+      val prefix = if (attr.getNodeName == null) {
+        ""
+      } else {
+        attr.getNodeName.toString
+      }
+      val uri = attr.getStringValue
+      ns.put(prefix, uri)
+    }
+    ns.toMap
   }
 
   // FIXME: THIS METHOD IS A GROTESQUE HACK!

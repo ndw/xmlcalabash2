@@ -1,0 +1,9 @@
+XD0004
+p:choose contained no matching p:when options and no p:otherwise
+The p:choose step contains a number of alternatives. Exactly one of those
+alternatives must be selected. The selected alternative is the first p:when
+for which the `test` condition returns true. If no p:when alternatives are
+selected, a p:otherwise must be present. This error is raised if the
+p:choose does not contain a selected p:when or a p:otherwise.
+
+

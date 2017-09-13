@@ -11,7 +11,7 @@ trait XmlStep {
   def bindingSpec: BindingSpecification
   def setConsumer(consumer: XProcDataConsumer)
   def setLocation(location: Location)
-  def receiveBinding(variable: QName, value: XdmItem, nsBindings: Map[String,String])
+  def receiveBinding(variable: QName, value: XdmItem, context: ExpressionContext)
   def receive(port: String, item: Any, metadata: XProcMetadata)
   def initialize(config: RuntimeConfiguration)
   def run()

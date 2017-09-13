@@ -3,7 +3,8 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.runtime.XProcXPathExpression
+import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
 class Variable(override val config: XMLCalabash,
@@ -47,7 +48,8 @@ class Variable(override val config: XMLCalabash,
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get
     val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
-    graphNode = Some(cnode.addVariable(_name.getClarkName, new XProcXPathExpression(inScopeNS, _select.get)))
+    val context = new ExpressionContext(_baseURI, inScopeNS, _location)
+    graphNode = Some(cnode.addVariable(_name.getClarkName, new XProcXPathExpression(context, _select.get)))
   }
 
   override def makeEdges(graph: Graph, parent: Node): Unit = {

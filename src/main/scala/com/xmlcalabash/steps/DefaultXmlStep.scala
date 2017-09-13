@@ -5,7 +5,8 @@ import com.jafpl.graph.Location
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.runtime.{XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
+import com.xmlcalabash.runtime.{ExpressionContext, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
+import com.xmlcalabash.util.XProcVarValue
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -16,7 +17,7 @@ class DefaultXmlStep extends XmlStep {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[XProcDataConsumer] = None
   protected var config: XMLCalabash = _
-  protected val bindings = mutable.HashMap.empty[QName,XdmItem]
+  protected val bindings = mutable.HashMap.empty[QName,XProcVarValue]
 
   def location: Option[Location] = _location
 
@@ -96,8 +97,8 @@ class DefaultXmlStep extends XmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def bindingSpec: BindingSpecification = BindingSpecification.ANY
 
-  override def receiveBinding(variable: QName, value: XdmItem, nsBindings: Map[String,String]): Unit = {
-    bindings.put(variable, value)
+  override def receiveBinding(variable: QName, value: XdmItem, context: ExpressionContext): Unit = {
+    bindings.put(variable, new XProcVarValue(value, context))
   }
 
   override def setConsumer(consumer: XProcDataConsumer): Unit = {

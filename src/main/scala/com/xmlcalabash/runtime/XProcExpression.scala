@@ -1,8 +1,8 @@
 package com.xmlcalabash.runtime
 
-class XProcExpression(val nsbindings: Map[String,String], val extensionFunctionsAllowed: Boolean) {
-  def this(nsbindings: Map[String,String]) {
-    this(nsbindings, false)
+class XProcExpression(val context: ExpressionContext, val extensionFunctionsAllowed: Boolean) {
+  def this(context: ExpressionContext) {
+    this(context, false)
   }
 
   override def toString: String = "{XProcExpression}"

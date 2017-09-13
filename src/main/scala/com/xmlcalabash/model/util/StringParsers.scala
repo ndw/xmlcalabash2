@@ -1,5 +1,6 @@
 package com.xmlcalabash.model.util
 
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer
@@ -87,6 +88,21 @@ object StringParsers {
         new QName(pfx.get, uri, local)
       } else {
         new QName(uri, local)
+      }
+    } else {
+      new QName("", name)
+    }
+  }
+
+  def parseQName(name: String, inScopeNS: Map[String,String]): QName = {
+    if (name.contains(":")) {
+      val pos = name.indexOf(':')
+      val prefix = name.substring(0, pos)
+      val local = name.substring(pos+1)
+      if (inScopeNS.contains(prefix)) {
+        new QName(prefix, inScopeNS(prefix), local)
+      } else {
+        throw new ModelException(ExceptionCode.NOPREFIX, prefix , None)
       }
     } else {
       new QName("", name)

@@ -3,8 +3,9 @@ package com.xmlcalabash.model.xml.containers
 import com.jafpl.graph.{Binding, ChooseStart, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.xml.{Artifact, DeclareStep, Documentation, OptionDecl, PipeInfo, Variable, XProcConstants}
-import com.xmlcalabash.runtime.{XProcExpression, XProcXPathExpression}
+import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.xml.{Artifact, DeclareStep, Documentation, OptionDecl, PipeInfo, Variable}
+import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
 
 class When(override val config: XMLCalabash,
            override val parent: Option[Artifact]) extends Container(config, parent) {
@@ -22,7 +23,8 @@ class When(override val config: XMLCalabash,
 
     val test = attributes.get(XProcConstants._test)
     if (test.isDefined) {
-      testExpr = new XProcXPathExpression(inScopeNS, test.get)
+      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      testExpr = new XProcXPathExpression(context, test.get)
     } else {
       throw new ModelException(ExceptionCode.TESTREQUIRED, List.empty[String], location)
     }

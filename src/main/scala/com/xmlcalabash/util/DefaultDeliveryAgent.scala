@@ -4,8 +4,7 @@ import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.steps.DataConsumer
 import com.xmlcalabash.config.{DeliveryAgent, XMLCalabash}
-import com.xmlcalabash.model.util.SaxonTreeBuilder
-import com.xmlcalabash.model.xml.XProcConstants
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{XProcMetadata, XmlStep}
 import net.sf.saxon.s9api.XdmNode
 

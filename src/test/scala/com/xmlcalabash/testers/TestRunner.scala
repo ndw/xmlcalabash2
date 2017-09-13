@@ -6,8 +6,9 @@ import javax.xml.transform.sax.SAXSource
 import com.jafpl.messages.{ItemMessage, Message}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.TestException
-import com.xmlcalabash.model.util.SaxonTreeBuilder
-import com.xmlcalabash.runtime.{XProcXPathExpression, XProcMetadata}
+import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, StringParsers}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
@@ -285,7 +286,9 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     tester.pipeline = pipeline.get
 
     if (schematron.isEmpty) {
-      logger.warn("No schematron for test result.")
+      if (expected == "pass") {
+        logger.warn("No schematron for test result.")
+      }
     } else {
       tester.schematron = schematron.get
     }
@@ -308,10 +311,15 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       }
     } else {
       val code = node.getAttributeValue(_code)
-      if (code == result.get) {
-        None
+      if (code == null) {
+        Some(s"null != ${result.get}")
       } else {
-        result
+        val qcode = StringParsers.parseQName(code, S9Api.inScopeNamespaces(node))
+        if (qcode.getClarkName == result.get) {
+          None
+        } else {
+          Some(s"$code != ${result.get}")
+        }
       }
     }
   }
@@ -347,12 +355,21 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
 
     val src = node.getAttributeValue(_src)
     if ((src == null) && children.isEmpty) {
+      val exprContext = new ExpressionContext(node.getBaseURI, S9Api.inScopeNamespaces(node), new NodeLocation(node))
       val value = node.getAttributeValue(_select)
       val eval = runtimeConfig.expressionEvaluator
       val context = inlineDocument(node)
       val message = new ItemMessage(context, new XProcMetadata("application/xml"))
-      val result = eval.value(new XProcXPathExpression(Map.empty[String,String], value), List(message), Map.empty[String,Message])
-      Some(new XdmAtomicValue(result.toString))
+      val result = eval.value(new XProcXPathExpression(exprContext, value), List(message), Map.empty[String,Message])
+      result match {
+        case item: XPathItemMessage =>
+          Some(item.item)
+        case item: ItemMessage =>
+          Some(item.item.asInstanceOf[XdmItem])
+        case _ =>
+          logger.warn("Unexpected option result: " + result)
+          Some(new XdmAtomicValue(result.toString))
+      }
     } else {
       loadResource(node)
     }
