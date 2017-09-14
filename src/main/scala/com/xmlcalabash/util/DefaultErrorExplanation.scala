@@ -1,7 +1,7 @@
 package com.xmlcalabash.util
 
 import com.xmlcalabash.config.{ErrorExplanation, XMLCalabash}
-import com.xmlcalabash.model.util.{StringParsers, XProcConstants}
+import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -27,7 +27,7 @@ class DefaultErrorExplanation(config: XMLCalabash) extends ErrorExplanation {
     } else {
       if (code.isEmpty) {
         if (line.startsWith("{")) {
-          code = Some(StringParsers.parseClarkName(line))
+          code = Some(ValueParser.parseClarkName(line))
         } else {
           code = Some(new QName(XProcConstants.ns_err, line))
         }

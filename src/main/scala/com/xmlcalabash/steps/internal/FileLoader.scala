@@ -6,12 +6,13 @@ import java.nio.file.Files
 
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{BindingMessage, ItemMessage}
+import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
-import net.sf.saxon.s9api.XdmItem
+import net.sf.saxon.s9api.{XdmAtomicValue, XdmItem}
 
 class FileLoader() extends DefaultStep {
   private var _href = ""
-  private var docProps = Map.empty[String, String]
+  private var docProps = Map.empty[String, XdmAtomicValue]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
@@ -36,7 +37,7 @@ class FileLoader() extends DefaultStep {
 
     variable match {
       case "document-properties" =>
-        docProps = parseDocumentProperties(valueitem.get)
+        docProps = ValueParser.parseDocumentProperties(valueitem.get, location)
       case "href" =>
         _href = valueitem.get.getStringValue
       case _ =>

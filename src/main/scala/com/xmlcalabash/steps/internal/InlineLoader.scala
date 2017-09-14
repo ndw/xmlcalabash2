@@ -6,9 +6,9 @@ import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{ItemMessage, Message}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.messages.XPathItemMessage
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, StringParsers, XProcConstants}
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
-import net.sf.saxon.s9api.{Axis, XdmItem, XdmMap, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api.{Axis, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
 
@@ -19,7 +19,7 @@ class InlineLoader(private val nodes: List[XdmNode],
                    private val docPropsExpr: Option[String],
                    private val encoding: Option[String]) extends DefaultStep {
   private val include_expand_text_attribute = false
-  private var docProps = Map.empty[String, String]
+  private var docProps = Map.empty[String, XdmAtomicValue]
   private val excludeURIs = mutable.HashSet.empty[String]
 
   excludeURIs += XProcConstants.ns_p
@@ -32,7 +32,7 @@ class InlineLoader(private val nodes: List[XdmNode],
 
   override def run(): Unit = {
     if (docPropsExpr.isDefined) {
-      val avt = StringParsers.parseAvt(docPropsExpr.get)
+      val avt = ValueParser.parseAvt(docPropsExpr.get)
       if (avt.isEmpty) {
         throw new ModelException(ExceptionCode.BADAVT, List("document-properties", docPropsExpr.get), location)
       }
@@ -40,7 +40,7 @@ class InlineLoader(private val nodes: List[XdmNode],
       val result = xpathValue(expr)
       docProps = result match {
         case map: XdmMap =>
-          parseDocumentProperties(map)
+          ValueParser.parseDocumentProperties(map, location)
         case _ =>
           throw new PipelineException("notmap", "The document-properties attribute must be a map", None)
       }
@@ -96,13 +96,12 @@ class InlineLoader(private val nodes: List[XdmNode],
         }
         builder.addEndElement()
       case XdmNodeKind.TEXT =>
-        val expanded = if (expandText) {
-          expandString(node.getStringValue)
-        } else {
-          node.getStringValue
+        var str = node.getStringValue
+        if (expandText && str.contains("{")) {
+          str = expandString(str)
         }
-        if (expanded != "") {
-          builder.addText(expanded)
+        if (str != "") {
+          builder.addText(str)
         }
       case _ =>
         builder.addSubtree(node)

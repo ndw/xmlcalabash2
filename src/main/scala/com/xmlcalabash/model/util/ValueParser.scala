@@ -1,11 +1,14 @@
 package com.xmlcalabash.model.util
 
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import net.sf.saxon.s9api.QName
+import com.jafpl.exceptions.PipelineException
+import com.jafpl.graph.Location
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-object StringParsers {
+object ValueParser {
   def parseAvt(value: String): Option[List[String]] = {
     val list = ListBuffer.empty[String]
     var state = StateChange.STRING
@@ -107,6 +110,78 @@ object StringParsers {
     } else {
       new QName("", name)
     }
+  }
+
+  def parseParameters(value: XdmItem, nsBindings: Map[String,String], location: Option[Location]): Map[QName, XdmValue] = {
+    val params = mutable.HashMap.empty[QName, XdmValue]
+
+    value match {
+      case map: XdmMap =>
+        // Grovel through a Java Map
+        val iter = map.keySet().iterator()
+        while (iter.hasNext) {
+          val key = iter.next()
+          val value = map.get(key)
+
+          val qname = ValueParser.parseQName(key.getStringValue, nsBindings)
+          params.put(qname, value)
+        }
+      case _ =>
+        throw XProcException.xiParamsNotMap(location, value)
+    }
+
+    params.toMap
+  }
+
+  def parseDocumentProperties(value: XdmItem, location: Option[Location]): Map[String, XdmAtomicValue] = {
+    val params = mutable.HashMap.empty[String, XdmAtomicValue]
+
+    value match {
+      case map: XdmMap =>
+        // Grovel through a Java Map
+        val iter = map.keySet().iterator()
+        while (iter.hasNext) {
+          val key = iter.next()
+          val value = map.get(key)
+
+          val strkey = key match {
+            case atomic: XdmAtomicValue =>
+              val itype = atomic.getTypeName
+              if (itype != XProcConstants.xs_string) {
+                throw XProcException.xiDocPropsKeyNotString(location, atomic)
+              }
+              atomic.getStringValue
+            case _ =>
+              throw XProcException.xiDocPropsKeyNotString(location, key)
+          }
+
+          var count = 0
+          var strvalue = ""
+          val viter = value.iterator()
+          while (viter.hasNext) {
+            val item = viter.next()
+            item match {
+              case atomic: XdmAtomicValue =>
+              //val itype = atomic.getTypeName
+              // FIXME: make sure some keys have the proper value (base-uri, etc.)
+                params.put(key.asInstanceOf[XdmAtomicValue].getStringValue, atomic)
+              case _ =>
+                throw XProcException.xiDocPropsValueNotAtomic(location, item)
+            }
+            count += 1
+
+            if (count > 1) {
+              throw XProcException.xiDocPropsValueNotAtomic(location, item)
+            }
+
+            strvalue += item.getStringValue
+          }
+        }
+      case _ =>
+        throw XProcException.xiDocPropsNotMap(location, value)
+    }
+
+    params.toMap
   }
 
   object StateChange {

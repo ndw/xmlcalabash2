@@ -1,7 +1,7 @@
 package com.xmlcalabash.steps
 
 import com.xmlcalabash.exceptions.StepException
-import com.xmlcalabash.model.util.StringParsers
+import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.XmlPortSpecification
 import net.sf.saxon.s9api.QName
 
@@ -27,7 +27,7 @@ class Error extends DefaultXmlStep {
         code = new QName(bindings(_code_namespace).value.getStringValue, name)
       }
     } else {
-      code = StringParsers.parseQName(name, bindings(_code).context.nsBindings)
+      code = ValueParser.parseQName(name, bindings(_code).context.nsBindings)
     }
 
     if (bindings.contains(_message)) {

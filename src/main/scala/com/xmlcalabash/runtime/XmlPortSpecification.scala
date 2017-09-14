@@ -2,6 +2,7 @@ package com.xmlcalabash.runtime
 
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.steps.PortSpecification
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 
 import scala.collection.immutable
 

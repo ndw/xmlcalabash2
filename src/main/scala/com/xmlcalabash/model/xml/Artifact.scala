@@ -4,9 +4,10 @@ import java.net.URI
 
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
+import com.sun.org.apache.xpath.internal.XPathProcessorException
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{StringParsers, UniqueId}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
+import com.xmlcalabash.model.util.{ValueParser, UniqueId}
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcAvtExpression, XProcExpression, XProcXPathExpression}
@@ -191,7 +192,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   }
 
   def lexicalAvt(name: String, value: String): XProcAvtExpression = {
-    val avt = StringParsers.parseAvt(value)
+    val avt = ValueParser.parseAvt(value)
     if (avt.isDefined) {
       val context = new ExpressionContext(_baseURI, inScopeNS, _location)
       new XProcAvtExpression(context, avt.get)
@@ -415,7 +416,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
         val parser = config.expressionParser
         parser.parse(expr.expr)
         for (ref <- parser.variableRefs) {
-          val qname = StringParsers.parseClarkName(ref)
+          val qname = ValueParser.parseClarkName(ref)
           variableRefs += qname
         }
       case expr: XProcAvtExpression =>
@@ -425,14 +426,14 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
             val parser = config.expressionParser
             parser.parse(subexpr)
             for (ref <- parser.variableRefs) {
-              val qname = StringParsers.parseClarkName(ref)
+              val qname = ValueParser.parseClarkName(ref)
               variableRefs += qname
             }
           }
           avt = !avt
         }
       case _ =>
-        throw new PipelineException("notimpl", "unknown expression type!", location)
+        throw XProcException.xiUnkExprType(location)
     }
 
     variableRefs.toSet

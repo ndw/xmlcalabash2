@@ -82,7 +82,7 @@ class WithOption(override val config: XMLCalabash,
         case pipe: Pipe =>
           pipe.makeGraph(graph, atomic.graphNode.get)
         case _ =>
-          throw new PipelineException("unexpected", "unexpected child: " + child, location)
+          throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected child in p:with-option: $child", location)
       }
     }
   }
@@ -108,7 +108,7 @@ class WithOption(override val config: XMLCalabash,
           case in: Input =>
             graph.addEdge(in.parent.get.graphNode.get, in.port.get, graphNode.get, "source")
           case _ =>
-            throw new PipelineException("notimpl", "not implemented reading from: " + drp.get, location)
+            throw new ModelException(ExceptionCode.INTERNAL, s"Not implemented in p:with-option, reading from ${drp.get}", location)
         }
       }
     }

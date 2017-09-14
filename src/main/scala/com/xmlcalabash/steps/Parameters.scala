@@ -3,7 +3,7 @@ package com.xmlcalabash.steps
 import java.net.URI
 
 import com.jafpl.messages.ItemMessage
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmValue}
 
@@ -15,7 +15,7 @@ class Parameters() extends DefaultXmlStep {
 
   override def receiveBinding(variable: QName, value: XdmItem, context: ExpressionContext): Unit = {
     variable match {
-      case XProcConstants._parameters => parameters = parseParameters(value, context.nsBindings)
+      case XProcConstants._parameters => parameters = ValueParser.parseParameters(value, context.nsBindings, context.location)
       case _ =>
         logger.info("Ignoring unexpected option to p:parameters: " + variable)
     }

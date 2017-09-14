@@ -1,7 +1,8 @@
 package com.xmlcalabash.runtime
 
 import com.jafpl.exceptions.PipelineException
-import com.xmlcalabash.model.util.StringParsers
+import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.model.util.ValueParser
 
 class XProcAvtExpression private (override val context: ExpressionContext)
   extends XProcExpression(context) {
@@ -14,9 +15,9 @@ class XProcAvtExpression private (override val context: ExpressionContext)
 
   def this(context: ExpressionContext, expr: String) {
     this(context)
-    val avt = StringParsers.parseAvt(expr)
+    val avt = ValueParser.parseAvt(expr)
     if (avt.isEmpty) {
-      throw new PipelineException("invalid", "Invalid AVT expression: " + expr, context.location)
+      throw XProcException.xiInvalidAVT(context.location, expr)
     }
     _avt = avt.get
   }

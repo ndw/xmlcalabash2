@@ -6,7 +6,7 @@ import com.jafpl.messages.{BindingMessage, Message, Metadata}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{XmlPortSpecification, XmlStep}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
@@ -21,98 +21,6 @@ class DefaultStep extends Step {
   protected val bindings = mutable.HashMap.empty[String,Message]
 
   def location: Option[Location] = _location
-
-  def dynamicError(code: Int): Unit = {
-    throw new PipelineException("notimpl", "dynamic error isn't implemented yet", location)
-  }
-
-  def lexicalQName(name: String, bindings: Map[String,String]): QName = {
-    if (name.contains(":")) {
-      val pos = name.indexOf(":")
-      val pfx = name.substring(0, pos)
-      val lcl = name.substring(pos+1)
-      if (bindings.contains(pfx)) {
-        new QName(pfx, bindings(pfx), lcl)
-      } else {
-        throw new PipelineException("badqname", "Unparsable qname: " + name, None)
-      }
-    } else {
-      new QName("", name)
-    }
-  }
-
-  def parseParameters(value: XdmItem, nsBindings: Map[String,String]): Map[QName, XdmValue] = {
-    val params = mutable.HashMap.empty[QName, XdmValue]
-
-    value match {
-      case map: XdmMap =>
-        // Grovel through a Java Map
-        val iter = map.keySet().iterator()
-        while (iter.hasNext) {
-          val key = iter.next()
-          val value = map.get(key)
-
-          val qname = lexicalQName(key.getStringValue, nsBindings)
-          params.put(qname, value)
-        }
-      case _ =>
-        throw new PipelineException("notmap", "The parameters must be a map", None)
-    }
-
-    params.toMap
-  }
-
-  def parseDocumentProperties(value: XdmItem): Map[String, String] = {
-    val params = mutable.HashMap.empty[String, String]
-
-    value match {
-      case map: XdmMap =>
-        // Grovel through a Java Map
-        val iter = map.keySet().iterator()
-        while (iter.hasNext) {
-          val key = iter.next()
-          val value = map.get(key)
-
-          val strkey = key match {
-            case atomic: XdmAtomicValue =>
-              val itype = atomic.getTypeName
-              if (itype != XProcConstants.xs_string) {
-                throw new PipelineException("notstring", "Map key is not a string", None)
-              }
-              atomic.getStringValue
-            case _ =>
-              throw new PipelineException("notstring", "Map key is not a string", None)
-          }
-
-          var count = 0
-          var strvalue = ""
-          val viter = value.iterator()
-          while (viter.hasNext) {
-            val item = viter.next()
-            item match {
-              case atomic: XdmAtomicValue =>
-                //val itype = atomic.getTypeName
-                // FIXME: make sure some keys have the proper value (base-uri, etc.)
-              case _ =>
-                throw new PipelineException("notatomic", "Map value is not an atomic value: " + item, None)
-            }
-            count += 1
-
-            if (count > 1) {
-              throw new PipelineException("notatomic", "Map value is a sequence", None)
-            }
-
-            strvalue += item.getStringValue
-          }
-
-          params.put(strkey, strvalue)
-        }
-      case _ =>
-        throw new PipelineException("notmap", "The document properties must be a map", None)
-    }
-
-    params.toMap
-  }
 
   // ==========================================================================
 

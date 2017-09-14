@@ -6,6 +6,7 @@ import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
 import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import net.sf.saxon.s9api.{QName, XdmItem}
 import org.slf4j.{Logger, LoggerFactory}
@@ -66,7 +67,7 @@ class StepProxy(step: XmlStep) extends Step with XProcDataConsumer {
       val clarkName = "\\{(.*)\\}(.*)".r
       val qname = bindmsg.name match {
         case clarkName(uri,name) => new QName(uri,name)
-        case _ => throw new PipelineException("badname", s"Name isn't a Clark name: ${bindmsg.name}", None)
+        case _ => throw XProcException.xiInvalidClarkName(location, bindmsg.name)
       }
       qname
     } else {
@@ -79,7 +80,7 @@ class StepProxy(step: XmlStep) extends Step with XProcDataConsumer {
       case item: ItemMessage =>
         step.receiveBinding(qname, item.item.asInstanceOf[XdmItem], ExpressionContext.NONE)
       case _ =>
-        throw new PipelineException("unkmsg", "Unexpected binding message: " + bindmsg.message, None)
+        throw XProcException.xiInvalidMessage(location, bindmsg.message)
     }
   }
   override def initialize(config: RuntimeConfiguration): Unit = {
@@ -108,9 +109,9 @@ class StepProxy(step: XmlStep) extends Step with XProcDataConsumer {
         item.metadata match {
           case xmlmeta: XProcMetadata =>
             step.receive(port, item.item, xmlmeta)
-          case _ => throw new PipelineException("badmeta", "Unexpected metadata: " + item.metadata, None)
+          case _ => throw XProcException.xiInvalidMetadata(location, item.metadata)
         }
-      case _ => throw new PipelineException("badmsg", "Unexpected message: " + message, None)
+      case _ => throw XProcException.xiInvalidMessage(location, message)
     }
   }
 

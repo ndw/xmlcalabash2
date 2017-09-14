@@ -1,13 +1,17 @@
 package com.xmlcalabash.functions
 
+import java.net.URI
+
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.ItemMessage
 import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcMetadata}
 import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
 import net.sf.saxon.om.{NodeInfo, Sequence, StructuredQName}
+import net.sf.saxon.s9api.XdmAtomicValue
 import net.sf.saxon.value.{SequenceType, StringValue}
 
 class DocumentProperties private extends ExtensionFunctionDefinition {
@@ -40,7 +44,7 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
     override def call(context: XPathContext, arguments: Array[Sequence]): Sequence = {
       val exprEval = runtime.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
       if (exprEval.dynContext.isEmpty) {
-        throw new PipelineException("notallowed", s"You cannot call the XProc extension function $funcname here", None)
+        throw XProcException.xiExtFunctionNotAllowed()
       }
 
       val doc = arguments(0).head
@@ -48,23 +52,23 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
       val msg = exprEval.dynContext.get.message(doc.asInstanceOf[NodeInfo])
 
       if (msg.isEmpty) {
-        throw new PipelineException("noprops", s"Properties requested for a document that has no properties", None)
+        throw XProcException.xiDocPropsUnavail(exprEval.dynContext.get.location, new URI(doc.asInstanceOf[NodeInfo].getBaseURI))
       }
 
-      val props: Map[String,String] = msg.get match {
+      val props: Map[String,XdmAtomicValue] = msg.get match {
         case item: ItemMessage =>
           item.metadata match {
             case xml: XProcMetadata =>
               xml.properties
             case _ =>
-              Map.empty[String,String]
+              Map.empty[String,XdmAtomicValue]
           }
         case _ =>
-          Map.empty[String,String]
+          Map.empty[String,XdmAtomicValue]
       }
 
-      val value = props.getOrElse(prop, "")
-      new StringValue(value)
+      val value = props.getOrElse(prop, new XdmAtomicValue(""))
+      new StringValue(value.getStringValue) // FIXME: this should be any atomic value not a string
     }
   }
 }

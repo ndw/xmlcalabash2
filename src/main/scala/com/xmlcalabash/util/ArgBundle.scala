@@ -3,7 +3,7 @@ package com.xmlcalabash.util
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.messages.XPathItemMessage
-import com.xmlcalabash.model.util.StringParsers
+import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XProcXPathExpression}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue}
 
@@ -78,7 +78,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
           pos += 1
         case paramRegex(kind, name, value) =>
           val context = new ExpressionContext(None, _nsbindings.toMap, None)
-          val qname = StringParsers.parseQName(name, _nsbindings.toMap)
+          val qname = ValueParser.parseQName(name, _nsbindings.toMap)
           if (_params.contains(qname)) {
             throw new RuntimeException("Attempt to redefine parameter: " + qname)
           }
