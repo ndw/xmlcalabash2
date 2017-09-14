@@ -2,6 +2,7 @@ package com.xmlcalabash.config
 
 import java.net.URI
 import javax.xml.transform.URIResolver
+import javax.xml.transform.sax.SAXSource
 
 import com.jafpl.graph.Location
 import com.jafpl.messages.{ItemMessage, Message}
@@ -14,11 +15,12 @@ import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.parsers.XPathParser
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XmlStep}
 import com.xmlcalabash.sbt.BuildInfo
-import com.xmlcalabash.util.URIUtils
+import com.xmlcalabash.util.{URIUtils, XProcURIResolver}
 import net.sf.saxon.lib.{ExtensionFunctionDefinition, ModuleURIResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.{Processor, QName, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
-import org.xml.sax.EntityResolver
+import org.xml.sax.helpers.XMLReaderFactory
+import org.xml.sax.{EntityResolver, InputSource}
 
 import scala.collection.mutable
 
@@ -300,6 +302,55 @@ class XMLCalabash extends RuntimeConfiguration {
 
     episode
   }
+
+  // ==============================================================================================
+
+  def parse(uri: String, base: URI): XdmNode = {
+    parse(uri, base, validate=false)
+  }
+
+  def parse(uri: String, base: URI, validate: Boolean): XdmNode = {
+    val href = URIUtils.encode(uri)
+    logger.debug("Attempting to parse: " + uri)
+
+    var source = uriResolver.resolve(href, base.toASCIIString)
+    if (source == null) {
+      var resURI = base.resolve(href)
+      val path = resURI.toASCIIString
+      val pos = path.indexOf("!")
+      if (pos > 0 && (path.startsWith("jar:file:") || path.startsWith("jar:http:") || path.startsWith("jar:https:"))) {
+        // You can't resolve() against jar: scheme URIs because they appear to be opaque.
+        // I wonder if what follows is kosher...
+        var fakeURIstr = "http://example.com"
+        val subpath = path.substring(pos + 1)
+        if (subpath.startsWith("/")) {
+          fakeURIstr += subpath
+        } else {
+          fakeURIstr += "/" + subpath
+        }
+        val fakeURI = new URI(fakeURIstr)
+        resURI = fakeURI.resolve(href)
+        fakeURIstr = path.substring(0, pos + 1) + resURI.getPath
+        resURI = new URI(fakeURIstr)
+      }
+
+      source = new SAXSource(new InputSource(resURI.toASCIIString))
+      var reader = source.asInstanceOf[SAXSource].getXMLReader
+      if (reader == null) {
+        reader = XMLReaderFactory.createXMLReader
+        source.asInstanceOf[SAXSource].setXMLReader(reader)
+        reader.setEntityResolver(entityResolver)
+      }
+    }
+
+    val builder = processor.newDocumentBuilder()
+    builder.setDTDValidation(validate)
+    builder.setLineNumbering(true)
+
+    builder.build(source)
+  }
+
+  // ==============================================================================================
 
   def close(): Unit = {
     closed = true
