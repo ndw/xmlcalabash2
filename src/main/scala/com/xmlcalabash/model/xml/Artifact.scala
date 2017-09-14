@@ -2,12 +2,10 @@ package com.xmlcalabash.model.xml
 
 import java.net.URI
 
-import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
-import com.sun.org.apache.xpath.internal.XPathProcessorException
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
-import com.xmlcalabash.model.util.{ValueParser, UniqueId}
+import com.xmlcalabash.model.util.{UniqueId, ValueParser}
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcAvtExpression, XProcExpression, XProcXPathExpression}

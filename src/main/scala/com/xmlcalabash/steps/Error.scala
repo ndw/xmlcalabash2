@@ -1,5 +1,6 @@
 package com.xmlcalabash.steps
 
+import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.exceptions.StepException
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.XmlPortSpecification

@@ -1,16 +1,13 @@
 package com.xmlcalabash.steps
 
-import com.jafpl.exceptions.{PipelineException, StepException}
 import com.jafpl.graph.Location
 import com.jafpl.runtime.RuntimeConfiguration
-import com.jafpl.steps.{BindingSpecification, DataConsumer}
-import com.sun.javafx.css.CssError.StringParsingError
+import com.jafpl.steps.BindingSpecification
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util.ValueParser
+import com.xmlcalabash.exceptions.StepException
 import com.xmlcalabash.runtime.{ExpressionContext, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
 import com.xmlcalabash.util.XProcVarValue
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmItem}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -49,7 +46,7 @@ class DefaultXmlStep extends XmlStep {
     config match {
       case xmlCalabash: XMLCalabash =>
         this.config = xmlCalabash
-      case _ => throw new StepException("badconfig", "Supplied configuration is unusable")
+      case _ => throw new IllegalArgumentException("Runtime configuration must be an XMLCalabash")
     }
   }
 

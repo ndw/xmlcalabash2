@@ -53,7 +53,7 @@ class DefaultErrorListener extends ErrorListener {
         if (loc.isEmpty) {
           loc = pe.location
         }
-        msg = pe.message
+        msg = pe.message.getOrElse("???")
       case me: ModelException =>
         if (loc.isEmpty) {
           loc = me.location

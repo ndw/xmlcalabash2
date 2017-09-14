@@ -1,14 +1,16 @@
 package com.xmlcalabash.model.xml.containers
 
-import com.jafpl.graph.{ChooseStart, ContainerStart, Graph, Node, TryCatchStart}
+import com.jafpl.graph.{Graph, Node, TryCatchStart}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, Documentation, PipeInfo}
+import net.sf.saxon.s9api.QName
 
-class Group(override val config: XMLCalabash,
-            override val parent: Option[Artifact]) extends Container(config, parent) {
+import scala.collection.mutable.ListBuffer
 
+class Finally(override val config: XMLCalabash,
+              override val parent: Option[Artifact]) extends Container(config, parent) {
   override def validate(): Boolean = {
     var valid = true
 
@@ -16,7 +18,7 @@ class Group(override val config: XMLCalabash,
     if (_name.isDefined) {
       label = _name.get
     } else {
-      label = "group"
+      label = "when"
     }
 
     for (key <- List(XProcConstants._name)) {
@@ -43,11 +45,9 @@ class Group(override val config: XMLCalabash,
   override def makeGraph(graph: Graph, parent: Node) {
     val node = parent match {
       case trycatch: TryCatchStart =>
-        trycatch.addTry(name)
-      case cont: ContainerStart =>
-        cont.addGroup(name)
+        trycatch.addFinally(name)
       case _ =>
-        throw new ModelException(ExceptionCode.INTERNAL, "Group parent isn't a container???", location)
+        throw new ModelException(ExceptionCode.INTERNAL, "Finally parent isn't a try/catch???", location)
     }
     graphNode = Some(node)
 

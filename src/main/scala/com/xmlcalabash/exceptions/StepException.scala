@@ -1,5 +1,6 @@
 package com.xmlcalabash.exceptions
 
+import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.Location
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.ExpressionContext
@@ -12,26 +13,42 @@ object StepException {
   }
 }
 
-class StepException(val code: QName, val message: Option[String], val location: Option[Location]) extends Throwable {
-  def this(code: QName) {
-    this(code, None, None)
-  }
-
+class StepException(override val code: QName) extends PipelineException(code) {
   def this(code: QName, message: String) {
-    this(code, Some(message), None)
+    this(code)
+    _message = Some(message)
   }
 
   def this(code: QName, message: String, location: Location) {
-    this(code, Some(message), Some(location))
+    this(code)
+    _message = Some(message)
+    _location = Some(location)
+  }
+
+  def this(code: QName, message: String, location: Option[Location]) {
+    this(code)
+    _message = Some(message)
+    _location = location
   }
 
   def this(code: QName, message: String, context: ExpressionContext) {
-    this(code, Some(message), context.location)
+    this(code)
+    _message = Some(message)
+    _location = context.location
   }
 
   def this(code: QName, context: ExpressionContext) {
-    this(code, None, context.location)
+    this(code)
+    _location = context.location
   }
+
+  def this(code: QName, message: String, cause: Throwable, location: Option[Location]) {
+    this(code)
+    _message = Some(message)
+    _location = location
+    _cause = Some(cause)
+  }
+
 
   override def toString: String = {
     var msg = "ERROR " + code

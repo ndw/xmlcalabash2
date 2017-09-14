@@ -259,8 +259,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
           saue.getCause match {
             case xpe: XPathException =>
               val code = new QName(xpe.getErrorCodeNamespace, xpe.getErrorCodeLocalPart)
-              val msg = xpe.getMessage
-              throw new StepException(code, Some(msg), exprContext.location)
+              throw new StepException(code, xpe.getMessage, xpe, exprContext.location)
             case _ => throw saue
           }
         case other: Throwable =>

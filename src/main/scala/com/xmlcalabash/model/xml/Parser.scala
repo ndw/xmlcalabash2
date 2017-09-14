@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.model.xml.containers.{Choose, Otherwise, When}
+import com.xmlcalabash.model.xml.containers.{Catch, Choose, Finally, Group, Otherwise, Try, When}
 import com.xmlcalabash.model.xml.datasource.{Document, Inline, Pipe}
 import net.sf.saxon.s9api.{Axis, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
@@ -73,9 +73,13 @@ class Parser(config: XMLCalabash) {
             case XProcConstants.p_pipe => Some(parsePipe(parent, node))
             case XProcConstants.p_document => Some(parseDocument(parent, node))
             case XProcConstants.p_with_option => Some(parseWithOption(parent, node))
+            case XProcConstants.p_group => Some(parseGroup(parent, node))
             case XProcConstants.p_choose => Some(parseChoose(parent, node))
             case XProcConstants.p_when => Some(parseWhen(parent, node))
             case XProcConstants.p_otherwise => Some(parseOtherwise(parent, node))
+            case XProcConstants.p_try => Some(parseTry(parent, node))
+            case XProcConstants.p_catch => Some(parseCatch(parent, node))
+            case XProcConstants.p_finally => Some(parseFinally(parent, node))
             case XProcConstants.p_documentation => Some(parseDocumentation(parent, node))
             case XProcConstants.p_pipeinfo => Some(parsePipeInfo(parent, node))
             case _ =>
@@ -227,6 +231,13 @@ class Parser(config: XMLCalabash) {
     art
   }
 
+  private def parseGroup(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new Group(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
   private def parseChoose(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new Choose(config, parent)
     art.parse(node)
@@ -271,6 +282,27 @@ class Parser(config: XMLCalabash) {
 
   private def parseOtherwise(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new Otherwise(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
+  private def parseTry(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new Try(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
+  private def parseCatch(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new Catch(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
+  private def parseFinally(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new Finally(config, parent)
     art.parse(node)
     parseChildren(art, node)
     art

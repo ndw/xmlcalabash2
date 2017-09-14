@@ -1,6 +1,5 @@
 package com.xmlcalabash.runtime
 
-import com.jafpl.exceptions.{PipelineException, StepException}
 import com.jafpl.graph.Location
 import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
@@ -87,7 +86,7 @@ class StepProxy(step: XmlStep) extends Step with XProcDataConsumer {
     config match {
       case saxon: XMLCalabash =>
         this.config = Some(saxon)
-      case _ => throw new StepException("badconfig", "Supplied configuration is unusable")
+      case _ => throw new IllegalArgumentException("Runtime configuration must be an XMLCalabash")
     }
     step.initialize(config)
   }

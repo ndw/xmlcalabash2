@@ -1,0 +1,16 @@
+<test xmlns='http://xproc.org/ns/testsuite/3.0' expected="pass">
+  <pipeline src="try-catch-001.xpl"/>
+  <option name="error" select="0"/>
+  <schematron>
+    <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+      <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step"/>
+
+      <s:pattern>
+        <s:rule context="/*">
+          <s:assert test="self::doc">The pipeline root is not doc.</s:assert>
+          <s:assert test=". = 'try succeeded'">The result isn't "one"</s:assert>
+        </s:rule>
+      </s:pattern>
+    </s:schema>
+  </schematron>
+</test>

@@ -109,6 +109,11 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
       case ExceptionCode.DIFFPRIMARYINPUT => s"Conflicting primary input port names: ${data.head} and ${data(1)}"
       case ExceptionCode.DIFFPRIMARYOUTPUT => s"Conflicting primary output port names: ${data.head} and ${data(1)}"
       case ExceptionCode.TESTREQUIRED => s"A test attribute is required on p:when"
+      case ExceptionCode.DUPGROUP => s"A p:try must have exactly one p:group"
+      case ExceptionCode.DUPFINALLY => s"A p:try must have at most one p:finally"
+      case ExceptionCode.MISSINGGROUP => s"A p:try must have exactly one p:group"
+      case ExceptionCode.MISSINGCATCH => s"A p:try must have at least one p:catch"
+      case ExceptionCode.BADTRYCHILD => s"A p:try cannot contain ${data.head}"
 
       case ExceptionCode.INTERNAL => data.head
       case _ => "INTERNAL ERROR: No message for $code"
