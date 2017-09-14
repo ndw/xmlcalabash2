@@ -77,6 +77,7 @@ class Parser(config: XMLCalabash) {
             case XProcConstants.p_choose => Some(parseChoose(parent, node))
             case XProcConstants.p_when => Some(parseWhen(parent, node))
             case XProcConstants.p_otherwise => Some(parseOtherwise(parent, node))
+            case XProcConstants.p_if => Some(parseIf(parent, node))
             case XProcConstants.p_try => Some(parseTry(parent, node))
             case XProcConstants.p_catch => Some(parseCatch(parent, node))
             case XProcConstants.p_finally => Some(parseFinally(parent, node))
@@ -305,6 +306,17 @@ class Parser(config: XMLCalabash) {
     val art = new Finally(config, parent)
     art.parse(node)
     parseChildren(art, node)
+    art
+  }
+
+  private def parseIf(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new Choose(config, parent)
+    val when = new When(config, Some(art))
+
+    when.parse(node)
+    parseChildren(when, node)
+
+    art.addChild(when)
     art
   }
 

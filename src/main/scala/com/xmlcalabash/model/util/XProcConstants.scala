@@ -20,6 +20,7 @@ object XProcConstants {
   val p_finally = new QName("p", ns_p, "finally")
   val p_for_each = new QName("p", ns_p, "for-each")
   val p_group = new QName("p", ns_p, "group")
+  val p_if = new QName("p", ns_p, "if")
   val p_import = new QName("p", ns_p, "import")
   val p_inline = new QName("p", ns_p, "inline")
   val p_input = new QName("p", ns_p, "input")
