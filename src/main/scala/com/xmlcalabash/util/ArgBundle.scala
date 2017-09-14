@@ -5,11 +5,15 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XProcXPathExpression}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue}
+import net.sf.saxon.lib.NamespaceConstant
+import net.sf.saxon.s9api.{ItemTypeFactory, QName, XdmAtomicValue}
 
 import scala.collection.mutable
 
 class ArgBundle(xmlCalabash: XMLCalabash) {
+  private val itf = new ItemTypeFactory(xmlCalabash.processor)
+  private val untypedAtomic = itf.getAtomicType(new QName(NamespaceConstant.SCHEMA, "xs:untypedAtomic"))
+
   private val _inputs = mutable.HashMap.empty[String, List[String]]
   private val _outputs = mutable.HashMap.empty[String, List[String]]
   private val _data = mutable.HashMap.empty[String, List[String]]
@@ -85,7 +89,8 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
 
           kind match {
             case "+" =>
-              throw new RuntimeException("File parameters not yet supported: " + name)
+              val node = xmlCalabash.parse(value, URIUtils.cwdAsURI)
+              _params.put(qname, new XProcVarValue(node, context))
             case "?" =>
               val paramBind = mutable.HashMap.empty[String, Message]
               for ((qname, value) <- _params) {
@@ -100,7 +105,10 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
 
               _params.put(qname, new XProcVarValue(eval, context))
             case null =>
-              _params.put(qname, new XProcVarValue(new XdmAtomicValue(value), context))
+              // Ordinary parameters are created as 'untypedAtomic' values so that numbers
+              // can be treated as numbers, etc.
+              val untypedValue = new XdmAtomicValue(value, untypedAtomic)
+              _params.put(qname, new XProcVarValue(untypedValue, context))
             case _ =>
               throw new RuntimeException("Unexpected prefix character in parameter: " + kind)
           }
