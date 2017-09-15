@@ -9,7 +9,7 @@ import com.jafpl.runtime.GraphRuntime
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ModelException, ParseException, StepException}
 import com.xmlcalabash.messages.XPathItemMessage
-import com.xmlcalabash.model.xml.Parser
+import com.xmlcalabash.model.xml.{DeclareStep, Parser}
 import com.xmlcalabash.runtime.{ExpressionContext, PrintingConsumer, XProcXPathExpression}
 import com.xmlcalabash.util.ArgBundle
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem}
@@ -35,14 +35,30 @@ object XmlDriver extends App {
   try {
     val parser = new Parser(xmlCalabash)
     val pipeline = parser.parsePipeline(node)
-    //println(pipeline.asXML)
+
+    if (options.dumpXML.isDefined) {
+      dumpXML(pipeline, options.dumpXML.get)
+    }
+
     val graph = pipeline.pipelineGraph()
 
-    graph.close()
-    //dumpRaw(graph)
-    dumpGraph(graph)
+    if (options.graphBefore.isDefined) {
+      dumpGraph(graph, options.graphBefore.get)
+    }
 
-    //System.exit(0)
+    graph.close()
+
+    if (options.raw) {
+      dumpRaw(graph)
+    }
+
+    if (options.graph.isDefined) {
+      dumpGraph(graph, options.graph.get)
+    }
+
+    if (options.norun) {
+      System.exit(0)
+    }
 
     val runtime = new GraphRuntime(graph, xmlCalabash)
     runtime.traceEventManager = xmlCalabash.traceEventManager
@@ -109,22 +125,19 @@ object XmlDriver extends App {
 
   // ===========================================================================================
 
-  private def dumpGraph(graph: Graph): Unit = {
-    dumpGraph(graph, None)
-  }
-
   private def dumpGraph(graph: Graph, fn: String): Unit = {
-    dumpGraph(graph, Some(fn))
+    val pw = new PrintWriter(new File(fn))
+    pw.write(graph.asXML.toString)
+    pw.close()
   }
 
-  private def dumpGraph(graph: Graph, fn: Option[String]): Unit = {
-    val pw = new PrintWriter(new File(fn.getOrElse("/projects/github/xproc/meerschaum/pg.xml")))
-    pw.write(graph.asXML.toString)
+  private def dumpXML(pipeline: DeclareStep, fn: String): Unit = {
+    val pw = new PrintWriter(new File(fn))
+    pw.write(pipeline.asXML.toString)
     pw.close()
   }
 
   private def dumpRaw(graph: Graph): Unit = {
     graph.dump()
   }
-
 }
