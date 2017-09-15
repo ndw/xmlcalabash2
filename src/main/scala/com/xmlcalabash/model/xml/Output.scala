@@ -20,6 +20,30 @@ class Output(override val config: XMLCalabash,
   override def validate(): Boolean = {
     super.validate()
 
+    _port = attributes.get(XProcConstants._port)
+
+    var attr = attributes.get(XProcConstants._primary)
+    if (attr.isDefined) {
+      attr.get match {
+        case "true" => _primary = Some(true)
+        case "false" => _primary = Some(false)
+        case _ => throw new RuntimeException("primary must be true or false")
+      }
+    } else {
+      _primary = None
+    }
+
+    attr = attributes.get(XProcConstants._sequence)
+    if (attr.isDefined) {
+      attr.get match {
+        case "true" => _sequence = Some(true)
+        case "false" => _sequence = Some(false)
+        case _ => throw new RuntimeException("sequence must be true or false")
+      }
+    } else {
+      _sequence = None
+    }
+
     for (key <- List(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary)) {
       if (attributes.contains(key)) {
         attributes.remove(key)

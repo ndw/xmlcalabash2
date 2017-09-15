@@ -34,9 +34,6 @@ class Otherwise(override val config: XMLCalabash,
       valid = valid && child.validate()
     }
 
-    valid = valid && makePortsExplicit()
-    valid = valid && makeBindingsExplicit()
-
     valid
   }
 

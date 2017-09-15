@@ -364,18 +364,17 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
               return out
             }
           }
-        } else {
-          for (port <- parent.get.inputPorts) {
-            val in = parent.get.input(port)
-            if (in.get.primary) {
-              return in
-            }
-          }
         }
-        None
-      } else {
-        None
       }
+
+      for (port <- parent.get.inputPorts) {
+        val in = parent.get.input(port)
+        if (in.get.primary) {
+          return in
+        }
+      }
+
+      None
     } else {
       None
     }

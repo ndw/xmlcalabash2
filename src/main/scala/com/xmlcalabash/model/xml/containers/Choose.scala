@@ -65,9 +65,6 @@ class Choose(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.MISSINGWHEN, List.empty[String], location)
     }
 
-    valid = valid && makePortsExplicit()
-    valid = valid && makeBindingsExplicit()
-
     var primaryInputPort = Option.empty[String]
     var primaryOutputPort = Option.empty[String]
 

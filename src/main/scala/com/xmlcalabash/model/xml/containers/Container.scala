@@ -104,7 +104,7 @@ class Container(override val config: XMLCalabash,
     for (child <- children) {
       child match {
         case step: PipelineStep =>
-          step.makePortsExplicit()
+          valid = valid && step.makePortsExplicit()
         case _ => Unit
       }
     }
@@ -121,8 +121,14 @@ class Container(override val config: XMLCalabash,
         if (last.isDefined) {
           var output = Option.empty[Output]
           for (oport <- last.get.outputPorts) {
-            if (last.get.output(oport).get.primary) {
-              output = last.get.output(oport)
+            if (port.startsWith("#")) {
+              if (last.get.output(oport).get.primary) {
+                output = last.get.output(oport)
+              }
+            } else {
+              if (last.get.output(oport).get.port.get == port) {
+                output = last.get.output(oport)
+              }
             }
           }
           if (output.isDefined) {

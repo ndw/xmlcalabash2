@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.model.xml.containers.{Catch, Choose, Finally, Group, Otherwise, Try, When}
+import com.xmlcalabash.model.xml.containers.{Catch, Choose, Finally, ForEach, Group, Otherwise, Try, When}
 import com.xmlcalabash.model.xml.datasource.{Document, Inline, Pipe}
 import net.sf.saxon.s9api.{Axis, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
@@ -39,7 +39,10 @@ class Parser(config: XMLCalabash) {
   private def parse(node: XdmNode): Option[Artifact] = {
     val root = parse(None, node)
     if (exception.isEmpty) {
-      if (!root.get.validate()) {
+      var valid = root.get.validate()
+      valid = valid && root.get.makePortsExplicit()
+      valid = valid && root.get.makeBindingsExplicit()
+      if (!valid) {
         config.errorListener.error(new ModelException(ExceptionCode.INVALIDPIPELINE, List(), node))
       }
     }
@@ -81,6 +84,7 @@ class Parser(config: XMLCalabash) {
             case XProcConstants.p_try => Some(parseTry(parent, node))
             case XProcConstants.p_catch => Some(parseCatch(parent, node))
             case XProcConstants.p_finally => Some(parseFinally(parent, node))
+            case XProcConstants.p_for_each => Some(parseForEach(parent, node))
             case XProcConstants.p_documentation => Some(parseDocumentation(parent, node))
             case XProcConstants.p_pipeinfo => Some(parsePipeInfo(parent, node))
             case _ =>
@@ -317,6 +321,13 @@ class Parser(config: XMLCalabash) {
     parseChildren(when, node)
 
     art.addChild(when)
+    art
+  }
+
+  private def parseForEach(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new ForEach(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
     art
   }
 

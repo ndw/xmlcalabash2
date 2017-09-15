@@ -90,9 +90,6 @@ class DeclareStep(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.BADCHILD, children(index).toString, location)
     }
 
-    valid = valid && makePortsExplicit()
-    valid = valid && makeBindingsExplicit()
-
     valid
   }
 

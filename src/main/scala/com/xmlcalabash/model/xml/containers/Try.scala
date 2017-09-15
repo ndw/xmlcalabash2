@@ -77,9 +77,6 @@ class Try(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.MISSINGCATCH, List.empty[String], location)
     }
 
-    valid = valid && makePortsExplicit()
-    valid = valid && makeBindingsExplicit()
-
     var primaryInputPort = Option.empty[String]
     var primaryOutputPort = Option.empty[String]
 
