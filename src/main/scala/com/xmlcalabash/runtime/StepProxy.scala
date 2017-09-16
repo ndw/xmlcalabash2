@@ -14,10 +14,20 @@ import scala.collection.mutable
 
 class StepProxy(step: XmlStep) extends Step with XProcDataConsumer {
   private var location = Option.empty[Location]
+  private var _id: String = _
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
   protected var config: Option[XMLCalabash] = None
   protected val bindings = mutable.HashMap.empty[QName,XdmItem]
+
+  def nodeId: String = _id
+  def nodeId_=(id: String): Unit = {
+    if (_id == null) {
+      _id = id
+    } else {
+      throw new RuntimeException("Reassignment to nodeId is forbidden")
+    }
+  }
 
   // =============================================================================================
 
@@ -61,6 +71,7 @@ class StepProxy(step: XmlStep) extends Step with XProcDataConsumer {
     this.location = Some(location)
     step.setLocation(location)
   }
+  override def id: String = _id
   override def receiveBinding(bindmsg: BindingMessage): Unit = {
     val qname = if (bindmsg.name.startsWith("{")) {
       val clarkName = "\\{(.*)\\}(.*)".r

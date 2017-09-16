@@ -258,8 +258,8 @@ class XMLCalabash extends RuntimeConfiguration {
 
   override def expressionEvaluator: ExpressionEvaluator = _expressionEvaluator
 
-  override def deliver(message: Message, consumer: DataConsumer, port: String): Unit = {
-    _deliveryAgent.deliver(message, consumer, port)
+  override def deliver(fromId: String, fromPort: String, message: Message, consumer: DataConsumer, port: String): Unit = {
+    _deliveryAgent.deliver(fromId, fromPort, message, consumer, port)
   }
 
   override def traceEnabled(trace: String): Boolean = traceEventManager.traceEnabled(trace)

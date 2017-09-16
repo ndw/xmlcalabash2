@@ -144,7 +144,7 @@ class Choose(override val config: XMLCalabash,
   }
 
   override def makeOutputBindingsExplicit(): Boolean = {
-    // These are conneced up by the when components
+    // These are connected up by the when components
     true
   }
 

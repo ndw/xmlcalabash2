@@ -122,15 +122,17 @@ class AtomicStep(override val config: XMLCalabash,
       addChild(withOpt)
     }
 
+    var proxy: StepProxy = null
     val node = parent match {
       case start: ContainerStart =>
         val impl = config.stepImplementation(stepType, location.get)
-        val proxy = new StepProxy(impl)
+        proxy = new StepProxy(impl)
         start.addAtomic(proxy, name)
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "Atomic step parent isn't a container???", location)
     }
     graphNode = Some(node)
+    proxy.nodeId = node.id
 
     for (child <- children) {
       child.makeGraph(graph, node)
