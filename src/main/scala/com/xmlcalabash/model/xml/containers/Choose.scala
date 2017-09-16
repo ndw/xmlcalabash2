@@ -71,73 +71,76 @@ class Choose(override val config: XMLCalabash,
     val impliedOutputs = mutable.HashSet.empty[String]
     for (child <- relevantChildren()) {
       // We can do this in one pass because inputs and outputs are always first
+      var process = false
       child match {
-        case output: Output =>
-          impliedOutputs += output.port.get
-        case when: When =>
-          if (when.primaryInput.isDefined) {
-            if (primaryInputPort.isDefined) {
-              if (when.primaryInput.get.port.get != primaryInputPort.get) {
-                throw new ModelException(ExceptionCode.DIFFPRIMARYINPUT,
-                  List(primaryInputPort.get, when.primaryInput.get.port.get), when.location)
-              }
-            } else {
-              primaryInputPort = when.primaryInput.get.port
-            }
-          }
-
-          if (when.primaryOutput.isDefined) {
-            if (primaryOutputPort.isDefined) {
-              if (when.primaryOutput.get.port.get != primaryOutputPort.get) {
-                throw new ModelException(ExceptionCode.DIFFPRIMARYOUTPUT,
-                  List(primaryOutputPort.get, when.primaryOutput.get.port.get), when.location)
-              }
-            } else {
-              primaryOutputPort = when.primaryOutput.get.port
-            }
-          }
-
-          for (port <- when.outputPorts) {
-            if (!impliedOutputs.contains(port)) {
-              impliedOutputs += port
-              val output = when.output(port).get
-              val out = new Output(config, this, port, primary=output.primary, sequence=output.sequence)
-              addChild(out)
-            }
-          }
-        case when: Otherwise =>
-          if (when.primaryInput.isDefined) {
-            if (primaryInputPort.isDefined) {
-              if (when.primaryInput.get.port.get != primaryInputPort.get) {
-                throw new ModelException(ExceptionCode.DIFFPRIMARYINPUT,
-                  List(primaryInputPort.get, when.primaryInput.get.port.get), when.location)
-              }
-            } else {
-              primaryInputPort = when.primaryInput.get.port
-            }
-          }
-
-          if (when.primaryOutput.isDefined) {
-            if (primaryOutputPort.isDefined) {
-              if (when.primaryOutput.get.port.get != primaryOutputPort.get) {
-                throw new ModelException(ExceptionCode.DIFFPRIMARYOUTPUT,
-                  List(primaryOutputPort.get, when.primaryOutput.get.port.get), when.location)
-              }
-            } else {
-              primaryOutputPort = when.primaryOutput.get.port
-            }
-          }
-
-          for (port <- when.outputPorts) {
-            if (!impliedOutputs.contains(port)) {
-              impliedOutputs += port
-              val output = when.output(port).get
-              val out = new Output(config, this, port, primary=output.primary, sequence=output.sequence)
-              addChild(out)
-            }
-          }
+        case output: Output => impliedOutputs += output.port.get
+        case when: When => process = true
+        case other: Otherwise => process = true
         case _ => Unit
       }
+
+      if (child.primaryInput.isDefined) {
+        if (primaryInputPort.isDefined) {
+          if (child.primaryInput.get.port.get != primaryInputPort.get) {
+            throw new ModelException(ExceptionCode.DIFFPRIMARYINPUT,
+              List(primaryInputPort.get, child.primaryInput.get.port.get), child.location)
+          }
+        } else {
+          primaryInputPort = child.primaryInput.get.port
+        }
+      }
+
+      if (child.primaryOutput.isDefined) {
+        if (primaryOutputPort.isDefined) {
+          if (child.primaryOutput.get.port.get != primaryOutputPort.get) {
+            throw new ModelException(ExceptionCode.DIFFPRIMARYOUTPUT,
+              List(primaryOutputPort.get, child.primaryOutput.get.port.get), child.location)
+          }
+        } else {
+          primaryOutputPort = child.primaryOutput.get.port
+        }
+      }
+    }
+
+    valid
+  }
+
+  override def makeOutputPortsExplicit(): Boolean = {
+    val ports = mutable.HashSet.empty[String]
+    var primary = Option.empty[String]
+
+    for (step <- children) {
+      var process = false
+      step match {
+        case when: When => process = true
+        case other: Otherwise => process = true
+        case _ => Unit
+      }
+
+      if (process) {
+        for (child <- step.children) {
+          child match {
+            case output: Output =>
+              ports += output.port.get
+              if (output.primary.getOrElse(false)) {
+                if (primary.isDefined) {
+                  if (primary.get != output.port.get) {
+                    throw new ModelException(ExceptionCode.DIFFPRIMARYOUTPUT, List(primary.get, output.port.get), location)
+                  }
+                } else {
+                  primary = Some(output.port.get)
+                }
+              }
+            case _ => Unit
+          }
+        }
+      }
+    }
+
+    for (port <- ports) {
+      val isprimary = primary.isDefined && (primary.get == port)
+      val output = new Output(config, this, port, primary=isprimary, sequence=true)
+      addChild(output)
     }
 
     valid

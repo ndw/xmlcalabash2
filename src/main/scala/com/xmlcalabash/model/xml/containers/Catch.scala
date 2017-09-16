@@ -22,7 +22,7 @@ class Catch(override val config: XMLCalabash,
     if (_name.isDefined) {
       label = _name.get
     } else {
-      label = "when"
+      label = "catch"
     }
 
     val codeList = attributes.get(_code)

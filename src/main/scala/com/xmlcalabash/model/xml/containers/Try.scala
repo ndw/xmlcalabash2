@@ -4,12 +4,13 @@ import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.{Artifact, Documentation, Output, PipeInfo, Variable}
+import com.xmlcalabash.model.xml.{Artifact, Documentation, IOPort, Output, PipeInfo, Variable}
 
 import scala.collection.mutable
 
 class Try(override val config: XMLCalabash,
           override val parent: Option[Artifact]) extends Container(config, parent) {
+
   override def validate(): Boolean = {
     var valid = true
 
@@ -83,80 +84,86 @@ class Try(override val config: XMLCalabash,
     val impliedOutputs = mutable.HashSet.empty[String]
     for (child <- relevantChildren()) {
       // We can do this in one pass because inputs and outputs are always first
+      var process = false
       child match {
         case output: Output =>
           impliedOutputs += output.port.get
-        case group: Group =>
-          if (group.primaryInput.isDefined) {
-            if (primaryInputPort.isDefined) {
-              if (group.primaryInput.get.port.get != primaryInputPort.get) {
-                throw new ModelException(ExceptionCode.DIFFPRIMARYINPUT,
-                  List(primaryInputPort.get, group.primaryInput.get.port.get), group.location)
-              }
-            } else {
-              primaryInputPort = group.primaryInput.get.port
-            }
-          }
-
-          if (group.primaryOutput.isDefined) {
-            if (primaryOutputPort.isDefined) {
-              if (group.primaryOutput.get.port.get != primaryOutputPort.get) {
-                throw new ModelException(ExceptionCode.DIFFPRIMARYOUTPUT,
-                  List(primaryOutputPort.get, group.primaryOutput.get.port.get), group.location)
-              }
-            } else {
-              primaryOutputPort = group.primaryOutput.get.port
-            }
-          }
-
-          for (port <- group.outputPorts) {
-            if (!impliedOutputs.contains(port)) {
-              impliedOutputs += port
-              val output = group.output(port).get
-              val out = new Output(config, this, port, primary=output.primary, sequence=output.sequence)
-              addChild(out)
-            }
-          }
-        case katch: Catch =>
-          if (katch.primaryInput.isDefined) {
-            if (primaryInputPort.isDefined) {
-              if (katch.primaryInput.get.port.get != primaryInputPort.get) {
-                throw new ModelException(ExceptionCode.DIFFPRIMARYINPUT,
-                  List(primaryInputPort.get, katch.primaryInput.get.port.get), katch.location)
-              }
-            } else {
-              primaryInputPort = katch.primaryInput.get.port
-            }
-          }
-
-          if (katch.primaryOutput.isDefined) {
-            if (primaryOutputPort.isDefined) {
-              if (katch.primaryOutput.get.port.get != primaryOutputPort.get) {
-                throw new ModelException(ExceptionCode.DIFFPRIMARYOUTPUT,
-                  List(primaryOutputPort.get, katch.primaryOutput.get.port.get), katch.location)
-              }
-            } else {
-              primaryOutputPort = katch.primaryOutput.get.port
-            }
-          }
-
-          for (port <- katch.outputPorts) {
-            if (!impliedOutputs.contains(port)) {
-              impliedOutputs += port
-              val output = katch.output(port).get
-              val out = new Output(config, this, port, primary=output.primary, sequence=output.sequence)
-              addChild(out)
-            }
-          }
+        case group: Group => process = true
+        case katch: Catch => process = true
+        case fin: Finally => process = true
         case _ => Unit
+      }
+
+      if (child.primaryInput.isDefined) {
+        if (primaryInputPort.isDefined) {
+          if (child.primaryInput.get.port.get != primaryInputPort.get) {
+            throw new ModelException(ExceptionCode.DIFFPRIMARYINPUT,
+              List(primaryInputPort.get, child.primaryInput.get.port.get), child.location)
+          }
+        } else {
+          primaryInputPort = child.primaryInput.get.port
+        }
+      }
+
+      if (child.primaryOutput.isDefined) {
+        if (primaryOutputPort.isDefined) {
+          if (child.primaryOutput.get.port.get != primaryOutputPort.get) {
+            throw new ModelException(ExceptionCode.DIFFPRIMARYOUTPUT,
+              List(primaryOutputPort.get, child.primaryOutput.get.port.get), child.location)
+          }
+        } else {
+          primaryOutputPort = child.primaryOutput.get.port
+        }
       }
     }
 
     valid
   }
 
+  override def makeOutputPortsExplicit(): Boolean = {
+    val ports = mutable.HashSet.empty[String]
+    var primary = Option.empty[String]
+
+    for (step <- children) {
+      var process = false
+      step match {
+        case group: Group => process = true
+        case katch: Catch => process = true
+        case fin: Finally => process = true
+        case _ => Unit
+      }
+
+      if (process) {
+        for (child <- step.children) {
+          child match {
+            case output: Output =>
+              ports += output.port.get
+              if (output.primary.getOrElse(false)) {
+                if (primary.isDefined) {
+                  if (primary.get != output.port.get) {
+                    throw new ModelException(ExceptionCode.DIFFPRIMARYOUTPUT, List(primary.get, output.port.get), location)
+                  }
+                } else {
+                  primary = Some(output.port.get)
+                }
+              }
+            case _ => Unit
+          }
+        }
+      }
+    }
+
+    for (port <- ports) {
+      val isprimary = primary.isDefined && (primary.get == port)
+      val output = new Output(config, this, port, primary=isprimary, sequence=true)
+      addChild(output)
+    }
+
+    valid
+  }
+
   override def makeOutputBindingsExplicit(): Boolean = {
-    // These are conneced up by the when components
+    // These are connected up by the catch/finally components
     true
   }
 

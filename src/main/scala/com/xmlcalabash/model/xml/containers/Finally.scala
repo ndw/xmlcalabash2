@@ -18,7 +18,7 @@ class Finally(override val config: XMLCalabash,
     if (_name.isDefined) {
       label = _name.get
     } else {
-      label = "when"
+      label = "finally"
     }
 
     for (key <- List(XProcConstants._name)) {

@@ -45,7 +45,7 @@ class Container(override val config: XMLCalabash,
           }
           ports += input.port.get
 
-          if (input.primary) {
+          if (input.primary.getOrElse(false)) {
             if (primary.isDefined) {
               throw new ModelException(ExceptionCode.DUPPRIMARYINPUT, List(input.port.get, primary.get.port.get), location)
             }
@@ -74,7 +74,7 @@ class Container(override val config: XMLCalabash,
           }
           ports += output.port.get
 
-          if (output.primary) {
+          if (output.primary.getOrElse(false)) {
             if (primary.isDefined) {
               throw new ModelException(ExceptionCode.DUPPRIMARYINPUT, List(output.port.get, primary.get.port.get), location)
             }
@@ -93,7 +93,9 @@ class Container(override val config: XMLCalabash,
     } else {
       if (primary.isEmpty && (outputPorts.size == 1)) {
         primary = output(outputPorts.head)
-        primary.get.primary = true
+        if (primary.get.primary.isEmpty) {
+          primary.get.primary = true
+        }
       }
     }
 
@@ -121,14 +123,9 @@ class Container(override val config: XMLCalabash,
         if (last.isDefined) {
           var output = Option.empty[Output]
           for (oport <- last.get.outputPorts) {
-            if (port.startsWith("#")) {
-              if (last.get.output(oport).get.primary) {
-                output = last.get.output(oport)
-              }
-            } else {
-              if (last.get.output(oport).get.port.get == port) {
-                output = last.get.output(oport)
-              }
+            val oput = last.get.output(oport).get
+            if (oput.primary.getOrElse(false)) {
+              output = Some(oput)
             }
           }
           if (output.isDefined) {

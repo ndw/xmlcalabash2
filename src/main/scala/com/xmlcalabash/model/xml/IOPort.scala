@@ -23,7 +23,7 @@ class IOPort(override val config: XMLCalabash,
 
   def port: Option[String] = _port
 
-  def primary: Boolean = _primary.getOrElse(false)
+  def primary: Option[Boolean] = _primary
   protected[xml] def primary_=(setPrimary: Boolean): Unit = {
     _primary = Some(setPrimary)
   }

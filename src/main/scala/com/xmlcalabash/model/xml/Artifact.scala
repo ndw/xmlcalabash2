@@ -242,7 +242,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     for (child <- children) {
       child match {
         case input: Input =>
-          if (input.primary) {
+          if (input.primary.getOrElse(false)) {
             return Some(input)
           }
         case _ => Unit
@@ -282,7 +282,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     for (child <- children) {
       child match {
         case output: Output =>
-          if (output.primary) {
+          if (output.primary.getOrElse(false)) {
             return Some(output)
           }
         case _ => Unit
@@ -360,7 +360,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
         if (ps.isDefined) {
           for (port <- ps.get.outputPorts) {
             val out = ps.get.output(port)
-            if (out.get.primary) {
+            if (out.get.primary.getOrElse(false)) {
               return out
             }
           }
@@ -369,7 +369,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
 
       for (port <- parent.get.inputPorts) {
         val in = parent.get.input(port)
-        if (in.get.primary) {
+        if (in.get.primary.getOrElse(false)) {
           return in
         }
       }
