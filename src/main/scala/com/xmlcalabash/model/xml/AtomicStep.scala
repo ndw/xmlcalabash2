@@ -133,6 +133,7 @@ class AtomicStep(override val config: XMLCalabash,
     }
     graphNode = Some(node)
     proxy.nodeId = node.id
+    config.addNode(node.id, this)
 
     for (child <- children) {
       child.makeGraph(graph, node)

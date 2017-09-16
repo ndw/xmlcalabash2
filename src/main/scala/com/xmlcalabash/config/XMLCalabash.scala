@@ -12,6 +12,7 @@ import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException}
 import com.xmlcalabash.functions.{Cwd, DocumentProperties, SystemProperty}
 import com.xmlcalabash.model.util.ExpressionParser
+import com.xmlcalabash.model.xml.Artifact
 import com.xmlcalabash.parsers.XPathParser
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XmlStep}
 import com.xmlcalabash.sbt.BuildInfo
@@ -43,6 +44,7 @@ class XMLCalabash extends RuntimeConfiguration {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _expressionEvaluator = new SaxonExpressionEvaluator(this)
   private val _collections = mutable.HashMap.empty[String, List[XdmNode]]
+  private val idMap = mutable.HashMap.empty[String,Artifact]
 
   private var closed = false
   private var _processor: Processor = _
@@ -305,6 +307,30 @@ class XMLCalabash extends RuntimeConfiguration {
 
   // ==============================================================================================
 
+  def close(): Unit = {
+    closed = true
+    // This doesn't work because I don't know how to dynamically call the constructor that has an argument
+    /*
+    for (xf <- signatures.functions) {
+      val impl = signatures.function(xf).head
+      trace("debug", s"Registering $xf with implementation $impl", "config")
+      println(s"Registering $xf with implementation $impl")
+      val f = Class.forName(impl).newInstance()
+      processor.registerExtensionFunction(f.asInstanceOf[ExtensionFunctionDefinition])
+    }
+    */
+    processor.registerExtensionFunction(new DocumentProperties(this))
+    processor.registerExtensionFunction(new SystemProperty(this))
+    processor.registerExtensionFunction(new Cwd(this))
+  }
+  private def checkClosed(): Unit = {
+    if (closed) {
+      throw new ConfigurationException(ExceptionCode.CLOSED, "XMLCalabash")
+    }
+  }
+
+  // ==============================================================================================
+
   def parse(uri: String, base: URI): XdmNode = {
     parse(uri, base, validate=false)
   }
@@ -352,25 +378,10 @@ class XMLCalabash extends RuntimeConfiguration {
 
   // ==============================================================================================
 
-  def close(): Unit = {
-    closed = true
-    // This doesn't work because I don't know how to dynamically call the constructor that has an argument
-    /*
-    for (xf <- signatures.functions) {
-      val impl = signatures.function(xf).head
-      trace("debug", s"Registering $xf with implementation $impl", "config")
-      println(s"Registering $xf with implementation $impl")
-      val f = Class.forName(impl).newInstance()
-      processor.registerExtensionFunction(f.asInstanceOf[ExtensionFunctionDefinition])
-    }
-    */
-    processor.registerExtensionFunction(new DocumentProperties(this))
-    processor.registerExtensionFunction(new SystemProperty(this))
-    processor.registerExtensionFunction(new Cwd(this))
+  def addNode(id: String, artifact: Artifact): Unit = {
+    idMap.put(id, artifact)
   }
-  private def checkClosed(): Unit = {
-    if (closed) {
-      throw new ConfigurationException(ExceptionCode.CLOSED, "XMLCalabash")
-    }
-  }
+
+  def node(id: String): Option[Artifact] = idMap.get(id)
+
 }

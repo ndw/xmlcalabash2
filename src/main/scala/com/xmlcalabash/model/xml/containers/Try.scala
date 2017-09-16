@@ -175,6 +175,7 @@ class Try(override val config: XMLCalabash,
         throw new ModelException(ExceptionCode.INTERNAL, "Try parent isn't a container???", location)
     }
     graphNode = Some(node)
+    config.addNode(node.id, this)
 
     for (child <- children) {
       child.makeGraph(graph, node)

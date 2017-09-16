@@ -3,6 +3,7 @@ package com.xmlcalabash.drivers
 import java.io.{File, PrintWriter}
 import javax.xml.transform.sax.SAXSource
 
+import com.jafpl.exceptions.GraphException
 import com.jafpl.graph.Graph
 import com.jafpl.messages.{ItemMessage, Message, Metadata}
 import com.jafpl.runtime.GraphRuntime
@@ -98,6 +99,8 @@ object XmlDriver extends App {
           println(model)
         case parse: ParseException => Unit
           println(parse)
+        case graph: GraphException => Unit
+          println(graph)
         case step: StepException => Unit
           val code = step.code
           val message = if (step.message.isDefined) {
@@ -114,7 +117,10 @@ object XmlDriver extends App {
             }
           }
 
-        case _ => throw t
+        case _ =>
+          println("Caught unexpected error: " + t)
+          t.printStackTrace()
+          throw t
       }
       errored = true
   }

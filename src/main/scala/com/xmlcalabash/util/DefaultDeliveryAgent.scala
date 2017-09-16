@@ -9,8 +9,11 @@ import com.xmlcalabash.runtime.{XProcMetadata, XmlStep}
 import net.sf.saxon.s9api.XdmNode
 
 class DefaultDeliveryAgent(config: XMLCalabash) extends DeliveryAgent {
-  override def deliver(from: Any, fromPort: String, message: Message, consumer: DataConsumer, port: String): Unit = {
-    println(s"deliver message to from $from.$fromPort to ${consumer.id}.$port")
+  override def deliver(from: String, fromPort: String, message: Message, consumer: DataConsumer, port: String): Unit = {
+    val fromNode = config.node(from)
+    val toNode = consumer
+
+    println(s"Deliver $fromNode.$fromPort to $toNode.$port")
     consumer.receive(port, message)
     /*
     message match {
