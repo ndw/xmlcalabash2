@@ -41,7 +41,7 @@
       </p:identity>
     </p:catch>
     <p:finally>
-      <p:output port="finally"/>
+      <p:output port="finally" primary="false"/>
       <p:identity>
         <p:input port="source">
           <p:inline><doc>finally</doc></p:inline>
