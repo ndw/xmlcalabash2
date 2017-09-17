@@ -3,6 +3,7 @@ package com.xmlcalabash.steps
 import com.xmlcalabash.exceptions.StepException
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.{StaticContext, XmlPortSpecification}
+import com.xmlcalabash.util.StepErrors
 import net.sf.saxon.s9api.QName
 
 class Error extends DefaultXmlStep {
@@ -30,10 +31,13 @@ class Error extends DefaultXmlStep {
       code = ValueParser.parseQName(name, bindings(_code).context.nsBindings)
     }
 
-    if (bindings.contains(_message)) {
-      throw new StepException(code, bindings(_message).value.getStringValue, bindings(_message).context)
+    val errors = new StepErrors(config)
+    val errout = if (bindings.contains(_message)) {
+      errors.error(code, bindings(_message).value.getStringValue)
     } else {
-      throw new StepException(code, bindings(_code).context)
+      errors.error(code)
     }
+
+    throw new StepException(code, bindings(_code).context, errout)
   }
 }

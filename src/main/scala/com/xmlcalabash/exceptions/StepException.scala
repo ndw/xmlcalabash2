@@ -4,7 +4,7 @@ import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.Location
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.ExpressionContext
-import net.sf.saxon.s9api.QName
+import net.sf.saxon.s9api.{QName, XdmNode}
 
 object StepException {
   def dynamicError(code: Int): StepException = {
@@ -14,6 +14,8 @@ object StepException {
 }
 
 class StepException(override val code: QName) extends PipelineException(code) {
+  private var _errors = Option.empty[XdmNode]
+
   def this(code: QName, message: String) {
     this(code)
     _message = Some(message)
@@ -37,9 +39,10 @@ class StepException(override val code: QName) extends PipelineException(code) {
     _location = context.location
   }
 
-  def this(code: QName, context: ExpressionContext) {
+  def this(code: QName, context: ExpressionContext, errors: XdmNode) {
     this(code)
     _location = context.location
+    _errors = Some(errors)
   }
 
   def this(code: QName, message: String, cause: Throwable, location: Option[Location]) {
@@ -49,6 +52,7 @@ class StepException(override val code: QName) extends PipelineException(code) {
     _cause = Some(cause)
   }
 
+  def errors: Option[XdmNode] = _errors
 
   override def toString: String = {
     var msg = "ERROR " + code

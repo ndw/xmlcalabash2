@@ -1,11 +1,11 @@
 package com.xmlcalabash.runtime
 
 import com.jafpl.graph.Location
-import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
+import com.jafpl.messages.{BindingMessage, ExceptionMessage, ItemMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import net.sf.saxon.s9api.{QName, XdmItem}
 import org.slf4j.{Logger, LoggerFactory}
@@ -121,6 +121,18 @@ class StepProxy(config: XMLCalabash, step: XmlStep, context: StaticContext) exte
   }
   override def receive(port: String, message: Message): Unit = {
     message match {
+      case item: ExceptionMessage =>
+        item.item match {
+          case ex: StepException =>
+            if (ex.errors.isDefined) {
+              step.receive(port, ex.errors.get, XProcMetadata.XML)
+            } else {
+              step.receive(port, item.item, XProcMetadata.EXCEPTION)
+            }
+          case _ =>
+            step.receive(port, item.item, XProcMetadata.EXCEPTION)
+        }
+
       case item: ItemMessage =>
         item.metadata match {
           case xmlmeta: XProcMetadata =>
