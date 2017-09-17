@@ -470,6 +470,38 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     false
   }
 
+  def makePipesExplicit(): Boolean = {
+    var valid = true
+    for (child <- children) {
+      child match {
+        case pipe: Pipe =>
+          if (pipe.step.isEmpty) {
+            val drp = defaultReadablePort
+            if (drp.isDefined) {
+              pipe.step = drp.get.parent.get.name
+            } else {
+              throw new ModelException(ExceptionCode.NODRP, List(), location)
+            }
+          }
+          if (pipe.port.isEmpty) {
+            val step = findStep(pipe.step.get)
+            if (step.isDefined) {
+              if (step.get.primaryOutput.isDefined) {
+                pipe.port = step.get.primaryOutput.get.port.get
+              } else {
+                throw new ModelException(ExceptionCode.NODRP, List(), location)
+              }
+            } else {
+              throw new ModelException(ExceptionCode.NODRP, List(), location)
+            }
+          }
+
+        case _ => child.makePipesExplicit()
+      }
+    }
+    valid
+  }
+
   def makeBindingsExplicit(): Boolean = {
     println(s"ERROR: $this doesn't override makeBindingsExplicit")
     false
