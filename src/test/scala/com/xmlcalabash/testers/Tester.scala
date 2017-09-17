@@ -137,6 +137,7 @@ class Tester(runtimeConfig: XMLCalabash) {
       case step: StepException =>
         Some(step.code.getClarkName)
       case t: Throwable =>
+        t.printStackTrace()
         Some(Option(t.getMessage).getOrElse("ERROR"))
     }
   }
