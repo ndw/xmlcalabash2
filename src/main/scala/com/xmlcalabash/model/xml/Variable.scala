@@ -42,14 +42,16 @@ class Variable(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.BADCHILD, children.head.toString, location)
     }
 
-    valid
+    true
   }
 
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get
     val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
     val context = new ExpressionContext(_baseURI, inScopeNS, _location)
-    graphNode = Some(cnode.addVariable(_name.getClarkName, new XProcXPathExpression(context, _select.get)))
+    val node = cnode.addVariable(_name.getClarkName, new XProcXPathExpression(context, _select.get))
+    graphNode = Some(node)
+    config.addNode(node.id, this)
   }
 
   override def makeEdges(graph: Graph, parent: Node): Unit = {

@@ -12,14 +12,7 @@ class When(override val config: XMLCalabash,
   private var testExpr: XProcExpression = _
 
   override def validate(): Boolean = {
-    var valid = true
-
-    _name = attributes.get(XProcConstants._name)
-    if (_name.isDefined) {
-      label = _name.get
-    } else {
-      label = "when"
-    }
+    var valid = super.validate()
 
     val test = attributes.get(XProcConstants._test)
     if (test.isDefined) {
@@ -29,7 +22,7 @@ class When(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.TESTREQUIRED, List.empty[String], location)
     }
 
-    for (key <- List(XProcConstants._name, XProcConstants._test)) {
+    for (key <- List(XProcConstants._test)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -55,6 +48,7 @@ class When(override val config: XMLCalabash,
         throw new ModelException(ExceptionCode.INTERNAL, "When parent isn't a choose???", location)
     }
     graphNode = Some(node)
+    config.addNode(node.id, this)
 
     for (child <- children) {
       child.makeGraph(graph, node)

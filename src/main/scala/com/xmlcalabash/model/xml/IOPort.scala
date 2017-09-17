@@ -67,7 +67,7 @@ class IOPort(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.PORTATTRREQ, this.toString, location)
     }
 
-    valid
+    true
   }
 
   override def makeEdges(graph: Graph, parent: Node) {

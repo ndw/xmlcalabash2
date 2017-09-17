@@ -18,7 +18,7 @@ class Output(override val config: XMLCalabash,
   }
 
   override def validate(): Boolean = {
-    super.validate()
+    var valid = super.validate()
 
     _port = attributes.get(XProcConstants._port)
 

@@ -13,7 +13,14 @@ class DefaultDeliveryAgent(config: XMLCalabash) extends DeliveryAgent {
     val fromNode = config.node(from)
     val toNode = consumer
 
-    println(s"Deliver $fromNode.$fromPort to $toNode.$port")
+    /*
+    if (fromNode.isDefined) {
+      println(s"Deliver ${fromNode.get}/$fromPort to $toNode/$port")
+    } else {
+      println(s"Deliver from undefined to $toNode/$port")
+    }
+    */
+
     consumer.receive(port, message)
     /*
     message match {

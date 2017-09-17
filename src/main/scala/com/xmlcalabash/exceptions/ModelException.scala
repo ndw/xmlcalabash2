@@ -114,6 +114,7 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
       case ExceptionCode.MISSINGGROUP => s"A p:try must have exactly one p:group"
       case ExceptionCode.MISSINGCATCH => s"A p:try must have at least one p:catch"
       case ExceptionCode.BADTRYCHILD => s"A p:try cannot contain ${data.head}"
+      case ExceptionCode.INVALIDNAME => s"Invalid step name: ${data.head}"
 
       case ExceptionCode.INTERNAL => data.head
       case _ => "INTERNAL ERROR: No message for $code"

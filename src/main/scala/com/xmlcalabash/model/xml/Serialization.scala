@@ -83,7 +83,7 @@ class Serialization(override val config: XMLCalabash,
       }
     }
 
-    valid
+    true
   }
 
   override def asXML: xml.Elem = {

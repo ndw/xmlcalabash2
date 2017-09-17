@@ -2,10 +2,34 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
 
 class PipelineStep(override val config: XMLCalabash,
                    override val parent: Option[Artifact]) extends Artifact(config, parent) {
+  protected var _name: Option[String] = None
+
+  override def validate(): Boolean = {
+    _name = attributes.get(XProcConstants._name)
+    if (_name.isDefined) {
+      val regex = """([\p{L}_][-\p{L}_\p{N}]*)""".r
+      _name.get match {
+        case regex(name) => label = name
+        case _ => throw new ModelException(ExceptionCode.INVALIDNAME, _name.get, location)
+      }
+    } else {
+      label = defaultLabel
+    }
+
+    for (key <- List(XProcConstants._name)) {
+      if (attributes.contains(key)) {
+        attributes.remove(key)
+      }
+    }
+
+    true
+  }
 
   def makeInputPortsExplicit(): Boolean = {
     println(s"ERROR: $this doesn't override makeInputPortsExplicit")
@@ -18,6 +42,8 @@ class PipelineStep(override val config: XMLCalabash,
   }
 
   def makeInputBindingsExplicit(): Boolean = {
+    var valid = true
+
     val drp = defaultReadablePort
     if (drp.isDefined) {
       for (port <- inputPorts) {

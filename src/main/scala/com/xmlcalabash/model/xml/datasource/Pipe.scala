@@ -15,8 +15,8 @@ class Pipe(override val config: XMLCalabash,
 
   def this(config: XMLCalabash, parent: Artifact, step: String, port: String) = {
     this(config, Some(parent))
-    _step = Some(step)
-    _port = Some(port)
+    this.step = step
+    this.port = port
   }
 
   def step: Option[String] = _step
@@ -33,6 +33,21 @@ class Pipe(override val config: XMLCalabash,
     _step = attributes.get(XProcConstants._step)
     _port = attributes.get(XProcConstants._port)
 
+    val ncname = """([\p{L}_][-\p{L}_\p{N}]*)""".r
+    if (_step.isDefined) {
+      _step.get match {
+        case ncname(label) => Unit
+        case _ => throw new ModelException(ExceptionCode.INVALIDNAME, _step.get, location)
+      }
+    }
+
+    if (_port.isDefined) {
+      _port.get match {
+        case ncname(label) => Unit
+        case _ => throw new ModelException(ExceptionCode.INVALIDNAME, _port.get, location)
+      }
+    }
+
     for (key <- List(XProcConstants._port, XProcConstants._step)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
@@ -44,7 +59,7 @@ class Pipe(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
-    valid
+    true
   }
 
   override def makeEdges(graph: Graph, parNode: Node): Unit = {

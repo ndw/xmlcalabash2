@@ -13,25 +13,11 @@ import scala.collection.mutable.ListBuffer
 class AtomicStep(override val config: XMLCalabash,
                  override val parent: Option[Artifact],
                  val stepType: QName) extends PipelineStep(config, parent) {
-  private var _name: Option[String] = None
   private val options = mutable.HashMap.empty[QName, XProcExpression]
 
   override def validate(): Boolean = {
     val sig = config.signatures.step(stepType)
-    var valid = true
-
-    _name = attributes.get(XProcConstants._name)
-    if (_name.isDefined) {
-      label = _name.get
-    } else {
-      label = stepType.getLocalName
-    }
-
-    for (key <- List(XProcConstants._name)) {
-      if (attributes.contains(key)) {
-        attributes.remove(key)
-      }
-    }
+    var valid = super.validate()
 
     for (key <- attributes.keySet) {
       if (key.getNamespaceURI == "") {
@@ -126,7 +112,7 @@ class AtomicStep(override val config: XMLCalabash,
     val node = parent match {
       case start: ContainerStart =>
         val impl = config.stepImplementation(stepType, location.get)
-        proxy = new StepProxy(impl)
+        proxy = new StepProxy(config, impl)
         start.addAtomic(proxy, name)
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "Atomic step parent isn't a container???", location)

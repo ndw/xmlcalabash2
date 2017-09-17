@@ -9,8 +9,6 @@ import scala.collection.mutable
 
 class Container(override val config: XMLCalabash,
                 override val parent: Option[Artifact]) extends PipelineStep(config, parent) {
-  protected var _name: Option[String] = None
-
   def firstChildStep: Option[PipelineStep] = {
     for (child <- children) {
       child match {
@@ -60,7 +58,7 @@ class Container(override val config: XMLCalabash,
       primary.get.primary = true
     }
 
-    valid
+    true
   }
 
   override def makeOutputPortsExplicit(): Boolean = {
@@ -99,10 +97,12 @@ class Container(override val config: XMLCalabash,
       }
     }
 
-    valid
+    true
   }
 
   override def makePortsExplicit(): Boolean = {
+    var valid = true
+
     for (child <- children) {
       child match {
         case step: PipelineStep =>
@@ -150,7 +150,7 @@ class Container(override val config: XMLCalabash,
         case _ => Unit
       }
     }
-    valid = valid && makeInputBindingsExplicit() && makeOutputBindingsExplicit()
-    valid
+
+    makeInputBindingsExplicit() && makeOutputBindingsExplicit()
   }
 }

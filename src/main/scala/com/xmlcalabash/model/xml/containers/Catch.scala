@@ -16,14 +16,7 @@ class Catch(override val config: XMLCalabash,
   private var codes = ListBuffer.empty[QName]
 
   override def validate(): Boolean = {
-    var valid = true
-
-    _name = attributes.get(XProcConstants._name)
-    if (_name.isDefined) {
-      label = _name.get
-    } else {
-      label = "catch"
-    }
+    var valid = super.validate()
 
     val codeList = attributes.get(_code)
     if (codeList.isDefined) {
@@ -33,7 +26,7 @@ class Catch(override val config: XMLCalabash,
       }
     }
 
-    for (key <- List(XProcConstants._name, _code)) {
+    for (key <- List(_code)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -63,6 +56,7 @@ class Catch(override val config: XMLCalabash,
         throw new ModelException(ExceptionCode.INTERNAL, "Catch parent isn't a try/catch???", location)
     }
     graphNode = Some(node)
+    config.addNode(node.id, this)
 
     for (child <- children) {
       child.makeGraph(graph, node)

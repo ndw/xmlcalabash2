@@ -42,7 +42,7 @@ class Inline(override val config: XMLCalabash,
       findVariableRefs(node, _expandText)
     }
 
-    valid
+    true
   }
 
   private def findVariableRefs(node: XdmNode, expandText: Boolean): Unit = {
@@ -98,9 +98,10 @@ class Inline(override val config: XMLCalabash,
 
     val context = new ExpressionContext(baseURI, inScopeNS, location)
     val produceInline = new InlineLoader(nodes, context, _expandText, _excludeInlinePrefixes, _documentProperties, _encoding)
-
     val inlineProducer = cnode.addAtomic(produceInline)
+
     graphNode = Some(inlineProducer)
+    config.addNode(inlineProducer.id, this)
 
     for (ref <- variableRefs) {
       val bind = findBinding(ref)

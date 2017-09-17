@@ -45,13 +45,15 @@ class DeclareStep(override val config: XMLCalabash,
   }
 
   override def validate(): Boolean = {
-    _name = attributes.get(XProcConstants._name)
+    var valid = super.validate()
+
     _type = lexicalQName(attributes.get(XProcConstants._type))
     _psviRequired = lexicalBoolean(attributes.get(XProcConstants._psvi_required))
     _xpathVersion = attributes.get(XProcConstants._xpath_version)
     _excludeInlinePrefixes = lexicalPrefixes(attributes.get(XProcConstants._exclude_inline_prefixes))
     _version = attributes.get(XProcConstants._version)
-    for (key <- List(XProcConstants._name, XProcConstants._type, XProcConstants._psvi_required,
+
+    for (key <- List(XProcConstants._type, XProcConstants._psvi_required,
       XProcConstants._xpath_version, XProcConstants._exclude_inline_prefixes,
       XProcConstants._version)) {
       if (attributes.contains(key)) {

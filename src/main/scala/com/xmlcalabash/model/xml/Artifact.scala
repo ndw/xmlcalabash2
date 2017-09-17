@@ -25,7 +25,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   protected[xml] val dataSourceClasses = List(classOf[Empty], classOf[Pipe],
     classOf[Document], classOf[Inline])
   protected[xml] var _label = Option.empty[String]
-  protected[xml] var valid = true
+  //protected[xml] var valid = true
   protected[xml] var graphNode = Option.empty[Node]
   protected[xml] var dump_attr = Option.empty[xml.MetaData]
   protected[xml] var _location = Option.empty[Location]
@@ -40,6 +40,10 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
 
   def location: Option[Location] = _location
   def baseURI: Option[URI] = _baseURI
+
+  override def toString: String = {
+    "{step " + name + "}"
+  }
 
   protected[xml] def setLocation(node: XdmNode): Unit = {
     // What if the preceding node is a location PI?
@@ -301,6 +305,25 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
       }
     }
     list.toList
+  }
+
+  def defaultLabel: String = {
+    if (parent.isEmpty) {
+      "!1"
+    } else {
+      var count = 0
+      var found = false
+      for (child <- parent.get.children) {
+        if (!found) {
+          child match {
+            case step: PipelineStep => count += 1
+            case _ => Unit
+          }
+        }
+        found = found || (this == child)
+      }
+      parent.get.defaultLabel + "." + count
+    }
   }
 
   def findStep(stepName: String): Option[Artifact] = {

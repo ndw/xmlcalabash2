@@ -41,7 +41,7 @@ class OptionDecl(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.BADCHILD, children.head.toString, location)
     }
 
-    valid
+    true
   }
 
   override def makeGraph(graph: Graph, parent: Node) {

@@ -12,20 +12,7 @@ import scala.collection.mutable.ListBuffer
 class Finally(override val config: XMLCalabash,
               override val parent: Option[Artifact]) extends Container(config, parent) {
   override def validate(): Boolean = {
-    var valid = true
-
-    _name = attributes.get(XProcConstants._name)
-    if (_name.isDefined) {
-      label = _name.get
-    } else {
-      label = "finally"
-    }
-
-    for (key <- List(XProcConstants._name)) {
-      if (attributes.contains(key)) {
-        attributes.remove(key)
-      }
-    }
+    var valid = super.validate()
 
     if (attributes.nonEmpty) {
       val key = attributes.keySet.head
@@ -47,6 +34,7 @@ class Finally(override val config: XMLCalabash,
         throw new ModelException(ExceptionCode.INTERNAL, "Finally parent isn't a try/catch???", location)
     }
     graphNode = Some(node)
+    config.addNode(node.id, this)
 
     for (child <- children) {
       child.makeGraph(graph, node)

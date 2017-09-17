@@ -12,12 +12,11 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 
-class StepProxy(step: XmlStep) extends Step with XProcDataConsumer {
+class StepProxy(config: XMLCalabash, step: XmlStep) extends Step with XProcDataConsumer {
   private var location = Option.empty[Location]
   private var _id: String = _
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
-  protected var config: Option[XMLCalabash] = None
   protected val bindings = mutable.HashMap.empty[QName,XdmItem]
 
   def nodeId: String = _id
@@ -32,7 +31,12 @@ class StepProxy(step: XmlStep) extends Step with XProcDataConsumer {
   // =============================================================================================
 
   override def toString: String = {
-    "proxy:" + step.toString
+    val node = config.node(nodeId)
+    if (node.isDefined) {
+      node.get.toString
+    } else {
+      "proxy:" + step.toString
+    }
   }
 
   override def inputSpec: XmlPortSpecification = {
@@ -95,9 +99,11 @@ class StepProxy(step: XmlStep) extends Step with XProcDataConsumer {
   }
   override def initialize(config: RuntimeConfiguration): Unit = {
     config match {
-      case saxon: XMLCalabash =>
-        this.config = Some(saxon)
+      case saxon: XMLCalabash => Unit
       case _ => throw new IllegalArgumentException("Runtime configuration must be an XMLCalabash")
+    }
+    if (this.config != config) {
+      throw new IllegalArgumentException("Step proxy configuration and runtime configuration must be the same")
     }
     step.initialize(config)
   }

@@ -28,6 +28,8 @@ class WithOption(override val config: XMLCalabash,
       return true
     }
 
+    var valid = true
+
     val qname = lexicalQName(attributes.get(XProcConstants._name))
     if (qname.isEmpty) {
       throw new ModelException(ExceptionCode.NAMEATTRREQ, this.toString, location)

@@ -10,20 +10,7 @@ import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
 class Otherwise(override val config: XMLCalabash,
                 override val parent: Option[Artifact]) extends Container(config, parent) {
   override def validate(): Boolean = {
-    var valid = true
-
-    _name = attributes.get(XProcConstants._name)
-    if (_name.isDefined) {
-      label = _name.get
-    } else {
-      label = "otherwise"
-    }
-
-    for (key <- List(XProcConstants._name)) {
-      if (attributes.contains(key)) {
-        attributes.remove(key)
-      }
-    }
+    var valid = super.validate()
 
     if (attributes.nonEmpty) {
       val key = attributes.keySet.head
@@ -46,6 +33,7 @@ class Otherwise(override val config: XMLCalabash,
         throw new ModelException(ExceptionCode.INTERNAL, "When parent isn't a choose???", location)
     }
     graphNode = Some(node)
+    config.addNode(node.id, this)
 
     for (child <- children) {
       child.makeGraph(graph, node)

@@ -11,20 +11,7 @@ class ForEach(override val config: XMLCalabash,
               override val parent: Option[Artifact]) extends Container(config, parent) {
 
   override def validate(): Boolean = {
-    var valid = true
-
-    _name = attributes.get(XProcConstants._name)
-    if (_name.isDefined) {
-      label = _name.get
-    } else {
-      label = "for-each"
-    }
-
-    for (key <- List(XProcConstants._name)) {
-      if (attributes.contains(key)) {
-        attributes.remove(key)
-      }
-    }
+    var valid = super.validate()
 
     if (attributes.nonEmpty) {
       val key = attributes.keySet.head
@@ -64,10 +51,12 @@ class ForEach(override val config: XMLCalabash,
       addChild(input)
     }
 
-    valid
+    true
   }
 
   override def makeInputBindingsExplicit(): Boolean = {
+    var valid = true
+
     val drp = defaultReadablePort
     if (drp.isDefined) {
       for (port <- inputPorts) {
@@ -103,6 +92,7 @@ class ForEach(override val config: XMLCalabash,
         throw new ModelException(ExceptionCode.INTERNAL, "ForEach parent isn't a container???", location)
     }
     graphNode = Some(node)
+    config.addNode(node.id, this)
 
     for (child <- children) {
       child.makeGraph(graph, node)

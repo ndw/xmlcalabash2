@@ -21,7 +21,7 @@ class Input(override val config: XMLCalabash,
   }
 
   override def validate(): Boolean = {
-    super.validate()
+    var valid = super.validate()
     _select = attributes.get(XProcConstants._select)
 
     for (key <- List(XProcConstants._port, XProcConstants._sequence,

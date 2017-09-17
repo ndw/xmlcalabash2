@@ -50,7 +50,7 @@ class Document(override val config: XMLCalabash,
       docPropsAvt = parseAvt("document-properties", _docProps.get)
     }
 
-    valid
+    true
   }
 
   private def parseAvt(name: String, expr: String): List[String] = {
@@ -85,6 +85,7 @@ class Document(override val config: XMLCalabash,
     val hrefBinding = cnode.addVariable("href", new XProcAvtExpression(context, hrefAvt))
     graph.addBindingEdge(hrefBinding, docReader)
     graphNode = Some(docReader)
+    config.addNode(docReader.id, this)
 
     val docPropsBinding =  if (_docProps.isDefined) {
       val docPropsBinding = cnode.addVariable("document-properties", new XProcAvtExpression(context, docPropsAvt))

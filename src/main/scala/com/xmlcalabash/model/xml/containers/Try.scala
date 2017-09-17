@@ -12,20 +12,7 @@ class Try(override val config: XMLCalabash,
           override val parent: Option[Artifact]) extends Container(config, parent) {
 
   override def validate(): Boolean = {
-    var valid = true
-
-    _name = attributes.get(XProcConstants._name)
-    if (_name.isDefined) {
-      label = _name.get
-    } else {
-      label = "try"
-    }
-
-    for (key <- List(XProcConstants._name)) {
-      if (attributes.contains(key)) {
-        attributes.remove(key)
-      }
-    }
+    var valid = super.validate()
 
     if (attributes.nonEmpty) {
       val key = attributes.keySet.head
@@ -159,7 +146,7 @@ class Try(override val config: XMLCalabash,
       addChild(output)
     }
 
-    valid
+    true
   }
 
   override def makeOutputBindingsExplicit(): Boolean = {
