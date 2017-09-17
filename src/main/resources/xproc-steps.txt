@@ -21,6 +21,14 @@ step p:parameters has implementation xc:Parameters
   output result
   option parameters
 
+step p:wrap-sequence has implementation xc:WrapSequence
+  input source*
+  output result*
+  option wrapper as QName
+  option wrapper-prefix? as NCName
+  option wrapper-namespace? as anyURI
+  option group-adjacent? as XPathExpression
+
 step p:xslt has implementation xc:Xslt
   primary input source*
   input stylesheet
