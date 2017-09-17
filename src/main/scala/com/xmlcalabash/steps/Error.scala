@@ -1,9 +1,8 @@
 package com.xmlcalabash.steps
 
-import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.exceptions.StepException
 import com.xmlcalabash.model.util.ValueParser
-import com.xmlcalabash.runtime.XmlPortSpecification
+import com.xmlcalabash.runtime.{StaticContext, XmlPortSpecification}
 import net.sf.saxon.s9api.QName
 
 class Error extends DefaultXmlStep {
@@ -15,7 +14,7 @@ class Error extends DefaultXmlStep {
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.NONE
 
-  override def run() {
+  override def run(staticContext: StaticContext) {
     var code = new QName("", "test")
     val name = bindings(_code).value.getStringValue
     if (bindings.contains(_code_prefix) || bindings.contains(_code_namespace)) {

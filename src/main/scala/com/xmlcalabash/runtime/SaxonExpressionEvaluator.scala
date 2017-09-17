@@ -22,10 +22,10 @@ import scala.util.DynamicVariable
 // it has a dynamic variable used to pass context to extension functions.
 class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvaluator {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  private val _dynContext = new DynamicVariable[DynamicContext](null)
+  private val _dynContext = new DynamicVariable[ExpressionDynamicContext](null)
 
-  def withContext[T](context: DynamicContext)(thunk: => T): T = _dynContext.withValue(context)(thunk)
-  def dynContext: Option[DynamicContext] = Option(_dynContext.value)
+  def withContext[T](context: ExpressionDynamicContext)(thunk: => T): T = _dynContext.withValue(context)(thunk)
+  def dynContext: Option[ExpressionDynamicContext] = Option(_dynContext.value)
 
   override def newInstance(): SaxonExpressionEvaluator = {
     this
@@ -33,7 +33,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
   override def value(xpath: Any, context: List[Message], bindings: Map[String, Message]): XPathItemMessage = {
     val proxies = mutable.HashMap.empty[Any, XdmNode]
-    val newContext = new DynamicContext()
+    val newContext = new ExpressionDynamicContext()
     if (context.nonEmpty) {
       context.head match {
         case item: ItemMessage =>
@@ -74,7 +74,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
   override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message]): Boolean = {
     val proxies = mutable.HashMap.empty[Any, XdmNode]
-    val newContext = new DynamicContext()
+    val newContext = new ExpressionDynamicContext()
     if (context.nonEmpty) {
       context.head match {
         case item: ItemMessage =>
@@ -276,7 +276,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     results
   }
 
-  def checkDocument(dynContext: DynamicContext, node: XdmNode, msg: Message): Unit = {
+  def checkDocument(dynContext: ExpressionDynamicContext, node: XdmNode, msg: Message): Unit = {
     var p: XdmNode = node
     while (Option(p.getParent).isDefined) {
       p = p.getParent

@@ -1,7 +1,7 @@
 package com.xmlcalabash.steps
 
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
 
 class OptionValue extends DefaultXmlStep {
@@ -14,7 +14,7 @@ class OptionValue extends DefaultXmlStep {
     this.value = Some(value)
   }
 
-  override def run() {
+  override def run(staticContext: StaticContext) {
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(None)
     builder.addStartElement(XProcConstants.c_result)

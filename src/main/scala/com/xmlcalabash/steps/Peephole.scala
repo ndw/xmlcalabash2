@@ -1,7 +1,6 @@
 package com.xmlcalabash.steps
 
-import com.jafpl.messages.ItemMessage
-import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 
 class Peephole extends DefaultXmlStep {
   private var item = Option.empty[Any]
@@ -15,7 +14,7 @@ class Peephole extends DefaultXmlStep {
     this.metadata = Some(metadata)
   }
 
-  override def run() {
+  override def run(staticContext: StaticContext) {
     if (item.isDefined) {
       println("cx:peephole: " + item.get)
       consumer.get.receive("result", item.get, metadata.get)

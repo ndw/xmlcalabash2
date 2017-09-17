@@ -2,10 +2,9 @@ package com.xmlcalabash.steps
 
 import java.net.URI
 
-import com.jafpl.messages.Message
 import com.xmlcalabash.exceptions.StepException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
-import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
 
 import scala.collection.mutable.ListBuffer
@@ -29,7 +28,7 @@ class WrapSequence extends DefaultXmlStep {
     }
   }
 
-  override def run() {
+  override def run(staticContext: StaticContext) {
     var wrapper = new QName("", "INVALID")
 
     val name = bindings(_wrapper).value.getStringValue
@@ -47,7 +46,7 @@ class WrapSequence extends DefaultXmlStep {
     }
 
     val builder = new SaxonTreeBuilder(config)
-    builder.startDocument(URI.create("http://example.com/"))
+    builder.startDocument(staticContext.baseURI)
     builder.addStartElement(wrapper)
     builder.startContent()
     for (item <- inputs) {

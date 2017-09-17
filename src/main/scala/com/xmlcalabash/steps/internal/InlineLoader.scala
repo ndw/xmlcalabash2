@@ -7,7 +7,7 @@ import com.jafpl.messages.{ItemMessage, Message}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.runtime.{ExpressionDynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import net.sf.saxon.s9api.{Axis, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
@@ -122,7 +122,7 @@ class InlineLoader(private val nodes: List[XdmNode],
 
   def xpathValue(expr: XProcExpression): XdmItem = {
     val eval = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
-    val dynContext = new DynamicContext()
+    val dynContext = new ExpressionDynamicContext()
     val msg = eval.withContext(dynContext) { eval.value(expr, List.empty[Message], bindings.toMap) }
     msg.asInstanceOf[XPathItemMessage].item
   }

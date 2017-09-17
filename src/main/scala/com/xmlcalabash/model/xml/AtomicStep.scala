@@ -4,7 +4,7 @@ import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, StepProxy, XProcAvtExpression, XProcExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, StepProxy, XProcAvtExpression, XProcExpression}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -108,11 +108,14 @@ class AtomicStep(override val config: XMLCalabash,
       addChild(withOpt)
     }
 
+    val context = new StaticContext()
+    context.baseURI = baseURI
+
     var proxy: StepProxy = null
     val node = parent match {
       case start: ContainerStart =>
         val impl = config.stepImplementation(stepType, location.get)
-        proxy = new StepProxy(config, impl)
+        proxy = new StepProxy(config, impl, context)
         start.addAtomic(proxy, name)
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "Atomic step parent isn't a container???", location)

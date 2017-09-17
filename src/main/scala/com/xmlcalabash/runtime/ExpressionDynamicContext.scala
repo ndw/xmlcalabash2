@@ -1,16 +1,19 @@
 package com.xmlcalabash.runtime
 
+import java.net.URI
+
 import com.jafpl.graph.Location
 import com.jafpl.messages.Message
 import net.sf.saxon.om.NodeInfo
 
 import scala.collection.mutable
 
-class DynamicContext {
+class ExpressionDynamicContext {
   private var _iterationPosition = Option.empty[Long]
   private var _iterationSize = Option.empty[Long]
   private var _documents = mutable.HashMap.empty[NodeInfo,Message]
   private var _location = Option.empty[Location]
+  private var _baseURI = Option.empty[URI]
 
   def iterationPosition: Option[Long] = _iterationPosition
   def iterationSize: Option[Long] = _iterationSize

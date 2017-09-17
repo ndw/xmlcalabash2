@@ -4,8 +4,7 @@ import com.jafpl.graph.Location
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.BindingSpecification
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.StepException
-import com.xmlcalabash.runtime.{ExpressionContext, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
+import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
 import com.xmlcalabash.util.XProcVarValue
 import net.sf.saxon.s9api.{QName, XdmItem}
 import org.slf4j.{Logger, LoggerFactory}
@@ -50,7 +49,7 @@ class DefaultXmlStep extends XmlStep {
     }
   }
 
-  override def run(): Unit = {
+  override def run(context: StaticContext): Unit = {
     // nop
   }
 

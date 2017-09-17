@@ -12,7 +12,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 
-class StepProxy(config: XMLCalabash, step: XmlStep) extends Step with XProcDataConsumer {
+class StepProxy(config: XMLCalabash, step: XmlStep, context: StaticContext) extends Step with XProcDataConsumer {
   private var location = Option.empty[Location]
   private var _id: String = _
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
@@ -108,7 +108,7 @@ class StepProxy(config: XMLCalabash, step: XmlStep) extends Step with XProcDataC
     step.initialize(config)
   }
   override def run(): Unit = {
-    step.run()
+    step.run(context)
   }
   override def reset(): Unit = {
     step.reset()

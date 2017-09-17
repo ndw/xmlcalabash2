@@ -1,6 +1,6 @@
 package com.xmlcalabash.steps
 
-import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 
 import scala.collection.mutable
 
@@ -18,7 +18,7 @@ class Producer() extends DefaultXmlStep {
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULTSEQ
 
-  override def run(): Unit = {
+  override def run(staticContext: StaticContext): Unit = {
     for (item <- items) {
       consumer.get.receive("result", item, new XProcMetadata("text/plain"))
     }

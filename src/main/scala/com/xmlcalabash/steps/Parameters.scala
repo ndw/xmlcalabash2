@@ -2,9 +2,8 @@ package com.xmlcalabash.steps
 
 import java.net.URI
 
-import com.jafpl.messages.ItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmValue}
 
 class Parameters() extends DefaultXmlStep {
@@ -21,9 +20,9 @@ class Parameters() extends DefaultXmlStep {
     }
   }
 
-  override def run(): Unit = {
+  override def run(staticContext: StaticContext): Unit = {
     val builder = new SaxonTreeBuilder(config)
-    builder.startDocument(URI.create("http://example.com/"))
+    builder.startDocument(staticContext.baseURI)
     builder.addStartElement(XProcConstants.c_param_set)
 
     for ((name, value) <- parameters) {

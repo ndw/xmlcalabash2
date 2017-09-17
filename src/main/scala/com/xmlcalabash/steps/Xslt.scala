@@ -4,7 +4,7 @@ import java.net.URI
 import javax.xml.transform.{Result, SourceLocator}
 
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{S9Api, XProcCollectionFinder}
 import net.sf.saxon.lib.OutputURIResolver
 import net.sf.saxon.s9api.{MessageListener, QName, ValidationMode, XdmDestination, XdmItem, XdmNode, XdmValue}
@@ -61,7 +61,7 @@ class Xslt extends DefaultXmlStep {
     }
   }
 
-  override def run(): Unit = {
+  override def run(staticContext: StaticContext): Unit = {
     val document: Option[XdmNode] = defaultCollection.headOption
 
     if (version.isEmpty && stylesheet.isDefined) {
