@@ -13,10 +13,26 @@ class Pipe(override val config: XMLCalabash,
   private var _step = Option.empty[String]
   private var _port = Option.empty[String]
 
+  def this(config: XMLCalabash, parent: Artifact, step: String) = {
+    this(config, Some(parent))
+    this.step = step
+  }
+
+  def this(config: XMLCalabash, parent: Artifact, step: Option[String]) = {
+    this(config, Some(parent))
+    _step = step
+  }
+
   def this(config: XMLCalabash, parent: Artifact, step: String, port: String) = {
     this(config, Some(parent))
     this.step = step
     this.port = port
+  }
+
+  def this(config: XMLCalabash, parent: Artifact, step: Option[String], port: Option[String]) = {
+    this(config, Some(parent))
+    _step = step
+    _port = port
   }
 
   def step: Option[String] = _step

@@ -41,7 +41,7 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
       case ExceptionCode.BADINPUTSIG =>
         val stepType = data.head
         val port = data(1)
-        s"Step $stepType has n o input port named $port"
+        s"Step $stepType has no input port named $port"
       case ExceptionCode.BADOUTPUTSIG =>
         val stepType = data.head
         val port = data(1)
@@ -116,7 +116,7 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
       case ExceptionCode.BADTRYCHILD => s"A p:try cannot contain ${data.head}"
       case ExceptionCode.INVALIDNAME => s"Invalid step name: ${data.head}"
       case ExceptionCode.NODRP => "No step or port specified and no default readable port exists"
-
+      case ExceptionCode.MIXEDPIPE => s"You cannot specify connections with a pipe attribute and sub-elements"
       case ExceptionCode.INTERNAL => data.head
       case _ => "INTERNAL ERROR: No message for $code"
     }
