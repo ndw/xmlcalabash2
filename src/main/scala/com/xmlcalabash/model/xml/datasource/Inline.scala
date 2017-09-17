@@ -148,7 +148,7 @@ class Inline(override val config: XMLCalabash,
         throw new ModelException(ExceptionCode.INTERNAL, "p:inline points to " + parent.get, location)
     }
 
-    graph.addEdge(graphNode.get, "result", toNode.get, toPort)
+    graph.addOrderedEdge(graphNode.get, "result", toNode.get, toPort)
   }
 
   override def asXML: xml.Elem = {

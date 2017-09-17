@@ -80,7 +80,7 @@ class Pipe(override val config: XMLCalabash,
         throw new ModelException(ExceptionCode.INTERNAL, "p:pipe points to " + parent.get, location)
     }
 
-    graph.addEdge(fromStep.get.graphNode.get, fromPort, toNode.get, toPort)
+    graph.addOrderedEdge(fromStep.get.graphNode.get, fromPort, toNode.get, toPort)
   }
 
   override def asXML: xml.Elem = {

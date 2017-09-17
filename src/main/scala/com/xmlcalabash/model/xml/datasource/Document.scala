@@ -130,7 +130,7 @@ class Document(override val config: XMLCalabash,
   override def makeEdges(graph: Graph, parent: Node): Unit = {
     val toStep = this.parent.get.parent
     val toPort = this.parent.get.asInstanceOf[IOPort].port.get
-    graph.addEdge(graphNode.get, "result", toStep.get.graphNode.get, toPort)
+    graph.addOrderedEdge(graphNode.get, "result", toStep.get.graphNode.get, toPort)
   }
 
   override def asXML: xml.Elem = {
