@@ -4,6 +4,7 @@ import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.xml.containers.Catch
 import com.xmlcalabash.model.xml.{Artifact, IOPort, WithOption}
 
 import scala.collection.mutable.ListBuffer
@@ -82,6 +83,10 @@ class Pipe(override val config: XMLCalabash,
     val fromStep = findStep(step.get)
     val fromPort = port.get
 
+    if (fromStep.isEmpty) {
+      throw new ModelException(ExceptionCode.NOSTEP, step.get, location)
+    }
+
     var toNode = Option.empty[Node]
     var toPort = ""
 
@@ -94,6 +99,17 @@ class Pipe(override val config: XMLCalabash,
         toPort = port.port.get
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "p:pipe points to " + parent.get, location)
+    }
+
+    if (fromStep.get.output(fromPort).isEmpty) {
+      var ok = false
+      fromStep.get match {
+        case katch: Catch => ok = (fromPort == "errors")
+        case _ => Unit
+      }
+      if (!ok) {
+        throw new ModelException(ExceptionCode.NOPORT, List(fromStep.get.name, fromPort), location)
+      }
     }
 
     graph.addOrderedEdge(fromStep.get.graphNode.get, fromPort, toNode.get, toPort)

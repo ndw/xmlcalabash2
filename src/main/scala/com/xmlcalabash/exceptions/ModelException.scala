@@ -117,6 +117,9 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
       case ExceptionCode.INVALIDNAME => s"Invalid step name: ${data.head}"
       case ExceptionCode.NODRP => "No step or port specified and no default readable port exists"
       case ExceptionCode.MIXEDPIPE => s"You cannot specify connections with a pipe attribute and sub-elements"
+      case ExceptionCode.NOSTEP => s"No step named ${data.head} is in scope"
+      case ExceptionCode.NOPORT => s"Step named ${data.head} has no port named ${data(1)}"
+
       case ExceptionCode.INTERNAL => data.head
       case _ => "INTERNAL ERROR: No message for $code"
     }
