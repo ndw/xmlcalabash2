@@ -71,7 +71,12 @@ class InlineLoader(private val nodes: List[XdmNode],
         while (iter.hasNext) {
           val ns = iter.next().asInstanceOf[XdmNode]
           if (!excludeURIs.contains(ns.getStringValue)) {
-            builder.addNamespace(ns.getNodeName.getLocalName, ns.getStringValue)
+            val prefix = if (Option(ns.getNodeName).isDefined) {
+              ns.getNodeName.getLocalName
+            } else {
+              ""
+            }
+            builder.addNamespace(prefix, ns.getStringValue)
           }
         }
         var newExpand = expandText
