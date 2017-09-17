@@ -7,7 +7,9 @@ import scala.collection.mutable
 
 object XProcMetadata {
   private val _any = new XProcMetadata("application/octet-stream")
+  private val _xml = new XProcMetadata("application/xml")
   def ANY = _any
+  def XML = _xml
 }
 
 class XProcMetadata(private val initialContentType: Option[String],
