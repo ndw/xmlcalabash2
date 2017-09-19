@@ -9,6 +9,7 @@ object XProcConstants {
   val ns_xs  = "http://www.w3.org/2001/XMLSchema"
   val ns_cx  = "http://xmlcalabash.com/ns/extensions"
   val ns_exf = "http://exproc.org/standard/functions"
+  val ns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
 
   val p_catch = new QName("p", ns_p, "catch")
   val p_choose = new QName("p", ns_p, "choose")
@@ -45,8 +46,52 @@ object XProcConstants {
   val p_sink = new QName("p", ns_p, "sink")
 
   // The XML Schema type names must be defined somewhere in Saxon but...
-  val xs_QName = new QName("xs", ns_xs, "QName")
-  val xs_string = new QName("xs", ns_xs, "string")
+  val xs_ENTITY = new QName("xs", XProcConstants.ns_xs, "ENTITY")
+  val xs_ID = new QName("xs", XProcConstants.ns_xs, "ID")
+  val xs_IDREF = new QName("xs", XProcConstants.ns_xs, "IDREF")
+  val xs_NCName = new QName("xs", XProcConstants.ns_xs, "NCName")
+  val xs_NMTOKEN = new QName("xs", XProcConstants.ns_xs, "NMTOKEN")
+  val xs_QName = new QName("xs", XProcConstants.ns_xs, "QName")
+  val xs_anyURI = new QName("xs", XProcConstants.ns_xs, "anyURI")
+  val xs_base64Binary = new QName("xs", XProcConstants.ns_xs, "base64Binary")
+  val xs_boolean = new QName("xs", XProcConstants.ns_xs, "boolean")
+  val xs_byte = new QName("xs", XProcConstants.ns_xs, "byte")
+  val xs_date = new QName("xs", XProcConstants.ns_xs, "date")
+  val xs_dateTime = new QName("xs", XProcConstants.ns_xs, "dateTime")
+  val xs_dateTimeStamp = new QName("xs", XProcConstants.ns_xs, "dateTimeStamp")
+  val xs_dayTimeDuration = new QName("xs", XProcConstants.ns_xs, "dayTimeDuration")
+  val xs_decimal = new QName("xs", XProcConstants.ns_xs, "decimal")
+  val xs_double = new QName("xs", XProcConstants.ns_xs, "double")
+  val xs_duration = new QName("xs", XProcConstants.ns_xs, "duration")
+  val xs_float = new QName("xs", XProcConstants.ns_xs, "float")
+  val xs_gDay = new QName("xs", XProcConstants.ns_xs, "gDay")
+  val xs_gMonth = new QName("xs", XProcConstants.ns_xs, "gMonth")
+  val xs_gMonthDay = new QName("xs", XProcConstants.ns_xs, "gMonthDay")
+  val xs_gYear = new QName("xs", XProcConstants.ns_xs, "gYear")
+  val xs_gYearMonth = new QName("xs", XProcConstants.ns_xs, "gYearMonth")
+  val xs_hexBinary = new QName("xs", XProcConstants.ns_xs, "hexBinary")
+  val xs_int = new QName("xs", XProcConstants.ns_xs, "int")
+  val xs_integer = new QName("xs", XProcConstants.ns_xs, "integer")
+  val xs_long = new QName("xs", XProcConstants.ns_xs, "long")
+  val xs_name = new QName("xs", XProcConstants.ns_xs, "name")
+  val xs_negativeInteger = new QName("xs", XProcConstants.ns_xs, "negativeInteger")
+  val xs_nonNegativeInteger = new QName("xs", XProcConstants.ns_xs, "nonNegativeInteger")
+  val xs_nonPositiveInteger = new QName("xs", XProcConstants.ns_xs, "nonPositiveInteger")
+  val xs_normalizedString = new QName("xs", XProcConstants.ns_xs, "normalizedString")
+  val xs_notation = new QName("xs", XProcConstants.ns_xs, "notation")
+  val xs_positiveInteger = new QName("xs", XProcConstants.ns_xs, "positiveInteger")
+  val xs_short = new QName("xs", XProcConstants.ns_xs, "short")
+  val xs_string = new QName("xs", XProcConstants.ns_xs, "string")
+  val xs_time = new QName("xs", XProcConstants.ns_xs, "time")
+  val xs_token = new QName("xs", XProcConstants.ns_xs, "token")
+  val xs_unsignedByte = new QName("xs", XProcConstants.ns_xs, "unsignedByte")
+  val xs_unsignedInt = new QName("xs", XProcConstants.ns_xs, "unsignedInt")
+  val xs_unsignedLong = new QName("xs", XProcConstants.ns_xs, "unsignedLong")
+  val xs_unsignedShort = new QName("xs", XProcConstants.ns_xs, "unsignedShort")
+  val xs_untypedAtomic = new QName("xs", XProcConstants.ns_xs, "untypedAtomic")
+  val xs_yearMonthDuration = new QName("xs", XProcConstants.ns_xs, "yearMonthDuration")
+
+  val xsi_type = new QName("xsi", ns_xsi, "type")
 
   // Extras for testing
   val p_producer = new QName("p", ns_p, "producer")
@@ -95,6 +140,8 @@ object XProcConstants {
   val _value = new QName("", "value")
   val _version = new QName("", "version")
   val _xpath_version = new QName("", "xpath-version")
+
+  val _content_type = new QName("", "content-type")
 
   // For non-XProc namespaced places
   val p_expand_text = new QName("p", ns_p, "expand-text")

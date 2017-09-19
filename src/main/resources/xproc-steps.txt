@@ -50,6 +50,16 @@ step cx:option-value has implementation xc:OptionValue
   output result
   option option
 
+step cx:property-extract has implementation xc:PropertyExtract
+  input source
+  primary output result
+  output properties
+
+step cx:property-merge has implementation xc:PropertyMerge
+  primary input source
+  input properties
+  output result
+
 /*
 step p:add-attribute
   input source
