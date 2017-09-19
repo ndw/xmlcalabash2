@@ -43,7 +43,7 @@ class AtomicStep(override val config: XMLCalabash,
       }
     }
 
-    val okChildren = List(classOf[Input], classOf[WithOption], classOf[Log])
+    val okChildren = List(classOf[Input], classOf[WithOption])
     for (child <- relevantChildren()) {
       if (!okChildren.contains(child.getClass)) {
         throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
