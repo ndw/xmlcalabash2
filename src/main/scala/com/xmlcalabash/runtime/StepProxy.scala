@@ -7,7 +7,7 @@ import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
-import net.sf.saxon.s9api.{QName, XdmItem}
+import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -18,6 +18,7 @@ class StepProxy(config: XMLCalabash, step: XmlStep, context: StaticContext) exte
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
   protected val bindings = mutable.HashMap.empty[QName,XdmItem]
+  protected var dynamicContext = new DynamicContext()
 
   def nodeId: String = _id
   def nodeId_=(id: String): Unit = {
@@ -108,7 +109,7 @@ class StepProxy(config: XMLCalabash, step: XmlStep, context: StaticContext) exte
     step.initialize(config)
   }
   override def run(): Unit = {
-    step.run(context)
+    DynamicContext.withContext(dynamicContext) { step.run(context) }
   }
   override def reset(): Unit = {
     step.reset()
@@ -136,6 +137,11 @@ class StepProxy(config: XMLCalabash, step: XmlStep, context: StaticContext) exte
       case item: ItemMessage =>
         item.metadata match {
           case xmlmeta: XProcMetadata =>
+            item.item match {
+              case node: XdmNode =>
+                dynamicContext.addDocument(node.getUnderlyingNode, message)
+              case _ => Unit
+            }
             step.receive(port, item.item, xmlmeta)
           case _ => throw XProcException.xiInvalidMetadata(location, item.metadata)
         }

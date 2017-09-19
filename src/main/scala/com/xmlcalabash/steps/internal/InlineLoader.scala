@@ -7,8 +7,8 @@ import com.jafpl.messages.{ItemMessage, Message}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionDynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
-import net.sf.saxon.s9api.{Axis, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind}
+import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
 
@@ -19,7 +19,7 @@ class InlineLoader(private val nodes: List[XdmNode],
                    private val docPropsExpr: Option[String],
                    private val encoding: Option[String]) extends DefaultStep {
   private val include_expand_text_attribute = false
-  private var docProps = Map.empty[String, XdmAtomicValue]
+  private var docProps = Map.empty[QName, XdmItem]
   private val excludeURIs = mutable.HashSet.empty[String]
 
   excludeURIs += XProcConstants.ns_p
@@ -122,7 +122,7 @@ class InlineLoader(private val nodes: List[XdmNode],
 
   def xpathValue(expr: XProcExpression): XdmItem = {
     val eval = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
-    val dynContext = new ExpressionDynamicContext()
+    val dynContext = new DynamicContext()
     val msg = eval.withContext(dynContext) { eval.value(expr, List.empty[Message], bindings.toMap) }
     msg.asInstanceOf[XPathItemMessage].item
   }

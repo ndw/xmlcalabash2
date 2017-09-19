@@ -1,6 +1,5 @@
 package com.xmlcalabash.steps
 
-import com.jafpl.messages.{ItemMessage, Message, Metadata}
 import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
 
 class Identity() extends DefaultXmlStep {

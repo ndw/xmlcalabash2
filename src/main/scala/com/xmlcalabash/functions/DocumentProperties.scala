@@ -9,10 +9,11 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcMetadata}
 import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
+import net.sf.saxon.functions.AccessorFn.Component
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
 import net.sf.saxon.om.{NodeInfo, Sequence, StructuredQName}
-import net.sf.saxon.s9api.XdmAtomicValue
-import net.sf.saxon.value.{SequenceType, StringValue}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem}
+import net.sf.saxon.value.{QNameValue, SequenceType, StringValue}
 
 class DocumentProperties private extends ExtensionFunctionDefinition {
   private val funcname = new StructuredQName("p", XProcConstants.ns_p, "document-properties")
@@ -26,9 +27,9 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
 
   override def getFunctionQName: StructuredQName = funcname
 
-  override def getArgumentTypes: Array[SequenceType] = Array(SequenceType.SINGLE_NODE, SequenceType.SINGLE_STRING)
+  override def getArgumentTypes: Array[SequenceType] = Array(SequenceType.SINGLE_NODE, SequenceType.SINGLE_QNAME)
 
-  override def getResultType(suppliedArgumentTypes: Array[SequenceType]): SequenceType = SequenceType.SINGLE_ATOMIC
+  override def getResultType(suppliedArgumentTypes: Array[SequenceType]): SequenceType = SequenceType.SINGLE_ITEM
 
   override def makeCallExpression(): ExtensionFunctionCall = {
     new DocPropsCall(this)
@@ -48,26 +49,28 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
       }
 
       val doc = arguments(0).head
-      val prop = arguments(1).head.getStringValue
+      val prop: QNameValue = arguments(1).head.asInstanceOf[QNameValue]
       val msg = exprEval.dynContext.get.message(doc.asInstanceOf[NodeInfo])
+
+      val qname = new QName(prop.getComponent(Component.NAMESPACE).getStringValue, prop.getComponent(Component.LOCALNAME).getStringValue)
 
       if (msg.isEmpty) {
         throw XProcException.xiDocPropsUnavail(exprEval.dynContext.get.location, new URI(doc.asInstanceOf[NodeInfo].getBaseURI))
       }
 
-      val props: Map[String,XdmAtomicValue] = msg.get match {
+      val props: Map[QName,XdmItem] = msg.get match {
         case item: ItemMessage =>
           item.metadata match {
             case xml: XProcMetadata =>
               xml.properties
             case _ =>
-              Map.empty[String,XdmAtomicValue]
+              Map.empty[QName,XdmItem]
           }
         case _ =>
-          Map.empty[String,XdmAtomicValue]
+          Map.empty[QName,XdmItem]
       }
 
-      val value = props.getOrElse(prop, new XdmAtomicValue(""))
+      val value = props.getOrElse(qname, new XdmAtomicValue(""))
       new StringValue(value.getStringValue) // FIXME: this should be any atomic value not a string
     }
   }

@@ -22,10 +22,10 @@ import scala.util.DynamicVariable
 // it has a dynamic variable used to pass context to extension functions.
 class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvaluator {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  private val _dynContext = new DynamicVariable[ExpressionDynamicContext](null)
+  private val _dynContext = new DynamicVariable[DynamicContext](null)
 
-  def withContext[T](context: ExpressionDynamicContext)(thunk: => T): T = _dynContext.withValue(context)(thunk)
-  def dynContext: Option[ExpressionDynamicContext] = Option(_dynContext.value)
+  def withContext[T](context: DynamicContext)(thunk: => T): T = _dynContext.withValue(context)(thunk)
+  def dynContext: Option[DynamicContext] = Option(_dynContext.value)
 
   override def newInstance(): SaxonExpressionEvaluator = {
     this
@@ -33,7 +33,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
   override def value(xpath: Any, context: List[Message], bindings: Map[String, Message]): XPathItemMessage = {
     val proxies = mutable.HashMap.empty[Any, XdmNode]
-    val newContext = new ExpressionDynamicContext()
+    val newContext = new DynamicContext()
     if (context.nonEmpty) {
       context.head match {
         case item: ItemMessage =>
@@ -74,7 +74,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
   override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message]): Boolean = {
     val proxies = mutable.HashMap.empty[Any, XdmNode]
-    val newContext = new ExpressionDynamicContext()
+    val newContext = new DynamicContext()
     if (context.nonEmpty) {
       context.head match {
         case item: ItemMessage =>
@@ -276,7 +276,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     results
   }
 
-  def checkDocument(dynContext: ExpressionDynamicContext, node: XdmNode, msg: Message): Unit = {
+  def checkDocument(dynContext: DynamicContext, node: XdmNode, msg: Message): Unit = {
     var p: XdmNode = node
     while (Option(p.getParent).isDefined) {
       p = p.getParent
@@ -290,8 +290,9 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
   private def proxy(message: Message): XdmNode = {
     message match {
       case item: ItemMessage =>
-        if (item.item.isInstanceOf[XdmNode]) {
-          return item.item.asInstanceOf[XdmNode]
+        item.item match {
+          case node: XdmNode => return node
+          case _ => Unit
         }
 
         item.metadata match {
@@ -302,10 +303,13 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
             builder.addStartElement(XProcConstants.c_document_properties)
             builder.startContent()
             for ((key,value) <- props) {
-              builder.addStartElement(XProcConstants.c_property)
-              builder.addAttribute(XProcConstants._name, key)
-              builder.addAttribute(XProcConstants._value, value.toString)
+              builder.addStartElement(key)
               builder.startContent()
+              value match {
+                case atom: XdmAtomicValue => builder.addText(value.getStringValue)
+                case node: XdmNode => builder.addSubtree(node)
+                case _ => throw new RuntimeException("Huh?")
+              }
               builder.addEndElement()
             }
             builder.addEndElement()

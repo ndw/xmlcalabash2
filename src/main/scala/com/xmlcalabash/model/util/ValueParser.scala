@@ -133,8 +133,8 @@ object ValueParser {
     params.toMap
   }
 
-  def parseDocumentProperties(value: XdmItem, location: Option[Location]): Map[String, XdmAtomicValue] = {
-    val params = mutable.HashMap.empty[String, XdmAtomicValue]
+  def parseDocumentProperties(value: XdmItem, location: Option[Location]): Map[QName, XdmItem] = {
+    val params = mutable.HashMap.empty[QName, XdmItem]
 
     value match {
       case map: XdmMap =>
@@ -144,37 +144,26 @@ object ValueParser {
           val key = iter.next()
           val value = map.get(key)
 
-          val strkey = key match {
-            case atomic: XdmAtomicValue =>
-              val itype = atomic.getTypeName
-              if (itype != XProcConstants.xs_string) {
-                throw XProcException.xiDocPropsKeyNotString(location, atomic)
-              }
-              atomic.getStringValue
+          val keytype = key.getTypeName
+          val qkey = keytype match {
+            case XProcConstants.xs_QName =>
+              key.getQNameValue
+            case XProcConstants.xs_string =>
+              new QName("", key.getStringValue)
             case _ =>
-              throw XProcException.xiDocPropsKeyNotString(location, key)
+              throw new RuntimeException("BANG2")
           }
 
           var count = 0
-          var strvalue = ""
           val viter = value.iterator()
           while (viter.hasNext) {
             val item = viter.next()
-            item match {
-              case atomic: XdmAtomicValue =>
-              //val itype = atomic.getTypeName
-              // FIXME: make sure some keys have the proper value (base-uri, etc.)
-                params.put(key.asInstanceOf[XdmAtomicValue].getStringValue, atomic)
-              case _ =>
-                throw XProcException.xiDocPropsValueNotAtomic(location, item)
-            }
+            params.put(qkey, item)
             count += 1
 
             if (count > 1) {
               throw XProcException.xiDocPropsValueNotAtomic(location, item)
             }
-
-            strvalue += item.getStringValue
           }
         }
       case _ =>

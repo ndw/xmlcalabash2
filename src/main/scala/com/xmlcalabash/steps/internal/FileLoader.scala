@@ -8,11 +8,11 @@ import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{BindingMessage, ItemMessage}
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
-import net.sf.saxon.s9api.{XdmAtomicValue, XdmItem}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem}
 
 class FileLoader() extends DefaultStep {
   private var _href = ""
-  private var docProps = Map.empty[String, XdmAtomicValue]
+  private var docProps = Map.empty[QName, XdmItem]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT

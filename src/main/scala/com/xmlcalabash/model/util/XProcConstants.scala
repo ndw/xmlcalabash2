@@ -45,6 +45,7 @@ object XProcConstants {
   val p_sink = new QName("p", ns_p, "sink")
 
   // The XML Schema type names must be defined somewhere in Saxon but...
+  val xs_QName = new QName("xs", ns_xs, "QName")
   val xs_string = new QName("xs", ns_xs, "string")
 
   // Extras for testing
