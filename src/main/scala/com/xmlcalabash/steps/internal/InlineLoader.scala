@@ -32,11 +32,7 @@ class InlineLoader(private val nodes: List[XdmNode],
 
   override def run(): Unit = {
     if (docPropsExpr.isDefined) {
-      val avt = ValueParser.parseAvt(docPropsExpr.get)
-      if (avt.isEmpty) {
-        throw new ModelException(ExceptionCode.BADAVT, List("document-properties", docPropsExpr.get), location)
-      }
-      val expr = new XProcAvtExpression(context, avt.get)
+      val expr = new XProcXPathExpression(context, docPropsExpr.get)
       val result = xpathValue(expr)
       docProps = result match {
         case map: XdmMap =>

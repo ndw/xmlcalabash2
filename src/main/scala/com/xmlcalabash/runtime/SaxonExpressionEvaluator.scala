@@ -61,7 +61,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         case item: ItemMessage =>
           item.item match {
             case xitem: XdmNode =>
-              checkDocument(newContext, xitem, context.head)
+              checkDocument(newContext, xitem, value)
             case _ => Unit
           }
         case _ =>
@@ -102,7 +102,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         case item: ItemMessage =>
           item.item match {
             case xitem: XdmNode =>
-              checkDocument(newContext, xitem, context.head)
+              checkDocument(newContext, xitem, value)
             case _ => Unit
           }
         case _ =>

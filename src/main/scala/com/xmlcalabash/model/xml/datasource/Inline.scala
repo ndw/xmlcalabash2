@@ -40,6 +40,9 @@ class Inline(override val config: XMLCalabash,
 
     for (node <- nodes) {
       findVariableRefs(node, _expandText)
+      if (_documentProperties.isDefined) {
+        findVariableRefsInString(_documentProperties.get)
+      }
     }
 
     true
@@ -53,7 +56,7 @@ class Inline(override val config: XMLCalabash,
         while (iter.hasNext) {
           val attr = iter.next().asInstanceOf[XdmNode]
           if (expandText) {
-            findVariableRefsInString(attr.getStringValue)
+            findVariableRefsInAvt(attr.getStringValue)
           }
           if (attr.getNodeName == XProcConstants.p_expand_text) {
             newExpand = lexicalBoolean(Some(attr.getStringValue)).get
@@ -66,13 +69,13 @@ class Inline(override val config: XMLCalabash,
         }
       case XdmNodeKind.TEXT =>
         if (expandText) {
-          findVariableRefsInString(node.getStringValue)
+          findVariableRefsInAvt(node.getStringValue)
         }
       case _ => Unit
     }
   }
 
-  private def findVariableRefsInString(text: String): Unit = {
+  private def findVariableRefsInAvt(text: String): Unit = {
     val list = ValueParser.parseAvt(text)
     if (list.isEmpty) {
       throw new ModelException(ExceptionCode.BADAVT, List("TVT", text), location)
@@ -81,14 +84,18 @@ class Inline(override val config: XMLCalabash,
     var avt = false
     for (substr <- list.get) {
       if (avt) {
-        val parser = config.expressionParser
-        parser.parse(substr)
-        for (ref <- parser.variableRefs) {
-          val qname = lexicalQName(Some(ref)).get
-          variableRefs += qname
-        }
+        findVariableRefsInString(substr)
       }
       avt = !avt
+    }
+  }
+
+  private def findVariableRefsInString(text: String): Unit = {
+    val parser = config.expressionParser
+    parser.parse(text)
+    for (ref <- parser.variableRefs) {
+      val qname = lexicalQName(Some(ref)).get
+      variableRefs += qname
     }
   }
 
