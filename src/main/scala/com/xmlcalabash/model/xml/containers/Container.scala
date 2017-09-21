@@ -6,6 +6,7 @@ import com.xmlcalabash.model.xml.datasource.Pipe
 import com.xmlcalabash.model.xml.{Artifact, Input, Output, PipelineStep, Variable}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class Container(override val config: XMLCalabash,
                 override val parent: Option[Artifact]) extends PipelineStep(config, parent) {
@@ -153,4 +154,16 @@ class Container(override val config: XMLCalabash,
 
     makeInputBindingsExplicit() && makeOutputBindingsExplicit()
   }
+
+  override def asXML: xml.Elem = {
+    dumpAttr("name", _name)
+    val nodes = ListBuffer.empty[xml.Node]
+    nodes += xml.Text("\n")
+    for (child <- children) {
+      nodes += child.asXML
+      nodes += xml.Text("\n")
+    }
+    new xml.Elem("p", "container", dump_attr.getOrElse(xml.Null), namespaceScope, false, nodes:_*)
+  }
+
 }

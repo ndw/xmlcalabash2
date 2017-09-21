@@ -6,7 +6,7 @@ import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{UniqueId, ValueParser}
-import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport}
+import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcAvtExpression, XProcExpression, XProcXPathExpression}
 import com.xmlcalabash.util.S9Api
@@ -21,11 +21,11 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   protected[xml] val children: mutable.ListBuffer[Artifact] = mutable.ListBuffer.empty[Artifact]
   protected[xml] var inScopeNS = Map.empty[String,String]
   protected[xml] val subpiplineClasses = List(classOf[ForEach], classOf[Viewport],
-    classOf[Choose], classOf[Group], classOf[Try], classOf[AtomicStep], classOf[Variable])
+    classOf[Choose], classOf[Group], classOf[Try], classOf[AtomicStep], classOf[Variable],
+    classOf[WithProperties], classOf[WithDocument])
   protected[xml] val dataSourceClasses = List(classOf[Empty], classOf[Pipe],
     classOf[Document], classOf[Inline])
   protected[xml] var _label = Option.empty[String]
-  //protected[xml] var valid = true
   protected[xml] var graphNode = Option.empty[Node]
   protected[xml] var dump_attr = Option.empty[xml.MetaData]
   protected[xml] var _location = Option.empty[Location]
@@ -39,10 +39,14 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   def name: String = _label.getOrElse("_" + id)
 
   def location: Option[Location] = _location
+  protected[xml] def location_=(loc: Location): Unit = {
+    _location = Some(loc)
+  }
+
   def baseURI: Option[URI] = _baseURI
 
   override def toString: String = {
-    "{step " + name + "}"
+    "{step " + name + " " + super.toString + "}"
   }
 
   protected[xml] def setLocation(node: XdmNode): Unit = {
@@ -126,6 +130,39 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
         }
       case _ =>
         children += child
+    }
+  }
+
+  protected[xml] def insertChildBefore(node: Artifact, insert: Artifact): Unit = {
+    var pos = -1
+    var found = false
+    while (!found && pos < children.length) {
+      pos += 1
+      found = (children(pos) == node)
+    }
+    if (!found) {
+      throw new RuntimeException("What3")
+    }
+    children.insert(pos, insert)
+
+  }
+
+  protected[xml] def insertChildAfter(node: Artifact, insert: Artifact): Unit = {
+    var pos = -1
+    var found = false
+    while (!found && pos < children.length) {
+      pos += 1
+      found = (children(pos) == node)
+    }
+    if (!found) {
+      throw new RuntimeException("What3")
+    }
+    children.insert(pos+1, insert)
+  }
+
+  protected def patchPipe(fromName: String, fromPort: List[String], patchName: String, patchPort: String): Unit = {
+    for (child <- children) {
+      child.patchPipe(fromName, fromPort, patchName, patchPort)
     }
   }
 
@@ -369,6 +406,18 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     }
   }
 
+  def isAncestor(stepName: String): Boolean = {
+    if (name == stepName) {
+      true
+    } else {
+      if (parent.isDefined) {
+        parent.get.isAncestor(stepName)
+      } else {
+        false
+      }
+    }
+  }
+
   def defaultReadablePort: Option[IOPort] = {
     if (parent.isDefined) {
       val drpIsPrecedingSibling =
@@ -505,6 +554,19 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   def makeBindingsExplicit(): Boolean = {
     println(s"ERROR: $this doesn't override makeBindingsExplicit")
     false
+  }
+
+  def findPatchable(): List[Artifact] = {
+    val list = ListBuffer.empty[Artifact]
+    for (child <- children) {
+      child match {
+        case art: WithProperties =>
+          list += art
+        case _ => Unit
+      }
+      list ++= child.findPatchable()
+    }
+    list.toList
   }
 
   def makeGraph(graph: Graph, parent: Node) {

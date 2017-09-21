@@ -21,6 +21,16 @@ class Inline(override val config: XMLCalabash,
   private var _encoding = Option.empty[String]
   private val variableRefs = mutable.HashSet.empty[QName]
 
+  def this(config: XMLCalabash, parent: Artifact, inline: Inline) {
+    this(config, Some(parent), inline.nodes)
+    _excludeInlinePrefixes = inline._excludeInlinePrefixes
+    _expandText = inline._expandText
+    _documentProperties = inline._documentProperties
+    _encoding = inline._encoding
+    variableRefs.clear()
+    variableRefs ++= inline.variableRefs
+  }
+
   override def validate(): Boolean = {
     _excludeInlinePrefixes = lexicalPrefixes(attributes.get(XProcConstants._exclude_inline_prefixes))
     _expandText = lexicalBoolean(attributes.get(XProcConstants._expand_text)).getOrElse(true)

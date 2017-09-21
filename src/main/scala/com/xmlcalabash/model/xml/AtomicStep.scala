@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
+import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, StepProxy, XProcAvtExpression, XProcExpression}
 import net.sf.saxon.s9api.QName
 

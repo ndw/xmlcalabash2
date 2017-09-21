@@ -22,6 +22,16 @@ class Document(override val config: XMLCalabash,
   private var docPropsAvt = List.empty[String]
   private val bindingRefs = mutable.HashSet.empty[QName]
 
+  def this(config: XMLCalabash, parent: Artifact, doc: Document) = {
+    this(config, Some(parent))
+    _href = doc._href
+    _docProps = doc._docProps
+    hrefAvt = doc.hrefAvt
+    docPropsAvt = doc.docPropsAvt
+    bindingRefs.clear()
+    bindingRefs ++= doc.bindingRefs
+  }
+
   override def validate(): Boolean = {
     _href = attributes.get(XProcConstants._href)
     _docProps = attributes.get(XProcConstants._document_properties)

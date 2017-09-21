@@ -27,7 +27,7 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
 
   override def getFunctionQName: StructuredQName = funcname
 
-  override def getArgumentTypes: Array[SequenceType] = Array(SequenceType.SINGLE_NODE, SequenceType.SINGLE_QNAME)
+  override def getArgumentTypes: Array[SequenceType] = Array(SequenceType.SINGLE_NODE, SequenceType.SINGLE_ATOMIC)
 
   override def getResultType(suppliedArgumentTypes: Array[SequenceType]): SequenceType = SequenceType.SINGLE_ITEM
 
@@ -49,11 +49,17 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
       }
 
       val doc = arguments(0).head
-      val prop: QNameValue = arguments(1).head.asInstanceOf[QNameValue]
+      val x = arguments(1).head
+      val prop: QName = arguments(1).head match {
+        case pval: QNameValue =>
+          new QName(pval.getComponent(Component.NAMESPACE).getStringValue, pval.getComponent(Component.LOCALNAME).getStringValue)
+        case sval: StringValue =>
+          new QName("", sval.getStringValue)
+        case _ =>
+          throw new RuntimeException("value must be string or qname")
+      }
+
       val msg = exprEval.dynContext.get.message(doc.asInstanceOf[NodeInfo])
-
-      val qname = new QName(prop.getComponent(Component.NAMESPACE).getStringValue, prop.getComponent(Component.LOCALNAME).getStringValue)
-
       if (msg.isEmpty) {
         throw XProcException.xiDocPropsUnavail(exprEval.dynContext.get.location, new URI(doc.asInstanceOf[NodeInfo].getBaseURI))
       }
@@ -70,7 +76,7 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
           Map.empty[QName,XdmItem]
       }
 
-      val value = props.getOrElse(qname, new XdmAtomicValue(""))
+      val value = props.getOrElse(prop, new XdmAtomicValue(""))
       new StringValue(value.getStringValue) // FIXME: this should be any atomic value not a string
     }
   }

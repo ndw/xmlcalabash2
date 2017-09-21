@@ -10,6 +10,10 @@ class PipelineStep(override val config: XMLCalabash,
                    override val parent: Option[Artifact]) extends Artifact(config, parent) {
   protected var _name: Option[String] = None
 
+  protected[xml] def name_=(name: String): Unit = {
+    _name = Some(name)
+  }
+
   override def validate(): Boolean = {
     _name = attributes.get(XProcConstants._name)
     if (_name.isDefined) {

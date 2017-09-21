@@ -3,9 +3,7 @@ package com.xmlcalabash.steps
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.S9Api
-import net.sf.saxon.`type`.BuiltInAtomicType
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
-import net.sf.saxon.value.UntypedAtomicValue
 
 import scala.collection.mutable
 
@@ -209,8 +207,11 @@ class PropertyMerge extends DefaultXmlStep {
       }
     }
 
-    if (!prop.contains(XProcConstants._content_type)) {
-      prop.put(XProcConstants._content_type, meta.get.properties(XProcConstants._content_type))
+    prop.put(XProcConstants._content_type, meta.get.properties(XProcConstants._content_type))
+
+    // FIXME: figure out how to standardize base-uri
+    if (meta.get.properties.contains(XProcConstants._base_uri)) {
+      prop.put(XProcConstants._base_uri, meta.get.properties(XProcConstants._base_uri))
     }
 
     prop.toMap

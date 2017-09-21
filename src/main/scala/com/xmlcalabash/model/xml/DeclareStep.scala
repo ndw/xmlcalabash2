@@ -5,7 +5,8 @@ import com.jafpl.graph.Graph
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.containers.Container
+import com.xmlcalabash.model.xml.containers.{Container, WithDocument, WithProperties}
+import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.XProcExpression
 import net.sf.saxon.s9api.QName
 
@@ -34,10 +35,98 @@ class DeclareStep(override val config: XMLCalabash,
       graph.addOutput(pipeline, "result")
     }
 
+    patchPipeline()
+
     graphNode = Some(pipeline)
     graphChildren(graph, pipeline)
     graphEdges(graph, pipeline)
     graph
+  }
+
+  private def patchPipeline(): Unit = {
+    for (patch <- findPatchable()) {
+      patch match {
+        case art: WithProperties => patchWithProperties(art, processProperties = true)
+        case art: WithDocument => patchWithProperties(art, processProperties = false)
+        case _ => throw new RuntimeException("Don't know how to patch: " + patch)
+      }
+    }
+  }
+
+  private def patchWithProperties(patch: Artifact, processProperties: Boolean): Unit = {
+    val extract = new AtomicStep(config, patch.parent, XProcConstants.cx_property_extract)
+    val merge = new AtomicStep(config, patch.parent, XProcConstants.cx_property_merge)
+
+    extract.location = patch.location.get
+    merge.location = patch.location.get
+
+    patch.parent.get.insertChildBefore(patch, extract)
+    patch.parent.get.insertChildAfter(patch, merge)
+
+    extract.makePortsExplicit()
+    merge.makePortsExplicit()
+
+    var input = extract.input("source").get
+    var output = Option.empty[Output]
+    var count = 0
+    while (count < patch.children.length) {
+      patch.children(count) match {
+        case pinput: Input =>
+          if (pinput.port.get == "source") {
+            input.children.clear()
+            for (pchild <- pinput.children) {
+              pchild match {
+                case pipe: Pipe =>
+                  input.addChild(new Pipe(config, input, pipe))
+                case doc: Document =>
+                  input.addChild(new Document(config, input, doc))
+                case inline: Inline =>
+                  input.addChild(new Inline(config, input, inline))
+                case empty: Empty =>
+                  input.addChild(new Empty(config, input, empty))
+                case _ =>
+                  throw new RuntimeException("Unimpl: " + pchild)
+              }
+            }
+            pinput.children.clear()
+          }
+        case out: Output =>
+          output = Some(out)
+        case _ => Unit
+      }
+      count += 1
+    }
+
+    patchPipe(patch.name, List("result","#result"), merge.name, "result")
+    input = patch.input("source").get
+
+    if (processProperties) {
+      var pipe = new Pipe(config, input, extract.name, "properties")
+      input.addChild(pipe)
+
+      input = new Input(config, merge, "source", primary=true, sequence=false)
+      pipe = new Pipe(config, input, extract.name, "result")
+      input.addChild(pipe)
+      merge.addChild(input)
+
+      input = new Input(config, merge, "properties", primary=true, sequence=false)
+      pipe = new Pipe(config, input, patch.name, output.get.port.get)
+      input.addChild(pipe)
+      merge.addChild(input)
+    } else {
+      var pipe = new Pipe(config, input, extract.name, "result")
+      input.addChild(pipe)
+
+      input = new Input(config, merge, "source", primary=true, sequence=false)
+      pipe = new Pipe(config, input, extract.name, "properties")
+      input.addChild(pipe)
+      merge.addChild(input)
+
+      input = new Input(config, merge, "result", primary=true, sequence=false)
+      pipe = new Pipe(config, input, patch.name, output.get.port.get)
+      input.addChild(pipe)
+      merge.addChild(input)
+    }
   }
 
   override def makeInputBindingsExplicit(): Boolean = {

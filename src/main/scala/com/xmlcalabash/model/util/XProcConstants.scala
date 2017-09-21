@@ -41,6 +41,10 @@ object XProcConstants {
   val p_when = new QName("p", ns_p, "when")
   val p_with_option = new QName("p", ns_p, "with-option")
 
+  val p_with_document = new QName("p", ns_p, "with-document")
+  val p_with_properties = new QName("p", ns_p, "with-properties")
+
+
   val p_error = new QName("p", ns_p, "error")
   val p_identity = new QName("p", ns_p, "identity")
   val p_sink = new QName("p", ns_p, "sink")
@@ -105,6 +109,8 @@ object XProcConstants {
 
   // Extensions
   val cx_document = new QName("cx", ns_cx, "document")
+  val cx_property_extract = new QName("cx", ns_cx, "property-extract")
+  val cx_property_merge = new QName("cx", ns_cx, "property-merge")
 
   val _byte_order_mark = new QName("", "byte-order-mark")
   val _cdata_section_elements = new QName("", "cdata-section-elements")
@@ -141,6 +147,7 @@ object XProcConstants {
   val _version = new QName("", "version")
   val _xpath_version = new QName("", "xpath-version")
 
+  val _base_uri = new QName("", "base-uri")
   val _content_type = new QName("", "content-type")
 
   // For non-XProc namespaced places

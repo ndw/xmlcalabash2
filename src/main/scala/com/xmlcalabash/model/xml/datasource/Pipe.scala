@@ -36,6 +36,12 @@ class Pipe(override val config: XMLCalabash,
     _port = port
   }
 
+  def this(config: XMLCalabash, parent: Artifact, pipe: Pipe) = {
+    this(config, Some(parent))
+    _step = pipe.step
+    _port = pipe.port
+  }
+
   def step: Option[String] = _step
   protected[xml] def step_=(name: String): Unit = {
     _step = Some(name)
@@ -44,6 +50,13 @@ class Pipe(override val config: XMLCalabash,
   def port: Option[String] = _port
   protected[xml] def port_=(name: String): Unit = {
     _port = Some(name)
+  }
+
+  override def patchPipe(fromName: String, fromPort: List[String], patchName: String, patchPort: String): Unit = {
+    if (_step.get == fromName && fromPort.contains(_port.get)) {
+      _step = Some(patchName)
+      _port = Some(patchPort)
+    }
   }
 
   override def validate(): Boolean = {
@@ -101,13 +114,20 @@ class Pipe(override val config: XMLCalabash,
         throw new ModelException(ExceptionCode.INTERNAL, "p:pipe points to " + parent.get, location)
     }
 
-    if (fromStep.get.output(fromPort).isEmpty) {
-      var ok = false
-      fromStep.get match {
-        case katch: Catch => ok = (fromPort == "errors")
-        case _ => Unit
+    if (isAncestor(step.get)) {
+      if (fromStep.get.input(fromPort).isEmpty) {
+        var ok = false
+        fromStep.get match {
+          case katch: Catch => ok = (fromPort == "errors")
+          case _ => Unit
+        }
+        if (!ok) {
+          throw new ModelException(ExceptionCode.NOPORT, List(fromStep.get.name, fromPort), location)
+        }
       }
-      if (!ok) {
+
+    } else {
+      if (fromStep.get.output(fromPort).isEmpty) {
         throw new ModelException(ExceptionCode.NOPORT, List(fromStep.get.name, fromPort), location)
       }
     }

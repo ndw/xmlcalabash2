@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.model.xml.containers.{Catch, Choose, Finally, ForEach, Group, Otherwise, Try, When}
+import com.xmlcalabash.model.xml.containers.{Catch, Choose, Finally, ForEach, Group, Otherwise, Try, When, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Inline, Pipe}
 import net.sf.saxon.s9api.{Axis, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
@@ -86,6 +86,8 @@ class Parser(config: XMLCalabash) {
             case XProcConstants.p_catch => Some(parseCatch(parent, node))
             case XProcConstants.p_finally => Some(parseFinally(parent, node))
             case XProcConstants.p_for_each => Some(parseForEach(parent, node))
+            case XProcConstants.p_with_properties => Some(parseWithProperties(parent, node))
+            case XProcConstants.p_with_document => Some(parseWithDocument(parent, node))
             case XProcConstants.p_documentation => Some(parseDocumentation(parent, node))
             case XProcConstants.p_pipeinfo => Some(parsePipeInfo(parent, node))
             case _ =>
@@ -327,6 +329,20 @@ class Parser(config: XMLCalabash) {
 
   private def parseForEach(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new ForEach(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
+  private def parseWithProperties(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new WithProperties(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
+  private def parseWithDocument(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new WithDocument(config, parent)
     art.parse(node)
     parseChildren(art, node)
     art
