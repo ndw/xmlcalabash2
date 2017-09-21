@@ -7,7 +7,7 @@
 
   <p:identity name="id">
     <p:input port="source">
-      <p:inline document-properties="{ map {{ 'a': 1 }} }">
+      <p:inline document-properties="map { 'a': 1 }">
         <doc/>
       </p:inline>
     </p:input>
