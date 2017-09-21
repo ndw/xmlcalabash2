@@ -37,11 +37,11 @@ object XmlDriver extends App {
     val parser = new Parser(xmlCalabash)
     val pipeline = parser.parsePipeline(node)
 
+    val graph = pipeline.pipelineGraph()
+
     if (options.dumpXML.isDefined) {
       dumpXML(pipeline, options.dumpXML.get)
     }
-
-    val graph = pipeline.pipelineGraph()
 
     if (options.graphBefore.isDefined) {
       dumpGraph(graph, options.graphBefore.get)
