@@ -12,7 +12,7 @@ import scala.collection.mutable.ListBuffer
 
 class Input(override val config: XMLCalabash,
             override val parent: Option[Artifact]) extends IOPort(config, parent) {
-  private val _pipe = new QName("", "pipe")
+  protected val _pipe = new QName("", "pipe")
   protected var _select: Option[String] = None
 
   protected[xml] def this(config: XMLCalabash, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {

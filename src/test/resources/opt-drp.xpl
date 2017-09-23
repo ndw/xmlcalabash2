@@ -7,9 +7,9 @@
   <p:output port="result"/>
 
   <p:identity>
-    <p:input port="source">
+    <p:with-input port="source">
       <doc><p/><p/><p/></doc>
-    </p:input>
+    </p:with-input>
   </p:identity>
 
   <p:parameters parameters="{ map {{ 'p': count(//p) }} }"/>

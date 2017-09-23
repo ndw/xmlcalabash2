@@ -9,25 +9,25 @@
   <p:output port="result"/>
 
   <p:identity name="one">
-    <p:input port="source">
+    <p:with-input port="source">
       <doc>One</doc>
-    </p:input>
+    </p:with-input>
   </p:identity>
 
   <p:identity name="two">
-    <p:input port="source">
+    <p:with-input port="source">
       <doc>Two</doc>
-    </p:input>
+    </p:with-input>
   </p:identity>
 
   <p:identity name="three">
-    <p:input port="source">
+    <p:with-input port="source">
       <doc>Three</doc>
-    </p:input>
+    </p:with-input>
   </p:identity>
 
   <p:identity name="combined">
-    <p:input port="source" pipe="three two one"/>
+    <p:with-input port="source" pipe="three two one"/>
   </p:identity>
 
   <p:wrap-sequence wrapper="docs"/>

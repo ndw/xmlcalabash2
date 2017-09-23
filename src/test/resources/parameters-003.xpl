@@ -7,11 +7,11 @@
   <p:output port="result"/>
 
   <p:identity name="fred">
-    <p:input port="source">
+    <p:with-input port="source">
       <p:inline>
         <doc><p/><p/><p/><p/></doc>
       </p:inline>
-    </p:input>
+    </p:with-input>
   </p:identity>
 
   <p:parameters>

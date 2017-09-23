@@ -9,34 +9,34 @@
   <p:output port="result"/>
 
   <p:identity name="id">
-    <p:input port="source">
+    <p:with-input port="source">
       <p:inline document-properties="map { 'a': '1', 'b': '2' }">
         <doc/>
       </p:inline>
-    </p:input>
+    </p:with-input>
   </p:identity>
 
 
   <p:choose name="choose">
     <p:when test="p:document-properties(., 'a') = $match">
       <p:identity>
-        <p:input port="source">
+        <p:with-input port="source">
           <p:inline><doc>one</doc></p:inline>
-        </p:input>
+        </p:with-input>
       </p:identity>
     </p:when>
     <p:when test="p:document-properties(., 'b') = $match">
       <p:identity>
-        <p:input port="source">
+        <p:with-input port="source">
           <p:inline><doc>two</doc></p:inline>
-        </p:input>
+        </p:with-input>
       </p:identity>
     </p:when>
     <p:otherwise>
       <p:identity>
-        <p:input port="source">
+        <p:with-input port="source">
           <p:inline><doc>none</doc></p:inline>
-        </p:input>
+        </p:with-input>
       </p:identity>
     </p:otherwise>
   </p:choose>

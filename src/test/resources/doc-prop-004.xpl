@@ -6,11 +6,11 @@
   <p:output port="result"/>
 
   <p:identity name="id">
-    <p:input port="source">
+    <p:with-input port="source">
       <p:inline document-properties="map { 'a': 1 }">
         <doc/>
       </p:inline>
-    </p:input>
+    </p:with-input>
   </p:identity>
 
   <p:variable name="a" select="."/>

@@ -6,10 +6,10 @@
   <p:output port="result"/>
 
   <p:identity name="id">
-    <p:input port="source">
+    <p:with-input port="source">
       <p:document href="src/test/resources/doc-prop-002.xml"
                   document-properties="{ map {{ 'a': 1 }} }"/>
-    </p:input>
+    </p:with-input>
   </p:identity>
 
   <cx:option-value option="{p:document-properties(., 'a')}"/>

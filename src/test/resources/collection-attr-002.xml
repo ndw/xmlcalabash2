@@ -9,23 +9,23 @@
   <p:output port="result"/>
 
   <p:identity name="id1">
-    <p:input port="source">
+    <p:with-input port="source">
       <p:inline>
         <doc/>
       </p:inline>
-    </p:input>
+    </p:with-input>
   </p:identity>
 
   <p:identity name="id2">
-    <p:input port="source">
+    <p:with-input port="source">
       <p:inline>
         <doc/>
       </p:inline>
-    </p:input>
+    </p:with-input>
   </p:identity>
 
   <p:identity name="combine">
-    <p:input port="source" pipe="id1 id2"/>
+    <p:with-input port="source" pipe="id1 id2"/>
   </p:identity>
 
   <p:variable name="a" select="0"/>

@@ -7,9 +7,9 @@
       <p:output port="result"/>
 
       <p:identity name="two">
-        <p:input port="source">
+        <p:with-input port="source">
           <doc xmlns="">The p:inline element can be defaulted.</doc>
-        </p:input>
+        </p:with-input>
       </p:identity>
     </p:declare-step>
   </pipeline>

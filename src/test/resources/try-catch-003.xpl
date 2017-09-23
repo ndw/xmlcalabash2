@@ -13,9 +13,9 @@
       <p:choose>
         <p:when test="$error = 0">
           <p:identity>
-            <p:input port="source">
+            <p:with-input port="source">
               <p:inline><doc>try succeeded</doc></p:inline>
-            </p:input>
+            </p:with-input>
           </p:identity>
         </p:when>
         <p:when test="$error = 1">
@@ -28,24 +28,24 @@
     </p:group>
     <p:catch code="cx:error cx:error2">
       <p:identity>
-        <p:input port="source">
+        <p:with-input port="source">
           <p:inline><doc>caught cx:error or cx:error2</doc></p:inline>
-        </p:input>
+        </p:with-input>
       </p:identity>
     </p:catch>
     <p:catch>
       <p:identity>
-        <p:input port="source">
+        <p:with-input port="source">
           <p:inline><doc>caught any</doc></p:inline>
-        </p:input>
+        </p:with-input>
       </p:identity>
     </p:catch>
     <p:finally>
       <p:output port="finally" primary="false"/>
       <p:identity>
-        <p:input port="source">
+        <p:with-input port="source">
           <p:inline><doc>finally</doc></p:inline>
-        </p:input>
+        </p:with-input>
       </p:identity>
     </p:finally>
   </p:try>

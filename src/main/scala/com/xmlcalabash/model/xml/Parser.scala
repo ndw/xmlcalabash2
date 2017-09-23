@@ -71,6 +71,7 @@ class Parser(config: XMLCalabash) {
             case XProcConstants.p_serialization => Some(parseSerialization(parent, node))
             case XProcConstants.p_output => Some(parseOutput(parent, node))
             case XProcConstants.p_input => Some(parseInput(parent, node))
+            case XProcConstants.p_with_input => Some(parseWithInput(parent, node))
             case XProcConstants.p_option => Some(parseOption(parent, node))
             case XProcConstants.p_variable => Some(parseVariable(parent, node))
             case XProcConstants.p_inline => Some(parseInline(parent, node))
@@ -98,6 +99,9 @@ class Parser(config: XMLCalabash) {
                   parent.get match {
                     case input: Input =>
                       logger.debug("Interpreting naked content of p:input as a p:inline")
+                      Some(parseInline(parent, node))
+                    case input: WithInput =>
+                      logger.debug("Interpreting naked content of p:with-input as a p:inline")
                       Some(parseInline(parent, node))
                     case _ =>
                       throw new ModelException(ExceptionCode.NOTASTEP, node.getNodeName.toString, node)
@@ -180,6 +184,13 @@ class Parser(config: XMLCalabash) {
 
   private def parseInput(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new Input(config, parent)
+    art.parse(node)
+    parseChildren(art, node)
+    art
+  }
+
+  private def parseWithInput(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val art = new WithInput(config, parent)
     art.parse(node)
     parseChildren(art, node)
     art

@@ -39,6 +39,7 @@ object XProcConstants {
   val p_variable = new QName("p", ns_p, "variable")
   val p_viewport = new QName("p", ns_p, "viewport")
   val p_when = new QName("p", ns_p, "when")
+  val p_with_input = new QName("p", ns_p, "with-input")
   val p_with_option = new QName("p", ns_p, "with-option")
 
   val p_with_document = new QName("p", ns_p, "with-document")
