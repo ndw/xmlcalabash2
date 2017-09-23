@@ -1,0 +1,39 @@
+<test xmlns='http://xproc.org/ns/testsuite/3.0'
+      xmlns:err='http://www.w3.org/ns/xproc-error'
+      expected="fail" code="ERROR">
+  <pipeline>
+<p:declare-step xmlns:p="http://www.w3.org/ns/xproc"
+                xmlns:cx="http://xmlcalabash.com/ns/extensions"
+                name="main"
+                version="1.0">
+  <p:output port="result"/>
+
+  <p:identity name="id1">
+    <p:input port="source">
+      <p:inline>
+        <doc/>
+      </p:inline>
+    </p:input>
+  </p:identity>
+
+  <p:identity name="id2">
+    <p:input port="source">
+      <p:inline>
+        <doc/>
+      </p:inline>
+    </p:input>
+  </p:identity>
+
+  <p:identity name="combine">
+    <p:input port="source" pipe="id1 id2"/>
+  </p:identity>
+
+  <p:variable name="a" select="0" collection="true"/>
+
+  <cx:option-value>
+    <p:with-option name="option" select="count(collection())"/>
+  </cx:option-value>
+
+</p:declare-step>
+  </pipeline>
+</test>

@@ -6,11 +6,12 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
-import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
 class WithOption(override val config: XMLCalabash,
                  override val parent: Option[Artifact]) extends Artifact(config, parent) {
+  private var _collection = false
   private var _name: QName = _
   private var _expression = Option.empty[XProcExpression]
 
@@ -44,7 +45,9 @@ class WithOption(override val config: XMLCalabash,
       _expression = Some(new XProcXPathExpression(context, selattr.get))
     }
 
-    for (key <- List(XProcConstants._name, XProcConstants._select)) {
+    _collection = lexicalBoolean(attributes.get(XProcConstants._collection)).getOrElse(false)
+
+    for (key <- List(XProcConstants._name, XProcConstants._select, XProcConstants._collection)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -72,7 +75,8 @@ class WithOption(override val config: XMLCalabash,
 
     grandparent match {
       case start: ContainerStart =>
-        graphNode = Some(start.addVariable(optionName.getClarkName, expression))
+        val options = new SaxonExpressionOptions(contextCollection = _collection)
+        graphNode = Some(start.addVariable(optionName.getClarkName, expression, options))
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "WithOption grandparent isn't a container???", location)
     }

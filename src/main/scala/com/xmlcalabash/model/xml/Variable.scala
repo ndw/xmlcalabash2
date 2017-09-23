@@ -3,13 +3,14 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
+import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
+import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
 class Variable(override val config: XMLCalabash,
                override val parent: Option[Artifact]) extends Artifact(config, parent) {
   private var _name: QName = new QName("", "UNINITIALIZED")
+  private var _collection: Boolean = false
   private var _select = Option.empty[String]
 
   def variableName: QName = _name
@@ -27,7 +28,9 @@ class Variable(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.SELECTATTRREQ, this.toString, location)
     }
 
-    for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._select)) {
+    _collection = lexicalBoolean(attributes.get(XProcConstants._collection)).getOrElse(false)
+
+    for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._select, XProcConstants._collection)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -49,7 +52,8 @@ class Variable(override val config: XMLCalabash,
     val container = this.parent.get
     val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
     val context = new ExpressionContext(_baseURI, inScopeNS, _location)
-    val node = cnode.addVariable(_name.getClarkName, new XProcXPathExpression(context, _select.get))
+    val options = new SaxonExpressionOptions(contextCollection = _collection)
+    val node = cnode.addVariable(_name.getClarkName, new XProcXPathExpression(context, _select.get), options)
     graphNode = Some(node)
     config.addNode(node.id, this)
   }

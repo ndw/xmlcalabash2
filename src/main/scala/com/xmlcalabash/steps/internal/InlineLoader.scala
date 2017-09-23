@@ -113,13 +113,13 @@ class InlineLoader(private val nodes: List[XdmNode],
   private def expandString(text: String): String = {
     val evaluator = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
     val expr = new XProcAvtExpression(context, text)
-    evaluator.value(expr, List.empty[Message], bindings.toMap).item.toString
+    evaluator.value(expr, List.empty[Message], bindings.toMap, None).item.toString
   }
 
   def xpathValue(expr: XProcExpression): XdmItem = {
     val eval = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
     val dynContext = new DynamicContext()
-    val msg = eval.withContext(dynContext) { eval.value(expr, List.empty[Message], bindings.toMap) }
+    val msg = eval.withContext(dynContext) { eval.value(expr, List.empty[Message], bindings.toMap, None) }
     msg.asInstanceOf[XPathItemMessage].item
   }
 }

@@ -360,7 +360,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       val eval = runtimeConfig.expressionEvaluator
       val context = inlineDocument(node)
       val message = new ItemMessage(context, new XProcMetadata("application/xml"))
-      val result = eval.value(new XProcXPathExpression(exprContext, value), List(message), Map.empty[String,Message])
+      val result = eval.value(new XProcXPathExpression(exprContext, value), List(message), Map.empty[String,Message], None)
       result match {
         case item: XPathItemMessage =>
           Some(item.item)

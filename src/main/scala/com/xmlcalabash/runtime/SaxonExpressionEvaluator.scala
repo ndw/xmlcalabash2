@@ -1,6 +1,7 @@
 package com.xmlcalabash.runtime
 
 import java.net.URI
+import java.util
 
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{ItemMessage, Message}
@@ -10,10 +11,14 @@ import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.util.XProcVarValue
+import net.sf.saxon.expr.XPathContext
+import net.sf.saxon.lib.{CollectionFinder, Resource, ResourceCollection}
+import net.sf.saxon.om.{Item, SpaceStrippingRule}
 import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
 import net.sf.saxon.trans.XPathException
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.util.DynamicVariable
@@ -21,6 +26,7 @@ import scala.util.DynamicVariable
 // N.B. The evaluator must be reentrant because there can be only one instance of it because
 // it has a dynamic variable used to pass context to extension functions.
 class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvaluator {
+  private val DEFAULT = "https://xmlcalabash.com/default-collection"
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _dynContext = new DynamicVariable[DynamicContext](null)
 
@@ -31,7 +37,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     this
   }
 
-  override def value(xpath: Any, context: List[Message], bindings: Map[String, Message]): XPathItemMessage = {
+  override def value(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XPathItemMessage = {
     val proxies = mutable.HashMap.empty[Any, XdmNode]
     val newContext = new DynamicContext()
     if (context.nonEmpty) {
@@ -69,10 +75,10 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       }
     }
 
-    withContext(newContext) { do_value(xpath, context, bindings, proxies.toMap) }
+    withContext(newContext) { do_value(xpath, context, bindings, proxies.toMap, options) }
   }
 
-  override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message]): Boolean = {
+  override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): Boolean = {
     val proxies = mutable.HashMap.empty[Any, XdmNode]
     val newContext = new DynamicContext()
     if (context.nonEmpty) {
@@ -110,7 +116,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       }
     }
 
-    val item = withContext(newContext) { do_value(xpath, context, bindings, proxies.toMap) }
+    val item = withContext(newContext) { do_value(xpath, context, bindings, proxies.toMap, options) }
     val result = item.item match {
       case atomic: XdmAtomicValue =>
         atomic.getBooleanValue
@@ -120,7 +126,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     result
   }
 
-  def do_value(xpath: Any, context: List[Message], bindings: Map[String, Message], proxies: Map[Any,XdmNode]): XPathItemMessage = {
+  def do_value(xpath: Any,
+               context: List[Message],
+               bindings: Map[String, Message],
+               proxies: Map[Any,XdmNode],
+               options: Option[Any]): XPathItemMessage = {
     xpath match {
       case expr: XProcExpression =>
         val patchBindings = mutable.HashMap.empty[QName, XdmItem]
@@ -141,7 +151,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
           }
         }
 
-        val result = value(expr, context, patchBindings.toMap, proxies)
+        val result = value(expr, context, patchBindings.toMap, proxies, options)
         new XPathItemMessage(result, XProcMetadata.ANY, expr.context)
       case str: String =>
         new XPathItemMessage(new XdmAtomicValue(str), XProcMetadata.ANY, ExpressionContext.NONE)
@@ -151,14 +161,14 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     }
   }
 
-  def value(xpath: XProcExpression, context: List[Message], bindings: Map[QName, XdmItem], proxies: Map[Any,XdmNode]): XdmItem = {
+  def value(xpath: XProcExpression, context: List[Message], bindings: Map[QName, XdmItem], proxies: Map[Any,XdmNode], options: Option[Any]): XdmItem = {
     var result = ListBuffer.empty[XdmItem]
     xpath match {
       case avtexpr: XProcAvtExpression =>
         var evalAvt = false
         for (part <- avtexpr.avt) {
           if (evalAvt) {
-            val epart = computeValue(part, context, avtexpr.context, bindings, proxies, avtexpr.extensionFunctionsAllowed)
+            val epart = computeValue(part, context, avtexpr.context, bindings, proxies, avtexpr.extensionFunctionsAllowed, options)
             for (item <- epart.asInstanceOf[ListBuffer[XdmItem]]) {
               result += item
             }
@@ -170,7 +180,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
           evalAvt = !evalAvt
         }
       case xpathexpr: XProcXPathExpression =>
-        val epart = computeValue(xpathexpr.expr, context, xpathexpr.context, bindings, proxies, xpathexpr.extensionFunctionsAllowed)
+        val epart = computeValue(xpathexpr.expr, context, xpathexpr.context, bindings, proxies, xpathexpr.extensionFunctionsAllowed, options)
         for (item <- epart.asInstanceOf[ListBuffer[XdmItem]]) {
           result += item
         }
@@ -190,13 +200,31 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
                            exprContext: ExpressionContext,
                            bindings: Map[QName,XdmItem],
                            proxies: Map[Any, XdmNode],
-                           extensionsOk: Boolean): Any = {
+                           extensionsOk: Boolean,
+                           options: Option[Any]): Any = {
     val results = ListBuffer.empty[XdmItem]
     val config = xmlCalabash.processor.getUnderlyingConfiguration
+    val collection = List.empty[XdmNode]
+
+    val useCollection = if (options.isDefined) {
+      options.get match {
+        case seo: SaxonExpressionOptions => seo.contextCollection
+        case _ => false
+      }
+    } else {
+      false
+    }
 
     if (contextItem.size > 1) {
-      throw XProcException.dynamicError(5, exprContext.location)
+      if (!useCollection) {
+        throw XProcException.dynamicError(5, exprContext.location)
+      }
     }
+
+    val sconfig = xmlCalabash.processor.getUnderlyingConfiguration
+    val curfinder = sconfig.getCollectionFinder
+    sconfig.setCollectionFinder(new ExprCollectionFinder(curfinder, contextItem))
+    sconfig.setDefaultCollection(DEFAULT)
 
     try {
       val xcomp = xmlCalabash.processor.newXPathCompiler()
@@ -331,4 +359,55 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     builder.result
   }
 
+  class ExprCollectionFinder(finder: CollectionFinder, messages: List[Message]) extends CollectionFinder {
+    private val items = ListBuffer.empty[ExprNodeResource]
+    for (msg <- messages) {
+      msg match {
+        case item: XPathItemMessage =>
+          items += new ExprNodeResource(item.item.asInstanceOf[XdmNode])
+        case item: ItemMessage =>
+          items += new ExprNodeResource(item.item.asInstanceOf[XdmNode])
+        case _ => throw new RuntimeException("Bang3")
+      }
+    }
+    private val rsrcColl = new ExprResourceCollection(items.toList)
+
+    override def findCollection(context: XPathContext, collectionURI: String): ResourceCollection = {
+      if (collectionURI == DEFAULT) {
+        rsrcColl
+      } else {
+        finder.findCollection(context, collectionURI)
+      }
+    }
+  }
+
+  class ExprResourceCollection(items: List[ExprNodeResource]) extends ResourceCollection {
+    override def getCollectionURI: String = ""
+
+    override def getResourceURIs(context: XPathContext): util.Iterator[String] = {
+      val uris = ListBuffer.empty[String]
+      for (rsrc <- items) {
+        uris += rsrc.getResourceURI
+      }
+      uris.iterator.asJava
+    }
+
+    override def getResources(context: XPathContext): util.Iterator[_ <: Resource] = {
+      items.iterator.asJava
+    }
+
+    override def stripWhitespace(rules: SpaceStrippingRule): Boolean = {
+      false
+    }
+
+    override def isStable(context: XPathContext): Boolean = {
+      true
+    }
+  }
+
+  class ExprNodeResource(node: XdmNode) extends Resource {
+    override def getResourceURI: String = node.getBaseURI.toASCIIString
+    override def getItem(context: XPathContext): Item = node.getUnderlyingNode.head
+    override def getContentType: String = null
+  }
 }

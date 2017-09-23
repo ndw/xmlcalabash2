@@ -149,6 +149,7 @@ object XProcConstants {
 
   val _base_uri = new QName("", "base-uri")
   val _content_type = new QName("", "content-type")
+  val _collection = new QName("", "collection")
 
   // For non-XProc namespaced places
   val p_expand_text = new QName("p", ns_p, "expand-text")
