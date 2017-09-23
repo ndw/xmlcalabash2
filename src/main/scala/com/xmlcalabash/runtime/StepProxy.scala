@@ -139,7 +139,7 @@ class StepProxy(config: XMLCalabash, step: XmlStep, context: StaticContext) exte
           case xmlmeta: XProcMetadata =>
             item.item match {
               case node: XdmNode =>
-                dynamicContext.addDocument(node.getUnderlyingNode, message)
+                dynamicContext.addDocument(node, message)
               case _ => Unit
             }
             step.receive(port, item.item, xmlmeta)

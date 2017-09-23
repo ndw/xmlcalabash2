@@ -311,7 +311,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     }
 
     if (p.getNodeKind == XdmNodeKind.DOCUMENT) {
-      dynContext.addDocument(p.getUnderlyingNode, msg)
+      dynContext.addDocument(p, msg)
     }
   }
 
@@ -361,13 +361,19 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
   class ExprCollectionFinder(finder: CollectionFinder, messages: List[Message]) extends CollectionFinder {
     private val items = ListBuffer.empty[ExprNodeResource]
+
     for (msg <- messages) {
-      msg match {
-        case item: XPathItemMessage =>
-          items += new ExprNodeResource(item.item.asInstanceOf[XdmNode])
-        case item: ItemMessage =>
-          items += new ExprNodeResource(item.item.asInstanceOf[XdmNode])
-        case _ => throw new RuntimeException("Bang3")
+      val node = dynContext.get.document(msg)
+      if (node.isDefined) {
+        items += new ExprNodeResource(node.get)
+      } else {
+        msg match {
+          case item: XPathItemMessage =>
+            items += new ExprNodeResource(item.item.asInstanceOf[XdmNode])
+          case item: ItemMessage =>
+            items += new ExprNodeResource(item.item.asInstanceOf[XdmNode])
+          case _ => throw new RuntimeException("Bang3")
+        }
       }
     }
     private val rsrcColl = new ExprResourceCollection(items.toList)

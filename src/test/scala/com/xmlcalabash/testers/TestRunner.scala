@@ -359,7 +359,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       val value = node.getAttributeValue(_select)
       val eval = runtimeConfig.expressionEvaluator
       val context = inlineDocument(node)
-      val message = new ItemMessage(context, new XProcMetadata("application/xml"))
+      val message = new ItemMessage(context.get, new XProcMetadata("application/xml"))
       val result = eval.value(new XProcXPathExpression(exprContext, value), List(message), Map.empty[String,Message], None)
       result match {
         case item: XPathItemMessage =>
@@ -376,19 +376,17 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
   }
 
   private def inlineDocument(node: XdmNode): Option[XdmNode] = {
-    val children = ListBuffer.empty[XdmNode]
-    val iter = node.axisIterator(Axis.CHILD)
-    while (iter.hasNext) {
-      children += iter.next.asInstanceOf[XdmNode]
-    }
-
     val builder = new SaxonTreeBuilder(runtimeConfig)
+    val iter = node.axisIterator(Axis.CHILD)
+
     builder.startDocument(node.getBaseURI)
-    for (node <- children) {
-      builder.addSubtree(node)
+    while (iter.hasNext) {
+      builder.addSubtree(iter.next().asInstanceOf[XdmNode])
     }
     builder.endDocument()
-    Some(builder.result)
+
+    val rnode = builder.result
+    Some(rnode)
   }
 
   private def recurse(dir: File): Unit = {

@@ -10,7 +10,6 @@ class DocPropSpec extends XProcTestSpec {
   "Document properties from an XML document" should " work" in {
     test("src/test/resources/doc-prop-002.xml")
   }
-
   "Document properties from a non-XML document" should " work" in {
     test("src/test/resources/doc-prop-003.xml")
   }

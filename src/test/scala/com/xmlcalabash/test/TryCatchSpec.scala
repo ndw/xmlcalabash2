@@ -34,5 +34,4 @@ class TryCatchSpec extends XProcTestSpec {
   "A try/catch " should " be able to catch a specific code that's not first in a list" in {
     test("src/test/resources/try-catch-008.xml")
   }
-
 }

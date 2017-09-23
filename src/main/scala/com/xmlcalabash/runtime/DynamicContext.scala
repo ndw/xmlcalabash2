@@ -38,20 +38,25 @@ class DynamicContext {
   private var _iterationPosition = Option.empty[Long]
   private var _iterationSize = Option.empty[Long]
   private var _documents = mutable.HashMap.empty[NodeInfo,Message]
+  private var _messages = mutable.HashMap.empty[Message,XdmNode]
   private var _location = Option.empty[Location]
   private var _baseURI = Option.empty[URI]
 
   def iterationPosition: Option[Long] = _iterationPosition
   def iterationSize: Option[Long] = _iterationSize
-  def message(doc: NodeInfo): Option[Message] = {
-    _documents.get(doc)
+  def message(document: NodeInfo): Option[Message] = {
+    _documents.get(document)
+  }
+  def document(message: Message): Option[XdmNode] = {
+    _messages.get(message)
   }
   def location: Option[Location] = _location
   def location_=(loc: Location): Unit = {
     _location = Some(loc)
   }
 
-  def addDocument(doc: NodeInfo, msg: Message): Unit = {
-    _documents.put(doc, msg)
+  def addDocument(doc: XdmNode, msg: Message): Unit = {
+    _documents.put(doc.getUnderlyingNode, msg)
+    _messages.put(msg, doc)
   }
 }
