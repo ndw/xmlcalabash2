@@ -1,4 +1,0 @@
-<test xmlns='http://xproc.org/ns/testsuite/3.0' expected="pass">
-  <pipeline src="inline-avt.xpl"/>
-  <schematron src="inline-avt.sch"/>
-</test>

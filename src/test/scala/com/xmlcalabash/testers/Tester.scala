@@ -115,10 +115,8 @@ class Tester(runtimeConfig: XMLCalabash) {
           if (fail == "") {
             fail = s"$xpath: $text"
           }
-          logger.info(s"FAIL: ${_pipeline.get.getBaseURI}: $xpath: $text")
         }
         if (results.isEmpty) {
-          logger.info(s"PASS: ${_pipeline.get.getBaseURI}")
           None
         } else {
           if (fail == "") {
@@ -133,11 +131,13 @@ class Tester(runtimeConfig: XMLCalabash) {
       }
     } catch {
       case model: ModelException =>
+        model.printStackTrace(Console.err)
         Some(model.code.toString)
       case step: StepException =>
+        step.printStackTrace(Console.err)
         Some(step.code.getClarkName)
       case t: Throwable =>
-        t.printStackTrace()
+        t.printStackTrace(Console.err)
         Some(Option(t.getMessage).getOrElse("ERROR"))
     }
   }

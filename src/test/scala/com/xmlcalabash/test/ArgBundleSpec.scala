@@ -4,8 +4,9 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.testers.XProcTestSpec
 import com.xmlcalabash.util.ArgBundle
 import net.sf.saxon.s9api.QName
+import org.scalatest.FlatSpec
 
-class ArgBundleSpec extends XProcTestSpec {
+class ArgBundleSpec extends FlatSpec {
   private val config = XMLCalabash.newInstance()
 
   "Parsing nothing" should "fail" in {

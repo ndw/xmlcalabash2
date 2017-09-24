@@ -1,6 +1,9 @@
 package com.xmlcalabash.testers
 
-import java.io.File
+import java.io.{ByteArrayOutputStream, File, PrintStream}
+import java.net.InetAddress
+import java.text.SimpleDateFormat
+import java.util.{Calendar, GregorianCalendar}
 import javax.xml.transform.sax.SAXSource
 
 import com.jafpl.messages.{ItemMessage, Message}
@@ -8,8 +11,8 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.TestException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcMetadata, XProcXPathExpression}
-import com.xmlcalabash.util.S9Api
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.util.{S9Api, URIUtils}
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.InputSource
@@ -18,10 +21,28 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
+  private val _testsuite = new QName("", "testsuite")
+  private val _properties = new QName("", "properties")
+  private val _property = new QName("", "property")
+  private val _value = new QName("", "value")
+  private val _testcase = new QName("", "testcase")
+  private val _classname = new QName("", "classname")
+  private val _time = new QName("", "time")
+  private val _timestamp = new QName("", "timestamp")
+  private val _system_out = new QName("", "system-out")
+  private val _system_err = new QName("", "system-err")
+  private val _hostname = new QName("", "hostname")
+  private val _tests = new QName("", "tests")
+  private val _error = new QName("", "error")
+  private val _failure = new QName("", "failure")
+  private val _failures = new QName("", "failures")
+  private val _message = new QName("", "message")
+  private val _type = new QName("", "type")
+
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val testFiles = ListBuffer.empty[String]
   private val dir = new File(testloc)
-  private val fnregex = "^.*_tests.xml".r
+  private val fnregex = "^.*.xml".r
   private val tsns = "http://xproc.org/ns/testsuite/3.0"
   private val t_test_suite = new QName(tsns, "test-suite")
   private val t_div = new QName(tsns, "div")
@@ -37,6 +58,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
   private val _select = new QName("", "select")
   private val _expected = new QName("", "expected")
   private val _code = new QName("", "code")
+  private val _when = new QName("", "when")
 
   private val processor = runtimeConfig.processor
   private val builder = processor.newDocumentBuilder()
@@ -68,6 +90,135 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     }
 
     firstError
+  }
+
+  def junit(): XdmNode = {
+    var firstError = Option.empty[String]
+
+    val junit = new SaxonTreeBuilder(runtimeConfig)
+    junit.startDocument(URIUtils.cwdAsURI)
+
+    var count = 0
+    var failures = 0
+    for (fn <- testFiles) {
+      count += 1
+      logger.info(s"Running $count of ${testFiles.length}: $fn")
+
+      val stdout = new ByteArrayOutputStream()
+      val psout = new PrintStream(stdout)
+
+      val stderr = new ByteArrayOutputStream()
+      val pserr = new PrintStream(stderr)
+
+      junit.addStartElement(_testcase)
+      junit.addAttribute(_name, fn)
+      junit.addAttribute(_classname, "NA")
+
+      Console.withOut(psout) {
+        Console.withErr(pserr) {
+          val source = new SAXSource(new InputSource(fn))
+          val node = builder.build(source)
+
+          var result: Option[String] = None
+          var error: Throwable = null
+
+          val start_ms = Calendar.getInstance().getTimeInMillis
+          try {
+            result = runTestDocument(node)
+          } catch {
+            case t: Throwable =>
+              result = Some("ERROR")
+              error = t
+          }
+          val end_ms = Calendar.getInstance().getTimeInMillis
+          junit.addAttribute(_time, ((end_ms - start_ms) / 1000.0).toString)
+          junit.startContent()
+
+          if (result.isDefined) {
+            failures += 1
+            logger.info(s"**** FAIL **** $failures **** $result")
+
+            if (firstError.isEmpty) {
+              firstError = result
+            }
+
+            if (Option(error).isDefined) {
+              junit.addStartElement(_error)
+              junit.addAttribute(_message, error.getMessage)
+              junit.addAttribute(_type, error.getClass.getName)
+              junit.startContent()
+
+              val stderr2 = new ByteArrayOutputStream()
+              val pstrace = new PrintStream(stderr2)
+              Console.withErr(pstrace) {
+                error.printStackTrace(Console.err)
+              }
+
+              junit.addText(stderr2.toString)
+              junit.addEndElement()
+
+            } else {
+              junit.addStartElement(_failure)
+              junit.startContent()
+              junit.addText(result.get)
+              junit.addEndElement()
+            }
+          }
+        }
+      }
+
+      junit.addStartElement(_system_out)
+      junit.startContent()
+      junit.addText(stdout.toString())
+      junit.addEndElement()
+
+      junit.addStartElement(_system_err)
+      junit.startContent()
+      junit.addText(stderr.toString())
+      junit.addEndElement()
+
+      junit.addEndElement()
+    }
+
+    logger.info(s"$failures of $count tests failed")
+
+    val wrapper = new SaxonTreeBuilder(runtimeConfig)
+    wrapper.startDocument(URIUtils.cwdAsURI)
+    wrapper.addStartElement(_testsuite)
+    wrapper.addAttribute(_name, "NA")
+
+    val today   = Calendar.getInstance().getTime
+    val dformat = new SimpleDateFormat("YYYY-MM-dd")
+    val tformat = new SimpleDateFormat("HH:mm:ss")
+    var stamp   = dformat.format(today) + "T" + tformat.format(today)
+    wrapper.addAttribute(_timestamp, stamp)
+
+    wrapper.addAttribute(_hostname, InetAddress.getLocalHost.getHostName)
+    wrapper.addAttribute(_tests, count.toString)
+    wrapper.addAttribute(_failures, failures.toString)
+
+    wrapper.startContent()
+    wrapper.addStartElement(_properties)
+    wrapper.startContent()
+
+    wrapper.addStartElement(_property)
+    wrapper.addAttribute(_name, "processor")
+    wrapper.addAttribute(_value, runtimeConfig.productName)
+    wrapper.startContent()
+    wrapper.addEndElement()
+
+    wrapper.addStartElement(_property)
+    wrapper.addAttribute(_name, "version")
+    wrapper.addAttribute(_value, runtimeConfig.productVersion)
+    wrapper.startContent()
+    wrapper.addEndElement()
+    wrapper.addEndElement()
+
+    wrapper.addSubtree(junit.result)
+
+    wrapper.addEndElement()
+    wrapper.endDocument()
+    wrapper.result
   }
 
   private def runTestDocument(node: XdmNode): Option[String] = {
@@ -111,6 +262,17 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
 
     if ((node.getNodeKind != XdmNodeKind.ELEMENT) || (node.getNodeName != t_test_suite)) {
       throw new TestException("Unexpected node in runTestSuite(): " + node.getNodeKind)
+    }
+
+    val when = node.getAttributeValue(_when)
+    if (when != null) {
+      val evaluator = new SaxonExpressionEvaluator(runtimeConfig)
+      val expr = new XProcXPathExpression(ExpressionContext.NONE, when)
+      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message], None)
+      if (!run) {
+        logger.info("Skipping test-suite")
+        return None // FIXME: work out some way to communicate that a test was skipped
+      }
     }
 
     val src = node.getAttributeValue(_src)
@@ -161,6 +323,17 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       throw new TestException("Unexpected node in runTestSuite(): " + node.getNodeKind)
     }
 
+    val when = node.getAttributeValue(_when)
+    if (when != null) {
+      val evaluator = new SaxonExpressionEvaluator(runtimeConfig)
+      val expr = new XProcXPathExpression(ExpressionContext.NONE, when)
+      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message], None)
+      if (!run) {
+        logger.info("Skipping test-div")
+        return None // FIXME: work out some way to communicate that a test was skipped
+      }
+    }
+
     val src = node.getAttributeValue(_src)
     if (src != null) {
       val divdoc = loadResource(node)
@@ -200,6 +373,17 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
   private def runTest(node: XdmNode): Option[String] = {
     if ((node.getNodeKind != XdmNodeKind.ELEMENT) || (node.getNodeName != t_test)) {
       throw new TestException("Unexpected node in runTestSuite(): " + node.getNodeKind)
+    }
+
+    val when = node.getAttributeValue(_when)
+    if (when != null) {
+      val evaluator = new SaxonExpressionEvaluator(runtimeConfig)
+      val expr = new XProcXPathExpression(ExpressionContext.NONE, when)
+      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message], None)
+      if (!run) {
+        logger.info("Skipping test")
+        return None // FIXME: work out some way to communicate that a test was skipped
+      }
     }
 
     val src = node.getAttributeValue(_src)
