@@ -102,6 +102,8 @@ object S9Api {
             xqeval.setDestination(serializer)
         }
       }
+    } else {
+      xqeval.setDestination(serializer)
     }
 
     for (node <- nodes) {
