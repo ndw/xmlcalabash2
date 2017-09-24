@@ -7,7 +7,7 @@ language: scala
 scala:
   - 2.12.3
 script:
-  - cd src/test/resources && git clone git@github.com:xproc/3.0-test-suite.git test-suite
+  - cd src/test/resources && git clone https://github.com/xproc/3.0-test-suite.git test-suite
   - sbt ++$TRAVIS_SCALA_VERSION test
 sudu: false
 jdk:
