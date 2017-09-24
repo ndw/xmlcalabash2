@@ -97,11 +97,11 @@ class Parser(config: XMLCalabash) {
               } else {
                 if (parent.isDefined) {
                   parent.get match {
-                    case input: Input =>
-                      logger.debug("Interpreting naked content of p:input as a p:inline")
-                      Some(parseInline(parent, node))
                     case input: WithInput =>
                       logger.debug("Interpreting naked content of p:with-input as a p:inline")
+                      Some(parseInline(parent, node))
+                    case input: Input =>
+                      logger.debug("Interpreting naked content of p:input as a p:inline")
                       Some(parseInline(parent, node))
                     case _ =>
                       throw new ModelException(ExceptionCode.NOTASTEP, node.getNodeName.toString, node)
