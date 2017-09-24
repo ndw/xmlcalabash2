@@ -18,8 +18,7 @@ class Document(override val config: XMLCalabash,
 
   private var _href = Option.empty[String]
   private var _docProps = Option.empty[String]
-  private var hrefAvt = List.empty[String]
-  private var docPropsAvt = List.empty[String]
+  private var hrefAvt = Option.empty[List[String]]
   private val bindingRefs = mutable.HashSet.empty[QName]
 
   def this(config: XMLCalabash, parent: Artifact, doc: Document) = {
@@ -27,7 +26,6 @@ class Document(override val config: XMLCalabash,
     _href = doc._href
     _docProps = doc._docProps
     hrefAvt = doc.hrefAvt
-    docPropsAvt = doc.docPropsAvt
     bindingRefs.clear()
     bindingRefs ++= doc.bindingRefs
   }
@@ -55,56 +53,35 @@ class Document(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.BADCHILD, children.head.toString, location)
     }
 
-    hrefAvt = parseAvt("href", _href.get)
+    hrefAvt = ValueParser.parseAvt(_href.get)
+
     if (_docProps.isDefined) {
-      docPropsAvt = parseAvt("document-properties", _docProps.get)
+      findVariableRefsInString(_docProps.get)
     }
 
     true
   }
 
-  private def parseAvt(name: String, expr: String): List[String] = {
-    val list = ValueParser.parseAvt(expr)
-    if (list.isEmpty) {
-      throw new ModelException(ExceptionCode.BADAVT, List(name, expr), location)
+  private def findVariableRefsInString(text: String): Unit = {
+    val parser = config.expressionParser
+    parser.parse(text)
+    for (ref <- parser.variableRefs) {
+      val qname = lexicalQName(Some(ref)).get
+      bindingRefs += qname
     }
-
-    var avt = false
-    for (substr <- list.get) {
-      if (avt) {
-        val parser = config.expressionParser
-        parser.parse(substr)
-        for (ref <- parser.variableRefs) {
-          val qname = lexicalQName(Some(ref)).get
-          bindingRefs += qname
-        }
-      }
-      avt = !avt
-    }
-
-    list.get
   }
 
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get.parent.get.parent.get
     val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
-    val step = new FileLoader()
+    val context = new ExpressionContext(baseURI, inScopeNS, location)
+    val step = new FileLoader(context, _docProps)
     val docReader = cnode.addAtomic(step, "document")
 
-    val context = new ExpressionContext(baseURI, inScopeNS, location)
-    val hrefBinding = cnode.addVariable("href", new XProcAvtExpression(context, hrefAvt))
+    val hrefBinding = cnode.addVariable("href", new XProcAvtExpression(context, hrefAvt.get))
     graph.addBindingEdge(hrefBinding, docReader)
     graphNode = Some(docReader)
     config.addNode(docReader.id, this)
-
-    val docPropsBinding =  if (_docProps.isDefined) {
-      val docPropsBinding = cnode.addVariable("document-properties", new XProcAvtExpression(context, docPropsAvt))
-      graph.addBindingEdge(docPropsBinding, docReader)
-      graphNode = Some(docReader)
-      Some(docPropsBinding)
-    } else {
-      None
-    }
 
     for (ref <- bindingRefs) {
       val bind = findBinding(ref)
@@ -127,9 +104,6 @@ class Document(override val config: XMLCalabash,
             throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
           }
           graph.addBindingEdge(optDecl.get.graphNode.get.asInstanceOf[Binding], hrefBinding)
-          if (docPropsBinding.isDefined) {
-            graph.addBindingEdge(optDecl.get.graphNode.get.asInstanceOf[Binding], docPropsBinding.get)
-          }
 
         case _ =>
           throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
