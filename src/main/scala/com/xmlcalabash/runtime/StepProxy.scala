@@ -7,17 +7,20 @@ import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
-import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
+import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.util.TypeUtils
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 
-class StepProxy(config: XMLCalabash, step: XmlStep, context: StaticContext) extends Step with XProcDataConsumer {
+class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, context: StaticContext) extends Step with XProcDataConsumer {
+  private val typeUtils = new TypeUtils(config)
   private var location = Option.empty[Location]
   private var _id: String = _
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
-  protected val bindings = mutable.HashMap.empty[QName,XdmItem]
+  protected val bindings = mutable.HashSet.empty[QName]
   protected var dynamicContext = new DynamicContext()
 
   def nodeId: String = _id
@@ -53,7 +56,6 @@ class StepProxy(config: XMLCalabash, step: XmlStep, context: StaticContext) exte
         new XmlPortSpecification(portMap.toMap, typeMap.toMap)
     }
   }
-
   override def outputSpec: XmlPortSpecification = {
     step match {
       case xstep: XmlStep => xstep.outputSpec
@@ -89,11 +91,33 @@ class StepProxy(config: XMLCalabash, step: XmlStep, context: StaticContext) exte
       new QName("", bindmsg.name)
     }
 
+    bindings += qname
+
+    val stepsig = config.signatures.step(stepType)
+    val optsig  = stepsig.option(qname, location.get)
+    val opttype: Option[QName] = if (optsig.declaredType.isDefined) {
+      Some(new QName(XProcConstants.ns_xs, optsig.declaredType.get))
+    } else {
+      None
+    }
+
     bindmsg.message match {
       case item: XPathItemMessage =>
-        step.receiveBinding(qname, item.item, item.context)
+        item.item match {
+          case atomic: XdmAtomicValue =>
+            val value = typeUtils.castAs(atomic, opttype, item.context)
+            step.receiveBinding(qname, value, item.context)
+          case _ => Unit
+            step.receiveBinding(qname, item.item, item.context)
+        }
       case item: ItemMessage =>
-        step.receiveBinding(qname, item.item.asInstanceOf[XdmItem], ExpressionContext.NONE)
+        item.item match {
+          case atomic: XdmAtomicValue =>
+            val value = typeUtils.castAs(atomic, opttype, ExpressionContext.NONE)
+            step.receiveBinding(qname, value, ExpressionContext.NONE)
+          case _ => Unit
+            step.receiveBinding(qname, item.item.asInstanceOf[XdmItem], ExpressionContext.NONE)
+        }
       case _ =>
         throw XProcException.xiInvalidMessage(location, bindmsg.message)
     }
@@ -109,10 +133,27 @@ class StepProxy(config: XMLCalabash, step: XmlStep, context: StaticContext) exte
     step.initialize(config)
   }
   override def run(): Unit = {
+    val stepsig = config.signatures.step(stepType)
+    for (qname <- stepsig.options) {
+      if (!bindings.contains(qname)) {
+        val optsig  = stepsig.option(qname, location.get)
+        val opttype: Option[QName] = if (optsig.declaredType.isDefined) {
+          Some(new QName(XProcConstants.ns_xs, optsig.declaredType.get))
+        } else {
+          None
+        }
+        if (optsig.defaultValue.isDefined) {
+          val value = typeUtils.castAs(new XdmAtomicValue(optsig.defaultValue.get), opttype, ExpressionContext.NONE)
+          step.receiveBinding(qname, value, ExpressionContext.NONE)
+        }
+      }
+    }
+
     DynamicContext.withContext(dynamicContext) { step.run(context) }
   }
   override def reset(): Unit = {
     step.reset()
+    bindings.clear()
   }
   override def abort(): Unit = {
     step.abort()
