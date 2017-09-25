@@ -11,8 +11,8 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ModelException, ParseException, StepException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.xml.{DeclareStep, Parser}
-import com.xmlcalabash.runtime.{ExpressionContext, PrintingConsumer, XProcXPathExpression}
-import com.xmlcalabash.util.ArgBundle
+import com.xmlcalabash.runtime.{ExpressionContext, PrintingConsumer, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.util.{ArgBundle, URIUtils}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem}
 import org.xml.sax.InputSource
 
@@ -65,8 +65,14 @@ object XmlDriver extends App {
     runtime.traceEventManager = xmlCalabash.traceEventManager
 
     for (port <- pipeline.inputPorts) {
-      xmlCalabash.trace(s"Binding input port $port to 'Hello, world.'", "ExternalBindings")
-      runtime.inputs(port).send(new ItemMessage("Hello, world.", Metadata.STRING))
+      if (options.inputs.contains(port)) {
+        for (fn <- options.inputs(port)) {
+          val node = xmlCalabash.parse(fn, URIUtils.cwdAsURI)
+          runtime.inputs(port).send(new XPathItemMessage(node, XProcMetadata.XML, ExpressionContext.NONE))
+        }
+      } else {
+        throw new RuntimeException("No binding for port: " + port)
+      }
     }
 
     for (port <- pipeline.outputPorts) {
