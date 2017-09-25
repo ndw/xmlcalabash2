@@ -7,6 +7,11 @@ function p:system-property     has implementation xf:SystemProperty
 function p:document-properties has implementation xf:DocumentProperties
 function cx:cwd                has implementation xf:Cwd
 
+step p:count has implementation xc:Count
+  input source*
+  output result
+  option limit? as integer = "0"
+
 step p:error has implementation xc:Error
   option code as QName
   option code-prefix? as NCName
@@ -81,11 +86,6 @@ step p:compare
   input alternate
   output result
   option fail-if-not-equal? as boolean = 'false'
-
-step p:count
-  input source*
-  output result
-  option limit? as integer = "0"
 
 step p:delete
   input source
