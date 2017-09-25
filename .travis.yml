@@ -13,7 +13,8 @@ script:
   - ls
   - ls src
   - ls src/test
-  - ls src/test/resources
+  - ls -l src/test/resources
+  - ls -l src/test/resources/test-suite
   - ls src/test/resources/test-suite/tests/
   - sbt ++$TRAVIS_SCALA_VERSION test
 sudu: false
