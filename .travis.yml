@@ -10,12 +10,6 @@ script:
   - pushd src/test/resources
   - git clone https://github.com/xproc/3.0-test-suite.git test-suite
   - popd
-  - ls
-  - ls src
-  - ls src/test
-  - ls -l src/test/resources
-  - ls -l src/test/resources/test-suite
-  - ls src/test/resources/test-suite/tests/
   - sbt ++$TRAVIS_SCALA_VERSION test
 sudu: false
 jdk:
