@@ -22,6 +22,8 @@ class Input(override val config: XMLCalabash,
     _sequence = Some(sequence)
   }
 
+  def select: Option[String] = _select
+
   override def validate(): Boolean = {
     var valid = super.validate()
 

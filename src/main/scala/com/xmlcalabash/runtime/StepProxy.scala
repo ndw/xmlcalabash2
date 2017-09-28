@@ -8,13 +8,15 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.util.TypeUtils
+import com.xmlcalabash.model.xml.Artifact
+import com.xmlcalabash.util.{S9Api, TypeUtils}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
-class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, context: StaticContext) extends Step with XProcDataConsumer {
+class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: Artifact, context: StaticContext) extends Step with XProcDataConsumer {
   private val typeUtils = new TypeUtils(config)
   private var location = Option.empty[Location]
   private var _id: String = _
@@ -178,12 +180,32 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, context: St
       case item: ItemMessage =>
         item.metadata match {
           case xmlmeta: XProcMetadata =>
+            var docs = ListBuffer.empty[Any]
             item.item match {
               case node: XdmNode =>
-                dynamicContext.addDocument(node, message)
-              case _ => Unit
+                if (artifact.input(port).get.select.isDefined) {
+                  val expr = config.expressionEvaluator.newInstance()
+                  val selectExpr = new XProcXPathExpression(ExpressionContext.NONE, artifact.input(port).get.select.get)
+                  val selected = expr.value(selectExpr, List(item), Map.empty[String,Message], None)
+                  for (msg <- selected) {
+                    val item = msg.asInstanceOf[XPathItemMessage].item
+                    docs += item
+                    item match {
+                      case node: XdmNode =>
+                        dynamicContext.addDocument(node, message)
+                      case _ => Unit
+                    }
+                  }
+                } else {
+                  dynamicContext.addDocument(node, message)
+                  docs += node
+                }
+              case _ =>
+                docs += item.item
             }
-            step.receive(port, item.item, xmlmeta)
+            for (item <- docs) {
+              step.receive(port, item, xmlmeta)
+            }
           case _ => throw XProcException.xiInvalidMetadata(location, item.metadata)
         }
       case _ => throw XProcException.xiInvalidMessage(location, message)
