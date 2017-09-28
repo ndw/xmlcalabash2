@@ -34,49 +34,69 @@ object XProcException {
 
   private def internalError(code: Int, location: Option[Location], args: List[Any]): XProcException = {
     val qname = new QName("cx", XProcConstants.ns_cx, "XI%04d".format(code))
-    new XProcException(qname, None, location)
+    new XProcException(qname, None, location, List.empty[String])
   }
 
   def dynamicError(code: Int): XProcException = {
-    dynamicError(code, None)
+    dynamicError(code, List.empty[String], None)
+  }
+  def dynamicError(code: Int, details: String): XProcException = {
+    dynamicError(code, List(details), None)
+  }
+  def dynamicError(code: Int, details: List[String]): XProcException = {
+    dynamicError(code, details, None)
   }
   def dynamicError(code: Int, location: Option[Location]): XProcException = {
+    dynamicError(code, List.empty[String], location)
+  }
+  def dynamicError(code: Int, details: String, location: Option[Location]): XProcException = {
+    dynamicError(code, List(details), location)
+  }
+  def dynamicError(code: Int, details: List[String], location: Option[Location]): XProcException = {
     val qname = new QName("err", XProcConstants.ns_err, "XD%04d".format(code))
-    new XProcException(qname)
+    new XProcException(qname, None, location, details)
   }
 
   def staticError(code: Int): XProcException = {
-    staticError(code, None)
+    staticError(code, List.empty[String], None)
+  }
+  def staticError(code: Int, details: String): XProcException = {
+    staticError(code, List(details), None)
+  }
+  def staticError(code: Int, details: List[String]): XProcException = {
+    staticError(code, details, None)
   }
   def staticError(code: Int, location: Option[Location]): XProcException = {
-    val qname = new QName("err", XProcConstants.ns_err, "XS%04d".format(code))
-    new XProcException(qname)
+    staticError(code, List.empty[String], location)
   }
-  def staticError(code: Int, location: Option[Location], details: List[String]): XProcException = {
+  def staticError(code: Int, details: String, location: Option[Location]): XProcException = {
+    staticError(code, List(details), location)
+  }
+  def staticError(code: Int, details: List[String], location: Option[Location]): XProcException = {
     val qname = new QName("err", XProcConstants.ns_err, "XS%04d".format(code))
-    new XProcException(qname)
+    new XProcException(qname, None, location, details)
   }
 }
 
-class XProcException(val code: QName, val message: Option[String], val location: Option[Location]) extends Throwable {
+class XProcException(val code: QName, val message: Option[String], val location: Option[Location], val details: List[String]) extends Throwable {
   def this(code: QName) {
-    this(code, None, None)
+    this(code, None, None, List.empty[String])
   }
 
   def this(code: QName, message: String) {
-    this(code, Some(message), None)
+    this(code, Some(message), None, List.empty[String])
   }
 
   def this(code: QName, message: String, location: Location) {
-    this(code, Some(message), Some(location))
+    this(code, Some(message), Some(location), List.empty[String])
   }
 
   def this(code: QName, message: String, context: ExpressionContext) {
-    this(code, Some(message), context.location)
+    this(code, Some(message), context.location, List.empty[String])
   }
 
   def this(code: QName, context: ExpressionContext) {
-    this(code, None, context.location)
+    this(code, None, context.location, List.empty[String])
   }
 
   override def toString: String = {

@@ -100,12 +100,16 @@ object XmlDriver extends App {
           } else {
             code match {
               case qname: QName =>
-                xmlCalabash.errorExplanation.message(qname)
+                xmlCalabash.errorExplanation.message(qname, xproc.details)
               case _ =>
                 s"Configuration error: code ($code) is not a QName"
             }
           }
-          println(s"ERROR $code $message")
+          if (xproc.location.isDefined) {
+            println(s"ERROR ${xproc.location.get} $code $message")
+          } else {
+            println(s"ERROR $code $message")
+          }
 
           if (options.verbose && code.isInstanceOf[QName]) {
             val explanation = xmlCalabash.errorExplanation.explanation(code.asInstanceOf[QName])
@@ -167,7 +171,7 @@ object XmlDriver extends App {
             bindingsMap.put(jcbind, msg)
           } else {
             if (decl.get.required) {
-              throw XProcException.staticError(18)
+              throw XProcException.staticError(18, bind.toString, pipeline.location)
             } else {
               println(s"Missing binding for $bind, supplied nothing")
             }

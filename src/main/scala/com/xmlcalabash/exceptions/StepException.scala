@@ -7,9 +7,42 @@ import com.xmlcalabash.runtime.ExpressionContext
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 object StepException {
-  def dynamicError(code: Int): StepException = {
-    val qname = new QName("err", XProcConstants.ns_err, "D%04d".format(code))
-    new StepException(qname)
+  def dynamicError(code: Int): XProcException = {
+    dynamicError(code, List.empty[String], None)
+  }
+  def dynamicError(code: Int, details: String): XProcException = {
+    dynamicError(code, List(details), None)
+  }
+  def dynamicError(code: Int, details: List[String]): XProcException = {
+    dynamicError(code, details, None)
+  }
+  def dynamicError(code: Int, location: Option[Location]): XProcException = {
+    dynamicError(code, List.empty[String], location)
+  }
+  def dynamicError(code: Int, details: String, location: Option[Location]): XProcException = {
+    dynamicError(code, List(details), location)
+  }
+  def dynamicError(code: Int, details: List[String], location: Option[Location]): XProcException = {
+    XProcException.dynamicError(code, details, location)
+  }
+
+  def staticError(code: Int): XProcException = {
+    staticError(code, List.empty[String], None)
+  }
+  def staticError(code: Int, details: String): XProcException = {
+    staticError(code, List(details), None)
+  }
+  def staticError(code: Int, details: List[String]): XProcException = {
+    staticError(code, details, None)
+  }
+  def staticError(code: Int, location: Option[Location]): XProcException = {
+    staticError(code, List.empty[String], location)
+  }
+  def staticError(code: Int, details: String, location: Option[Location]): XProcException = {
+    staticError(code, List(details), location)
+  }
+  def staticError(code: Int, details: List[String], location: Option[Location]): XProcException = {
+    XProcException.staticError(code, details, location)
   }
 }
 

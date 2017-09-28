@@ -45,10 +45,35 @@ class DefaultErrorExplanation(config: XMLCalabash) extends ErrorExplanation {
   }
 
   override def message(code: QName): String = {
-    messages.getOrElse(code, "[No explanatory message for " + code + "]")
+    message(code, List.empty[String])
+  }
+
+  override def message(code: QName, details: List[String]): String = {
+    val detail = "^(.*)\\$(\\d+)(.*)$".r
+    var message = messages.getOrElse(code, "[No explanatory message for " + code + "]")
+    var matched = true
+    while (matched) {
+      matched = false
+      message match {
+        case detail(pre,detno,post) =>
+          matched = true
+          val detnum = detno.toInt - 1
+          if (details.length > detnum) {
+            message = pre + details(detnum) + post
+          } else {
+            message = pre + post
+          }
+        case _ =>
+      }
+    }
+    message
   }
 
   override def explanation(code: QName): String = {
+    explanation(code, List.empty[String])
+  }
+
+  override def explanation(code: QName, details: List[String]): String = {
     explain.getOrElse(code, "")
   }
 }
