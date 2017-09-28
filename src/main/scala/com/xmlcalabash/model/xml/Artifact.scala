@@ -344,6 +344,19 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     list.toList
   }
 
+  def bindingDeclaration(qname: QName): Option[OptionDecl] = {
+    for (child <- children) {
+      child match {
+        case opt: OptionDecl =>
+          if (opt.optionName == qname) {
+            return Some(opt)
+          }
+        case _ => Unit
+      }
+    }
+    None
+  }
+
   def defaultLabel: String = {
     if (parent.isEmpty) {
       "!1"

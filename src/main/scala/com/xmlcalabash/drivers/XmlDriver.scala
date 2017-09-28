@@ -5,15 +5,15 @@ import javax.xml.transform.sax.SAXSource
 
 import com.jafpl.exceptions.GraphException
 import com.jafpl.graph.Graph
-import com.jafpl.messages.{ItemMessage, Message, Metadata}
+import com.jafpl.messages.Message
 import com.jafpl.runtime.GraphRuntime
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ModelException, ParseException, StepException}
+import com.xmlcalabash.exceptions.{ModelException, ParseException, StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.xml.{DeclareStep, Parser}
 import com.xmlcalabash.runtime.{ExpressionContext, PrintingConsumer, XProcMetadata, XProcXPathExpression}
-import com.xmlcalabash.util.{ArgBundle, URIUtils}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem}
+import com.xmlcalabash.util.{ArgBundle, URIUtils, XProcVarValue}
+import net.sf.saxon.s9api.QName
 import org.xml.sax.InputSource
 
 import scala.collection.mutable
@@ -81,33 +81,39 @@ object XmlDriver extends App {
       runtime.outputs(port).setConsumer(pc)
     }
 
-    val usedBindings = mutable.HashSet.empty[QName]
-    for (bind <- pipeline.bindings) {
-      if (options.params.contains(bind)) {
-        xmlCalabash.trace(s"Binding option $bind to '${options.params(bind)}'", "ExternalBindings")
-        runtime.bindings(bind.getClarkName).set(options.params(bind))
-        usedBindings += bind
-      } else {
-        println(s"Missing binding for $bind, supplied nothing")
-      }
-    }
-    for (bind <- options.params.keySet) {
-      if (!usedBindings.contains(bind)) {
-        println(s"Ignoring unused binding for $bind")
-      }
-    }
+    processOptionBindings(runtime, pipeline)
 
     runtime.run()
   } catch {
     case t: Throwable =>
       t match {
-        case model: ModelException => Unit
+        case model: ModelException =>
           println(model)
-        case parse: ParseException => Unit
+        case parse: ParseException =>
           println(parse)
-        case graph: GraphException => Unit
+        case graph: GraphException =>
           println(graph)
-        case step: StepException => Unit
+        case xproc: XProcException =>
+          val code = xproc.code
+          val message = if (xproc.message.isDefined) {
+            xproc.message.get
+          } else {
+            code match {
+              case qname: QName =>
+                xmlCalabash.errorExplanation.message(qname)
+              case _ =>
+                s"Configuration error: code ($code) is not a QName"
+            }
+          }
+          println(s"ERROR $code $message")
+
+          if (options.verbose && code.isInstanceOf[QName]) {
+            val explanation = xmlCalabash.errorExplanation.explanation(code.asInstanceOf[QName])
+            if (explanation != "") {
+              println(explanation)
+            }
+          }
+        case step: StepException =>
           val code = step.code
           val message = if (step.message.isDefined) {
             step.message.get
@@ -133,6 +139,51 @@ object XmlDriver extends App {
 
   if (errored) {
     System.exit(1)
+  }
+
+  // ===========================================================================================
+
+  private def processOptionBindings(runtime: GraphRuntime, pipeline: DeclareStep): Unit = {
+    val bindingsMap = mutable.HashMap.empty[String, Message]
+    for (bind <- pipeline.bindings) {
+      val jcbind = bind.getClarkName
+
+      if (options.params.contains(bind)) {
+        xmlCalabash.trace(s"Binding option $bind to '${options.params(bind)}'", "ExternalBindings")
+        val value = options.params(bind)
+        val msg = new XPathItemMessage(value.value, XProcMetadata.XML, value.context)
+        runtime.bindings(jcbind).set(value)
+        bindingsMap.put(jcbind, msg)
+      } else {
+        val decl = pipeline.bindingDeclaration(bind)
+        if (decl.isDefined) {
+          if (decl.get.select.isDefined) {
+            // FIXME: support references to previously declared variables ...
+            val context = new ExpressionContext(None, options.inScopeNamespaces, None)
+            val expr = new XProcXPathExpression(context, decl.get.select.get)
+            val msg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+            val eval = msg.asInstanceOf[XPathItemMessage].item
+            runtime.bindings(jcbind).set(new XProcVarValue(eval, context))
+            bindingsMap.put(jcbind, msg)
+          } else {
+            if (decl.get.required) {
+              throw XProcException.staticError(18)
+            } else {
+              println(s"Missing binding for $bind, supplied nothing")
+            }
+          }
+        } else {
+          println("No decl for " + bind + " ???")
+        }
+      }
+    }
+
+    for (bind <- options.params.keySet) {
+      val jcbind = bind.getClarkName
+      if (!bindingsMap.contains(jcbind)) {
+        println(s"Ignoring unused binding for $bind")
+      }
+    }
   }
 
   // ===========================================================================================

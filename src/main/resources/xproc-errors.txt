@@ -6,4 +6,5 @@ for which the `test` condition returns true. If no p:when alternatives are
 selected, a p:otherwise must be present. This error is raised if the
 p:choose does not contain a selected p:when or a p:otherwise.
 
-
+XS0018
+The pipeline has a required option for which no value was provided.

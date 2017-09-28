@@ -35,6 +35,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
   def verbose: Boolean = _verbose
   def inputs: Map[String, List[String]] = _inputs.toMap
   def outputs: Map[String, List[String]] = _outputs.toMap
+  def inScopeNamespaces: Map[String,String] = _nsbindings.toMap
   def data: Map[String, List[String]] = _data.toMap
   def params: Map[QName, XProcVarValue] = _params.toMap
   def pipeline: String = {

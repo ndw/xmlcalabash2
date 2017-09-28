@@ -41,7 +41,19 @@ object XProcException {
     dynamicError(code, None)
   }
   def dynamicError(code: Int, location: Option[Location]): XProcException = {
-    val qname = new QName("err", XProcConstants.ns_err, "D%04d".format(code))
+    val qname = new QName("err", XProcConstants.ns_err, "XD%04d".format(code))
+    new XProcException(qname)
+  }
+
+  def staticError(code: Int): XProcException = {
+    staticError(code, None)
+  }
+  def staticError(code: Int, location: Option[Location]): XProcException = {
+    val qname = new QName("err", XProcConstants.ns_err, "XS%04d".format(code))
+    new XProcException(qname)
+  }
+  def staticError(code: Int, location: Option[Location], details: List[String]): XProcException = {
+    val qname = new QName("err", XProcConstants.ns_err, "XS%04d".format(code))
     new XProcException(qname)
   }
 }
