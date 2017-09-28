@@ -1,11 +1,12 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{Graph, Node}
+import com.jafpl.graph.{Binding, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
+import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer
@@ -127,6 +128,52 @@ class Input(override val config: XMLCalabash,
     // Process the children in the context of our parent
     for (child <- children) {
       child.makeGraph(graph, parent)
+    }
+  }
+
+  override def makeEdges(graph: Graph, parent: Node) {
+    for (child <- children) {
+      child match {
+        case doc: Documentation => Unit
+        case pipe: PipeInfo => Unit
+        case _ =>
+          child.makeEdges(graph, parent)
+      }
+    }
+
+    if (select.isDefined) {
+      val graphNode = this.parent.get.graphNode
+      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      val expression = new XProcXPathExpression(context, select.get)
+      val variableRefs = findVariableRefs(expression)
+      for (ref <- variableRefs) {
+        val bind = findBinding(ref)
+        if (bind.isEmpty) {
+          throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
+        }
+
+        bind.get match {
+          case declStep: DeclareStep =>
+            var optDecl = Option.empty[OptionDecl]
+            for (child <- declStep.children) {
+              child match {
+                case opt: OptionDecl =>
+                  if (opt.optionName == ref) {
+                    optDecl = Some(opt)
+                  }
+                case _ => Unit
+              }
+            }
+            if (optDecl.isEmpty) {
+              throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
+            }
+            graph.addBindingEdge(optDecl.get.graphNode.get.asInstanceOf[Binding], graphNode.get)
+          case varDecl: Variable =>
+            graph.addBindingEdge(varDecl.graphNode.get.asInstanceOf[Binding], graphNode.get)
+          case _ =>
+            throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
+        }
+      }
     }
   }
 

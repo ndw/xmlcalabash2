@@ -23,6 +23,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
   protected val bindings = mutable.HashSet.empty[QName]
+  protected val bindingsMap = mutable.HashMap.empty[String, Message]
   protected var dynamicContext = new DynamicContext()
 
   def nodeId: String = _id
@@ -58,6 +59,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
         new XmlPortSpecification(portMap.toMap, typeMap.toMap)
     }
   }
+
   override def outputSpec: XmlPortSpecification = {
     step match {
       case xstep: XmlStep => xstep.outputSpec
@@ -94,36 +96,40 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
     }
 
     bindings += qname
+    bindingsMap.put(qname.getClarkName, bindmsg.message)
 
     val stepsig = config.signatures.step(stepType)
-    val optsig  = stepsig.option(qname, location.get)
-    val opttype: Option[QName] = if (optsig.declaredType.isDefined) {
-      Some(new QName(XProcConstants.ns_xs, optsig.declaredType.get))
-    } else {
-      None
-    }
+    if (stepsig.options.contains(qname)) {
+      val optsig  = stepsig.option(qname, location.get)
+      val opttype: Option[QName] = if (optsig.declaredType.isDefined) {
+        Some(new QName(XProcConstants.ns_xs, optsig.declaredType.get))
+      } else {
+        None
+      }
 
-    bindmsg.message match {
-      case item: XPathItemMessage =>
-        item.item match {
-          case atomic: XdmAtomicValue =>
-            val value = typeUtils.castAs(atomic, opttype, item.context)
-            step.receiveBinding(qname, value, item.context)
-          case _ => Unit
-            step.receiveBinding(qname, item.item, item.context)
-        }
-      case item: ItemMessage =>
-        item.item match {
-          case atomic: XdmAtomicValue =>
-            val value = typeUtils.castAs(atomic, opttype, ExpressionContext.NONE)
-            step.receiveBinding(qname, value, ExpressionContext.NONE)
-          case _ => Unit
-            step.receiveBinding(qname, item.item.asInstanceOf[XdmItem], ExpressionContext.NONE)
-        }
-      case _ =>
-        throw XProcException.xiInvalidMessage(location, bindmsg.message)
+      bindmsg.message match {
+        case item: XPathItemMessage =>
+          item.item match {
+            case atomic: XdmAtomicValue =>
+              val value = typeUtils.castAs(atomic, opttype, item.context)
+              step.receiveBinding(qname, value, item.context)
+            case _ => Unit
+              step.receiveBinding(qname, item.item, item.context)
+          }
+        case item: ItemMessage =>
+          item.item match {
+            case atomic: XdmAtomicValue =>
+              val value = typeUtils.castAs(atomic, opttype, ExpressionContext.NONE)
+              step.receiveBinding(qname, value, ExpressionContext.NONE)
+            case _ => Unit
+              step.receiveBinding(qname, item.item.asInstanceOf[XdmItem], ExpressionContext.NONE)
+          }
+        case _ =>
+          throw XProcException.xiInvalidMessage(location, bindmsg.message)
+      }
     }
   }
+
   override def initialize(config: RuntimeConfiguration): Unit = {
     config match {
       case saxon: XMLCalabash => Unit
@@ -156,6 +162,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
   override def reset(): Unit = {
     step.reset()
     bindings.clear()
+    bindingsMap.clear()
   }
   override def abort(): Unit = {
     step.abort()
@@ -186,7 +193,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
                 if (artifact.input(port).get.select.isDefined) {
                   val expr = config.expressionEvaluator.newInstance()
                   val selectExpr = new XProcXPathExpression(ExpressionContext.NONE, artifact.input(port).get.select.get)
-                  val selected = expr.value(selectExpr, List(item), Map.empty[String,Message], None)
+                  val selected = expr.value(selectExpr, List(item), bindingsMap.toMap, None)
                   for (msg <- selected) {
                     val item = msg.asInstanceOf[XPathItemMessage].item
                     docs += item
