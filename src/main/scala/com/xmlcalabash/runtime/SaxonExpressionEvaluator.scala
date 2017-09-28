@@ -23,25 +23,41 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.util.DynamicVariable
 
-// N.B. The evaluator must be reentrant because there can be only one instance of it because
-// it has a dynamic variable used to pass context to extension functions.
-class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvaluator {
-  private val DEFAULT = "https://xmlcalabash.com/default-collection"
-  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  private val _dynContext = new DynamicVariable[DynamicContext](null)
+object SaxonExpressionEvaluator {
+  val DEFAULT_COLLECTION = "https://xmlcalabash.com/default-collection"
+  protected val _dynContext = new DynamicVariable[DynamicContext](null)
+}
 
-  def withContext[T](context: DynamicContext)(thunk: => T): T = _dynContext.withValue(context)(thunk)
-  def dynContext: Option[DynamicContext] = Option(_dynContext.value)
+class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvaluator {
+  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
+
+  def withContext[T](context: DynamicContext)(thunk: => T): T = SaxonExpressionEvaluator._dynContext.withValue(context)(thunk)
+  def dynContext: Option[DynamicContext] = Option(SaxonExpressionEvaluator._dynContext.value)
 
   override def newInstance(): SaxonExpressionEvaluator = {
-    this
+    new SaxonExpressionEvaluator(xmlCalabash)
   }
 
-  override def value(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XPathItemMessage = {
+  override def singletonValue(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XPathItemMessage = {
+    val msgs = value(xpath, context, bindings, options)
+    if (msgs.length == 1) {
+      msgs.head
+    } else {
+      xpath match {
+        case xpath: XProcXPathExpression =>
+          throw XProcException.xiSeqNotSupported(xpath.context.location, xpath)
+        case xpath: XProcAvtExpression =>
+          throw XProcException.xiSeqNotSupported(xpath.context.location, xpath)
+        // We should never fall off the end of this match because we got past the value() call above
+      }
+    }
+  }
+
+  override def value(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): List[XPathItemMessage] = {
     val proxies = mutable.HashMap.empty[Any, XdmNode]
     val newContext = new DynamicContext()
-    if (context.nonEmpty) {
-      context.head match {
+    for (msg <- context) {
+      msg match {
         case item: ItemMessage =>
           val node = proxy(item)
           proxies.put(item.item, node)
@@ -59,7 +75,8 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         if (xpath.context.location.isDefined) {
           newContext.location = xpath.context.location.get
         }
-      case _ => println("DIDN'T MATCH: " + xpath)
+      case _ =>
+        throw new IllegalArgumentException("The expression passed to value() is not an XPath expression")
     }
 
     for ((str, value) <- bindings) {
@@ -75,101 +92,45 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       }
     }
 
-    withContext(newContext) { do_value(xpath, context, bindings, proxies.toMap, options) }
+    withContext(newContext) { compute(xpath.asInstanceOf[XProcExpression], context, bindings, proxies.toMap, options) }
   }
 
   override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): Boolean = {
-    val proxies = mutable.HashMap.empty[Any, XdmNode]
-    val newContext = new DynamicContext()
-    if (context.nonEmpty) {
-      context.head match {
-        case item: ItemMessage =>
-          val node = proxy(item)
-          proxies.put(item.item, node)
-          checkDocument(newContext, node, context.head)
-        case _ => Unit
-      }
-    }
+    val msg = singletonValue(xpath, context, bindings, options)
 
-    xpath match {
-      case xpath: XProcXPathExpression =>
-        if (xpath.context.location.isDefined) {
-          newContext.location = xpath.context.location.get
-        }
-      case xpath: XProcAvtExpression =>
-        if (xpath.context.location.isDefined) {
-          newContext.location = xpath.context.location.get
-        }
-      case _ => println("DIDN'T MATCH: " + xpath)
+    msg.item match {
+      case atomic: XdmAtomicValue => atomic.getBooleanValue
+      case _ => true
     }
+  }
+
+  def compute(xpath: XProcExpression, context: List[Message], bindings: Map[String, Message], proxies: Map[Any,XdmNode], options: Option[Any]): List[XPathItemMessage] = {
+    val patchBindings = mutable.HashMap.empty[QName, XdmItem]
 
     for ((str, value) <- bindings) {
       value match {
         case item: ItemMessage =>
           item.item match {
-            case xitem: XdmNode =>
-              checkDocument(newContext, xitem, value)
-            case _ => Unit
+            case xitem: XdmItem =>
+              patchBindings.put(ValueParser.parseClarkName(str), xitem)
+            case value: XProcVarValue =>
+              patchBindings.put(ValueParser.parseClarkName(str), value.value)
+            case _ =>
+              throw XProcException.xiBadBoundValue(xpath.context.location, item.item)
           }
         case _ =>
-          throw XProcException.xiInvalidMessage(newContext.location, value)
+          throw XProcException.xiInvalidMessage(None, value)
       }
     }
 
-    val item = withContext(newContext) { do_value(xpath, context, bindings, proxies.toMap, options) }
-    val result = item.item match {
-      case atomic: XdmAtomicValue =>
-        atomic.getBooleanValue
-      case _ => true
-    }
-
-    result
-  }
-
-  def do_value(xpath: Any,
-               context: List[Message],
-               bindings: Map[String, Message],
-               proxies: Map[Any,XdmNode],
-               options: Option[Any]): XPathItemMessage = {
-    xpath match {
-      case expr: XProcExpression =>
-        val patchBindings = mutable.HashMap.empty[QName, XdmItem]
-
-        for ((str, value) <- bindings) {
-          value match {
-            case item: ItemMessage =>
-              item.item match {
-                case xitem: XdmItem =>
-                  patchBindings.put(ValueParser.parseClarkName(str), xitem)
-                case value: XProcVarValue =>
-                  patchBindings.put(ValueParser.parseClarkName(str), value.value)
-                case _ =>
-                  throw XProcException.xiBadBoundValue(expr.context.location, item.item)
-              }
-            case _ =>
-              throw XProcException.xiInvalidMessage(None, value)
-          }
-        }
-
-        val result = value(expr, context, patchBindings.toMap, proxies, options)
-        new XPathItemMessage(result, XProcMetadata.ANY, expr.context)
-      case str: String =>
-        new XPathItemMessage(new XdmAtomicValue(str), XProcMetadata.ANY, ExpressionContext.NONE)
-      case _ =>
-        logger.warn("Unexpected expression type, returning string value: " + xpath)
-        new XPathItemMessage(new XdmAtomicValue(xpath.toString), XProcMetadata.ANY, ExpressionContext.NONE)
-    }
-  }
-
-  def value(xpath: XProcExpression, context: List[Message], bindings: Map[QName, XdmItem], proxies: Map[Any,XdmNode], options: Option[Any]): XdmItem = {
-    var result = ListBuffer.empty[XdmItem]
+    val result = ListBuffer.empty[XdmItem]
     xpath match {
       case avtexpr: XProcAvtExpression =>
         var evalAvt = false
         for (part <- avtexpr.avt) {
           if (evalAvt) {
-            val epart = computeValue(part, context, avtexpr.context, bindings, proxies, avtexpr.extensionFunctionsAllowed, options)
-            for (item <- epart.asInstanceOf[ListBuffer[XdmItem]]) {
+            val epart = computeValue(part, context, avtexpr.context, patchBindings.toMap, proxies, avtexpr.extensionFunctionsAllowed, options)
+            for (item <- epart) {
               result += item
             }
           } else {
@@ -180,19 +141,20 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
           evalAvt = !evalAvt
         }
       case xpathexpr: XProcXPathExpression =>
-        val epart = computeValue(xpathexpr.expr, context, xpathexpr.context, bindings, proxies, xpathexpr.extensionFunctionsAllowed, options)
-        for (item <- epart.asInstanceOf[ListBuffer[XdmItem]]) {
+        val epart = computeValue(xpathexpr.expr, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed, options)
+        for (item <- epart) {
           result += item
         }
       case _ =>
         throw XProcException.xiUnexpectedExprType(xpath.context.location, xpath)
     }
 
-    if (result.size == 1) {
-      result.head
-    } else {
-      throw XProcException.xiSeqNotSupported(xpath.context.location, xpath)
+    val messages = ListBuffer.empty[XPathItemMessage]
+    for (value <- result) {
+      messages += new XPathItemMessage(value, XProcMetadata.ANY, xpath.context)
     }
+
+    messages.toList
   }
 
   private def computeValue(xpath: String,
@@ -201,7 +163,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
                            bindings: Map[QName,XdmItem],
                            proxies: Map[Any, XdmNode],
                            extensionsOk: Boolean,
-                           options: Option[Any]): Any = {
+                           options: Option[Any]): List[XdmItem] = {
     val results = ListBuffer.empty[XdmItem]
     val config = xmlCalabash.processor.getUnderlyingConfiguration
     val collection = List.empty[XdmNode]
@@ -224,7 +186,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     val sconfig = xmlCalabash.processor.getUnderlyingConfiguration
     val curfinder = sconfig.getCollectionFinder
     sconfig.setCollectionFinder(new ExprCollectionFinder(curfinder, contextItem))
-    sconfig.setDefaultCollection(DEFAULT)
+    sconfig.setDefaultCollection(SaxonExpressionEvaluator.DEFAULT_COLLECTION)
 
     try {
       val xcomp = xmlCalabash.processor.newXPathCompiler()
@@ -301,8 +263,10 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
     }
 
-    results
+    results.toList
   }
+
+  // =========================================================================================================
 
   def checkDocument(dynContext: DynamicContext, node: XdmNode, msg: Message): Unit = {
     var p: XdmNode = node
@@ -379,7 +343,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     private val rsrcColl = new ExprResourceCollection(items.toList)
 
     override def findCollection(context: XPathContext, collectionURI: String): ResourceCollection = {
-      if (collectionURI == DEFAULT) {
+      if (collectionURI == SaxonExpressionEvaluator.DEFAULT_COLLECTION) {
         rsrcColl
       } else {
         finder.findCollection(context, collectionURI)

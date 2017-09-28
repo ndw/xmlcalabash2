@@ -97,7 +97,7 @@ class FileLoader(private val context: ExpressionContext,
   def xpathValue(expr: XProcExpression): XdmItem = {
     val eval = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
     val dynContext = new DynamicContext()
-    val msg = eval.withContext(dynContext) { eval.value(expr, List.empty[Message], bindings.toMap, None) }
+    val msg = eval.withContext(dynContext) { eval.singletonValue(expr, List.empty[Message], bindings.toMap, None) }
     msg.asInstanceOf[XPathItemMessage].item
   }
 }
