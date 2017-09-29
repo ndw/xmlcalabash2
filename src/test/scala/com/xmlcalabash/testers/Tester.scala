@@ -1,12 +1,13 @@
 package com.xmlcalabash.testers
 
-import com.jafpl.messages.ItemMessage
+import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.runtime.GraphRuntime
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ModelException, StepException, TestException}
-import com.xmlcalabash.model.xml.Parser
-import com.xmlcalabash.runtime.{BufferingConsumer, DevNullConsumer, XProcMetadata}
-import com.xmlcalabash.util.Schematron
+import com.xmlcalabash.exceptions.{ModelException, StepException, TestException, XProcException}
+import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.model.xml.{DeclareStep, Parser}
+import com.xmlcalabash.runtime.{BufferingConsumer, DevNullConsumer, ExpressionContext, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.util.{Schematron, XProcVarValue}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -80,14 +81,6 @@ class Tester(runtimeConfig: XMLCalabash) {
         }
       }
 
-      for (bind <- pipeline.bindings) {
-        if (_bindings.contains(bind.getClarkName)) {
-          runtime.bindings(bind.getClarkName).set(_bindings(bind.getClarkName))
-        } else {
-          logger.warn(s"No binding specified for $bind")
-        }
-      }
-
       var result = Option.empty[BufferingConsumer]
       for (port <- pipeline.outputPorts) {
         if (port == "result") {
@@ -98,6 +91,8 @@ class Tester(runtimeConfig: XMLCalabash) {
           runtime.outputs(port).setConsumer(new DevNullConsumer())
         }
       }
+
+      processOptionBindings(runtime, pipeline)
 
       runtime.run()
 
@@ -139,6 +134,41 @@ class Tester(runtimeConfig: XMLCalabash) {
       case t: Throwable =>
         t.printStackTrace(Console.err)
         Some(Option(t.getMessage).getOrElse("ERROR"))
+    }
+  }
+
+  private def processOptionBindings(runtime: GraphRuntime, pipeline: DeclareStep): Unit = {
+    val bindingsMap = mutable.HashMap.empty[String, Message]
+    for (bind <- pipeline.bindings) {
+      val jcbind = bind.getClarkName
+
+      if (_bindings.contains(bind.getClarkName)) {
+        val value = _bindings(jcbind)
+        val msg = new XPathItemMessage(value, XProcMetadata.XML, ExpressionContext.NONE)
+        runtime.bindings(jcbind).set(value)
+        bindingsMap.put(jcbind, msg)
+      } else {
+        val decl = pipeline.bindingDeclaration(bind)
+        if (decl.isDefined) {
+          if (decl.get.select.isDefined) {
+            // FIXME: support references to previously declared variables ...
+            val context = ExpressionContext.NONE // new ExpressionContext(None, options.inScopeNamespaces, None)
+            val expr = new XProcXPathExpression(context, decl.get.select.get)
+            val msg = runtimeConfig.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+            val eval = msg.asInstanceOf[XPathItemMessage].item
+            runtime.bindings(jcbind).set(new XProcVarValue(eval, context))
+            bindingsMap.put(jcbind, msg)
+          } else {
+            if (decl.get.required) {
+              throw XProcException.staticError(18, bind.toString, pipeline.location)
+            } else {
+              println(s"Missing binding for $bind, supplied nothing")
+            }
+          }
+        } else {
+          println("No decl for " + bind + " ???")
+        }
+      }
     }
   }
 }
