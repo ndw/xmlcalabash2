@@ -8,8 +8,10 @@ import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmNode, XdmNod
 import scala.collection.mutable
 
 class PropertyMerge extends DefaultXmlStep {
-  private var doc = Option.empty[Any]
-  private var meta = Option.empty[XProcMetadata]
+  private var sourceDoc = Option.empty[Any]
+  private var sourceMeta = Option.empty[XProcMetadata]
+  private var propDoc = Option.empty[Any]
+  private var propMeta = Option.empty[XProcMetadata]
   private var prop = Option.empty[Map[QName,XdmItem]]
 
   override def inputSpec: XmlPortSpecification = new XmlPortSpecification(Map("source" -> "1", "properties" -> "1"),
@@ -18,37 +20,40 @@ class PropertyMerge extends DefaultXmlStep {
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     if (port == "source") {
-      doc = Some(item)
-      meta = Some(metadata)
+      sourceDoc = Some(item)
+      sourceMeta = Some(metadata)
     } else { // port="properties"
-      item match {
-        case node: XdmNode =>
-          val piter = node.axisIterator(Axis.CHILD)
-          while (piter.hasNext) {
-            val pnode = piter.next().asInstanceOf[XdmNode]
-            pnode.getNodeKind match {
-              case XdmNodeKind.ELEMENT =>
-                if (pnode.getNodeName == XProcConstants.c_document_properties) {
-                  prop = Some(extractProperties(pnode))
-                } else {
-                  throw new RuntimeException("Document properties must be a c:document-properties document")
-                }
-              case XdmNodeKind.TEXT =>
-                if (pnode.getStringValue.trim != "") {
-                  throw new RuntimeException("Text nodes in a properties fragment must be just whitespace")
-                }
-              case _ => Unit
-            }
-          }
-
-        case _ => throw new RuntimeException("properties must be xml")
-      }
+      propDoc = Some(item)
+      propMeta = Some(metadata)
     }
   }
 
   override def run(staticContext: StaticContext) {
-    val newmeta = new XProcMetadata(meta.get.contentType, prop.get)
-    consumer.get.receive("result", doc.get, newmeta)
+    propDoc.get match {
+      case node: XdmNode =>
+        val piter = node.axisIterator(Axis.CHILD)
+        while (piter.hasNext) {
+          val pnode = piter.next().asInstanceOf[XdmNode]
+          pnode.getNodeKind match {
+            case XdmNodeKind.ELEMENT =>
+              if (pnode.getNodeName == XProcConstants.c_document_properties) {
+                prop = Some(extractProperties(pnode))
+              } else {
+                throw new RuntimeException("Document properties must be a c:document-properties document")
+              }
+            case XdmNodeKind.TEXT =>
+              if (pnode.getStringValue.trim != "") {
+                throw new RuntimeException("Text nodes in a properties fragment must be just whitespace")
+              }
+            case _ => Unit
+          }
+        }
+
+      case _ => throw new RuntimeException("properties must be xml")
+    }
+
+    val newmeta = new XProcMetadata(sourceMeta.get.contentType, prop.get)
+    consumer.get.receive("result", sourceDoc.get, newmeta)
   }
 
   private def extractProperties(node: XdmNode): Map[QName,XdmItem] = {
@@ -207,11 +212,11 @@ class PropertyMerge extends DefaultXmlStep {
       }
     }
 
-    prop.put(XProcConstants._content_type, meta.get.properties(XProcConstants._content_type))
+    prop.put(XProcConstants._content_type, sourceMeta.get.properties(XProcConstants._content_type))
 
     // FIXME: figure out how to standardize base-uri
-    if (meta.get.properties.contains(XProcConstants._base_uri)) {
-      prop.put(XProcConstants._base_uri, meta.get.properties(XProcConstants._base_uri))
+    if (sourceMeta.get.properties.contains(XProcConstants._base_uri)) {
+      prop.put(XProcConstants._base_uri, sourceMeta.get.properties(XProcConstants._base_uri))
     }
 
     prop.toMap
