@@ -6,12 +6,14 @@ import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
+import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer
 
 class WithInput(override val config: XMLCalabash,
                 override val parent: Option[Artifact]) extends Input(config, parent) {
+
   protected[xml] def this(config: XMLCalabash, parent: Artifact, port: String) {
     this(config, Some(parent))
     _port = Some(port)
@@ -30,6 +32,10 @@ class WithInput(override val config: XMLCalabash,
     }
 
     _select = attributes.get(XProcConstants._select)
+    if (_select.isDefined) {
+      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      _expression = Some(new XProcXPathExpression(context, _select.get))
+    }
 
     val pipe = attributes.get(_pipe)
 

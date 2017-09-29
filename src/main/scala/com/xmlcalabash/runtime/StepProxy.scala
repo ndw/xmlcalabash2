@@ -192,7 +192,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
               case node: XdmNode =>
                 if (artifact.input(port).get.select.isDefined) {
                   val expr = config.expressionEvaluator.newInstance()
-                  val selectExpr = new XProcXPathExpression(ExpressionContext.NONE, artifact.input(port).get.select.get)
+                  val selectExpr = artifact.input(port).get.selectExpression
                   val selected = expr.value(selectExpr, List(item), bindingsMap.toMap, None)
                   for (msg <- selected) {
                     val item = msg.asInstanceOf[XPathItemMessage].item

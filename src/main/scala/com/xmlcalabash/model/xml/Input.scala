@@ -6,7 +6,7 @@ import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
-import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer
@@ -15,6 +15,7 @@ class Input(override val config: XMLCalabash,
             override val parent: Option[Artifact]) extends IOPort(config, parent) {
   protected val _pipe = new QName("", "pipe")
   protected var _select: Option[String] = None
+  protected var _expression = Option.empty[XProcExpression]
 
   protected[xml] def this(config: XMLCalabash, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
     this(config, Some(parent))
@@ -24,12 +25,17 @@ class Input(override val config: XMLCalabash,
   }
 
   def select: Option[String] = _select
+  def selectExpression: XProcExpression = _expression.get
 
   override def validate(): Boolean = {
     var valid = super.validate()
 
     _port = attributes.get(XProcConstants._port)
     _select = attributes.get(XProcConstants._select)
+    if (_select.isDefined) {
+      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      _expression = Some(new XProcXPathExpression(context, _select.get))
+    }
 
     var attr = attributes.get(XProcConstants._primary)
     if (attr.isDefined) {
