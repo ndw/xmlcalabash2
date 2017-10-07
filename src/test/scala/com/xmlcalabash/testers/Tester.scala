@@ -148,6 +148,8 @@ class Tester(runtimeConfig: XMLCalabash) {
         runtime.bindings(jcbind).set(value)
         bindingsMap.put(jcbind, msg)
       } else {
+        println("??? What about these bindings?")
+        /*
         val decl = pipeline.bindingDeclaration(bind)
         if (decl.isDefined) {
           if (decl.get.select.isDefined) {
@@ -168,6 +170,7 @@ class Tester(runtimeConfig: XMLCalabash) {
         } else {
           println("No decl for " + bind + " ???")
         }
+        */
       }
     }
   }
