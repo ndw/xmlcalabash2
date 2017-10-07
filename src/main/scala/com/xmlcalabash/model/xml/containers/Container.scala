@@ -4,12 +4,45 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.xml.datasource.Pipe
 import com.xmlcalabash.model.xml.{Artifact, Input, Output, PipelineStep, Variable}
+import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class Container(override val config: XMLCalabash,
-                override val parent: Option[Artifact]) extends PipelineStep(config, parent) {
+                override val parent: Option[Artifact],
+                val stepType: QName) extends PipelineStep(config, parent) {
+  def steps: List[PipelineStep] = {
+    val list = ListBuffer.empty[PipelineStep]
+
+    for (child <- children) {
+      child match {
+        case step: PipelineStep =>
+          list += step
+        case _ => Unit
+      }
+    }
+
+    list.toList
+  }
+
+  def descendantSteps: List[PipelineStep] = {
+    val list = ListBuffer.empty[PipelineStep]
+
+    for (child <- children) {
+      child match {
+        case step: Container =>
+          list += step
+          list ++= step.descendantSteps
+        case step: PipelineStep =>
+          list += step
+        case _ => Unit
+      }
+    }
+
+    list.toList
+  }
+
   def firstChildStep: Option[PipelineStep] = {
     for (child <- children) {
       child match {

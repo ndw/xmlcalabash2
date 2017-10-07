@@ -35,6 +35,12 @@ object XmlDriver extends App {
   var errored = false
   try {
     val parser = new Parser(xmlCalabash)
+
+    for (injectable <- options.injectables) {
+      val doc = builder.build(new SAXSource(new InputSource(injectable)))
+      parser.parseInjectables(doc)
+    }
+
     val pipeline = parser.parsePipeline(node)
 
     val graph = pipeline.pipelineGraph()
@@ -86,6 +92,7 @@ object XmlDriver extends App {
     runtime.run()
   } catch {
     case t: Throwable =>
+      t.printStackTrace()
       t match {
         case model: ModelException =>
           println(model)
@@ -159,6 +166,8 @@ object XmlDriver extends App {
         runtime.bindings(jcbind).set(value)
         bindingsMap.put(jcbind, msg)
       } else {
+          println("??? What about the binding for: " + bind)
+        /*
         val decl = pipeline.bindingDeclaration(bind)
         if (decl.isDefined) {
           if (decl.get.select.isDefined) {
@@ -179,6 +188,7 @@ object XmlDriver extends App {
         } else {
           println("No decl for " + bind + " ???")
         }
+        */
       }
     }
 

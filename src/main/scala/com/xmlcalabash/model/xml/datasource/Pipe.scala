@@ -42,6 +42,10 @@ class Pipe(override val config: XMLCalabash,
     _port = pipe.port
   }
 
+  override def toString: String = {
+    s"Pipe: ${step.get}.${port.get} to ${parent.get}"
+  }
+
   def step: Option[String] = _step
   protected[xml] def step_=(name: String): Unit = {
     _step = Some(name)
@@ -105,10 +109,10 @@ class Pipe(override val config: XMLCalabash,
 
     parent.get match {
       case opt: WithOption =>
-        toNode = opt.graphNode
+        toNode = opt._graphNode
         toPort = "source"
       case port: IOPort =>
-        toNode = parent.get.parent.get.graphNode
+        toNode = parent.get.parent.get._graphNode
         toPort = port.port.get
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "p:pipe points to " + parent.get, location)
@@ -132,7 +136,7 @@ class Pipe(override val config: XMLCalabash,
       }
     }
 
-    graph.addOrderedEdge(fromStep.get.graphNode.get, fromPort, toNode.get, toPort)
+    graph.addOrderedEdge(fromStep.get._graphNode.get, fromPort, toNode.get, toPort)
   }
 
   override def asXML: xml.Elem = {

@@ -2,8 +2,10 @@ package com.xmlcalabash.model.util
 
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.Location
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
+import com.xmlcalabash.runtime.{XProcAvtExpression, XProcExpression, XProcXPathExpression}
+import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -112,6 +114,19 @@ object ValueParser {
     }
   }
 
+  def parseBoolean(value: Option[String], location: Option[Location]): Option[Boolean] = {
+    if (value.isDefined) {
+      if (value.get == "true" || value.get == "false") {
+        Some(value.get == "true")
+      } else {
+        throw new ModelException(ExceptionCode.BADBOOLEAN, value.get, location)
+      }
+    } else {
+      None
+    }
+  }
+
+
   def parseParameters(value: XdmItem, nsBindings: Map[String,String], location: Option[Location]): Map[QName, XdmValue] = {
     val params = mutable.HashMap.empty[QName, XdmValue]
 
@@ -171,6 +186,100 @@ object ValueParser {
     }
 
     params.toMap
+  }
+
+  def findVariableRefs(config: XMLCalabash, expression: XProcExpression, location: Option[Location]): Set[QName] = {
+    val variableRefs = mutable.HashSet.empty[QName]
+
+    expression match {
+      case expr: XProcXPathExpression =>
+        val parser = config.expressionParser
+        parser.parse(expr.expr)
+        for (ref <- parser.variableRefs) {
+          val qname = ValueParser.parseClarkName(ref)
+          variableRefs += qname
+        }
+      case expr: XProcAvtExpression =>
+        var avt = false
+        for (subexpr <- expr.avt) {
+          if (avt) {
+            val parser = config.expressionParser
+            parser.parse(subexpr)
+            for (ref <- parser.variableRefs) {
+              val qname = ValueParser.parseClarkName(ref)
+              variableRefs += qname
+            }
+          }
+          avt = !avt
+        }
+      case _ =>
+        throw XProcException.xiUnkExprType(location)
+    }
+
+    variableRefs.toSet
+  }
+
+  def findVariableRefs(config: XMLCalabash, node: XdmNode, expandText: Boolean, location: Option[Location]): Set[QName] = {
+    val variableRefs = mutable.HashSet.empty[QName]
+
+    node.getNodeKind match {
+      case XdmNodeKind.ELEMENT =>
+        var newExpand = expandText
+        var iter = node.axisIterator(Axis.ATTRIBUTE)
+        while (iter.hasNext) {
+          val attr = iter.next().asInstanceOf[XdmNode]
+          if (expandText) {
+            variableRefs ++= ValueParser.findVariableRefsInAvt(config, attr.getStringValue, location)
+          }
+          if (attr.getNodeName == XProcConstants.p_expand_text) {
+            newExpand = ValueParser.parseBoolean(Some(attr.getStringValue), location).get
+          }
+        }
+        iter = node.axisIterator(Axis.CHILD)
+        while (iter.hasNext) {
+          val child = iter.next().asInstanceOf[XdmNode]
+          variableRefs ++= ValueParser.findVariableRefs(config, child, newExpand, location)
+        }
+      case XdmNodeKind.TEXT =>
+        if (expandText) {
+          variableRefs ++= ValueParser.findVariableRefsInAvt(config, node.getStringValue, location)
+        }
+      case _ => Unit
+    }
+
+    variableRefs.toSet
+  }
+
+  private def findVariableRefsInAvt(config: XMLCalabash, text: String, location: Option[Location]): Set[QName] = {
+    val variableRefs = mutable.HashSet.empty[QName]
+
+    val list = ValueParser.parseAvt(text)
+    if (list.isEmpty) {
+      throw new ModelException(ExceptionCode.BADAVT, List("TVT", text), location)
+    }
+
+    var avt = false
+    for (substr <- list.get) {
+      if (avt) {
+        variableRefs ++= ValueParser.findVariableRefsInString(config, substr, location)
+      }
+      avt = !avt
+    }
+
+    variableRefs.toSet
+  }
+
+  def findVariableRefsInString(config: XMLCalabash, text: String, location: Option[Location]): Set[QName] = {
+    val variableRefs = mutable.HashSet.empty[QName]
+
+    val parser = config.expressionParser
+    parser.parse(text)
+    for (ref <- parser.variableRefs) {
+      val qname = ValueParser.parseClarkName(ref)
+      variableRefs += qname
+    }
+
+    variableRefs.toSet
   }
 
   object StateChange {

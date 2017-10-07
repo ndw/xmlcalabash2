@@ -5,13 +5,24 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
+import net.sf.saxon.s9api.QName
+
+import scala.collection.mutable
 
 class PipelineStep(override val config: XMLCalabash,
                    override val parent: Option[Artifact]) extends Artifact(config, parent) {
   protected var _name: Option[String] = None
+  // Can be used to create additional variable bindings, e.g., for injectables
+  protected[xml] val variableRefs = mutable.HashSet.empty[QName]
 
   protected[xml] def name_=(name: String): Unit = {
     _name = Some(name)
+  }
+
+  def graphNode: Node = _graphNode.get // Steps always have graphNodes
+
+  def addVariableRef(ref: QName): Unit = {
+    variableRefs += ref
   }
 
   override def validate(): Boolean = {
@@ -88,7 +99,6 @@ class PipelineStep(override val config: XMLCalabash,
   }
 
   override def makeEdges(graph: Graph, parent: Node) {
-    graphEdges(graph, graphNode.get.asInstanceOf[ContainerStart])
+    graphEdges(graph, _graphNode.get.asInstanceOf[ContainerStart])
   }
-
 }

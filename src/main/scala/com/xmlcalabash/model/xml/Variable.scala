@@ -50,11 +50,11 @@ class Variable(override val config: XMLCalabash,
 
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get
-    val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
+    val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
     val context = new ExpressionContext(_baseURI, inScopeNS, _location)
-    val options = new SaxonExpressionOptions(contextCollection = _collection)
+    val options = new SaxonExpressionOptions(Map("collection" -> _collection))
     val node = cnode.addVariable(_name.getClarkName, new XProcXPathExpression(context, _select.get), options)
-    graphNode = Some(node)
+    _graphNode = Some(node)
     config.addNode(node.id, this)
   }
 
@@ -62,7 +62,7 @@ class Variable(override val config: XMLCalabash,
     val drp = defaultReadablePort
     if (drp.isDefined) {
       val src = drp.get.parent.get
-      graph.addEdge(src.graphNode.get, drp.get.port.get, graphNode.get, "source")
+      graph.addEdge(src._graphNode.get, drp.get.port.get, _graphNode.get, "source")
     }
   }
 }

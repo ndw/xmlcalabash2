@@ -9,7 +9,7 @@ import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.Artifact
-import com.xmlcalabash.util.{S9Api, TypeUtils}
+import com.xmlcalabash.util.TypeUtils
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 

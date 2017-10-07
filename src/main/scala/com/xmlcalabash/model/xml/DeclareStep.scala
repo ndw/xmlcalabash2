@@ -14,7 +14,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class DeclareStep(override val config: XMLCalabash,
-                  override val parent: Option[Artifact]) extends Container(config, parent) {
+                  override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_declare_step) {
   private var _type: Option[QName] = None
   private var _psviRequired: Option[Boolean] = None
   private var _xpathVersion: Option[String] = None
@@ -37,9 +37,75 @@ class DeclareStep(override val config: XMLCalabash,
 
     patchPipeline()
 
-    graphNode = Some(pipeline)
+    _graphNode = Some(pipeline)
     graphChildren(graph, pipeline)
     graphEdges(graph, pipeline)
+
+    for (step <- findInjectables()) {
+      val stepName = step.name
+      val stepType = step match {
+        case atomic: AtomicStep =>
+          atomic.stepType
+        case container: Container =>
+          container.stepType
+        case _ =>
+          XProcConstants.cx_unknown
+      }
+
+      for (inject <- step.inputInjectables) {
+        var port: Option[String] = inject.declPort
+        if (port.isEmpty) {
+          for (iport <- step.inputPorts) {
+            val input = step.input(iport)
+            if (input.get.primary.get) {
+              inject.declPort = iport
+              port = Some(iport)
+            }
+          }
+        }
+        if (port.isEmpty) {
+          logger.warn("Input injectable: no port specified and no primary output port")
+        } else if (step.input(port.get).isEmpty) {
+          logger.warn(s"Input injectable: no input port named ${port.get}")
+        } else {
+          logger.debug(s"Adding input injectable...${inject.id}")
+          inject.name = stepName
+          inject.stepType = stepType
+          step._graphNode.get.addInputInjectable(inject)
+        }
+      }
+
+      for (inject <- step.outputInjectables) {
+        var port: Option[String] = inject.declPort
+        if (port.isEmpty) {
+          for (oport <- step.outputPorts) {
+            val output = step.output(oport)
+            if (output.get.primary.get) {
+              inject.declPort = oport
+              port = Some(oport)
+            }
+          }
+        }
+        if (port.isEmpty) {
+          logger.warn("Input injectable: no port specified and no primary output port")
+        } else if (step.output(port.get).isEmpty) {
+          logger.warn(s"Input injectable: no output port named ${port.get}")
+        } else {
+          logger.debug(s"Adding output injectable...${inject.id}")
+          inject.name = stepName
+          inject.stepType = stepType
+          step._graphNode.get.addOutputInjectable(inject)
+        }
+      }
+
+      for (inject <- step.stepInjectables) {
+        logger.debug(s"Adding step injectable...${inject.id}")
+        inject.name = stepName
+        inject.stepType = stepType
+        step._graphNode.get.addStepInjectable(inject)
+      }
+    }
+
     graph
   }
 

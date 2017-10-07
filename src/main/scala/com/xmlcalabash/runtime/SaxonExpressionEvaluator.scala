@@ -47,7 +47,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         case xpath: XProcXPathExpression =>
           throw XProcException.xiSeqNotSupported(xpath.context.location, xpath)
         case xpath: XProcAvtExpression =>
-          throw XProcException.xiSeqNotSupported(xpath.context.location, xpath)
+          var s = ""
+          for (item <- msgs) {
+            s += item.item.getStringValue
+          }
+          new XPathItemMessage(new XdmAtomicValue(s), XProcMetadata.ANY, ExpressionContext.NONE)
         // We should never fall off the end of this match because we got past the value() call above
       }
     }
@@ -63,6 +67,24 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
           proxies.put(item.item, node)
           checkDocument(newContext, node, context.head)
         case _ => Unit
+      }
+    }
+
+    if (options.isDefined) {
+      options.get match {
+        case seo: SaxonExpressionOptions =>
+          if (seo.inj_elapsed.isDefined) {
+            newContext.injElapsed = seo.inj_elapsed.get
+          }
+          if (seo.inj_id.isDefined) {
+            newContext.injId = seo.inj_id.get
+          }
+          if (seo.inj_name.isDefined) {
+            newContext.injName = seo.inj_name.get
+          }
+          if (seo.inj_type.isDefined) {
+            newContext.injType = seo.inj_type.get
+          }
       }
     }
 
@@ -170,7 +192,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
     val useCollection = if (options.isDefined) {
       options.get match {
-        case seo: SaxonExpressionOptions => seo.contextCollection
+        case seo: SaxonExpressionOptions => seo.contextCollection.getOrElse(false)
         case _ => false
       }
     } else {

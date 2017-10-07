@@ -73,14 +73,14 @@ class Document(override val config: XMLCalabash,
 
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get.parent.get.parent.get
-    val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
+    val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
     val context = new ExpressionContext(baseURI, inScopeNS, location)
     val step = new FileLoader(context, _docProps)
     val docReader = cnode.addAtomic(step, "document")
 
     val hrefBinding = cnode.addVariable("href", new XProcAvtExpression(context, hrefAvt.get))
     graph.addBindingEdge(hrefBinding, docReader)
-    graphNode = Some(docReader)
+    _graphNode = Some(docReader)
     config.addNode(docReader.id, this)
 
     for (ref <- bindingRefs) {
@@ -103,7 +103,7 @@ class Document(override val config: XMLCalabash,
           if (optDecl.isEmpty) {
             throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
           }
-          graph.addBindingEdge(optDecl.get.graphNode.get.asInstanceOf[Binding], hrefBinding)
+          graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], hrefBinding)
 
         case _ =>
           throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
@@ -114,7 +114,7 @@ class Document(override val config: XMLCalabash,
   override def makeEdges(graph: Graph, parent: Node): Unit = {
     val toStep = this.parent.get.parent
     val toPort = this.parent.get.asInstanceOf[IOPort].port.get
-    graph.addOrderedEdge(graphNode.get, "result", toStep.get.graphNode.get, toPort)
+    graph.addOrderedEdge(_graphNode.get, "result", toStep.get._graphNode.get, toPort)
   }
 
   override def asXML: xml.Elem = {

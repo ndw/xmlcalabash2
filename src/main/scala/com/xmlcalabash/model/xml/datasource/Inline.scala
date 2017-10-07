@@ -4,7 +4,7 @@ import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{ParserConfiguration, ValueParser, XProcConstants}
-import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, Variable, WithOption}
+import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, Output, Variable, WithInput, WithOption}
 import com.xmlcalabash.runtime.ExpressionContext
 import com.xmlcalabash.steps.internal.InlineLoader
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
@@ -17,9 +17,10 @@ class Inline(override val config: XMLCalabash,
              val nodes: List[XdmNode]) extends DataSource(config, parent) {
   private var _excludeInlinePrefixes = Map.empty[String,String]
   private var _expandText = true
+  private var _allowExpandText = true
   private var _documentProperties = Option.empty[String]
   private var _encoding = Option.empty[String]
-  private val variableRefs = mutable.HashSet.empty[QName]
+  protected[xml] val variableRefs = mutable.HashSet.empty[QName]
 
   def this(config: XMLCalabash, parent: Artifact, inline: Inline) {
     this(config, Some(parent), inline.nodes)
@@ -29,6 +30,11 @@ class Inline(override val config: XMLCalabash,
     _encoding = inline._encoding
     variableRefs.clear()
     variableRefs ++= inline.variableRefs
+  }
+
+  protected[xmlcalabash] def allowExpandText: Boolean = _allowExpandText
+  protected[xmlcalabash] def allowExpandText_=(allow: Boolean): Unit = {
+    _allowExpandText = allow
   }
 
   override def validate(): Boolean = {
@@ -48,16 +54,23 @@ class Inline(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.BADATTR, attributes.keySet.head.toString, location)
     }
 
-    for (node <- nodes) {
-      findVariableRefs(node, _expandText)
-      if (_documentProperties.isDefined) {
-        findVariableRefsInString(_documentProperties.get)
-      }
-    }
+    checkForBindings()
 
     true
   }
 
+  protected[xml] def checkForBindings(): Unit = {
+    for (node <- nodes) {
+      variableRefs ++= ValueParser.findVariableRefs(config, node, _expandText, location)
+      //findVariableRefs(node, _expandText)
+      if (_documentProperties.isDefined) {
+        variableRefs ++= ValueParser.findVariableRefsInString(config, _documentProperties.get, location)
+        //findVariableRefsInString(_documentProperties.get)
+      }
+    }
+  }
+
+  /*
   private def findVariableRefs(node: XdmNode, expandText: Boolean): Unit = {
     node.getNodeKind match {
       case XdmNodeKind.ELEMENT =>
@@ -108,16 +121,21 @@ class Inline(override val config: XMLCalabash,
       variableRefs += qname
     }
   }
+  */
 
   override def makeGraph(graph: Graph, parent: Node) {
-    val container = this.parent.get.parent.get.parent.get
-    val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
+    val container = this.parent.get match {
+      case wi: WithInput => this.parent.get.parent.get.parent.get
+      case _ => this.parent.get
+    }
+    val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
 
     val context = new ExpressionContext(baseURI, inScopeNS, location)
     val produceInline = new InlineLoader(nodes, context, _expandText, _excludeInlinePrefixes, _documentProperties, _encoding)
+    produceInline.allowExpandText = allowExpandText
     val inlineProducer = cnode.addAtomic(produceInline)
 
-    graphNode = Some(inlineProducer)
+    _graphNode = Some(inlineProducer)
     config.addNode(inlineProducer.id, this)
 
     for (ref <- variableRefs) {
@@ -141,9 +159,9 @@ class Inline(override val config: XMLCalabash,
           if (optDecl.isEmpty) {
             throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
           }
-          graph.addBindingEdge(optDecl.get.graphNode.get.asInstanceOf[Binding], inlineProducer)
+          graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], inlineProducer)
         case varDecl: Variable =>
-          graph.addBindingEdge(varDecl.graphNode.get.asInstanceOf[Binding], inlineProducer)
+          graph.addBindingEdge(varDecl._graphNode.get.asInstanceOf[Binding], inlineProducer)
         case _ =>
           throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
       }
@@ -156,16 +174,20 @@ class Inline(override val config: XMLCalabash,
 
     parent.get match {
       case opt: WithOption =>
-        toNode = opt.graphNode
+        toNode = opt._graphNode
         toPort = "source"
       case port: IOPort =>
-        toNode = parent.get.parent.get.graphNode
+        toNode = parent.get.parent.get._graphNode
         toPort = port.port.get
       case _ =>
-        throw new ModelException(ExceptionCode.INTERNAL, "p:inline points to " + parent.get, location)
+        // It must be an explicit link from somewhere else; make an output to link from
+        val out = new Output(config, this, "result", primary=true, sequence=true)
+        addChild(out)
     }
 
-    graph.addOrderedEdge(graphNode.get, "result", toNode.get, toPort)
+    if (toNode.isDefined) {
+      graph.addOrderedEdge(_graphNode.get, "result", toNode.get, toPort)
+    }
   }
 
   override def asXML: xml.Elem = {

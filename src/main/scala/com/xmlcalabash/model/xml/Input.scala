@@ -148,11 +148,13 @@ class Input(override val config: XMLCalabash,
     }
 
     if (select.isDefined) {
-      val graphNode = this.parent.get.graphNode
+      val graphNode = this.parent.get._graphNode
       val context = new ExpressionContext(baseURI, inScopeNS, location)
       val expression = new XProcXPathExpression(context, select.get)
       val variableRefs = findVariableRefs(expression)
       for (ref <- variableRefs) {
+        this.parent.get.asInstanceOf[PipelineStep].addVariableRef(ref)
+        /*
         val bind = findBinding(ref)
         if (bind.isEmpty) {
           throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
@@ -173,12 +175,13 @@ class Input(override val config: XMLCalabash,
             if (optDecl.isEmpty) {
               throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
             }
-            graph.addBindingEdge(optDecl.get.graphNode.get.asInstanceOf[Binding], graphNode.get)
+            graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], graphNode.get)
           case varDecl: Variable =>
-            graph.addBindingEdge(varDecl.graphNode.get.asInstanceOf[Binding], graphNode.get)
+            graph.addBindingEdge(varDecl._graphNode.get.asInstanceOf[Binding], graphNode.get)
           case _ =>
             throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
         }
+        */
       }
     }
   }

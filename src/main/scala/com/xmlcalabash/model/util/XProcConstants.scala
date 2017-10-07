@@ -10,6 +10,9 @@ object XProcConstants {
   val ns_cx  = "http://xmlcalabash.com/ns/extensions"
   val ns_exf = "http://exproc.org/standard/functions"
   val ns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
+  val ns_xml = "http://www.w3.org/XML/1998/namespace"
+
+  val xml_id = new QName("xml", ns_xml, "id")
 
   val p_catch = new QName("p", ns_p, "catch")
   val p_choose = new QName("p", ns_p, "choose")
@@ -45,6 +48,9 @@ object XProcConstants {
   val p_with_document = new QName("p", ns_p, "with-document")
   val p_with_properties = new QName("p", ns_p, "with-properties")
 
+  val p_injectable = new QName("p", ns_p, "injectable")
+  val p_start = new QName("p", ns_p, "start")
+  val p_end = new QName("p", ns_p, "end")
 
   val p_error = new QName("p", ns_p, "error")
   val p_identity = new QName("p", ns_p, "identity")
@@ -112,6 +118,7 @@ object XProcConstants {
   val cx_document = new QName("cx", ns_cx, "document")
   val cx_property_extract = new QName("cx", ns_cx, "property-extract")
   val cx_property_merge = new QName("cx", ns_cx, "property-merge")
+  val cx_unknown = new QName("cx", ns_cx, "unknown")
 
   val _byte_order_mark = new QName("", "byte-order-mark")
   val _cdata_section_elements = new QName("", "cdata-section-elements")
@@ -151,6 +158,8 @@ object XProcConstants {
   val _base_uri = new QName("", "base-uri")
   val _content_type = new QName("", "content-type")
   val _collection = new QName("", "collection")
+  val _message = new QName("", "message")
+  val _condition = new QName("", "condition")
 
   // For non-XProc namespaced places
   val p_expand_text = new QName("p", ns_p, "expand-text")

@@ -9,6 +9,7 @@ import net.sf.saxon.lib.NamespaceConstant
 import net.sf.saxon.s9api.{ItemTypeFactory, QName, XdmAtomicValue}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class ArgBundle(xmlCalabash: XMLCalabash) {
   private val itf = new ItemTypeFactory(xmlCalabash.processor)
@@ -17,6 +18,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
   private val _inputs = mutable.HashMap.empty[String, List[String]]
   private val _outputs = mutable.HashMap.empty[String, List[String]]
   private val _data = mutable.HashMap.empty[String, List[String]]
+  private val _injectables = ListBuffer.empty[String]
   private val _nsbindings = mutable.HashMap.empty[String,String]
   private val _params = mutable.HashMap.empty[QName, XProcVarValue]
   private var _pipeline = Option.empty[String]
@@ -35,6 +37,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
   def verbose: Boolean = _verbose
   def inputs: Map[String, List[String]] = _inputs.toMap
   def outputs: Map[String, List[String]] = _outputs.toMap
+  def injectables: List[String] = _injectables.toList
   def inScopeNamespaces: Map[String,String] = _nsbindings.toMap
   def data: Map[String, List[String]] = _data.toMap
   def params: Map[QName, XProcVarValue] = _params.toMap
@@ -56,6 +59,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
     // -iport=input | --input port=input
     // -oport=output | --output port=output
     // -bprefix=namespace | --bind prefix=namespace
+    // -jinjectable | --inject injectable
     // --raw
     // -G|--graph output.xml
     // --graph-before output.xml
@@ -127,6 +131,10 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
               case "dump-xml" =>
                 _dumpXml = Some(args(pos + 1))
                 pos += 1
+              case "inject" =>
+                _injectables += args(pos+1)
+                pos += 1
+              /*
               case "input" =>
                 val rest = args(pos + 1)
                 val eqpos = rest.indexOf("=")
@@ -149,6 +157,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
                   throw new RuntimeException(s"Cannot parse option --output $rest")
                 }
                 pos += 1
+              */
               case "bind" =>
                 val rest = args(pos + 1)
                 val eqpos = rest.indexOf("=")
@@ -203,6 +212,11 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
                     } else {
                       throw new RuntimeException(s"Cannot parse option -o$rest")
                     }
+                    skip = true
+
+                  case 'j' =>
+                    val rest = chars.substring(chpos + 1)
+                    _injectables += rest
                     skip = true
 
                   case 'b' =>

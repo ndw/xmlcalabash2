@@ -4,6 +4,7 @@ import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
 class OptionDecl(override val config: XMLCalabash,
@@ -46,18 +47,19 @@ class OptionDecl(override val config: XMLCalabash,
 
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get
-    val cnode = container.graphNode.get.asInstanceOf[ContainerStart]
+    val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
     if (cnode.parent.isEmpty) {
-      //graphNode = Some(graph.addBinding(_name.getClarkName))
+      val context = new ExpressionContext(_baseURI, inScopeNS, _location)
+      val options = new SaxonExpressionOptions(Map("collection" -> false, "optiondecl" -> true))
+      val node = graph.addBinding(_name.getClarkName)
+      _graphNode = Some(node)
+      config.addNode(node.id, this)
     } else {
       throw new ModelException(ExceptionCode.INTERNAL, "Don't know what to do about opts here", location)
     }
   }
 
   override def makeEdges(graph: Graph, parent: Node): Unit = {
-    if (parent.parent.isEmpty) {
-      graphNode = Some(graph.addBinding(_name.getClarkName))
-      //graph.addBindingEdge(graphNode.get.asInstanceOf[Binding], parent)
-    }
+    // There are no edges to top-level options
   }
 }

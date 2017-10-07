@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{ContainerStart, Graph, Node}
+import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ValueParser
@@ -13,7 +13,7 @@ import scala.collection.mutable.ListBuffer
 class AtomicStep(override val config: XMLCalabash,
                  override val parent: Option[Artifact],
                  val stepType: QName) extends PipelineStep(config, parent) {
-  private val options = mutable.HashMap.empty[QName, XProcExpression]
+  protected[xml] val options = mutable.HashMap.empty[QName, XProcExpression]
 
   override def validate(): Boolean = {
     val sig = config.signatures.step(stepType)
@@ -121,7 +121,7 @@ class AtomicStep(override val config: XMLCalabash,
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "Atomic step parent isn't a container???", location)
     }
-    graphNode = Some(node)
+    _graphNode = Some(node)
     proxy.nodeId = node.id
     config.addNode(node.id, this)
 
@@ -137,6 +137,35 @@ class AtomicStep(override val config: XMLCalabash,
         case pipe: PipeInfo => Unit
         case _ =>
           child.makeEdges(graph, parent)
+      }
+    }
+
+    for (ref <- variableRefs) {
+      val bind = findBinding(ref)
+      if (bind.isEmpty) {
+        throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
+      }
+
+      bind.get match {
+        case declStep: DeclareStep =>
+          var optDecl = Option.empty[OptionDecl]
+          for (child <- declStep.children) {
+            child match {
+              case opt: OptionDecl =>
+                if (opt.optionName == ref) {
+                  optDecl = Some(opt)
+                }
+              case _ => Unit
+            }
+          }
+          if (optDecl.isEmpty) {
+            throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
+          }
+          graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], graphNode)
+        case varDecl: Variable =>
+          graph.addBindingEdge(varDecl._graphNode.get.asInstanceOf[Binding], graphNode)
+        case _ =>
+          throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
       }
     }
   }

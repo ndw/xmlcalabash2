@@ -23,6 +23,7 @@ object XProcException {
   def xiDocPropsNotMap(location: Option[Location], props: Any) = internalError(12, location, props)
   def xiDocPropsKeyNotString(location: Option[Location], key: Any) = internalError(13, location, key)
   def xiDocPropsValueNotAtomic(location: Option[Location], key: Any) = internalError(14, location, key)
+  def xiNotInInjectable() = internalError(15, None)
 
   private def internalError(code: Int, location: Option[Location]): XProcException = {
     internalError(code, location, List())

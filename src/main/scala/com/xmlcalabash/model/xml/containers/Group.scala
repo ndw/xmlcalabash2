@@ -7,7 +7,7 @@ import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.{Artifact, Documentation, PipeInfo}
 
 class Group(override val config: XMLCalabash,
-            override val parent: Option[Artifact]) extends Container(config, parent) {
+            override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_group) {
 
   override def validate(): Boolean = {
     var valid = super.validate()
@@ -33,7 +33,7 @@ class Group(override val config: XMLCalabash,
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "Group parent isn't a container???", location)
     }
-    graphNode = Some(node)
+    _graphNode = Some(node)
     config.addNode(node.id, this)
 
     for (child <- children) {
@@ -43,7 +43,7 @@ class Group(override val config: XMLCalabash,
 
   override def makeEdges(graph: Graph, parentNode: Node) {
     for (output <- outputPorts) {
-      graph.addEdge(graphNode.get, output, parentNode, output)
+      graph.addEdge(_graphNode.get, output, parentNode, output)
     }
 
     for (child <- children) {
@@ -51,7 +51,7 @@ class Group(override val config: XMLCalabash,
         case doc: Documentation => Unit
         case pipe: PipeInfo => Unit
         case _ =>
-          child.makeEdges(graph, graphNode.get)
+          child.makeEdges(graph, _graphNode.get)
       }
     }
   }

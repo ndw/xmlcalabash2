@@ -75,8 +75,8 @@ class WithOption(override val config: XMLCalabash,
 
     grandparent match {
       case start: ContainerStart =>
-        val options = new SaxonExpressionOptions(contextCollection = _collection)
-        graphNode = Some(start.addVariable(optionName.getClarkName, expression, options))
+        val options = new SaxonExpressionOptions(Map("collection" -> _collection))
+        _graphNode = Some(start.addVariable(optionName.getClarkName, expression, options))
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "WithOption grandparent isn't a container???", location)
     }
@@ -84,9 +84,9 @@ class WithOption(override val config: XMLCalabash,
     for (child <- children) {
       child match {
         case inline: Inline =>
-          inline.makeGraph(graph, atomic.graphNode.get)
+          inline.makeGraph(graph, atomic._graphNode.get)
         case pipe: Pipe =>
-          pipe.makeGraph(graph, atomic.graphNode.get)
+          pipe.makeGraph(graph, atomic._graphNode.get)
         case _ =>
           throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected child in p:with-option: $child", location)
       }
@@ -110,19 +110,26 @@ class WithOption(override val config: XMLCalabash,
       if (drp.isDefined) {
         drp.get match {
           case out: Output =>
-            graph.addEdge(out.parent.get.graphNode.get, out.port.get, graphNode.get, "source")
+            graph.addEdge(out.parent.get._graphNode.get, out.port.get, _graphNode.get, "source")
           case in: Input =>
-            graph.addEdge(in.parent.get.graphNode.get, in.port.get, graphNode.get, "source")
+            graph.addEdge(in.parent.get._graphNode.get, in.port.get, _graphNode.get, "source")
           case _ =>
             throw new ModelException(ExceptionCode.INTERNAL, s"Not implemented in p:with-option, reading from ${drp.get}", location)
         }
       }
     }
 
-    graph.addEdge(graphNode.get, "result", this.parent.get.graphNode.get, "#bindings")
+    graph.addEdge(_graphNode.get, "result", this.parent.get._graphNode.get, "#bindings")
 
     val variableRefs = findVariableRefs(expression)
     for (ref <- variableRefs) {
+      this.parent.get.asInstanceOf[PipelineStep].addVariableRef(ref)
+
+      /*
+      if (this.parent.get.asInstanceOf[PipelineStep].variableRefs.contains(ref)) {
+        this.parent.get.asInstanceOf[PipelineStep].variableRefs -= ref
+      }
+
       val bind = findBinding(ref)
       if (bind.isEmpty) {
         throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
@@ -143,12 +150,13 @@ class WithOption(override val config: XMLCalabash,
           if (optDecl.isEmpty) {
             throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
           }
-          graph.addBindingEdge(optDecl.get.graphNode.get.asInstanceOf[Binding], graphNode.get)
+          graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], _graphNode.get)
         case varDecl: Variable =>
-          graph.addBindingEdge(varDecl.graphNode.get.asInstanceOf[Binding], graphNode.get)
+          graph.addBindingEdge(varDecl._graphNode.get.asInstanceOf[Binding], _graphNode.get)
         case _ =>
           throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
       }
+      */
     }
   }
 }

@@ -18,9 +18,10 @@ class InlineLoader(private val nodes: List[XdmNode],
                    private val excludeInlinePrefixes: Map[String,String],
                    private val docPropsExpr: Option[String],
                    private val encoding: Option[String]) extends DefaultStep {
-  private val include_expand_text_attribute = false
+  private var include_expand_text_attribute = false
   private var docProps = Map.empty[QName, XdmItem]
   private val excludeURIs = mutable.HashSet.empty[String]
+  private var _allowExpandText = true
 
   excludeURIs += XProcConstants.ns_p
   for (uri <- excludeInlinePrefixes.values) {
@@ -29,6 +30,12 @@ class InlineLoader(private val nodes: List[XdmNode],
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
+
+  protected[xmlcalabash] def allowExpandText: Boolean = _allowExpandText
+  protected[xmlcalabash] def allowExpandText_=(allow: Boolean): Unit = {
+    _allowExpandText = allow
+    include_expand_text_attribute = !allow
+  }
 
   override def run(): Unit = {
     if (docPropsExpr.isDefined) {
@@ -46,7 +53,11 @@ class InlineLoader(private val nodes: List[XdmNode],
     builder.startDocument(Some(URI.create("http://example.com/")))
     builder.startContent()
     for (node <- nodes) {
-      expandTVT(node, builder, expandText)
+      if (allowExpandText) {
+        expandTVT(node, builder, expandText)
+      } else {
+        builder.addSubtree(node)
+      }
     }
     builder.endDocument()
     val result = builder.result
@@ -93,7 +104,7 @@ class InlineLoader(private val nodes: List[XdmNode],
         iter = node.axisIterator(Axis.CHILD)
         while (iter.hasNext) {
           val child = iter.next().asInstanceOf[XdmNode]
-          expandTVT(child, builder, newExpand)
+          expandTVT(child, builder, newExpand && _allowExpandText)
         }
         builder.addEndElement()
       case XdmNodeKind.TEXT =>

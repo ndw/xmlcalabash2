@@ -8,7 +8,7 @@ import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
 import com.xmlcalabash.model.xml.{Artifact, Documentation, Input, PipeInfo}
 
 class ForEach(override val config: XMLCalabash,
-              override val parent: Option[Artifact]) extends Container(config, parent) {
+              override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_for_each) {
 
   override def validate(): Boolean = {
     var valid = super.validate()
@@ -91,7 +91,7 @@ class ForEach(override val config: XMLCalabash,
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "ForEach parent isn't a container???", location)
     }
-    graphNode = Some(node)
+    _graphNode = Some(node)
     config.addNode(node.id, this)
 
     for (child <- children) {
@@ -105,7 +105,7 @@ class ForEach(override val config: XMLCalabash,
         case doc: Documentation => Unit
         case pipe: PipeInfo => Unit
         case _ =>
-          child.makeEdges(graph, graphNode.get)
+          child.makeEdges(graph, _graphNode.get)
       }
     }
   }

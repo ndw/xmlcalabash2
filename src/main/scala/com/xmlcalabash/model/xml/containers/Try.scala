@@ -9,7 +9,7 @@ import com.xmlcalabash.model.xml.{Artifact, Documentation, IOPort, Output, PipeI
 import scala.collection.mutable
 
 class Try(override val config: XMLCalabash,
-          override val parent: Option[Artifact]) extends Container(config, parent) {
+          override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_try) {
 
   override def validate(): Boolean = {
     var valid = super.validate()
@@ -161,7 +161,7 @@ class Try(override val config: XMLCalabash,
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "Try parent isn't a container???", location)
     }
-    graphNode = Some(node)
+    _graphNode = Some(node)
     config.addNode(node.id, this)
 
     for (child <- children) {
@@ -175,7 +175,7 @@ class Try(override val config: XMLCalabash,
         case doc: Documentation => Unit
         case pipe: PipeInfo => Unit
         case _ =>
-          child.makeEdges(graph, graphNode.get)
+          child.makeEdges(graph, _graphNode.get)
       }
     }
   }

@@ -10,7 +10,7 @@ import com.xmlcalabash.model.xml.{Artifact, AtomicStep, Documentation, Input, Ou
 import scala.collection.mutable
 
 class Choose(override val config: XMLCalabash,
-             override val parent: Option[Artifact]) extends Container(config, parent) {
+             override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_choose) {
 
   override def validate(): Boolean = {
     var valid = super.validate()
@@ -145,7 +145,7 @@ class Choose(override val config: XMLCalabash,
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "Choose parent isn't a container???", location)
     }
-    graphNode = Some(node)
+    _graphNode = Some(node)
     config.addNode(node.id, this)
 
     for (child <- children) {
@@ -159,7 +159,7 @@ class Choose(override val config: XMLCalabash,
         case doc: Documentation => Unit
         case pipe: PipeInfo => Unit
         case _ =>
-          child.makeEdges(graph, graphNode.get)
+          child.makeEdges(graph, _graphNode.get)
       }
     }
   }

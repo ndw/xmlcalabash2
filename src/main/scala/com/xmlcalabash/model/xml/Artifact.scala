@@ -2,20 +2,23 @@ package com.xmlcalabash.model.xml
 
 import java.net.URI
 
-import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
+import com.jafpl.graph.{Binding, ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{UniqueId, ValueParser}
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcAvtExpression, XProcExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionOptions, XProcAvtExpression, XProcExpression, XProcXPathExpression}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
+  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected[xml] var id: Long = UniqueId.nextId
   protected[xml] val attributes = mutable.HashMap.empty[QName, String]
   protected[xml] val children: mutable.ListBuffer[Artifact] = mutable.ListBuffer.empty[Artifact]
@@ -26,10 +29,13 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   protected[xml] val dataSourceClasses = List(classOf[Empty], classOf[Pipe],
     classOf[Document], classOf[Inline])
   protected[xml] var _label = Option.empty[String]
-  protected[xml] var graphNode = Option.empty[Node]
+  protected[xml] var _graphNode = Option.empty[Node]
   protected[xml] var dump_attr = Option.empty[xml.MetaData]
   protected[xml] var _location = Option.empty[Location]
   protected[xml] var _baseURI = Option.empty[URI]
+  protected[xml] val _inputInjectables: ListBuffer[XProcPortInjectable] = ListBuffer.empty[XProcPortInjectable]
+  protected[xml] val _outputInjectables: ListBuffer[XProcPortInjectable] = ListBuffer.empty[XProcPortInjectable]
+  protected[xml] val _stepInjectables: ListBuffer[XProcStepInjectable] = ListBuffer.empty[XProcStepInjectable]
 
   def label: Option[String] = _label
   protected[xml] def label_=(label: String): Unit = {
@@ -47,6 +53,21 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
 
   override def toString: String = {
     "{step " + name + " " + super.toString + "}"
+  }
+
+  protected[xml] def inputInjectables: List[XProcPortInjectable] = _inputInjectables.toList
+  protected[xml] def addInputInjectable(injectable: XProcPortInjectable): Unit = {
+    _inputInjectables += injectable
+  }
+
+  protected[xml] def outputInjectables: List[XProcPortInjectable] = _outputInjectables.toList
+  protected[xml] def addOutputInjectable(injectable: XProcPortInjectable): Unit = {
+    _outputInjectables += injectable
+  }
+
+  protected[xml] def stepInjectables: List[XProcStepInjectable] = _stepInjectables.toList
+  protected[xml] def addStepInjectable(injectable: XProcStepInjectable): Unit = {
+    _stepInjectables += injectable
   }
 
   protected[xml] def setLocation(node: XdmNode): Unit = {
@@ -344,6 +365,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     list.toList
   }
 
+
   def bindingDeclaration(qname: QName): Option[OptionDecl] = {
     for (child <- children) {
       child match {
@@ -491,36 +513,8 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   }
 
   def findVariableRefs(expression: XProcExpression): Set[QName] = {
-    val variableRefs = mutable.HashSet.empty[QName]
-
-    expression match {
-      case expr: XProcXPathExpression =>
-        val parser = config.expressionParser
-        parser.parse(expr.expr)
-        for (ref <- parser.variableRefs) {
-          val qname = ValueParser.parseClarkName(ref)
-          variableRefs += qname
-        }
-      case expr: XProcAvtExpression =>
-        var avt = false
-        for (subexpr <- expr.avt) {
-          if (avt) {
-            val parser = config.expressionParser
-            parser.parse(subexpr)
-            for (ref <- parser.variableRefs) {
-              val qname = ValueParser.parseClarkName(ref)
-              variableRefs += qname
-            }
-          }
-          avt = !avt
-        }
-      case _ =>
-        throw XProcException.xiUnkExprType(location)
-    }
-
-    variableRefs.toSet
+    ValueParser.findVariableRefs(config, expression, location)
   }
-
 
   def validate(): Boolean = {
     println(s"ERROR: $this doesn't override validate")
@@ -569,7 +563,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     false
   }
 
-  def findPatchable(): List[Artifact] = {
+  private[xml] def findPatchable(): List[Artifact] = {
     val list = ListBuffer.empty[Artifact]
     for (child <- children) {
       child match {
@@ -582,11 +576,24 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     list.toList
   }
 
+  private[xml] def findInjectables(): List[Artifact] = {
+    val list = ListBuffer.empty[Artifact]
+    if (inputInjectables.nonEmpty || outputInjectables.nonEmpty || stepInjectables.nonEmpty) {
+      list += this
+    }
+
+    for (child <- children) {
+      list ++= child.findInjectables()
+    }
+
+    list.toList
+  }
+
   def makeGraph(graph: Graph, parent: Node) {
     if (children.nonEmpty) {
-      if (graphNode.isDefined) {
+      if (_graphNode.isDefined) {
         for (child <- children) {
-          child.makeGraph(graph, graphNode.get)
+          child.makeGraph(graph, _graphNode.get)
         }
       } else {
         println("cannot process children of " + this)

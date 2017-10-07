@@ -10,7 +10,7 @@ import com.jafpl.runtime.{ExpressionEvaluator, RuntimeConfiguration}
 import com.jafpl.steps.{DataConsumer, Step}
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException}
-import com.xmlcalabash.functions.{Cwd, DocumentProperties, SystemProperty}
+import com.xmlcalabash.functions.{Cwd, DocumentProperties, InjElapsed, InjId, InjName, InjType, SystemProperty}
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.Artifact
 import com.xmlcalabash.parsers.XPathParser
@@ -56,7 +56,6 @@ class XMLCalabash extends RuntimeConfiguration {
   private var _moduleURIResolver: ModuleURIResolver = _
   private var _unparsedTextURIResolver: UnparsedTextURIResolver = _
   private var _errorExplanation: ErrorExplanation = _
-  private var _deliveryAgent: DeliveryAgent = _
   private var _documentManager: DocumentManager = _
   private var _htmlSerializer = false
   private var _watchdogTimeout = 1000L
@@ -175,17 +174,6 @@ class XMLCalabash extends RuntimeConfiguration {
     _errorExplanation = explain
   }
 
-  def deliveryAgent: DeliveryAgent = {
-    if (_deliveryAgent == null) {
-      throw new ConfigurationException(ExceptionCode.CFGINCOMPLETE, "deliveryAgent")
-    }
-    _deliveryAgent
-  }
-  def deliveryAgent_=(agent: DeliveryAgent): Unit = {
-    checkClosed()
-    _deliveryAgent = agent
-  }
-
   def documentManager: DocumentManager = {
     if (_documentManager == null) {
       throw new ConfigurationException(ExceptionCode.CFGINCOMPLETE, "documentManager")
@@ -260,10 +248,6 @@ class XMLCalabash extends RuntimeConfiguration {
 
   override def expressionEvaluator: ExpressionEvaluator = _expressionEvaluator
 
-  override def deliver(fromId: String, fromPort: String, message: Message, consumer: DataConsumer, port: String): Unit = {
-    _deliveryAgent.deliver(fromId, fromPort, message, consumer, port)
-  }
-
   override def traceEnabled(trace: String): Boolean = traceEventManager.traceEnabled(trace)
 
   // Convenience functions
@@ -322,6 +306,10 @@ class XMLCalabash extends RuntimeConfiguration {
     processor.registerExtensionFunction(new DocumentProperties(this))
     processor.registerExtensionFunction(new SystemProperty(this))
     processor.registerExtensionFunction(new Cwd(this))
+    processor.registerExtensionFunction(new InjElapsed(this))
+    processor.registerExtensionFunction(new InjName(this))
+    processor.registerExtensionFunction(new InjId(this))
+    processor.registerExtensionFunction(new InjType(this))
   }
   private def checkClosed(): Unit = {
     if (closed) {

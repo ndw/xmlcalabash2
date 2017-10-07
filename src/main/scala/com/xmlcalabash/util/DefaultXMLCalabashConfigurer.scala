@@ -41,7 +41,6 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
 
     configuration.errorExplanation = new DefaultErrorExplanation(configuration)
 
-    configuration.deliveryAgent = new DefaultDeliveryAgent(configuration)
     configuration.documentManager = new DefaultDocumentManager(configuration)
   }
 }

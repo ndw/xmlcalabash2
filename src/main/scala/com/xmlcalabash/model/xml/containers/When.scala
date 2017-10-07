@@ -8,7 +8,7 @@ import com.xmlcalabash.model.xml.{Artifact, DeclareStep, Documentation, OptionDe
 import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
 
 class When(override val config: XMLCalabash,
-           override val parent: Option[Artifact]) extends Container(config, parent) {
+           override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_when) {
   private var testExpr: XProcExpression = _
 
   override def validate(): Boolean = {
@@ -47,7 +47,7 @@ class When(override val config: XMLCalabash,
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "When parent isn't a choose???", location)
     }
-    graphNode = Some(node)
+    _graphNode = Some(node)
     config.addNode(node.id, this)
 
     for (child <- children) {
@@ -58,16 +58,16 @@ class When(override val config: XMLCalabash,
   override def makeEdges(graph: Graph, parentNode: Node) {
     val drp = parent.get.defaultReadablePort
     if (drp.isDefined) {
-      val gnode = if (drp.get.graphNode.isDefined) {
-        drp.get.graphNode.get
+      val gnode = if (drp.get._graphNode.isDefined) {
+        drp.get._graphNode.get
       } else {
-        drp.get.parent.get.graphNode.get
+        drp.get.parent.get._graphNode.get
       }
-      graph.addEdge(gnode, drp.get.port.get, graphNode.get, "condition")
+      graph.addEdge(gnode, drp.get.port.get, _graphNode.get, "condition")
     }
 
     for (output <- outputPorts) {
-      graph.addEdge(graphNode.get, output, parentNode, output)
+      graph.addEdge(_graphNode.get, output, parentNode, output)
     }
 
     for (child <- children) {
@@ -75,7 +75,7 @@ class When(override val config: XMLCalabash,
         case doc: Documentation => Unit
         case pipe: PipeInfo => Unit
         case _ =>
-          child.makeEdges(graph, graphNode.get)
+          child.makeEdges(graph, _graphNode.get)
       }
     }
 
@@ -101,9 +101,9 @@ class When(override val config: XMLCalabash,
           if (optDecl.isEmpty) {
             throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
           }
-          graph.addBindingEdge(optDecl.get.graphNode.get.asInstanceOf[Binding], graphNode.get)
+          graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], _graphNode.get)
         case varDecl: Variable =>
-          graph.addBindingEdge(varDecl.graphNode.get.asInstanceOf[Binding], graphNode.get)
+          graph.addBindingEdge(varDecl._graphNode.get.asInstanceOf[Binding], _graphNode.get)
         case _ =>
           throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
       }
