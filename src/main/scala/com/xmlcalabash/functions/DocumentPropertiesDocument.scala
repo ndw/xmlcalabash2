@@ -2,23 +2,19 @@ package com.xmlcalabash.functions
 
 import java.net.URI
 
-import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.ItemMessage
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcMetadata}
 import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
-import net.sf.saxon.functions.AccessorFn.Component
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
 import net.sf.saxon.om.{NodeInfo, Sequence, StructuredQName}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode}
-import net.sf.saxon.value.{QNameValue, SequenceType, StringValue}
+import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
+import net.sf.saxon.value.SequenceType
 
-import scala.collection.mutable
-
-class DocumentProperties private extends ExtensionFunctionDefinition {
-  private val funcname = new StructuredQName("p", XProcConstants.ns_p, "document-properties")
+class DocumentPropertiesDocument private extends ExtensionFunctionDefinition {
+  private val funcname = new StructuredQName("p", XProcConstants.ns_p, "document-properties-document")
 
   private var runtime: XMLCalabash = _
 
@@ -31,7 +27,7 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
 
   override def getArgumentTypes: Array[SequenceType] = Array(SequenceType.SINGLE_NODE)
 
-  override def getResultType(suppliedArgumentTypes: Array[SequenceType]): SequenceType = SequenceType.SINGLE_ITEM
+  override def getResultType(suppliedArgumentTypes: Array[SequenceType]): SequenceType = SequenceType.SINGLE_NODE
 
   override def makeCallExpression(): ExtensionFunctionCall = {
     new DocPropsCall(this)
@@ -68,13 +64,23 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
           Map.empty[QName,XdmItem]
       }
 
-      var map = new XdmMap()
+      val builder = new SaxonTreeBuilder(runtime)
+      builder.startDocument(None)
+      builder.addStartElement(XProcConstants.p_document_properties)
+      builder.startContent()
       for (key <- props.keySet) {
-        val value = props(key)
-        map = map.put(new XdmAtomicValue(key), value)
+        builder.addStartElement(key)
+        builder.startContent()
+        props(key) match {
+          case node: XdmNode => builder.addSubtree(node)
+          case atomic: XdmItem => builder.addText(atomic.getStringValue)
+        }
+        builder.addEndElement()
       }
+      builder.addEndElement()
+      builder.endDocument()
 
-      map.getUnderlyingValue
+      builder.result.getUnderlyingNode
     }
   }
 }

@@ -10,7 +10,7 @@ import com.jafpl.runtime.{ExpressionEvaluator, RuntimeConfiguration}
 import com.jafpl.steps.{DataConsumer, Step}
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException}
-import com.xmlcalabash.functions.{Cwd, DocumentProperties, InjElapsed, InjId, InjName, InjType, SystemProperty}
+import com.xmlcalabash.functions.{Cwd, DocumentProperties, DocumentPropertiesDocument, DocumentProperty, InjElapsed, InjId, InjName, InjType, SystemProperty}
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.Artifact
 import com.xmlcalabash.parsers.XPathParser
@@ -304,6 +304,8 @@ class XMLCalabash extends RuntimeConfiguration {
     }
     */
     processor.registerExtensionFunction(new DocumentProperties(this))
+    processor.registerExtensionFunction(new DocumentProperty(this))
+    processor.registerExtensionFunction(new DocumentPropertiesDocument(this))
     processor.registerExtensionFunction(new SystemProperty(this))
     processor.registerExtensionFunction(new Cwd(this))
     processor.registerExtensionFunction(new InjElapsed(this))
