@@ -83,7 +83,12 @@ object XmlDriver extends App {
 
     for (port <- pipeline.outputPorts) {
       xmlCalabash.trace(s"Binding output port stdout", "ExternalBindings")
-      val pc = new PrintingConsumer()
+      val outputs = options.outputs.get(port)
+      val pc = if (outputs.isDefined) {
+        new PrintingConsumer(outputs.get)
+      } else {
+        new PrintingConsumer()
+      }
       runtime.outputs(port).setConsumer(pc)
     }
 

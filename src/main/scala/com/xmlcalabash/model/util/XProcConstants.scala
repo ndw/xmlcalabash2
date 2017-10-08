@@ -51,6 +51,7 @@ object XProcConstants {
   val p_injectable = new QName("p", ns_p, "injectable")
   val p_start = new QName("p", ns_p, "start")
   val p_end = new QName("p", ns_p, "end")
+  val p_document_properties = new QName("p", ns_p, "document-properties")
 
   val p_error = new QName("p", ns_p, "error")
   val p_identity = new QName("p", ns_p, "identity")
