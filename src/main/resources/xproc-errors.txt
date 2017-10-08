@@ -8,3 +8,12 @@ p:choose does not contain a selected p:when or a p:otherwise.
 
 XS0018
 The option named “$1” is required, but no value was provided for it.
+
+XS0069
+The encoding “$1” is not supported.
+The only encoding supported is “base64”.
+
+XS0070
+It is an error to specify an encoding, “$1”, if the content type is an XML media type: “$2”.
+
+

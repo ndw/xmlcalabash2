@@ -20,6 +20,9 @@ class DefaultStep extends Step {
   protected val bindings = mutable.HashMap.empty[String,Message]
 
   def location: Option[Location] = _location
+  protected[xmlcalabash] def location_=(location: Option[Location]): Unit = {
+    _location = location
+  }
 
   // ==========================================================================
 

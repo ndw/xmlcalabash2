@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{ItemMessage, Message}
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
@@ -12,7 +12,8 @@ import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode
 
 import scala.collection.mutable
 
-class InlineLoader(private val nodes: List[XdmNode],
+class InlineLoader(private val baseURI: Option[URI],
+                   private val nodes: List[XdmNode],
                    private val context: ExpressionContext,
                    private val expandText: Boolean,
                    private val excludeInlinePrefixes: Map[String,String],
@@ -49,8 +50,18 @@ class InlineLoader(private val nodes: List[XdmNode],
       }
     }
 
+    val contentType = docProps.getOrElse(XProcConstants._content_type, "application/xml").toString
+    if (encoding.isDefined) {
+      if (ValueParser.xmlContentType(contentType)) {
+        throw XProcException.staticError(70, List(encoding.get, contentType), location)
+      }
+      if (encoding.get != "base64") {
+        throw XProcException.staticError(69, List(encoding.get), location)
+      }
+    }
+
     val builder = new SaxonTreeBuilder(config.get)
-    builder.startDocument(Some(URI.create("http://example.com/")))
+    builder.startDocument(baseURI)
     builder.startContent()
     for (node <- nodes) {
       if (allowExpandText) {

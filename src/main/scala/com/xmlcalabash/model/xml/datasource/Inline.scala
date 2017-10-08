@@ -70,59 +70,6 @@ class Inline(override val config: XMLCalabash,
     }
   }
 
-  /*
-  private def findVariableRefs(node: XdmNode, expandText: Boolean): Unit = {
-    node.getNodeKind match {
-      case XdmNodeKind.ELEMENT =>
-        var newExpand = expandText
-        var iter = node.axisIterator(Axis.ATTRIBUTE)
-        while (iter.hasNext) {
-          val attr = iter.next().asInstanceOf[XdmNode]
-          if (expandText) {
-            findVariableRefsInAvt(attr.getStringValue)
-          }
-          if (attr.getNodeName == XProcConstants.p_expand_text) {
-            newExpand = lexicalBoolean(Some(attr.getStringValue)).get
-          }
-        }
-        iter = node.axisIterator(Axis.CHILD)
-        while (iter.hasNext) {
-          val child = iter.next().asInstanceOf[XdmNode]
-          findVariableRefs(child, newExpand)
-        }
-      case XdmNodeKind.TEXT =>
-        if (expandText) {
-          findVariableRefsInAvt(node.getStringValue)
-        }
-      case _ => Unit
-    }
-  }
-
-  private def findVariableRefsInAvt(text: String): Unit = {
-    val list = ValueParser.parseAvt(text)
-    if (list.isEmpty) {
-      throw new ModelException(ExceptionCode.BADAVT, List("TVT", text), location)
-    }
-
-    var avt = false
-    for (substr <- list.get) {
-      if (avt) {
-        findVariableRefsInString(substr)
-      }
-      avt = !avt
-    }
-  }
-
-  private def findVariableRefsInString(text: String): Unit = {
-    val parser = config.expressionParser
-    parser.parse(text)
-    for (ref <- parser.variableRefs) {
-      val qname = lexicalQName(Some(ref)).get
-      variableRefs += qname
-    }
-  }
-  */
-
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get match {
       case wi: WithInput => this.parent.get.parent.get.parent.get
@@ -131,8 +78,9 @@ class Inline(override val config: XMLCalabash,
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
 
     val context = new ExpressionContext(baseURI, inScopeNS, location)
-    val produceInline = new InlineLoader(nodes, context, _expandText, _excludeInlinePrefixes, _documentProperties, _encoding)
+    val produceInline = new InlineLoader(baseURI, nodes, context, _expandText, _excludeInlinePrefixes, _documentProperties, _encoding)
     produceInline.allowExpandText = allowExpandText
+    produceInline.location = location
     val inlineProducer = cnode.addAtomic(produceInline)
 
     _graphNode = Some(inlineProducer)
