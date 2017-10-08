@@ -97,7 +97,10 @@ object XmlDriver extends App {
     runtime.run()
   } catch {
     case t: Throwable =>
-      t.printStackTrace()
+      if (options.debug) {
+        t.printStackTrace()
+      }
+
       t match {
         case model: ModelException =>
           println(model)

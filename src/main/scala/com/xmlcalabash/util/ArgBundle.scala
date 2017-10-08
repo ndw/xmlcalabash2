@@ -28,6 +28,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
   private var _raw = false
   private var _verbose = false
   private var _norun = false
+  private var _debug = false
 
   def this(config: XMLCalabash, args: List[String]) = {
     this(config)
@@ -54,6 +55,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
   def raw: Boolean = _raw
   def dumpXML: Option[String] = _dumpXml
   def norun: Boolean = _norun
+  def debug: Boolean = _debug
 
   def parse(args: List[String]): Unit = {
     // -iport=input | --input port=input
@@ -61,9 +63,10 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
     // -bprefix=namespace | --bind prefix=namespace
     // -jinjectable | --inject injectable
     // --raw
-    // -G|--graph output.xml
+    // -G | --graph output.xml
     // --graph-before output.xml
     // --norun
+    // -D | --debug
     // param=string value
     // +param=file value
     // ?param=xpath expression value
@@ -122,6 +125,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
               case "verbose" => _verbose = true
               case "raw" => _raw = true
               case "norun" => _norun = true
+              case "debug" => _debug = true
               case "graph" =>
                 _graph = Some(args(pos + 1))
                 pos += 1
@@ -134,30 +138,6 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
               case "inject" =>
                 _injectables += args(pos+1)
                 pos += 1
-              /*
-              case "input" =>
-                val rest = args(pos + 1)
-                val eqpos = rest.indexOf("=")
-                if (eqpos > 0) {
-                  val port = rest.substring(0, eqpos)
-                  val value = rest.substring(eqpos+1)
-                  parsePort(_inputs, s"$port=$value")
-                } else {
-                  throw new RuntimeException(s"Cannot parse option --input $rest")
-                }
-                pos += 1
-              case "output" =>
-                val rest = args(pos + 1)
-                val eqpos = rest.indexOf("=")
-                if (eqpos > 0) {
-                  val port = rest.substring(0, eqpos)
-                  val value = rest.substring(eqpos+1)
-                  parsePort(_outputs, s"$port=$value")
-                } else {
-                  throw new RuntimeException(s"Cannot parse option --output $rest")
-                }
-                pos += 1
-              */
               case "bind" =>
                 val rest = args(pos + 1)
                 val eqpos = rest.indexOf("=")
@@ -190,6 +170,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
               if (!skip) {
                 ch match {
                   case 'v' => _verbose = true
+                  case 'D' => _debug = true
                   case 'i' =>
                     val rest = chars.substring(chpos + 1)
                     val eqpos = rest.indexOf("=")
