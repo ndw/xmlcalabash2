@@ -77,6 +77,26 @@ object XProcException {
     val qname = new QName("err", XProcConstants.ns_err, "XS%04d".format(code))
     new XProcException(qname, None, location, details)
   }
+
+  def stepError(code: Int): XProcException = {
+    stepError(code, List.empty[String], None)
+  }
+  def stepError(code: Int, details: String): XProcException = {
+    stepError(code, List(details), None)
+  }
+  def stepError(code: Int, details: List[String]): XProcException = {
+    stepError(code, details, None)
+  }
+  def stepError(code: Int, location: Option[Location]): XProcException = {
+    stepError(code, List.empty[String], location)
+  }
+  def stepError(code: Int, details: String, location: Option[Location]): XProcException = {
+    stepError(code, List(details), location)
+  }
+  def stepError(code: Int, details: List[String], location: Option[Location]): XProcException = {
+    val qname = new QName("err", XProcConstants.ns_err, "XC%04d".format(code))
+    new XProcException(qname, None, location, details)
+  }
 }
 
 class XProcException(val code: QName, val message: Option[String], val location: Option[Location], val details: List[String]) extends Throwable {
