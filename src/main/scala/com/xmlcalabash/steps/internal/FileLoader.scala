@@ -85,7 +85,7 @@ class FileLoader(private val context: ExpressionContext,
       case t: Throwable =>
         // What should the representation of non-XML data be?
         val file = new File(href)
-        props.put(new QName("", "file-size"), new XdmAtomicValue(file.length()))
+        props.put(XProcConstants._content_length, new XdmAtomicValue(file.length()))
         props.put(XProcConstants._base_uri, new XdmAtomicValue(file.toURI))
         val bytes = Files.readAllBytes(new File(href).toPath)
         val ctype = contentType.getOrElse("application/octet-stream")
