@@ -16,4 +16,7 @@ The only encoding supported is “base64”.
 XS0070
 It is an error to specify an encoding, “$1”, if the content type is an XML media type: “$2”.
 
+XS0072
+For p:inline “$1” content, only text is allowed. Found: “$2”.
+
 

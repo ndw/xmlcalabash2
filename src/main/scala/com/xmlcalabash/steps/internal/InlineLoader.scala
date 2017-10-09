@@ -1,12 +1,13 @@
 package com.xmlcalabash.steps.internal
 
 import java.net.URI
+import java.util.Base64
 
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{ItemMessage, Message}
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, ValueParser, XProcConstants}
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind}
 
@@ -60,19 +61,53 @@ class InlineLoader(private val baseURI: Option[URI],
       }
     }
 
-    val builder = new SaxonTreeBuilder(config.get)
-    builder.startDocument(baseURI)
-    builder.startContent()
-    for (node <- nodes) {
-      if (allowExpandText) {
-        expandTVT(node, builder, expandText)
-      } else {
-        builder.addSubtree(node)
+    if (ValueParser.xmlContentType(contentType)) {
+      val builder = new SaxonTreeBuilder(config.get)
+      builder.startDocument(baseURI)
+      builder.startContent()
+      for (node <- nodes) {
+        if (allowExpandText) {
+          expandTVT(node, builder, expandText)
+        } else {
+          builder.addSubtree(node)
+        }
       }
+      builder.endDocument()
+      val result = builder.result
+      consumer.get.receive("result", new ItemMessage(result, new XProcMetadata(contentType, docProps)))
+    } else if (ValueParser.textContentType(contentType)) {
+      val builder = new SaxonTreeBuilder(config.get)
+      builder.startDocument(baseURI)
+      builder.startContent()
+      for (node <- nodes) {
+        if (node.getNodeKind == XdmNodeKind.TEXT) {
+          builder.addText(node.getStringValue)
+        } else {
+          throw XProcException.staticError(72, List(node.getNodeKind.toString), location)
+        }
+      }
+      builder.endDocument()
+      val result = builder.result
+      consumer.get.receive("result", new ItemMessage(result, new XProcMetadata(contentType, docProps)))
+    } else {
+      var str = ""
+      for (node <- nodes) {
+        if (node.getNodeKind == XdmNodeKind.TEXT) {
+          str += node.getStringValue
+        } else {
+          throw XProcException.staticError(72, List(contentType, node.getNodeKind.toString), location)
+        }
+      }
+
+      val props = mutable.HashMap.empty[QName, XdmItem]
+      props ++= docProps
+      val bytes = Base64.getMimeDecoder.decode(str)
+
+      props.put(XProcConstants._content_length, new XdmAtomicValue(bytes.length))
+      props.put(XProcConstants._base_uri, new XdmAtomicValue(baseURI.get))
+      
+      consumer.get.receive("result", new ItemMessage(bytes, new XProcMetadata(contentType, props.toMap)))
     }
-    builder.endDocument()
-    val result = builder.result
-    consumer.get.receive("result", new ItemMessage(result, new XProcMetadata("application/xml", docProps)))
   }
 
   private def expandTVT(node: XdmNode, builder: SaxonTreeBuilder, expandText: Boolean): Unit = {
