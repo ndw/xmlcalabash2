@@ -138,6 +138,28 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
               case "inject" =>
                 _injectables += args(pos+1)
                 pos += 1
+              case "input" =>
+                val rest = args(pos + 1)
+                val eqpos = rest.indexOf("=")
+                if (eqpos > 0) {
+                  val port = rest.substring(0, eqpos)
+                  val value = rest.substring(eqpos+1)
+                  parsePort(_inputs, s"$port=$value")
+                } else {
+                  throw new RuntimeException(s"Cannot parse option --input $rest")
+                }
+                pos += 1
+              case "output" =>
+                val rest = args(pos + 1)
+                val eqpos = rest.indexOf("=")
+                if (eqpos > 0) {
+                  val port = rest.substring(0, eqpos)
+                  val value = rest.substring(eqpos+1)
+                  parsePort(_outputs, s"$port=$value")
+                } else {
+                  throw new RuntimeException(s"Cannot parse option --output $rest")
+                }
+                pos += 1
               case "bind" =>
                 val rest = args(pos + 1)
                 val eqpos = rest.indexOf("=")
