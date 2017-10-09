@@ -7,6 +7,11 @@ function p:system-property     has implementation xf:SystemProperty
 function p:document-properties has implementation xf:DocumentProperties
 function cx:cwd                has implementation xf:Cwd
 
+step p:cast-content-type has implementation xc:CastContentType
+  input source
+  output result
+  option content-type as string
+
 step p:count has implementation xc:Count
   input source*
   output result

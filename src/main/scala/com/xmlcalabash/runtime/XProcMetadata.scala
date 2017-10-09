@@ -1,6 +1,7 @@
 package com.xmlcalabash.runtime
 
 import com.jafpl.messages.Metadata
+import com.xmlcalabash.model.util.XProcConstants
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem}
 
 import scala.collection.mutable
@@ -22,9 +23,8 @@ class XProcMetadata(private val initialContentType: Option[String],
     _properties.put(key, value)
   }
 
-  val _content_type = new QName("","content-type")
-  if (initialContentType.isDefined && !_properties.contains(_content_type)) {
-    _properties.put(_content_type, new XdmAtomicValue(initialContentType.get))
+  if (initialContentType.isDefined) {
+    _properties.put(XProcConstants._content_type, new XdmAtomicValue(initialContentType.get))
   }
 
   def this() {
@@ -46,8 +46,8 @@ class XProcMetadata(private val initialContentType: Option[String],
   }
 
   def contentType: String = {
-    if (_properties.contains(_content_type)) {
-      _properties(_content_type).getStringValue
+    if (_properties.contains(XProcConstants._content_type)) {
+      _properties(XProcConstants._content_type).getStringValue
     } else {
       "application/octet-stream"
     }
