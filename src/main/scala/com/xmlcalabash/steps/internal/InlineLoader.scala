@@ -61,6 +61,13 @@ class InlineLoader(private val baseURI: Option[URI],
       }
     }
 
+    val props = mutable.HashMap.empty[QName, XdmItem]
+    props ++= docProps
+
+    if (baseURI.isDefined) {
+      props.put(XProcConstants._base_uri, new XdmAtomicValue(baseURI.get))
+    }
+
     if (ValueParser.xmlContentType(contentType)) {
       val builder = new SaxonTreeBuilder(config.get)
       builder.startDocument(baseURI)
@@ -74,21 +81,25 @@ class InlineLoader(private val baseURI: Option[URI],
       }
       builder.endDocument()
       val result = builder.result
-      consumer.get.receive("result", new ItemMessage(result, new XProcMetadata(contentType, docProps)))
+      consumer.get.receive("result", new ItemMessage(result, new XProcMetadata(contentType, props.toMap)))
     } else if (ValueParser.textContentType(contentType)) {
-      val builder = new SaxonTreeBuilder(config.get)
-      builder.startDocument(baseURI)
-      builder.startContent()
+      var str = ""
       for (node <- nodes) {
         if (node.getNodeKind == XdmNodeKind.TEXT) {
-          builder.addText(node.getStringValue)
+          str += node.getStringValue
         } else {
           throw XProcException.staticError(72, List(node.getNodeKind.toString), location)
         }
       }
+      props.put(XProcConstants._content_length, new XdmAtomicValue(str.length))
+
+      val builder = new SaxonTreeBuilder(config.get)
+      builder.startDocument(baseURI)
+      builder.startContent()
+      builder.addText(str)
       builder.endDocument()
       val result = builder.result
-      consumer.get.receive("result", new ItemMessage(result, new XProcMetadata(contentType, docProps)))
+      consumer.get.receive("result", new ItemMessage(result, new XProcMetadata(contentType, props.toMap)))
     } else {
       var str = ""
       for (node <- nodes) {
@@ -99,13 +110,10 @@ class InlineLoader(private val baseURI: Option[URI],
         }
       }
 
-      val props = mutable.HashMap.empty[QName, XdmItem]
-      props ++= docProps
       val bytes = Base64.getMimeDecoder.decode(str)
 
       props.put(XProcConstants._content_length, new XdmAtomicValue(bytes.length))
-      props.put(XProcConstants._base_uri, new XdmAtomicValue(baseURI.get))
-      
+
       consumer.get.receive("result", new ItemMessage(bytes, new XProcMetadata(contentType, props.toMap)))
     }
   }
