@@ -52,7 +52,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
       case _ =>
         val portMap = mutable.HashMap.empty[String,String]
         val typeMap = mutable.HashMap.empty[String,List[String]]
-        for (key <- step.inputSpec.ports()) {
+        for (key <- step.inputSpec.ports) {
           portMap.put(key, step.inputSpec.cardinality(key).getOrElse("*"))
           typeMap.put(key, List("application/octet-stream"))
         }
@@ -66,7 +66,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
       case _ =>
         val portMap = mutable.HashMap.empty[String,String]
         val typeMap = mutable.HashMap.empty[String,List[String]]
-        for (key <- step.outputSpec.ports()) {
+        for (key <- step.outputSpec.ports) {
           portMap.put(key, step.outputSpec.cardinality(key).getOrElse("*"))
           typeMap.put(key, List("application/octet-stream"))
         }
