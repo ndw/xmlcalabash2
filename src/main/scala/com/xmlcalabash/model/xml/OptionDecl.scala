@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{ContainerStart, Graph, Node}
+import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
@@ -60,6 +60,16 @@ class OptionDecl(override val config: XMLCalabash,
   }
 
   override def makeEdges(graph: Graph, parent: Node): Unit = {
-    // There are no edges to top-level options
+    if (_select.isDefined) {
+      val context = new ExpressionContext(_baseURI, inScopeNS, _location)
+      val variableRefs = findVariableRefs(new XProcXPathExpression(context, _select.get))
+      for (ref <- variableRefs) {
+        val bind = findBinding(ref)
+        if (bind.isEmpty) {
+          throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
+        }
+        graph.addBindingEdge(bind.get._graphNode.get.asInstanceOf[Binding], _graphNode.get)
+      }
+    }
   }
 }

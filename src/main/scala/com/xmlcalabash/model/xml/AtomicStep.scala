@@ -147,7 +147,9 @@ class AtomicStep(override val config: XMLCalabash,
       }
 
       bind.get match {
+          /*
         case declStep: DeclareStep =>
+          // FIXME: Does this case ever happen anymore?
           var optDecl = Option.empty[OptionDecl]
           for (child <- declStep.children) {
             child match {
@@ -162,6 +164,9 @@ class AtomicStep(override val config: XMLCalabash,
             throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
           }
           graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], graphNode)
+          */
+        case optDecl: OptionDecl =>
+          graph.addBindingEdge(optDecl._graphNode.get.asInstanceOf[Binding], graphNode)
         case varDecl: Variable =>
           graph.addBindingEdge(varDecl._graphNode.get.asInstanceOf[Binding], graphNode)
         case _ =>

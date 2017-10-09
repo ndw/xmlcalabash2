@@ -73,6 +73,7 @@ class Inline(override val config: XMLCalabash,
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get match {
       case wi: WithInput => this.parent.get.parent.get.parent.get
+      case wo: WithOption => this.parent.get.parent.get.parent.get
       case _ => this.parent.get
     }
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]

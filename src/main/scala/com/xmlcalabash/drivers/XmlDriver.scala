@@ -174,12 +174,10 @@ object XmlDriver extends App {
         runtime.bindings(jcbind).set(value)
         bindingsMap.put(jcbind, msg)
       } else {
-          println("??? What about the binding for: " + bind)
-        /*
+        xmlCalabash.trace(s"No binding provided for option $bind; using default", "ExternalBindings")
         val decl = pipeline.bindingDeclaration(bind)
         if (decl.isDefined) {
           if (decl.get.select.isDefined) {
-            // FIXME: support references to previously declared variables ...
             val context = new ExpressionContext(None, options.inScopeNamespaces, None)
             val expr = new XProcXPathExpression(context, decl.get.select.get)
             val msg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
@@ -190,13 +188,12 @@ object XmlDriver extends App {
             if (decl.get.required) {
               throw XProcException.staticError(18, bind.toString, pipeline.location)
             } else {
-              println(s"Missing binding for $bind, supplied nothing")
+              xmlCalabash.trace(s"No default for option $bind", "ExternalBindings")
             }
           }
         } else {
           println("No decl for " + bind + " ???")
         }
-        */
       }
     }
 

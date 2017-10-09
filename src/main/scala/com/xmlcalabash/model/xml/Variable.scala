@@ -4,7 +4,7 @@ import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
 class Variable(override val config: XMLCalabash,
@@ -12,9 +12,11 @@ class Variable(override val config: XMLCalabash,
   private var _name: QName = new QName("", "UNINITIALIZED")
   private var _collection: Boolean = false
   private var _select = Option.empty[String]
+  private var _expression = Option.empty[XProcExpression]
 
   def variableName: QName = _name
   def select: Option[String] = _select
+  def expression: XProcExpression = _expression.get
 
   override def validate(): Boolean = {
     val qname = lexicalQName(attributes.get(XProcConstants._name))
@@ -53,7 +55,8 @@ class Variable(override val config: XMLCalabash,
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
     val context = new ExpressionContext(_baseURI, inScopeNS, _location)
     val options = new SaxonExpressionOptions(Map("collection" -> _collection))
-    val node = cnode.addVariable(_name.getClarkName, new XProcXPathExpression(context, _select.get), options)
+    _expression = Some(new XProcXPathExpression(context, _select.get))
+    val node = cnode.addVariable(_name.getClarkName, expression, options)
     _graphNode = Some(node)
     config.addNode(node.id, this)
   }
@@ -63,6 +66,11 @@ class Variable(override val config: XMLCalabash,
     if (drp.isDefined) {
       val src = drp.get.parent.get
       graph.addEdge(src._graphNode.get, drp.get.port.get, _graphNode.get, "source")
+    }
+
+    val variableRefs = findVariableRefs(expression)
+    for (ref <- variableRefs) {
+      this.parent.get.asInstanceOf[PipelineStep].addVariableRef(ref)
     }
   }
 }

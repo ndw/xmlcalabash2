@@ -9,7 +9,7 @@ import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.Artifact
-import com.xmlcalabash.util.TypeUtils
+import com.xmlcalabash.util.{TypeUtils, XProcVarValue}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -121,6 +121,8 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
             case atomic: XdmAtomicValue =>
               val value = typeUtils.castAs(atomic, opttype, ExpressionContext.NONE)
               step.receiveBinding(qname, value, ExpressionContext.NONE)
+            case opt: XProcVarValue =>
+              step.receiveBinding(qname, opt.value, ExpressionContext.NONE)
             case _ => Unit
               step.receiveBinding(qname, item.item.asInstanceOf[XdmItem], ExpressionContext.NONE)
           }

@@ -489,22 +489,26 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
 
   def findBinding(varname: QName): Option[Artifact] = {
     if (parent.isEmpty) {
-      Some(this)
+      None
     } else {
       var binding = Option.empty[Artifact]
       for (child <- parent.get.children) {
+        if ((child == this) && binding.isDefined) {
+          return binding
+        }
+
         child match {
           case varbind: Variable =>
             if (varbind.variableName == varname) {
               binding = Some(varbind)
             }
+          case optdecl: OptionDecl =>
+            if (optdecl.optionName == varname) {
+              binding = Some(optdecl)
+            }
           case art: Artifact =>
             if (art == this) {
-              if (binding.isDefined) {
-                return binding
-              } else {
-                return parent.get.findBinding(varname)
-              }
+              return parent.get.findBinding(varname)
             }
         }
       }

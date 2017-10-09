@@ -87,6 +87,7 @@ class When(override val config: XMLCalabash,
       }
 
       bind.get match {
+          /*
         case declStep: DeclareStep =>
           var optDecl = Option.empty[OptionDecl]
           for (child <- declStep.children) {
@@ -102,6 +103,9 @@ class When(override val config: XMLCalabash,
             throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
           }
           graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], _graphNode.get)
+          */
+        case optDecl: OptionDecl =>
+          graph.addBindingEdge(optDecl._graphNode.get.asInstanceOf[Binding], graphNode)
         case varDecl: Variable =>
           graph.addBindingEdge(varDecl._graphNode.get.asInstanceOf[Binding], _graphNode.get)
         case _ =>

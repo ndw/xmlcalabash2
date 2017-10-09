@@ -3,6 +3,7 @@ package com.xmlcalabash.testers
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.runtime.GraphRuntime
 import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.drivers.XmlDriver.options
 import com.xmlcalabash.exceptions.{ModelException, StepException, TestException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.xml.{DeclareStep, Parser}
@@ -148,12 +149,9 @@ class Tester(runtimeConfig: XMLCalabash) {
         runtime.bindings(jcbind).set(value)
         bindingsMap.put(jcbind, msg)
       } else {
-        println("??? What about these bindings?")
-        /*
         val decl = pipeline.bindingDeclaration(bind)
         if (decl.isDefined) {
           if (decl.get.select.isDefined) {
-            // FIXME: support references to previously declared variables ...
             val context = ExpressionContext.NONE // new ExpressionContext(None, options.inScopeNamespaces, None)
             val expr = new XProcXPathExpression(context, decl.get.select.get)
             val msg = runtimeConfig.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
@@ -170,7 +168,6 @@ class Tester(runtimeConfig: XMLCalabash) {
         } else {
           println("No decl for " + bind + " ???")
         }
-        */
       }
     }
   }

@@ -1,6 +1,5 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
@@ -125,7 +124,6 @@ class WithOption(override val config: XMLCalabash,
     for (ref <- variableRefs) {
       this.parent.get.asInstanceOf[PipelineStep].addVariableRef(ref)
 
-      /*
       if (this.parent.get.asInstanceOf[PipelineStep].variableRefs.contains(ref)) {
         this.parent.get.asInstanceOf[PipelineStep].variableRefs -= ref
       }
@@ -136,6 +134,7 @@ class WithOption(override val config: XMLCalabash,
       }
 
       bind.get match {
+          /*
         case declStep: DeclareStep =>
           var optDecl = Option.empty[OptionDecl]
           for (child <- declStep.children) {
@@ -151,12 +150,14 @@ class WithOption(override val config: XMLCalabash,
             throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
           }
           graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], _graphNode.get)
+          */
+        case optDecl: OptionDecl =>
+          graph.addBindingEdge(optDecl._graphNode.get.asInstanceOf[Binding], _graphNode.get)
         case varDecl: Variable =>
           graph.addBindingEdge(varDecl._graphNode.get.asInstanceOf[Binding], _graphNode.get)
         case _ =>
           throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
       }
-      */
     }
   }
 }
