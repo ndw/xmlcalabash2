@@ -10,7 +10,7 @@ import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcMetadata}
 import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
 import net.sf.saxon.om.{NodeInfo, Sequence, StructuredQName}
-import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode}
 import net.sf.saxon.value.SequenceType
 
 class DocumentPropertiesDocument private extends ExtensionFunctionDefinition {
@@ -67,13 +67,25 @@ class DocumentPropertiesDocument private extends ExtensionFunctionDefinition {
       val builder = new SaxonTreeBuilder(runtime)
       builder.startDocument(None)
       builder.addStartElement(XProcConstants.p_document_properties)
+      builder.addNamespace("xsi", XProcConstants.ns_xsi)
+      builder.addNamespace("xs", XProcConstants.ns_xs)
       builder.startContent()
       for (key <- props.keySet) {
         builder.addStartElement(key)
-        builder.startContent()
         props(key) match {
-          case node: XdmNode => builder.addSubtree(node)
-          case atomic: XdmItem => builder.addText(atomic.getStringValue)
+          case node: XdmNode =>
+            builder.startContent()
+            builder.addSubtree(node)
+          case atomic: XdmAtomicValue =>
+            val xtype = atomic.getTypeName
+            if (xtype.getNamespaceURI == XProcConstants.ns_xs && (xtype != XProcConstants.xs_string)) {
+              builder.addAttribute(XProcConstants.xsi_type, xtype.toString)
+            }
+            builder.startContent()
+            builder.addText(atomic.getStringValue)
+          case item: XdmItem =>
+            builder.startContent()
+            builder.addText(item.getStringValue)
         }
         builder.addEndElement()
       }
