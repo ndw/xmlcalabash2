@@ -189,31 +189,21 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
       case item: ItemMessage =>
         item.metadata match {
           case xmlmeta: XProcMetadata =>
-            var docs = ListBuffer.empty[Any]
-            item.item match {
-              case node: XdmNode =>
-                if (artifact.input(port).get.select.isDefined) {
-                  val expr = config.expressionEvaluator.newInstance()
-                  val selectExpr = artifact.input(port).get.selectExpression
-                  val selected = expr.value(selectExpr, List(item), bindingsMap.toMap, None)
-                  for (msg <- selected) {
-                    val item = msg.asInstanceOf[XPathItemMessage].item
-                    docs += item
-                    item match {
-                      case node: XdmNode =>
-                        dynamicContext.addDocument(node, message)
-                      case _ => Unit
-                    }
-                  }
-                } else {
-                  dynamicContext.addDocument(node, message)
-                  docs += node
+            if (artifact.input(port).get.select.isDefined) {
+              val expr = config.expressionEvaluator.newInstance()
+              val selectExpr = artifact.input(port).get.selectExpression
+              val selected = expr.value(selectExpr, List(item), bindingsMap.toMap, None)
+              for (msg <- selected) {
+                val xitem = msg.asInstanceOf[XPathItemMessage]
+                xitem.item match {
+                  case node: XdmNode =>
+                    dynamicContext.addDocument(node, message)
+                  case _ => Unit
                 }
-              case _ =>
-                docs += item.item
-            }
-            for (item <- docs) {
-              step.receive(port, item, xmlmeta)
+                step.receive(port, xitem.item, xitem.metadata)
+              }
+            } else {
+              step.receive(port, item.item, xmlmeta)
             }
           case _ => throw XProcException.xiInvalidMetadata(location, item.metadata)
         }

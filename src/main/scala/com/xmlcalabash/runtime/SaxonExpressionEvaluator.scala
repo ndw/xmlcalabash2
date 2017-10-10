@@ -173,7 +173,10 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
     val messages = ListBuffer.empty[XPathItemMessage]
     for (value <- result) {
-      messages += new XPathItemMessage(value, XProcMetadata.ANY, xpath.context)
+      value match {
+        case node: XdmNode => messages += new XPathItemMessage(value, XProcMetadata.XML, xpath.context)
+        case _ => messages += new XPathItemMessage(value, XProcMetadata.ANY, xpath.context)
+      }
     }
 
     messages.toList

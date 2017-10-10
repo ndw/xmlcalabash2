@@ -36,6 +36,9 @@ class XProcMetadata(private val initialContentType: Option[String],
   def this(contentType: String, initProp: Map[QName,XdmItem]) {
     this(Some(contentType), initProp)
   }
+  def this(contentType: String, metadata: XProcMetadata) {
+    this(Some(contentType), metadata._properties.toMap)
+  }
 
   def properties: Map[QName,XdmItem] = _properties.toMap
   def property(name: QName): Option[XdmItem] = {
