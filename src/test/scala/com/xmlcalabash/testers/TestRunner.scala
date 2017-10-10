@@ -502,7 +502,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
         if (qcode.getClarkName == result.get) {
           None
         } else {
-          Some(s"$code != ${result.get}")
+          Some(s"${qcode.getClarkName} != ${result.get}")
         }
       }
     }
