@@ -5,7 +5,7 @@ import net.sf.saxon.s9api.QName
 object XProcConstants {
   val ns_p   = "http://www.w3.org/ns/xproc"
   val ns_c   = "http://www.w3.org/ns/xproc-step"
-  val ns_err = "http://www.w3.org/ns/xproc-errors"
+  val ns_err = "http://www.w3.org/ns/xproc-error"
   val ns_xs  = "http://www.w3.org/2001/XMLSchema"
   val ns_cx  = "http://xmlcalabash.com/ns/extensions"
   val ns_exf = "http://exproc.org/standard/functions"
