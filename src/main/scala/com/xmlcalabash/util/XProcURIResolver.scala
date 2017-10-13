@@ -153,25 +153,25 @@ class XProcURIResolver(config: XMLCalabash) extends URIResolver with EntityResol
       return null
     }
 
+    var uri = ""
     try {
-      val baseURI = new URI(systemId)
-      val uri = baseURI.toASCIIString
-      if (cache.contains(uri)) {
-        logger.trace("Returning cached document.")
-        return S9Api.xdmToInputSource(config, cache(uri))
-      }
+      uri = new URI(systemId).toASCIIString
     } catch {
       case use: URISyntaxException =>
         logger.trace("URISyntaxException resolving entityResolver systemId: " + systemId)
+        uri = systemId
       case t: Throwable => throw t
     }
 
-    if (entityResolver.isDefined) {
+    if (cache.contains(uri)) {
+      logger.trace("Returning cached document.")
+      S9Api.xdmToInputSource(config, cache(uri))
+    } else if (entityResolver.isDefined) {
       val r = entityResolver.get.resolveEntity(publicId, systemId)
       r
+    } else {
+      new InputSource(uri)
     }
-
-    null
   }
 
   override def resolve(moduleURI: String, baseURI: String, locations: Array[String]): Array[StreamSource] = {
