@@ -17,24 +17,29 @@ class Document(override val config: XMLCalabash,
   extends DataSource(config, parent) {
 
   private var _href = Option.empty[String]
+  private var _params = Option.empty[String]
   private var _docProps = Option.empty[String]
   private var hrefAvt = Option.empty[List[String]]
+  private var paramsAvt = Option.empty[List[String]]
   private val bindingRefs = mutable.HashSet.empty[QName]
 
   def this(config: XMLCalabash, parent: Artifact, doc: Document) = {
     this(config, Some(parent))
     _href = doc._href
+    _params = doc._params
     _docProps = doc._docProps
     hrefAvt = doc.hrefAvt
+    paramsAvt = doc.paramsAvt
     bindingRefs.clear()
     bindingRefs ++= doc.bindingRefs
   }
 
   override def validate(): Boolean = {
     _href = attributes.get(XProcConstants._href)
+    _params = attributes.get(XProcConstants._parameters)
     _docProps = attributes.get(XProcConstants._document_properties)
 
-    for (key <- List(XProcConstants._href, XProcConstants._document_properties)) {
+    for (key <- List(XProcConstants._href, XProcConstants._document_properties, XProcConstants._parameters)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -54,6 +59,12 @@ class Document(override val config: XMLCalabash,
     }
 
     hrefAvt = ValueParser.parseAvt(_href.get)
+    findVariableRefsInString(_href.get)
+
+    if (_params.isDefined) {
+      paramsAvt = ValueParser.parseAvt(_params.get)
+      findVariableRefsInString(_params.get)
+    }
 
     if (_docProps.isDefined) {
       findVariableRefsInString(_docProps.get)
@@ -80,6 +91,11 @@ class Document(override val config: XMLCalabash,
 
     val hrefBinding = cnode.addVariable("href", new XProcAvtExpression(context, hrefAvt.get))
     graph.addBindingEdge(hrefBinding, docReader)
+    if (paramsAvt.isDefined) {
+      val binding = cnode.addVariable("parameters", new XProcAvtExpression(context, paramsAvt.get))
+      graph.addBindingEdge(binding, docReader)
+    }
+
     _graphNode = Some(docReader)
     config.addNode(docReader.id, this)
 

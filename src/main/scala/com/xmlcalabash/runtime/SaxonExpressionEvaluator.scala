@@ -58,7 +58,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
   }
 
   override def value(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): List[XPathItemMessage] = {
-    val proxies = mutable.HashMap.empty[Any, XdmNode]
+    val proxies = mutable.HashMap.empty[Any, XdmItem]
     val newContext = new DynamicContext()
     for (msg <- context) {
       msg match {
@@ -126,7 +126,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     }
   }
 
-  def compute(xpath: XProcExpression, context: List[Message], bindings: Map[String, Message], proxies: Map[Any,XdmNode], options: Option[Any]): List[XPathItemMessage] = {
+  def compute(xpath: XProcExpression, context: List[Message], bindings: Map[String, Message], proxies: Map[Any,XdmItem], options: Option[Any]): List[XPathItemMessage] = {
     val patchBindings = mutable.HashMap.empty[QName, XdmItem]
 
     for ((str, value) <- bindings) {
@@ -186,7 +186,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
                            contextItem: List[Message],
                            exprContext: ExpressionContext,
                            bindings: Map[QName,XdmItem],
-                           proxies: Map[Any, XdmNode],
+                           proxies: Map[Any, XdmItem],
                            extensionsOk: Boolean,
                            options: Option[Any]): List[XdmItem] = {
     val results = ListBuffer.empty[XdmItem]
@@ -293,22 +293,27 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
   // =========================================================================================================
 
-  def checkDocument(dynContext: DynamicContext, node: XdmNode, msg: Message): Unit = {
-    var p: XdmNode = node
-    while (Option(p.getParent).isDefined) {
-      p = p.getParent
-    }
+  def checkDocument(dynContext: DynamicContext, item: XdmItem, msg: Message): Unit = {
+    item match {
+      case node: XdmNode =>
+        var p: XdmNode = node
+        while (Option(p.getParent).isDefined) {
+          p = p.getParent
+        }
 
-    if (p.getNodeKind == XdmNodeKind.DOCUMENT) {
-      dynContext.addDocument(p, msg)
+        if (p.getNodeKind == XdmNodeKind.DOCUMENT) {
+          dynContext.addDocument(p, msg)
+        }
+      case _ => Unit
     }
   }
 
-  private def proxy(message: Message): XdmNode = {
+  private def proxy(message: Message): XdmItem = {
     message match {
       case item: ItemMessage =>
         item.item match {
           case node: XdmNode => return node
+          case item: XdmItem => return item
           case _ => Unit
         }
 
@@ -360,7 +365,10 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
           case item: XPathItemMessage =>
             items += new ExprNodeResource(item.item.asInstanceOf[XdmNode])
           case item: ItemMessage =>
-            items += new ExprNodeResource(item.item.asInstanceOf[XdmNode])
+            item.item match {
+              case node: XdmNode => items += new ExprNodeResource(node)
+              case _ => Unit
+            }
           case _ => throw new RuntimeException("Bang3")
         }
       }

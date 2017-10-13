@@ -111,7 +111,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
         case item: XPathItemMessage =>
           item.item match {
             case atomic: XdmAtomicValue =>
-              val value = typeUtils.castAs(atomic, opttype, item.context)
+              val value = typeUtils.castAtomicAs(atomic, opttype, item.context)
               step.receiveBinding(qname, value, item.context)
             case _ => Unit
               step.receiveBinding(qname, item.item, item.context)
@@ -119,7 +119,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
         case item: ItemMessage =>
           item.item match {
             case atomic: XdmAtomicValue =>
-              val value = typeUtils.castAs(atomic, opttype, ExpressionContext.NONE)
+              val value = typeUtils.castAtomicAs(atomic, opttype, ExpressionContext.NONE)
               step.receiveBinding(qname, value, ExpressionContext.NONE)
             case opt: XProcVarValue =>
               step.receiveBinding(qname, opt.value, ExpressionContext.NONE)
@@ -153,7 +153,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
           None
         }
         if (optsig.defaultValue.isDefined) {
-          val value = typeUtils.castAs(new XdmAtomicValue(optsig.defaultValue.get), opttype, ExpressionContext.NONE)
+          val value = typeUtils.castAtomicAs(new XdmAtomicValue(optsig.defaultValue.get), opttype, ExpressionContext.NONE)
           step.receiveBinding(qname, value, ExpressionContext.NONE)
         }
       }

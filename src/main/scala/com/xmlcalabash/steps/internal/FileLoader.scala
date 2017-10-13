@@ -9,13 +9,14 @@ import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
 
 import scala.collection.mutable
 
 class FileLoader(private val context: ExpressionContext,
                  private val docPropsExpr: Option[String]) extends DefaultStep {
   private var _href = ""
+  private var _params = Option.empty[Map[QName,XdmValue]]
   private var docProps = Map.empty[QName, XdmItem]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
@@ -42,6 +43,9 @@ class FileLoader(private val context: ExpressionContext,
     variable match {
       case "href" =>
         _href = valueitem.get.getStringValue
+      case "parameters" =>
+        bindings.put(XProcConstants._parameters.getClarkName, bindmsg.message)
+        _params = Some(ValueParser.parseParameters(valueitem.get, context.nsBindings, context.location))
       case _ =>
         logger.info("Ignoring unexpected option to p:document: " + variable)
     }
@@ -58,7 +62,10 @@ class FileLoader(private val context: ExpressionContext,
     // You can extend the set of known extensions by pointing the system property
     // `content.types.user.table` at your own mime types file. The default file to
     // start with is in $JAVA_HOME/lib/content-types.properties
-    val contentType = Option(URLConnection.guessContentTypeFromName(href.toASCIIString))
+    var contentType = Option(URLConnection.guessContentTypeFromName(href.toASCIIString)).getOrElse("application/xml")
+    if (_params.isDefined && _params.get.contains(XProcConstants._content_type)) {
+      contentType = _params.get(XProcConstants._content_type).toString
+    }
 
     if (docPropsExpr.isDefined) {
       val expr = new XProcXPathExpression(context, docPropsExpr.get)
@@ -74,23 +81,22 @@ class FileLoader(private val context: ExpressionContext,
     val props = mutable.HashMap.empty[QName, XdmItem]
     props ++= docProps
 
-    // I'm not sure what to do here...
-    try {
+    if (ValueParser.xmlContentType(contentType)) {
       val node = config.get.documentManager.parse(href)
-      val ctype = contentType.getOrElse("application/xml")
       props.put(XProcConstants._base_uri, new XdmAtomicValue(node.getBaseURI))
-      logger.debug(s"Loaded $href as $ctype")
-      consumer.get.receive("result", new ItemMessage(node, new XProcMetadata(ctype, props.toMap)))
-    } catch {
-      case t: Throwable =>
-        // What should the representation of non-XML data be?
-        val file = new File(href)
-        props.put(XProcConstants._content_length, new XdmAtomicValue(file.length()))
-        props.put(XProcConstants._base_uri, new XdmAtomicValue(file.toURI))
-        val bytes = Files.readAllBytes(new File(href).toPath)
-        val ctype = contentType.getOrElse("application/octet-stream")
-        logger.debug(s"Loaded ${href} as $ctype")
-        consumer.get.receive("result", new ItemMessage(bytes, new XProcMetadata(ctype, props.toMap)))
+      logger.debug(s"Loaded $href as $contentType")
+      consumer.get.receive("result", new ItemMessage(node, new XProcMetadata(contentType, props.toMap)))
+    } else if (ValueParser.jsonContentType(contentType)) {
+      val expr = new XProcXPathExpression(context, s"json-doc('$href', $$parameters)")
+      val json = config.get.expressionEvaluator.singletonValue(expr, List(), bindings.toMap, None).asInstanceOf[XPathItemMessage]
+      consumer.get.receive("result", new ItemMessage(json.item, new XProcMetadata(contentType, props.toMap)))
+    } else {
+      val file = new File(href)
+      props.put(XProcConstants._content_length, new XdmAtomicValue(file.length()))
+      props.put(XProcConstants._base_uri, new XdmAtomicValue(file.toURI))
+      val bytes = Files.readAllBytes(new File(href).toPath)
+      logger.debug(s"Loaded $href as $contentType")
+      consumer.get.receive("result", new ItemMessage(bytes, new XProcMetadata(contentType, props.toMap)))
     }
   }
 
