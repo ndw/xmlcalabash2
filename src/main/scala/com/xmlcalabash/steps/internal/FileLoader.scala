@@ -3,6 +3,7 @@ package com.xmlcalabash.steps.internal
 import java.io.File
 import java.net.{URI, URLConnection}
 import java.nio.file.Files
+import javax.xml.transform.dom.DOMSource
 
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
@@ -10,6 +11,9 @@ import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
+import nu.validator.htmlparser.common.XmlViolationPolicy
+import nu.validator.htmlparser.dom.HtmlDocumentBuilder
+import org.xml.sax.InputSource
 
 import scala.collection.mutable
 
@@ -90,6 +94,10 @@ class FileLoader(private val context: ExpressionContext,
       val expr = new XProcXPathExpression(context, s"json-doc('$href', $$parameters)")
       val json = config.get.expressionEvaluator.singletonValue(expr, List(), bindings.toMap, None).asInstanceOf[XPathItemMessage]
       consumer.get.receive("result", new ItemMessage(json.item, new XProcMetadata(contentType, props.toMap)))
+    } else if (ValueParser.htmlContentType(contentType)) {
+      val node = config.get.documentManager.parseHtml(href)
+      logger.debug(s"Loaded $href as $contentType")
+      consumer.get.receive("result", new ItemMessage(node, new XProcMetadata(contentType, props.toMap)))
     } else {
       val file = new File(href)
       props.put(XProcConstants._content_length, new XdmAtomicValue(file.length()))
