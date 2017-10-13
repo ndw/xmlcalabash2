@@ -294,6 +294,10 @@ object ValueParser {
     contentType.startsWith("application/json") || contentType.startsWith("text/json") || contentType.contains("+json")
   }
 
+  def htmlContentType(contentType: String): Boolean = {
+    contentType.startsWith("text/html")
+  }
+
   object StateChange {
     val STRING = 0
     val EXPR = 1

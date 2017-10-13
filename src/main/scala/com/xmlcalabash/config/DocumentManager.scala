@@ -11,4 +11,10 @@ trait DocumentManager {
   def parse(href: String, base: String): XdmNode
   def parse(href: String, base: String, dtdValidate: Boolean): XdmNode
   def parse(isource: InputSource): XdmNode
+
+  def parseHtml(uri: URI): XdmNode
+  def parseHtml(href: String): XdmNode
+  def parseHtml(href: String, base: String): XdmNode
+  def parseHtml(href: String, base: String, dtdValidate: Boolean): XdmNode
+  def parseHtml(isource: InputSource): XdmNode
 }

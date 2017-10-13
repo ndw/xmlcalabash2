@@ -1,11 +1,14 @@
 package com.xmlcalabash.util
 
 import java.net.URI
+import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
 
 import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.config.{DocumentManager, XMLCalabash}
 import net.sf.saxon.s9api.{SaxonApiException, XdmNode}
+import nu.validator.htmlparser.common.XmlViolationPolicy
+import nu.validator.htmlparser.dom.HtmlDocumentBuilder
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.helpers.XMLReaderFactory
 import org.xml.sax.{InputSource, SAXException}
@@ -103,5 +106,31 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabash) extends DocumentManager {
           throw new PipelineException("unk", "xproc err 11", None)
         }
     }
+  }
+
+  override def parseHtml(uri: URI): XdmNode = {
+    parseHtml(uri.toASCIIString, xmlCalabash.staticBaseURI.toASCIIString)
+  }
+
+  override def parseHtml(href: String): XdmNode = {
+    parseHtml(href, xmlCalabash.staticBaseURI.toASCIIString)
+  }
+
+  override def parseHtml(href: String, base: String): XdmNode = {
+    parseHtml(href, base, dtdValidate=false)
+  }
+
+  override def parseHtml(href: String, base: String, dtdValidate: Boolean): XdmNode = {
+    val uri = new URI(base).resolve(href)
+    val src = new InputSource(uri.toASCIIString)
+    parseHtml(src)
+  }
+
+  override def parseHtml(isource: InputSource): XdmNode = {
+    val htmlBuilder = new HtmlDocumentBuilder(XmlViolationPolicy.ALTER_INFOSET)
+    htmlBuilder.setEntityResolver(xmlCalabash.entityResolver)
+    val html = htmlBuilder.parse(isource)
+    val builder = xmlCalabash.processor.newDocumentBuilder()
+    builder.build(new DOMSource(html))
   }
 }
