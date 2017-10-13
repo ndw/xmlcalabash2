@@ -34,4 +34,14 @@ object MDUtils {
         false
     }
   }
+
+  def jsonContentType(metadata: Metadata): Boolean = {
+    metadata match {
+      case meta: XProcMetadata =>
+        ValueParser.jsonContentType(meta.contentType)
+      case _ =>
+        false
+    }
+  }
+
 }

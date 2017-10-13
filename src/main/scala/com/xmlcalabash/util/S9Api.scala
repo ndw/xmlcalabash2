@@ -1,17 +1,28 @@
 package com.xmlcalabash.util
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileNotFoundException, FileOutputStream, OutputStream, Writer}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
 import com.xmlcalabash.config.XMLCalabash
-import net.sf.saxon.Configuration
-import net.sf.saxon.s9api.{Axis, SAXDestination, Serializer, XdmNode, XdmNodeKind}
-import nu.validator.htmlparser.sax.HtmlSerializer
-import org.xml.sax.{ContentHandler, InputSource}
+import com.xmlcalabash.model.util.XProcConstants
+import net.sf.saxon.s9api.{Axis, Serializer, XdmArray, XdmAtomicValue, XdmEmptySequence, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.value.StringValue
+import org.xml.sax.InputSource
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
 object S9Api {
+  val OPEN_BRACE = new XdmAtomicValue("{")
+  val CLOSE_BRACE = new XdmAtomicValue("}")
+  val OPEN_SQUARE = new XdmAtomicValue("[")
+  val CLOSE_SQUARE = new XdmAtomicValue("]")
+  val DOUBLE_QUOTE = new XdmAtomicValue("\"")
+  val COMMA = new XdmAtomicValue(",")
+  val NEWLINE = new XdmAtomicValue("\n")
+  val COLON = new XdmAtomicValue(":")
+  val SPACE = new XdmAtomicValue(" ")
+  val NULL = new XdmAtomicValue("null")
+
   def documentElement(doc: XdmNode): Option[XdmNode] = {
     doc.getNodeKind match {
       case XdmNodeKind.DOCUMENT =>
@@ -59,13 +70,74 @@ object S9Api {
     isource
   }
 
-  def serialize(config: XMLCalabash, node: XdmNode, serializer: Serializer): Unit = {
-    val nodes = ListBuffer.empty[XdmNode]
-    nodes += node
-    serialize(config, nodes.toList, serializer)
+  def serialize(config: XMLCalabash, value: XdmValue, serializer: Serializer): Unit = {
+    serialize(config, List(value), serializer)
   }
 
-  def serialize(xproc: XMLCalabash, nodes: List[XdmNode], serializer: Serializer): Unit = {
+  def serialize(xproc: XMLCalabash, values: List[XdmValue], serializer: Serializer): Unit = {
+    for (value <- values) {
+      value match {
+        case arr: XdmArray =>
+          serializeArr(xproc, arr, serializer)
+        case map: XdmMap =>
+          serializeMap(xproc, map, serializer)
+        case empty: XdmEmptySequence =>
+          serializer.serializeXdmValue(NULL)
+        case atomic: XdmAtomicValue =>
+          atomic.getPrimitiveTypeName match {
+            case XProcConstants.xs_string =>
+              serializer.serializeXdmValue(DOUBLE_QUOTE)
+              serializer.serializeXdmValue(atomic)
+              serializer.serializeXdmValue(DOUBLE_QUOTE)
+            case _ =>
+              serializer.serializeXdmValue(atomic)
+          }
+        case _ => serializer.serializeXdmValue(value)
+      }
+    }
+  }
+
+  private def serializeMap(xproc: XMLCalabash, value: XdmMap, serializer: Serializer): Unit = {
+    serializer.serializeXdmValue(OPEN_BRACE)
+    val map = value.asMap()
+
+    var first = true
+    for (key <- map.asScala.keySet) {
+      val value = map.asScala(key)
+      if (!first) {
+        serializer.serializeXdmValue(COMMA)
+        serializer.serializeXdmValue(NEWLINE)
+      }
+      first = false
+
+      serializer.serializeXdmValue(DOUBLE_QUOTE)
+      serializer.serializeXdmValue(key)
+      serializer.serializeXdmValue(DOUBLE_QUOTE)
+      serializer.serializeXdmValue(COLON)
+      serializer.serializeXdmValue(SPACE)
+      serialize(xproc, value, serializer)
+    }
+    serializer.serializeXdmValue(CLOSE_BRACE)
+  }
+
+  private def serializeArr(xproc: XMLCalabash, arr: XdmArray, serializer: Serializer): Unit = {
+    serializer.serializeXdmValue(OPEN_SQUARE)
+
+    var idx = 0
+    for (idx <- 0  until arr.arrayLength()) {
+      val value = arr.get(idx)
+      if (idx > 0) {
+        serializer.serializeXdmValue(COMMA)
+        serializer.serializeXdmValue(SPACE)
+      }
+
+      serialize(xproc, value, serializer)
+    }
+    serializer.serializeXdmValue(CLOSE_SQUARE)
+  }
+
+  /*
+  def serialize(xproc: XMLCalabash, nodes: List[XdmValue], serializer: Serializer): Unit = {
     val qtproc = xproc.processor
     val xqcomp = qtproc.newXQueryCompiler
     xqcomp.setModuleURIResolver(xproc.moduleURIResolver)
@@ -113,4 +185,5 @@ object S9Api {
       serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
     }
   }
+  */
 }

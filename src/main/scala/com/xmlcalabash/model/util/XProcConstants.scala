@@ -141,6 +141,7 @@ object XProcConstants {
   val _namespace = new QName("", "namespace")
   val _normalization_form = new QName("", "normalization-form")
   val _omit_xml_declaration = new QName("", "omit-xml-declaration")
+  val _override_content_type = new QName("", "override-content-type")
   val _required = new QName("", "required")
   val _parameters = new QName("", "parameters")
   val _port = new QName("", "port")

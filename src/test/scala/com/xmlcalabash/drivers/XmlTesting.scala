@@ -91,7 +91,7 @@ object XmlTesting extends App {
 
       for (port <- pipeline.outputPorts) {
         xmlCalabash.trace(s"Binding output port stdout", "ExternalBindings")
-        val pc = new PrintingConsumer()
+        val pc = new PrintingConsumer(xmlCalabash)
         runtime.outputs(port).setConsumer(pc)
       }
 

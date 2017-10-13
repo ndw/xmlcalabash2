@@ -1,21 +1,24 @@
 package com.xmlcalabash.runtime
 
-import java.io.{File, FileOutputStream, PrintStream}
+import java.io.{ByteArrayOutputStream, File, FileOutputStream, PrintStream}
 
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.steps.DataConsumer
+import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.model.util.{MDUtils, UniqueId, XProcConstants}
+import com.xmlcalabash.util.S9Api
+import net.sf.saxon.s9api.{Serializer, XdmValue}
 
-class PrintingConsumer (outputs: Option[List[String]]) extends DataConsumer {
+class PrintingConsumer(config: XMLCalabash, outputs: Option[List[String]]) extends DataConsumer {
   private val _id = UniqueId.nextId.toString
   private var index = 0
 
-  def this() = {
-    this(None)
+  def this(config: XMLCalabash) = {
+    this(config, None)
   }
 
-  def this(outputs: List[String]) = {
-    this(Some(outputs))
+  def this(config: XMLCalabash, outputs: List[String]) = {
+    this(config, Some(outputs))
   }
 
   override def id: String = _id
@@ -26,8 +29,14 @@ class PrintingConsumer (outputs: Option[List[String]]) extends DataConsumer {
         if (outputs.isEmpty || (index >= outputs.get.length)) {
           if (MDUtils.textContentType(item.metadata)) {
             println(item.item)
-          } else if (MDUtils.xmlContentType(item.metadata)) {
-            println(item.item)
+          } else if (MDUtils.xmlContentType(item.metadata) || MDUtils.jsonContentType(item.metadata)) {
+            val stream = new ByteArrayOutputStream()
+            val serializer = config.processor.newSerializer(stream)
+            serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
+            item.item match {
+              case value: XdmValue => S9Api.serialize(config, value, serializer)
+            }
+            println(stream.toString("UTF-8"))
           } else {
             println(s"Eliding ${MDUtils.contentType(item.metadata)} content")
           }
