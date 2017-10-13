@@ -52,6 +52,11 @@ step p:xslt has implementation xc:Xslt
 
 // ============================================================
 
+step cx:javascript has implementation xc:JavaScript
+  input script
+  output result
+  option parameters
+
 step cx:peephole has implementation xc:Peephole
   input source
   output result
