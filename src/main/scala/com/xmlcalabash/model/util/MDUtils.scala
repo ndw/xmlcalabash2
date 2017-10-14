@@ -44,4 +44,17 @@ object MDUtils {
     }
   }
 
+  def htmlContentType(metadata: Metadata): Boolean = {
+    metadata match {
+      case meta: XProcMetadata =>
+        ValueParser.htmlContentType(meta.contentType)
+      case _ =>
+        false
+    }
+  }
+
+  def markupContentType(metadata: Metadata): Boolean = {
+    xmlContentType(metadata) || jsonContentType(metadata) || htmlContentType(metadata)
+  }
+
 }
