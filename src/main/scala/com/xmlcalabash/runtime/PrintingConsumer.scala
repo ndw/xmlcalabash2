@@ -6,19 +6,19 @@ import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.steps.DataConsumer
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.model.util.{MDUtils, UniqueId, XProcConstants}
-import com.xmlcalabash.util.S9Api
+import com.xmlcalabash.util.{S9Api, SerializationOptions}
 import net.sf.saxon.s9api.{Serializer, XdmValue}
 
-class PrintingConsumer(config: XMLCalabash, outputs: Option[List[String]]) extends DataConsumer {
+class PrintingConsumer private(config: XMLCalabash, serialization: SerializationOptions, outputs: Option[List[String]]) extends DataConsumer {
   private val _id = UniqueId.nextId.toString
   private var index = 0
 
-  def this(config: XMLCalabash) = {
-    this(config, None)
+  def this(config: XMLCalabash, serialization: SerializationOptions) = {
+    this(config, serialization, None)
   }
 
-  def this(config: XMLCalabash, outputs: List[String]) = {
-    this(config, Some(outputs))
+  def this(config: XMLCalabash, serialization: SerializationOptions, outputs: List[String]) = {
+    this(config, serialization, Some(outputs))
   }
 
   override def id: String = _id
@@ -27,16 +27,23 @@ class PrintingConsumer(config: XMLCalabash, outputs: Option[List[String]]) exten
     message match {
       case item: ItemMessage =>
         if (outputs.isEmpty || (index >= outputs.get.length)) {
-          if (MDUtils.textContentType(item.metadata)) {
-            println(item.item)
-          } else if (MDUtils.xmlContentType(item.metadata) || MDUtils.jsonContentType(item.metadata)) {
+          if (MDUtils.markupContentType(item.metadata)) {
             val stream = new ByteArrayOutputStream()
             val serializer = config.processor.newSerializer(stream)
-            serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
+
+            if (MDUtils.jsonContentType(item.metadata)) {
+              serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
+            } else {
+              serializer.setOutputProperty(Serializer.Property.METHOD, serialization.method)
+              serializer.setOutputProperty(Serializer.Property.HTML_VERSION, serialization.version)
+            }
+
             item.item match {
               case value: XdmValue => S9Api.serialize(config, value, serializer)
             }
             println(stream.toString("UTF-8"))
+          } else if (MDUtils.textContentType(item.metadata)) {
+            println(item.item)
           } else {
             println(s"Eliding ${MDUtils.contentType(item.metadata)} content")
           }
