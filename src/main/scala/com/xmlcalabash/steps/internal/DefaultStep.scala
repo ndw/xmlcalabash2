@@ -5,6 +5,7 @@ import com.jafpl.messages.{BindingMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
 import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.UniqueId
 import com.xmlcalabash.runtime.XmlPortSpecification
 import org.slf4j.{Logger, LoggerFactory}
@@ -50,7 +51,7 @@ class DefaultStep extends Step {
     config match {
       case saxon: XMLCalabash =>
         this.config = Some(saxon)
-      case _ => throw new IllegalArgumentException("Runtime configuration must be an XMLCalabash")
+      case _ => throw XProcException.xiNotXMLCalabash()
     }
   }
 

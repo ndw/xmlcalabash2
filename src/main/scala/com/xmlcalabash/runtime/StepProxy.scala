@@ -14,7 +14,6 @@ import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
 class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: Artifact, context: StaticContext) extends Step with XProcDataConsumer {
   private val typeUtils = new TypeUtils(config)
@@ -31,7 +30,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
     if (_id == null) {
       _id = id
     } else {
-      throw new RuntimeException("Reassignment to nodeId is forbidden")
+      throw XProcException.xiRedefId(id, location)
     }
   }
 
@@ -135,10 +134,10 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
   override def initialize(config: RuntimeConfiguration): Unit = {
     config match {
       case saxon: XMLCalabash => Unit
-      case _ => throw new IllegalArgumentException("Runtime configuration must be an XMLCalabash")
+      case _ => throw XProcException.xiNotXMLCalabash()
     }
     if (this.config != config) {
-      throw new IllegalArgumentException("Step proxy configuration and runtime configuration must be the same")
+      throw XProcException.xiDifferentXMLCalabash()
     }
     step.initialize(config)
   }

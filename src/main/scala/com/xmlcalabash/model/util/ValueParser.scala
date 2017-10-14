@@ -132,7 +132,7 @@ object ValueParser {
       if (value.get == "true" || value.get == "false") {
         Some(value.get == "true")
       } else {
-        throw new ModelException(ExceptionCode.BADBOOLEAN, value.get, location)
+        throw XProcException.dynamicError(19, List(value.get, "boolean"), location)
       }
     } else {
       None
@@ -179,7 +179,7 @@ object ValueParser {
             case XProcConstants.xs_string =>
               new QName("", key.getStringValue)
             case _ =>
-              throw new RuntimeException("BANG2")
+              throw XProcException.dynamicError(45, List(key, "string or QName"), location)
           }
 
           var count = 0

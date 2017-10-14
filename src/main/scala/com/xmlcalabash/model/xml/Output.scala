@@ -2,13 +2,13 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
 import com.xmlcalabash.util.{SerializationOptions, TypeUtils}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -37,7 +37,7 @@ class Output(override val config: XMLCalabash,
       attr.get match {
         case "true" => _primary = Some(true)
         case "false" => _primary = Some(false)
-        case _ => throw new RuntimeException("primary must be true or false")
+        case _ => throw XProcException.dynamicError(19, List(attr.get, "boolean"), location)
       }
     } else {
       _primary = None
@@ -48,7 +48,7 @@ class Output(override val config: XMLCalabash,
       attr.get match {
         case "true" => _sequence = Some(true)
         case "false" => _sequence = Some(false)
-        case _ => throw new RuntimeException("sequence must be true or false")
+        case _ => throw XProcException.dynamicError(19, List(attr.get, "boolean"), location)
       }
     } else {
       _sequence = None
@@ -73,19 +73,19 @@ class Output(override val config: XMLCalabash,
                 val value = optvalue match {
                   case atomic: XdmAtomicValue =>
                     atomic
-                  case _ => throw new RuntimeException("Not an atomic value?")
+                  case _ => throw XProcException.dynamicError(47, optvalue, location)
                 }
                 optkey match {
                   case str: String =>
                     opts.put(new QName("", str), value)
                   case qname: QName =>
                     opts.put(qname, value)
-                  case _ => throw new RuntimeException("map key is not a qname")
+                  case _ => throw XProcException.dynamicError(46, optkey, location)
                 }
               }
-            case _ => throw new RuntimeException("Not a map?")
+            case _ => throw XProcException.dynamicError(48, item.item, location)
           }
-        case _ => throw new RuntimeException("Not an item message?")
+        case _ => throw XProcException.xiBadMessage(message, location)
       }
       serOpts = new SerializationOptions(config, opts.toMap)
     }

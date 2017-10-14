@@ -1,5 +1,6 @@
 package com.xmlcalabash.steps
 
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode}
@@ -40,7 +41,7 @@ class PropertyExtract extends DefaultXmlStep {
           builder.startContent()
           builder.addText(value.getStringValue)
         case _ =>
-          throw new RuntimeException("What!?")
+          throw XProcException.xiInvalidPropertyValue(value, location)
       }
       builder.addEndElement()
     }

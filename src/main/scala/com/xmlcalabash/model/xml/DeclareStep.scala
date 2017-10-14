@@ -2,8 +2,9 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.config.Jafpl
 import com.jafpl.graph.Graph
+import com.sun.org.apache.xpath.internal.XPathProcessorException
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.{Container, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
@@ -114,7 +115,7 @@ class DeclareStep(override val config: XMLCalabash,
       patch match {
         case art: WithProperties => patchWithProperties(art, processProperties = true)
         case art: WithDocument => patchWithProperties(art, processProperties = false)
-        case _ => throw new RuntimeException("Don't know how to patch: " + patch)
+        case _ => throw XProcException.xiBadPatch(patch, location)
       }
     }
   }
@@ -151,7 +152,7 @@ class DeclareStep(override val config: XMLCalabash,
                 case empty: Empty =>
                   input.addChild(new Empty(config, input, empty))
                 case _ =>
-                  throw new RuntimeException("Unimpl: " + pchild)
+                  throw XProcException.xiBadPatchChild(pchild, location)
               }
             }
             pinput.children.clear()

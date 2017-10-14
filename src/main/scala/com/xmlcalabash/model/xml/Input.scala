@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Binding, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
@@ -42,7 +42,7 @@ class Input(override val config: XMLCalabash,
       attr.get match {
         case "true" => _primary = Some(true)
         case "false" => _primary = Some(false)
-        case _ => throw new RuntimeException("primary must be true or false")
+        case _ => throw XProcException.dynamicError(19, List(attr.get, "boolean"), location)
       }
     } else {
       _primary = None
@@ -53,7 +53,7 @@ class Input(override val config: XMLCalabash,
       attr.get match {
         case "true" => _sequence = Some(true)
         case "false" => _sequence = Some(false)
-        case _ => throw new RuntimeException("sequence must be true or false")
+        case _ => throw XProcException.dynamicError(19, List(attr.get, "boolean"), location)
       }
     } else {
       _sequence = None

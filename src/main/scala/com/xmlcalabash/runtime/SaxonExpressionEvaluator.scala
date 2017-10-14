@@ -98,7 +98,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
           newContext.location = xpath.context.location.get
         }
       case _ =>
-        throw new IllegalArgumentException("The expression passed to value() is not an XPath expression")
+        throw XProcException.xiNotAnXPathExpression(xpath, None)
     }
 
     for ((str, value) <- bindings) {
@@ -330,7 +330,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
               value match {
                 case atom: XdmAtomicValue => builder.addText(value.getStringValue)
                 case node: XdmNode => builder.addSubtree(node)
-                case _ => throw new RuntimeException("Huh?")
+                case _ => throw XProcException.xiInvalidPropertyValue(value, None)
               }
               builder.addEndElement()
             }
@@ -369,7 +369,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
               case node: XdmNode => items += new ExprNodeResource(node)
               case _ => Unit
             }
-          case _ => throw new RuntimeException("Bang3")
+          case _ => throw XProcException.xiBadMessage(msg, None)
         }
       }
     }

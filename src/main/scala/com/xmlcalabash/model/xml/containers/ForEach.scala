@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml.containers
 
 import com.jafpl.graph.{ContainerStart, Graph, Node, TryCatchStart}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
 import com.xmlcalabash.model.xml.{Artifact, Documentation, Input, PipeInfo}
@@ -35,7 +35,7 @@ class ForEach(override val config: XMLCalabash,
           input.port.get match {
             case "source" => source = Some(input)
             case "current" => current = Some(input)
-            case _ => throw new RuntimeException("BANG1")
+            case _ => throw XProcException.xiInvalidPort(input.port.get, location)
           }
         case _ => Unit
       }

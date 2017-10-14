@@ -5,6 +5,7 @@ import java.io.{ByteArrayOutputStream, File, FileOutputStream, PrintStream}
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.steps.DataConsumer
 import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{MDUtils, UniqueId, XProcConstants}
 import com.xmlcalabash.util.{S9Api, SerializationOptions}
 import net.sf.saxon.s9api.{Serializer, XdmValue}
@@ -65,7 +66,7 @@ class PrintingConsumer private(config: XMLCalabash, serialization: Serialization
           fos.close()
         }
       case _ =>
-        throw new RuntimeException("Unexpected message type: " + message)
+        throw XProcException.xiBadMessage(message, None)
     }
   }
 }

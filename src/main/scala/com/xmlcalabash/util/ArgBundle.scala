@@ -2,6 +2,7 @@ package com.xmlcalabash.util
 
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XProcXPathExpression}
@@ -46,7 +47,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
     if (_pipeline.isDefined) {
       _pipeline.get
     } else {
-      throw new RuntimeException("No pipeline specified")
+      throw XProcException.xiArgBundleNoPipeline()
     }
   }
 
@@ -90,7 +91,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
           val context = new ExpressionContext(None, _nsbindings.toMap, None)
           val qname = ValueParser.parseQName(name, _nsbindings.toMap)
           if (_params.contains(qname)) {
-            throw new RuntimeException("Attempt to redefine parameter: " + qname)
+            throw XProcException.xiArgBundleRedefined(qname)
           }
 
           kind match {
@@ -116,7 +117,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
               val untypedValue = new XdmAtomicValue(value, untypedAtomic)
               _params.put(qname, new XProcVarValue(untypedValue, context))
             case _ =>
-              throw new RuntimeException("Unexpected prefix character in parameter: " + kind)
+              throw XProcException.xiArgBundlePfxChar(kind)
           }
           pos += 1
         case longOptRegex(optname) =>
@@ -146,7 +147,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
                   val value = rest.substring(eqpos+1)
                   parsePort(_inputs, s"$port=$value")
                 } else {
-                  throw new RuntimeException(s"Cannot parse option --input $rest")
+                  throw XProcException.xiArgBundleCannotParseInput(s"--input $rest")
                 }
                 pos += 1
               case "output" =>
@@ -157,7 +158,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
                   val value = rest.substring(eqpos+1)
                   parsePort(_outputs, s"$port=$value")
                 } else {
-                  throw new RuntimeException(s"Cannot parse option --output $rest")
+                  throw XProcException.xiArgBundleCannotParseInput(s"--output $rest")
                 }
                 pos += 1
               case "bind" =>
@@ -167,18 +168,18 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
                   val prefix = rest.substring(0, eqpos)
                   val uri = rest.substring(eqpos+1)
                   if (_nsbindings.contains(prefix)) {
-                    throw new RuntimeException(s"Attempt to redefine namespace binding for $prefix")
+                    throw XProcException.xiArgBundleRedefinedNamespace(prefix)
                   }
                   _nsbindings.put(prefix, uri)
                 } else {
-                  throw new RuntimeException(s"Cannot parse option --input $rest")
+                  throw XProcException.xiArgBundleCannotParseNamespace(rest)
                 }
                 pos += 1
-              case _ => throw new RuntimeException(s"Unexpected option --$optname")
+              case _ => throw XProcException.xiArgBundleUnexpectedOption(optname)
             }
           } catch {
             case iobe: IndexOutOfBoundsException =>
-              throw new RuntimeException(s"--$optname must be followed by a filename")
+              throw XProcException.xiArgBundleIndexOOB(optname)
             case t: Throwable => throw t
           }
           pos += 1
@@ -201,7 +202,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
                       val value = rest.substring(eqpos+1)
                       parsePort(_inputs, s"$port=$value")
                     } else {
-                      throw new RuntimeException(s"Cannot parse option -i$rest")
+                      throw XProcException.xiArgBundleCannotParseInput(s"-i$rest")
                     }
                     skip = true
 
@@ -213,7 +214,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
                       val value = rest.substring(eqpos+1)
                       parsePort(_outputs, s"$port=$value")
                     } else {
-                      throw new RuntimeException(s"Cannot parse option -o$rest")
+                      throw XProcException.xiArgBundleCannotParseOutput(s"-o$rest")
                     }
                     skip = true
 
@@ -236,11 +237,11 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
                       val prefix = rest.substring(0, eqpos)
                       val uri = rest.substring(eqpos+1)
                       if (_nsbindings.contains(prefix)) {
-                        throw new RuntimeException(s"Attempt to redefine namespace binding for $prefix")
+                        throw XProcException.xiArgBundleRedefinedNamespace(prefix)
                       }
                       _nsbindings.put(prefix, uri)
                     } else {
-                      throw new RuntimeException(s"Cannot parse option -o$rest")
+                      throw XProcException.xiArgBundleCannotParseNamespace(rest)
                     }
                   case 'G' =>
                     if (chpos + 1 == chars.length) {
@@ -251,14 +252,14 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
                       skip = true
                     }
                   case _ =>
-                    throw new RuntimeException(s"Unrecognized option: $ch")
+                    throw XProcException.xiArgBundleUnexpectedOption(ch.toString)
                 }
               }
               chpos += 1
             }
           } catch {
             case iobe: IndexOutOfBoundsException =>
-              throw new RuntimeException(s"--$optname must be followed by a filename")
+              throw XProcException.xiArgBundleIndexOOB(optname)
             case t: Throwable => throw t
           }
           pos += 1
@@ -266,11 +267,11 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
           if (_pipeline.isEmpty) {
             _pipeline = Some(pfx + rest)
           } else {
-            throw new RuntimeException(s"More than one pipeline specified: ${_pipeline.get}, ${pfx+rest}, ...")
+            throw XProcException.xiArgBundleMultiplePipelines(_pipeline.get, pfx+rest)
           }
           pos += 1
         case _ =>
-          throw new RuntimeException("Unexpected option: " + opt)
+          throw XProcException.xiArgBundleUnexpectedOption(opt)
       }
     }
   }
@@ -278,7 +279,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
   def parsePort(ports: mutable.HashMap[String,List[String]], binding: String): Unit = {
     val pos = binding.indexOf("=")
     if (pos < 1) {
-      throw new RuntimeException("Invalid port specification: " + binding)
+      throw XProcException.xiArgBundleInvalidPortSpec(binding)
     }
     val port = binding.substring(0, pos)
     val fn = binding.substring(pos+1)

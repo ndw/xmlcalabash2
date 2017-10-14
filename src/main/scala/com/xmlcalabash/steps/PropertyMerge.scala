@@ -1,5 +1,6 @@
 package com.xmlcalabash.steps
 
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.S9Api
@@ -39,17 +40,17 @@ class PropertyMerge extends DefaultXmlStep {
               if (pnode.getNodeName == XProcConstants.c_document_properties) {
                 prop = Some(extractProperties(pnode))
               } else {
-                throw new RuntimeException("Document properties must be a c:document-properties document")
+                throw XProcException.xiMergeBadRoot(pnode.getNodeName, location)
               }
             case XdmNodeKind.TEXT =>
               if (pnode.getStringValue.trim != "") {
-                throw new RuntimeException("Text nodes in a properties fragment must be just whitespace")
+                throw XProcException.xiMergeBadText(pnode.getStringValue.trim, location)
               }
             case _ => Unit
           }
         }
 
-      case _ => throw new RuntimeException("properties must be xml")
+      case _ => throw XProcException.xiMergeBadValue(propDoc, location)
     }
 
     val newmeta = new XProcMetadata(sourceMeta.get.contentType, prop.get)
@@ -66,7 +67,7 @@ class PropertyMerge extends DefaultXmlStep {
         case XdmNodeKind.ELEMENT =>
           val name = pnode.getNodeName
           if (prop.contains(name)) {
-            throw new RuntimeException("Duplicate properties are not allowed")
+            throw XProcException.xiMergeDup(name, location)
           }
 
           val vtypestr = Option(pnode.getAttributeValue(XProcConstants.xsi_type))
@@ -93,7 +94,7 @@ class PropertyMerge extends DefaultXmlStep {
           }
 
           if (!atomic && vtype.isDefined) {
-            throw new RuntimeException("Cannot specify xsi:type on subtrees")
+            throw XProcException.xiMergeXsiTypeOnNode(location)
           }
 
           if (atomic) {
@@ -186,7 +187,7 @@ class PropertyMerge extends DefaultXmlStep {
                 case XProcConstants.xs_dateTimeStamp =>
                   prop.put(name, new XdmAtomicValue(strvalue))
                 case _ =>
-                  throw new RuntimeException(s"Don't understand type: ${vtype.get}")
+                  throw XProcException.xiMergeBadAtomic(vtype.get, location)
               }
             } else {
               val x = XProcConstants._code
@@ -206,7 +207,7 @@ class PropertyMerge extends DefaultXmlStep {
 
         case XdmNodeKind.TEXT =>
           if (pnode.getStringValue.trim != "") {
-            throw new RuntimeException("Text nodes in a properties fragment must be just whitespace")
+            throw XProcException.xiMergeBadText(pnode.getStringValue.trim, location)
           }
         case _ => Unit
       }

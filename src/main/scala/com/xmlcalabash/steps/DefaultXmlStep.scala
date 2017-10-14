@@ -4,6 +4,7 @@ import com.jafpl.graph.Location
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.BindingSpecification
 import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
 import com.xmlcalabash.util.XProcVarValue
 import net.sf.saxon.s9api.{QName, XdmItem}
@@ -45,7 +46,7 @@ class DefaultXmlStep extends XmlStep {
     config match {
       case xmlCalabash: XMLCalabash =>
         this.config = xmlCalabash
-      case _ => throw new IllegalArgumentException("Runtime configuration must be an XMLCalabash")
+      case _ => throw XProcException.xiNotXMLCalabash()
     }
   }
 

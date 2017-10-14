@@ -6,6 +6,24 @@ for which the `test` condition returns true. If no p:when alternatives are
 selected, a p:otherwise must be present. This error is raised if the
 p:choose does not contain a selected p:when or a p:otherwise.
 
+XD0019
+Invalid value specified: “$1”. Value must be $2.
+
+XD0044
+Invalid second argument to p:document-property: “$1”. Argument must be a string or QName.
+
+XD0045
+Invalid key: “$1”. Document property map keys must be QNames.
+
+XD0046
+Invalid key: “$1”. Serialization option keys must be QNames.
+
+XD0047
+The values of the serialization options must be atomic. Invalid: “$1”
+
+XD0048
+The serialization options must be a map. Invalid: “$1”
+
 XS0018
 The option named “$1” is required, but no value was provided for it.
 
@@ -18,5 +36,121 @@ It is an error to specify an encoding, “$1”, if the content type is an XML m
 
 XS0072
 For p:inline “$1” content, only text is allowed. Found: “$2”.
+
+{http://xmlcalabash.com/ns/extensions}XI0016
+No input specified for pipeline port “$1”.
+
+{http://xmlcalabash.com/ns/extensions}XI0017
+You cannot specify both a message attribute and content on an injectable.
+
+{http://xmlcalabash.com/ns/extensions}XI0018
+You cannot redefine the port on an injectable.
+
+{http://xmlcalabash.com/ns/extensions}XI0019
+Internal error: attempt to insert node adjacent to non-existant node.
+
+{http://xmlcalabash.com/ns/extensions}XI0020
+Internal error: attempt to patch unexpected artifact: “$1”
+
+{http://xmlcalabash.com/ns/extensions}XI0021
+Internal error: unexpected input artifact: “$1”
+
+{http://xmlcalabash.com/ns/extensions}XI0022
+Internal error: unexpected message type: “$1”
+
+{http://xmlcalabash.com/ns/extensions}XI0023
+Invalid port: “$1”
+
+{http://xmlcalabash.com/ns/extensions}XI0024
+Internal error: unexpected document properties value: “$1”
+
+{http://xmlcalabash.com/ns/extensions}XI0025
+Internal error: attempt to redefine id: “$1”
+
+{http://xmlcalabash.com/ns/extensions}XI0026
+Invalid root: “$1”. Root must be c:document-properties
+
+{http://xmlcalabash.com/ns/extensions}XI0027
+Invalid text: “$1”. Only whitespace text nodes are allowed between properties.
+
+{http://xmlcalabash.com/ns/extensions}XI0028
+Invalid value: “$1”. Source must be an XML document.
+
+{http://xmlcalabash.com/ns/extensions}XI0029
+Duplicate property names are not allowed: “$1”.
+
+{http://xmlcalabash.com/ns/extensions}XI0030
+The xsi:type attribute can only be specified on atomic properties.
+
+{http://xmlcalabash.com/ns/extensions}XI0031
+Unexpected atomic type: “$1”
+
+{http://xmlcalabash.com/ns/extensions}XI0032
+The p:wrap-sequence step only wraps documents; items are not allowed.
+
+{http://xmlcalabash.com/ns/extensions}XI0033
+The p:wrap-sequence step only wraps XML documents.
+
+{http://xmlcalabash.com/ns/extensions}XI0034
+Failed to cast to XML: “$1”.
+
+{http://xmlcalabash.com/ns/extensions}XI0035
+Cannot create media type for unexpected value: “$1”.
+
+{http://xmlcalabash.com/ns/extensions}XI0036
+No pipeline specified.
+
+{http://xmlcalabash.com/ns/extensions}XI0037
+Attempt to redefine parameter “$1”. Parameters cannot be redefined.
+
+{http://xmlcalabash.com/ns/extensions}XI0038
+Invalid prefix character: “$1”. Only “+” and “?” are supported.
+
+{http://xmlcalabash.com/ns/extensions}XI0039
+Cannot parse input: “$1”.
+
+{http://xmlcalabash.com/ns/extensions}XI0040
+Cannot parse output: “$1”.
+
+{http://xmlcalabash.com/ns/extensions}XI0041
+Attempt to redefine namespace prefix: “$1”. Namespace bindings cannot be redefined.
+
+{http://xmlcalabash.com/ns/extensions}XI0042
+Cannot parse namespace binding: “$1”.
+
+{http://xmlcalabash.com/ns/extensions}XI0043
+Unexpected option: “$1”.
+
+{http://xmlcalabash.com/ns/extensions}XI0044
+Option “$1” must be followed by a value.
+
+{http://xmlcalabash.com/ns/extensions}XI0045
+Multiple pipelines specified: “$1”, “$2”. Only one pipeline may be specified.
+
+{http://xmlcalabash.com/ns/extensions}XI0046
+Cannot parse port binding: “$1”.
+
+{http://xmlcalabash.com/ns/extensions}XI0047
+Internal error: expression is not an XPath expression: “$1”.
+
+{http://xmlcalabash.com/ns/extensions}XI0048
+Internal error: configuration object is not an XMLCalabash object.
+
+{http://xmlcalabash.com/ns/extensions}XI0049
+Internal error: configuration object differs from runtime configuration object.
+
+{http://xmlcalabash.com/ns/extensions}XI0050
+
+{http://xmlcalabash.com/ns/extensions}XI0051
+
+{http://xmlcalabash.com/ns/extensions}XI0052
+
+{http://xmlcalabash.com/ns/extensions}XI0053
+
+{http://xmlcalabash.com/ns/extensions}XI0055
+
+
+
+
 
 

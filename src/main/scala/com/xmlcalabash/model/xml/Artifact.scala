@@ -162,7 +162,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
       found = (children(pos) == node)
     }
     if (!found) {
-      throw new RuntimeException("What3")
+      throw XProcException.xiChildNotFound(node.location)
     }
     children.insert(pos, insert)
 
@@ -176,7 +176,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
       found = (children(pos) == node)
     }
     if (!found) {
-      throw new RuntimeException("What3")
+      throw XProcException.xiChildNotFound(node.location)
     }
     children.insert(pos+1, insert)
   }
@@ -192,7 +192,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
       if (value.get == "true" || value.get == "false") {
         Some(value.get == "true")
       } else {
-        throw new ModelException(ExceptionCode.BADBOOLEAN, value.get, location)
+        throw XProcException.dynamicError(19, List(value.get, "boolean"), location)
       }
     } else {
       None

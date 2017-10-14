@@ -5,25 +5,61 @@ import java.net.URI
 import com.jafpl.graph.Location
 import com.jafpl.messages.{Message, Metadata}
 import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.xml.Artifact
 import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression}
-import net.sf.saxon.s9api.QName
+import net.sf.saxon.s9api.{QName, XdmNode}
 
 object XProcException {
-  def xiUnkExprType(location: Option[Location]) = internalError(1, location)
-  def xiInvalidMessage(location: Option[Location], message: Message) = internalError(2, location, message)
-  def xiBadBoundValue(location: Option[Location], value: Any) = internalError(3, location, value)
-  def xiUnexpectedExprType(location: Option[Location], expr: Any) = internalError(4, location, expr)
-  def xiSeqNotSupported(location: Option[Location], expr: XProcExpression) = internalError(5, location, expr)
-  def xiInvalidClarkName(location: Option[Location], name: String) = internalError(6, location, name)
-  def xiInvalidMetadata(location: Option[Location], metadata: Metadata) = internalError(7, location, metadata)
-  def xiExtFunctionNotAllowed() = internalError(8, None)
-  def xiInvalidAVT(location: Option[Location], expr: String) = internalError(9,location, expr)
-  def xiParamsNotMap(location: Option[Location], props: Any) = internalError(10, location, props)
-  def xiDocPropsUnavail(location: Option[Location], baseURI: URI) = internalError(11, location, baseURI)
-  def xiDocPropsNotMap(location: Option[Location], props: Any) = internalError(12, location, props)
-  def xiDocPropsKeyNotString(location: Option[Location], key: Any) = internalError(13, location, key)
-  def xiDocPropsValueNotAtomic(location: Option[Location], key: Any) = internalError(14, location, key)
-  def xiNotInInjectable() = internalError(15, None)
+  def xiUnkExprType(location: Option[Location]): XProcException = internalError(1, location)
+  def xiInvalidMessage(location: Option[Location], message: Message): XProcException = internalError(2, location, message)
+  def xiBadBoundValue(location: Option[Location], value: Any): XProcException = internalError(3, location, value)
+  def xiUnexpectedExprType(location: Option[Location], expr: Any): XProcException = internalError(4, location, expr)
+  def xiSeqNotSupported(location: Option[Location], expr: XProcExpression): XProcException = internalError(5, location, expr)
+  def xiInvalidClarkName(location: Option[Location], name: String): XProcException = internalError(6, location, name)
+  def xiInvalidMetadata(location: Option[Location], metadata: Metadata): XProcException = internalError(7, location, metadata)
+  def xiExtFunctionNotAllowed(): XProcException = internalError(8, None)
+  def xiInvalidAVT(location: Option[Location], expr: String): XProcException = internalError(9,location, expr)
+  def xiParamsNotMap(location: Option[Location], props: Any): XProcException = internalError(10, location, props)
+  def xiDocPropsUnavail(location: Option[Location], baseURI: URI): XProcException = internalError(11, location, baseURI)
+  def xiDocPropsNotMap(location: Option[Location], props: Any): XProcException = internalError(12, location, props)
+  def xiDocPropsKeyNotString(location: Option[Location], key: Any): XProcException = internalError(13, location, key)
+  def xiDocPropsValueNotAtomic(location: Option[Location], key: Any): XProcException = internalError(14, location, key)
+  def xiNotInInjectable(): XProcException = internalError(15, None)
+  def xiNoBindingForPort(port: String): XProcException = internalError(16, None, port)
+  def xiInjectMessageNodes(location: Option[Location]): XProcException = internalError(17, location)
+  def xiInjectRedefPort(location: Option[Location]): XProcException = internalError(18, location)
+  def xiChildNotFound(location: Option[Location]): XProcException = internalError(19, location)
+  def xiBadPatch(node: Artifact, location: Option[Location]): XProcException = internalError(20, location, node)
+  def xiBadPatchChild(node: Artifact, location: Option[Location]): XProcException = internalError(21, location, node)
+  def xiBadMessage(message: Message, location: Option[Location]): XProcException = internalError(22, location, message)
+  def xiInvalidPort(port: String, location: Option[Location]): XProcException = internalError(23, location, port)
+  def xiInvalidPropertyValue(value: Any, location: Option[Location]): XProcException = internalError(24, location, value)
+  def xiRedefId(id: String, location: Option[Location]): XProcException = internalError(25, location, id)
+  def xiMergeBadRoot(root: QName, location: Option[Location]): XProcException = internalError(26, location, root)
+  def xiMergeBadText(text: String, location: Option[Location]): XProcException = internalError(27, location, text)
+  def xiMergeBadValue(value: Any, location: Option[Location]): XProcException = internalError(28, location, value)
+  def xiMergeDup(key: QName, location: Option[Location]): XProcException = internalError(29, location, key)
+  def xiMergeXsiTypeOnNode(location: Option[Location]): XProcException = internalError(30, location)
+  def xiMergeBadAtomic(ptype: QName, location: Option[Location]): XProcException = internalError(31, location, ptype)
+  def xiWrapItems(location: Option[Location]): XProcException = internalError(32, location)
+  def xiWrapXML(location: Option[Location]): XProcException = internalError(33, location)
+  def xiCastXML(value: Any, location: Option[Location]): XProcException = internalError(34, location, value)
+  def xiMediaType(value: Any, location: Option[Location]): XProcException = internalError(35, location, value)
+  def xiArgBundleNoPipeline(): XProcException = internalError(36, None)
+  def xiArgBundleRedefined(name: QName): XProcException = internalError(37, None, name)
+  def xiArgBundlePfxChar(str: String): XProcException = internalError(38, None, str)
+  def xiArgBundleCannotParseInput(str: String): XProcException = internalError(39, None, str)
+  def xiArgBundleCannotParseOutput(str: String): XProcException = internalError(40, None, str)
+  def xiArgBundleRedefinedNamespace(pfx: String): XProcException = internalError(41, None, pfx)
+  def xiArgBundleCannotParseNamespace(str: String): XProcException = internalError(42, None, str)
+  def xiArgBundleUnexpectedOption(str: String): XProcException = internalError(43, None, str)
+  def xiArgBundleIndexOOB(str: String): XProcException = internalError(44, None, str)
+  def xiArgBundleMultiplePipelines(p1: String, p2: String): XProcException = internalError(45, None, List(p1, p2))
+  def xiArgBundleInvalidPortSpec(spec: String): XProcException = internalError(46, None, spec)
+  def xiNotAnXPathExpression(expr: Any, location: Option[Location]): XProcException = internalError(47, location, expr)
+  def xiNotXMLCalabash(): XProcException = internalError(48, None)
+  def xiDifferentXMLCalabash(): XProcException = internalError(49, None)
+  def xiNodesNotAllowed(node: XdmNode): XProcException = internalError(50, None, node)
 
   private def internalError(code: Int, location: Option[Location]): XProcException = {
     internalError(code, location, List())
@@ -35,71 +71,71 @@ object XProcException {
 
   private def internalError(code: Int, location: Option[Location], args: List[Any]): XProcException = {
     val qname = new QName("cx", XProcConstants.ns_cx, "XI%04d".format(code))
-    new XProcException(qname, None, location, List.empty[String])
+    new XProcException(qname, None, location, args)
   }
 
   def dynamicError(code: Int): XProcException = {
-    dynamicError(code, List.empty[String], None)
+    dynamicError(code, List.empty[Any], None)
   }
-  def dynamicError(code: Int, details: String): XProcException = {
+  def dynamicError(code: Int, details: Any): XProcException = {
     dynamicError(code, List(details), None)
   }
-  def dynamicError(code: Int, details: List[String]): XProcException = {
+  def dynamicError(code: Int, details: List[Any]): XProcException = {
     dynamicError(code, details, None)
   }
   def dynamicError(code: Int, location: Option[Location]): XProcException = {
-    dynamicError(code, List.empty[String], location)
+    dynamicError(code, List.empty[Any], location)
   }
-  def dynamicError(code: Int, details: String, location: Option[Location]): XProcException = {
+  def dynamicError(code: Int, details: Any, location: Option[Location]): XProcException = {
     dynamicError(code, List(details), location)
   }
-  def dynamicError(code: Int, details: List[String], location: Option[Location]): XProcException = {
+  def dynamicError(code: Int, details: List[Any], location: Option[Location]): XProcException = {
     val qname = new QName("err", XProcConstants.ns_err, "XD%04d".format(code))
     new XProcException(qname, None, location, details)
   }
 
   def staticError(code: Int): XProcException = {
-    staticError(code, List.empty[String], None)
+    staticError(code, List.empty[Any], None)
   }
-  def staticError(code: Int, details: String): XProcException = {
+  def staticError(code: Int, details: Any): XProcException = {
     staticError(code, List(details), None)
   }
-  def staticError(code: Int, details: List[String]): XProcException = {
+  def staticError(code: Int, details: List[Any]): XProcException = {
     staticError(code, details, None)
   }
   def staticError(code: Int, location: Option[Location]): XProcException = {
-    staticError(code, List.empty[String], location)
+    staticError(code, List.empty[Any], location)
   }
-  def staticError(code: Int, details: String, location: Option[Location]): XProcException = {
+  def staticError(code: Int, details: Any, location: Option[Location]): XProcException = {
     staticError(code, List(details), location)
   }
-  def staticError(code: Int, details: List[String], location: Option[Location]): XProcException = {
+  def staticError(code: Int, details: List[Any], location: Option[Location]): XProcException = {
     val qname = new QName("err", XProcConstants.ns_err, "XS%04d".format(code))
     new XProcException(qname, None, location, details)
   }
 
   def stepError(code: Int): XProcException = {
-    stepError(code, List.empty[String], None)
+    stepError(code, List.empty[Any], None)
   }
-  def stepError(code: Int, details: String): XProcException = {
+  def stepError(code: Int, details: Any): XProcException = {
     stepError(code, List(details), None)
   }
-  def stepError(code: Int, details: List[String]): XProcException = {
+  def stepError(code: Int, details: List[Any]): XProcException = {
     stepError(code, details, None)
   }
   def stepError(code: Int, location: Option[Location]): XProcException = {
-    stepError(code, List.empty[String], location)
+    stepError(code, List.empty[Any], location)
   }
-  def stepError(code: Int, details: String, location: Option[Location]): XProcException = {
+  def stepError(code: Int, details: Any, location: Option[Location]): XProcException = {
     stepError(code, List(details), location)
   }
-  def stepError(code: Int, details: List[String], location: Option[Location]): XProcException = {
+  def stepError(code: Int, details: List[Any], location: Option[Location]): XProcException = {
     val qname = new QName("err", XProcConstants.ns_err, "XC%04d".format(code))
     new XProcException(qname, None, location, details)
   }
 }
 
-class XProcException(val code: QName, val message: Option[String], val location: Option[Location], val details: List[String]) extends Throwable {
+class XProcException(val code: QName, val message: Option[String], val location: Option[Location], val details: List[Any]) extends Throwable {
   def this(code: QName) {
     this(code, None, None, List.empty[String])
   }

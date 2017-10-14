@@ -77,7 +77,7 @@ object XmlDriver extends App {
           runtime.inputs(port).send(new XPathItemMessage(node, XProcMetadata.XML, ExpressionContext.NONE))
         }
       } else {
-        throw new RuntimeException("No binding for port: " + port)
+        throw XProcException.xiNoBindingForPort(port)
       }
     }
 

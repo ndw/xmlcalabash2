@@ -1,6 +1,7 @@
 package com.xmlcalabash.util
 
 import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.ExpressionContext
 import jdk.nashorn.api.scripting.ScriptObjectMirror
@@ -40,7 +41,7 @@ object TypeUtils {
           }
           map
         }
-      case _ => throw new RuntimeException("Don't know how to handle: " + value)
+      case _ => throw XProcException.xiCastXML(value, None)
     }
   }
 
@@ -50,7 +51,7 @@ object TypeUtils {
     }
     value match {
       case node: XdmNode =>
-        throw new IllegalArgumentException("Cannot have nodes")
+        throw XProcException.xiNodesNotAllowed(node)
       case atomic: XdmAtomicValue =>
         atomic.getValue
       case xarr: XdmArray =>
@@ -78,7 +79,7 @@ object TypeUtils {
     value match {
       case v: XdmMap => vnd("map")
       case v: Boolean => vnd("boolean")
-      case _ => throw new RuntimeException("I don't know how to handle: " + value)
+      case _ => throw XProcException.xiMediaType(value, None)
     }
   }
 

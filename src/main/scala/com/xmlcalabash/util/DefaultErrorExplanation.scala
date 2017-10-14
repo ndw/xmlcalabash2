@@ -45,10 +45,10 @@ class DefaultErrorExplanation(config: XMLCalabash) extends ErrorExplanation {
   }
 
   override def message(code: QName): String = {
-    message(code, List.empty[String])
+    message(code, List.empty[Any])
   }
 
-  override def message(code: QName, details: List[String]): String = {
+  override def message(code: QName, details: List[Any]): String = {
     val detail = "^(.*)\\$(\\d+)(.*)$".r
     var message = messages.getOrElse(code, "[No explanatory message for " + code + "]")
     var matched = true
@@ -70,10 +70,10 @@ class DefaultErrorExplanation(config: XMLCalabash) extends ErrorExplanation {
   }
 
   override def explanation(code: QName): String = {
-    explanation(code, List.empty[String])
+    explanation(code, List.empty[Any])
   }
 
-  override def explanation(code: QName, details: List[String]): String = {
+  override def explanation(code: QName, details: List[Any]): String = {
     explain.getOrElse(code, "")
   }
 }

@@ -55,7 +55,7 @@ class DocumentProperty private extends ExtensionFunctionDefinition {
         case sval: StringValue =>
           new QName("", sval.getStringValue)
         case _ =>
-          throw new RuntimeException("value must be string or qname")
+          throw XProcException.dynamicError(44, arguments(1).head.toString, exprEval.dynContext.get.location)
       }
 
       val msg = exprEval.dynContext.get.message(doc.asInstanceOf[NodeInfo])

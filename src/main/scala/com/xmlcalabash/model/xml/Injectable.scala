@@ -5,6 +5,7 @@ import java.net.URI
 import com.jafpl.graph.Location
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.{ExpressionContext, XProcAvtExpression, XProcMetadata, XProcXPathExpression}
@@ -31,7 +32,7 @@ class Injectable(val config: XMLCalabash,
   def messageXPath: Option[XProcAvtExpression] = _messageXPath
   def messageXPath_=(expr: XProcAvtExpression): Unit = {
     if (messageXPath.isDefined || messageNodes.isDefined) {
-      throw new RuntimeException("You can't do that")
+      throw XProcException.xiInjectMessageNodes(Some(location))
     }
     _messageXPath = Some(expr)
   }
@@ -39,7 +40,7 @@ class Injectable(val config: XMLCalabash,
   def messageNodes: Option[List[XdmNode]] = _messageNodes
   def messageNodes_=(nodes: List[XdmNode]): Unit = {
     if (messageXPath.isDefined || messageNodes.isDefined) {
-      throw new RuntimeException("You can't do that")
+      throw XProcException.xiInjectMessageNodes(Some(location))
     }
     _messageNodes = Some(nodes)
   }
@@ -47,7 +48,7 @@ class Injectable(val config: XMLCalabash,
   def port: Option[String] = _port
   def port_=(port: String): Unit = {
     if (_port.isDefined) {
-      throw new RuntimeException("You can't do that")
+      throw XProcException.xiInjectRedefPort(Some(location))
     }
     _port = Some(port)
   }

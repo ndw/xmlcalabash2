@@ -1,5 +1,6 @@
 package com.xmlcalabash.runtime
 
+import com.xmlcalabash.exceptions.XProcException
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -80,7 +81,7 @@ class SaxonExpressionOptions private(map: Option[Map[String,Any]]) {
   private def checkBoolean(key: String, value: Any): Boolean = {
     value match {
       case b: Boolean => b
-      case _ => throw new RuntimeException("Not a boolean: " + key)
+      case _ => throw XProcException.dynamicError(19, List(value, "boolean"), None)
     }
   }
 
@@ -95,7 +96,7 @@ class SaxonExpressionOptions private(map: Option[Map[String,Any]]) {
   private def checkDouble(key: String, value: Any): Double = {
     value match {
       case d: Double => d
-      case _ => throw new RuntimeException("Not a double: " + key)
+      case _ => throw XProcException.dynamicError(19, List(value, "double"), None)
     }
   }
 
@@ -110,7 +111,7 @@ class SaxonExpressionOptions private(map: Option[Map[String,Any]]) {
   private def checkQName(key: String, value: Any): QName = {
     value match {
       case q: QName => q
-      case _ => throw new RuntimeException("Not a qname: " + key)
+      case _ => throw XProcException.dynamicError(19, List(value, "QName"), None)
     }
   }
 }

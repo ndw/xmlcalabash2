@@ -2,7 +2,7 @@ package com.xmlcalabash.steps
 
 import java.net.URI
 
-import com.xmlcalabash.exceptions.StepException
+import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
@@ -23,8 +23,8 @@ class WrapSequence extends DefaultXmlStep {
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     item match {
       case xdm: XdmNode => inputs += xdm
-      case xdm: XdmItem => throw new RuntimeException("Sequence of items isn't supported yet")
-      case _ => throw new RuntimeException("Only XML is allowed to WrapSequence")
+      case xdm: XdmItem => throw XProcException.xiWrapItems(location)
+      case _ => throw XProcException.xiWrapXML(location)
     }
   }
 
