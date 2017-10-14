@@ -34,8 +34,7 @@ class PrintingConsumer private(config: XMLCalabash, serialization: Serialization
             if (MDUtils.jsonContentType(item.metadata)) {
               serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
             } else {
-              serializer.setOutputProperty(Serializer.Property.METHOD, serialization.method)
-              serializer.setOutputProperty(Serializer.Property.HTML_VERSION, serialization.version)
+              serialization.setOutputProperties(serializer)
             }
 
             item.item match {
