@@ -149,6 +149,7 @@ object XProcConstants {
   val _psvi_required = new QName("", "psvi-required")
   val _select = new QName("", "select")
   val _sequence = new QName("", "sequence")
+  val _serialization = new QName("", "serialization")
   val _standalone = new QName("", "standalone")
   val _step = new QName("", "step")
   val _test = new QName("", "test")
