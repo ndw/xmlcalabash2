@@ -75,6 +75,19 @@ object ValueParser {
     }
   }
 
+  def findVariableRefsInString(config: XMLCalabash, inScopeNS: Map[String,String], text: String): Set[QName] = {
+    val names = mutable.HashSet.empty[QName]
+
+    val parser = config.expressionParser
+    parser.parse(text)
+    for (ref <- parser.variableRefs) {
+      val qname = parseQName(ref, inScopeNS)
+      names += qname
+    }
+
+    names.toSet
+  }
+
   def parseClarkName(name: String): QName = {
     parseClarkName(name, None)
   }
