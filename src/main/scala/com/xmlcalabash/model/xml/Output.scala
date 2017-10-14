@@ -3,13 +3,23 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{ParserConfiguration, XProcConstants}
+import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.Container
+import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
+import com.xmlcalabash.util.{SerializationOptions, TypeUtils}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmValue}
 
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class Output(override val config: XMLCalabash,
              override val parent: Option[Artifact]) extends IOPort(config, parent) {
+  private var serOpts = new SerializationOptions(config)
+
+  def serialization: SerializationOptions = serOpts
+
   protected[xml] def this(config: XMLCalabash, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
     this(config, Some(parent))
     _port = Some(port)
@@ -44,7 +54,43 @@ class Output(override val config: XMLCalabash,
       _sequence = None
     }
 
-    for (key <- List(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary)) {
+    val ser = attributes.get(XProcConstants._serialization)
+    if (ser.isDefined) {
+      val opts = mutable.HashMap.empty[QName, XdmAtomicValue]
+      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      val serAvt = new XProcXPathExpression(context, ser.get)
+      val bindingRefs = ValueParser.findVariableRefsInString(config, inScopeNS, ser.get)
+      val eval = config.expressionEvaluator
+      val message = eval.singletonValue(serAvt, List(), Map(), None)
+      message match {
+        case item: XPathItemMessage =>
+          item.item match {
+            case xdmMap: XdmMap =>
+              val map = xdmMap.asMap()
+              for (key <- map.asScala.keySet) {
+                val optkey = TypeUtils.castAsJava(key)
+                val optvalue = map.asScala(key)
+                val value = optvalue match {
+                  case atomic: XdmAtomicValue =>
+                    atomic
+                  case _ => throw new RuntimeException("Not an atomic value?")
+                }
+                optkey match {
+                  case str: String =>
+                    opts.put(new QName("", str), value)
+                  case qname: QName =>
+                    opts.put(qname, value)
+                  case _ => throw new RuntimeException("map key is not a qname")
+                }
+              }
+            case _ => throw new RuntimeException("Not a map?")
+          }
+        case _ => throw new RuntimeException("Not an item message?")
+      }
+      serOpts = new SerializationOptions(config, opts.toMap)
+    }
+
+    for (key <- List(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary, XProcConstants._serialization)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
