@@ -10,6 +10,7 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ModelException, ParseException}
 import com.xmlcalabash.model.xml.Parser
 import com.xmlcalabash.runtime.{BufferingConsumer, PrintingConsumer, XProcMetadata}
+import com.xmlcalabash.util.SerializationOptions
 import org.xml.sax.InputSource
 
 object XmlTesting extends App {
@@ -91,7 +92,7 @@ object XmlTesting extends App {
 
       for (port <- pipeline.outputPorts) {
         xmlCalabash.trace(s"Binding output port stdout", "ExternalBindings")
-        val pc = new PrintingConsumer(xmlCalabash)
+        val pc = new PrintingConsumer(xmlCalabash, new SerializationOptions(xmlCalabash))
         runtime.outputs(port).setConsumer(pc)
       }
 
