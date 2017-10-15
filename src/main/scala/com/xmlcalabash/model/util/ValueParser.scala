@@ -125,7 +125,7 @@ object ValueParser {
         if (inScopeNS.contains(prefix)) {
           Some(new QName(prefix, inScopeNS(prefix), local))
         } else {
-          throw XProcException.dynamicError(15, name, location)
+          throw XProcException.dynamicError(15, name.get, location)
         }
       } else {
         Some(new QName("", name.get))
