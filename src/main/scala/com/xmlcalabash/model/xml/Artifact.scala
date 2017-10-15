@@ -5,7 +5,7 @@ import java.net.URI
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
-import com.xmlcalabash.model.util.{UniqueId, ValueParser}
+import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
@@ -33,6 +33,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   protected[xml] var dump_attr = Option.empty[xml.MetaData]
   protected[xml] var _location = Option.empty[Location]
   protected[xml] var _baseURI = Option.empty[URI]
+  protected[xml] var _xmlId = Option.empty[String]
   protected[xml] val _inputInjectables: ListBuffer[XProcPortInjectable] = ListBuffer.empty[XProcPortInjectable]
   protected[xml] val _outputInjectables: ListBuffer[XProcPortInjectable] = ListBuffer.empty[XProcPortInjectable]
   protected[xml] val _stepInjectables: ListBuffer[XProcStepInjectable] = ListBuffer.empty[XProcStepInjectable]
@@ -50,6 +51,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   }
 
   def baseURI: Option[URI] = _baseURI
+  def xmlId: Option[String] = _xmlId
 
   override def toString: String = {
     "{step " + name + " " + super.toString + "}"
@@ -109,7 +111,11 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     val aiter = node.axisIterator(Axis.ATTRIBUTE)
     while (aiter.hasNext) {
       val attr = aiter.next().asInstanceOf[XdmNode]
-      attributes.put(attr.getNodeName, attr.getStringValue)
+      attr.getNodeName match {
+        case XProcConstants.xml_base => _baseURI = Some(new URI(attr.getStringValue))
+        case XProcConstants.xml_id => _xmlId = Some(attr.getStringValue)
+        case _ => attributes.put(attr.getNodeName, attr.getStringValue)
+      }
     }
 
     var same = parent.isDefined
