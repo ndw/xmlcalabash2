@@ -118,17 +118,22 @@ object ValueParser {
 
   def parseQName(name: Option[String], inScopeNS: Map[String,String], location: Option[Location]): Option[QName] = {
     if (name.isDefined) {
-      if (name.get.contains(":")) {
-        val pos = name.get.indexOf(':')
-        val prefix = name.get.substring(0, pos)
-        val local = name.get.substring(pos+1)
-        if (inScopeNS.contains(prefix)) {
-          Some(new QName(prefix, inScopeNS(prefix), local))
-        } else {
-          throw XProcException.dynamicError(15, name.get, location)
-        }
-      } else {
-        Some(new QName("", name.get))
+      val eqname = "^Q\\{(.*)\\}(\\S+)$".r
+      name.get match {
+        case eqname(uri,local) => Some(new QName(uri, local))
+        case _ =>
+          if (name.get.contains(":")) {
+            val pos = name.get.indexOf(':')
+            val prefix = name.get.substring(0, pos)
+            val local = name.get.substring(pos+1)
+            if (inScopeNS.contains(prefix)) {
+              Some(new QName(prefix, inScopeNS(prefix), local))
+            } else {
+              throw XProcException.dynamicError(15, name.get, location)
+            }
+          } else {
+            Some(new QName("", name.get))
+          }
       }
     } else {
       None
