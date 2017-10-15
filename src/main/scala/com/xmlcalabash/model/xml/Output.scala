@@ -59,7 +59,7 @@ class Output(override val config: XMLCalabash,
       val opts = mutable.HashMap.empty[QName, XdmAtomicValue]
       val context = new ExpressionContext(baseURI, inScopeNS, location)
       val serAvt = new XProcXPathExpression(context, ser.get)
-      val bindingRefs = ValueParser.findVariableRefsInString(config, inScopeNS, ser.get)
+      val bindingRefs = lexicalVariables(ser.get)
       val eval = config.expressionEvaluator
       val message = eval.singletonValue(serAvt, List(), Map(), None)
       message match {

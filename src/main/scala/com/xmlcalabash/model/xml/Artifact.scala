@@ -188,34 +188,11 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   }
 
   def lexicalBoolean(value: Option[String]): Option[Boolean] = {
-    if (value.isDefined) {
-      if (value.get == "true" || value.get == "false") {
-        Some(value.get == "true")
-      } else {
-        throw XProcException.dynamicError(19, List(value.get, "boolean"), location)
-      }
-    } else {
-      None
-    }
+    ValueParser.parseBoolean(value, location)
   }
 
   def lexicalQName(name: Option[String]): Option[QName] = {
-    if (name.isDefined) {
-      if (name.get.contains(":")) {
-        val pos = name.get.indexOf(':')
-        val prefix = name.get.substring(0, pos)
-        val local = name.get.substring(pos+1)
-        if (inScopeNS.contains(prefix)) {
-          Some(new QName(prefix, inScopeNS(prefix), local))
-        } else {
-          throw new ModelException(ExceptionCode.NOPREFIX, prefix , location)
-        }
-      } else {
-        Some(new QName("", name.get))
-      }
-    } else {
-      None
-    }
+    ValueParser.parseQName(name, inScopeNS, location)
   }
 
   def lexicalPrefixes(value: Option[String]): Map[String,String] = {
@@ -259,6 +236,10 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     } else {
       throw new ModelException(ExceptionCode.BADAVT, List(name, value), location)
     }
+  }
+
+  def lexicalVariables(expr: String): Set[QName] = {
+    ValueParser.findVariableRefsInString(config, inScopeNS, expr, location)
   }
 
   def relevantChildren(): List[Artifact] = {

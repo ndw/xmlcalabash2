@@ -6,6 +6,9 @@ for which the `test` condition returns true. If no p:when alternatives are
 selected, a p:otherwise must be present. This error is raised if the
 p:choose does not contain a selected p:when or a p:otherwise.
 
+XD0015
+There is no in-scope namespace for the QName “$1”.
+
 XD0019
 Invalid value specified: “$1”. Value must be $2.
 

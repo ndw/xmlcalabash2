@@ -42,7 +42,7 @@ class WrapSequence extends DefaultXmlStep {
         wrapper = new QName(bindings(_wrapper_namespace).value.getStringValue, name)
       }
     } else {
-      wrapper = ValueParser.parseQName(name, bindings(_wrapper).context.nsBindings)
+      wrapper = ValueParser.parseQName(name, bindings(_wrapper).context.nsBindings, location)
     }
 
     val builder = new SaxonTreeBuilder(config)

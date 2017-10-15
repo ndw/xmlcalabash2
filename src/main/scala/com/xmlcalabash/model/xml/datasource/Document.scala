@@ -59,30 +59,19 @@ class Document(override val config: XMLCalabash,
     }
 
     hrefAvt = ValueParser.parseAvt(_href.get)
-    bindingRefs ++= ValueParser.findVariableRefsInString(config, inScopeNS, _href.get)
+    bindingRefs ++= lexicalVariables(_href.get)
 
     if (_params.isDefined) {
       paramsAvt = ValueParser.parseAvt(_params.get)
-      bindingRefs ++= ValueParser.findVariableRefsInString(config, inScopeNS, _params.get)
+      bindingRefs ++= lexicalVariables(_params.get)
     }
 
     if (_docProps.isDefined) {
-      bindingRefs ++= ValueParser.findVariableRefsInString(config, inScopeNS, _docProps.get)
+      bindingRefs ++= lexicalVariables(_docProps.get)
     }
 
     true
   }
-
-  /*
-  private def findVariableRefsInString(text: String): Unit = {
-    val parser = config.expressionParser
-    parser.parse(text)
-    for (ref <- parser.variableRefs) {
-      val qname = lexicalQName(Some(ref)).get
-      bindingRefs += qname
-    }
-  }
-  */
 
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get.parent.get.parent.get

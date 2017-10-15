@@ -89,7 +89,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
           pos += 2
         case paramRegex(kind, name, value) =>
           val context = new ExpressionContext(None, _nsbindings.toMap, None)
-          val qname = ValueParser.parseQName(name, _nsbindings.toMap)
+          val qname = ValueParser.parseQName(name, _nsbindings.toMap, None)
           if (_params.contains(qname)) {
             throw XProcException.xiArgBundleRedefined(qname)
           }

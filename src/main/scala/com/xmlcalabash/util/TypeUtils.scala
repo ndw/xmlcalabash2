@@ -101,7 +101,7 @@ class TypeUtils(val config: XMLCalabash) {
     }
 
     if (xsdtype.get == XProcConstants.xs_QName) {
-      return new XdmAtomicValue(ValueParser.parseQName(value.getStringValue, context.nsBindings))
+      return new XdmAtomicValue(ValueParser.parseQName(value.getStringValue, context.nsBindings, None))
     }
 
     val itype = typeFactory.getAtomicType(xsdtype.get)

@@ -498,7 +498,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       if (code == null) {
         Some(s"null != ${result.get}")
       } else {
-        val qcode = ValueParser.parseQName(code, S9Api.inScopeNamespaces(node))
+        val qcode = ValueParser.parseQName(code, S9Api.inScopeNamespaces(node), Some(new NodeLocation(node)))
         if (qcode.getClarkName == result.get) {
           None
         } else {

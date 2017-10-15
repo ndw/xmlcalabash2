@@ -21,7 +21,7 @@ class Catch(override val config: XMLCalabash,
     val codeList = attributes.get(_code)
     if (codeList.isDefined) {
       for (code <- codeList.get.split("\\s+")) {
-        val qname = ValueParser.parseQName(code, inScopeNS)
+        val qname = ValueParser.parseQName(code, inScopeNS, location)
         codes += qname
       }
     }

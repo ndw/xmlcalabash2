@@ -51,8 +51,8 @@ class Xslt extends DefaultXmlStep {
 
   override def receiveBinding(variable: QName, value: XdmItem, context: ExpressionContext): Unit = {
     variable match {
-      case `_initial_mode` => initialMode = Some(ValueParser.parseQName(value.getStringValue, context.nsBindings))
-      case `_template_name` => templateName = Some(ValueParser.parseQName(value.getStringValue, context.nsBindings))
+      case `_initial_mode` => initialMode = Some(ValueParser.parseQName(value.getStringValue, context.nsBindings, location))
+      case `_template_name` => templateName = Some(ValueParser.parseQName(value.getStringValue, context.nsBindings, location))
       case `_output_base_uri` => outputBaseURI = Some(value.getStringValue)
       case `_parameters` => parameters = ValueParser.parseParameters(value, context.nsBindings, context.location)
       case `_version` => version = Some(value.getStringValue)

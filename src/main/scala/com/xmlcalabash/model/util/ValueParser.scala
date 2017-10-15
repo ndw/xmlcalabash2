@@ -75,13 +75,13 @@ object ValueParser {
     }
   }
 
-  def findVariableRefsInString(config: XMLCalabash, inScopeNS: Map[String,String], text: String): Set[QName] = {
+  def findVariableRefsInString(config: XMLCalabash, inScopeNS: Map[String,String], text: String, location: Option[Location]): Set[QName] = {
     val names = mutable.HashSet.empty[QName]
 
     val parser = config.expressionParser
     parser.parse(text)
     for (ref <- parser.variableRefs) {
-      val qname = parseQName(ref, inScopeNS)
+      val qname = parseQName(ref, inScopeNS, location)
       names += qname
     }
 
@@ -112,18 +112,26 @@ object ValueParser {
     }
   }
 
-  def parseQName(name: String, inScopeNS: Map[String,String]): QName = {
-    if (name.contains(":")) {
-      val pos = name.indexOf(':')
-      val prefix = name.substring(0, pos)
-      val local = name.substring(pos+1)
-      if (inScopeNS.contains(prefix)) {
-        new QName(prefix, inScopeNS(prefix), local)
+  def parseQName(name: String, inScopeNS: Map[String,String], location: Option[Location]): QName = {
+    parseQName(Some(name), inScopeNS, location).get
+  }
+
+  def parseQName(name: Option[String], inScopeNS: Map[String,String], location: Option[Location]): Option[QName] = {
+    if (name.isDefined) {
+      if (name.get.contains(":")) {
+        val pos = name.get.indexOf(':')
+        val prefix = name.get.substring(0, pos)
+        val local = name.get.substring(pos+1)
+        if (inScopeNS.contains(prefix)) {
+          Some(new QName(prefix, inScopeNS(prefix), local))
+        } else {
+          throw XProcException.dynamicError(15, name, location)
+        }
       } else {
-        throw new ModelException(ExceptionCode.NOPREFIX, prefix , None)
+        Some(new QName("", name.get))
       }
     } else {
-      new QName("", name)
+      None
     }
   }
 
@@ -151,7 +159,7 @@ object ValueParser {
           val key = iter.next()
           val value = map.get(key)
 
-          val qname = ValueParser.parseQName(key.getStringValue, nsBindings)
+          val qname = ValueParser.parseQName(key.getStringValue, nsBindings, location)
           params.put(qname, value)
         }
       case _ =>

@@ -28,7 +28,7 @@ class Error extends DefaultXmlStep {
         code = new QName(bindings(_code_namespace).value.getStringValue, name)
       }
     } else {
-      code = ValueParser.parseQName(name, bindings(_code).context.nsBindings)
+      code = ValueParser.parseQName(name, bindings(_code).context.nsBindings, location)
     }
 
     val errors = new StepErrors(config)
