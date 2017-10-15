@@ -2,17 +2,22 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XProcExpression, XProcXPathExpression}
+import net.sf.saxon.expr.parser.XPathParser
 import net.sf.saxon.s9api.QName
+import net.sf.saxon.sxpath.IndependentContext
+import net.sf.saxon.trans.XPathException
+import net.sf.saxon.value.SequenceType
 
 class WithOption(override val config: XMLCalabash,
                  override val parent: Option[Artifact]) extends Artifact(config, parent) {
   private var _collection = false
   private var _name: QName = _
   private var _expression = Option.empty[XProcExpression]
+  private var _as = Option.empty[SequenceType]
 
   def this(config: XMLCalabash, parent: Artifact, name: QName, expr: XProcExpression) = {
     this(config, Some(parent))
@@ -22,6 +27,7 @@ class WithOption(override val config: XMLCalabash,
 
   def optionName: QName = _name
   def expression: XProcExpression = _expression.get
+  def as: Option[SequenceType] = _as
 
   override def validate(): Boolean = {
     if (_expression.isDefined) {
@@ -36,15 +42,34 @@ class WithOption(override val config: XMLCalabash,
     }
 
     _name = qname.get
+
+    _collection = lexicalBoolean(attributes.get(XProcConstants._collection)).getOrElse(false)
+
+    val seqType = attributes.get(XProcConstants._as)
+    if (seqType.isDefined) {
+      try {
+        val parser = new XPathParser
+        parser.setLanguage(XPathParser.SEQUENCE_TYPE, 31)
+        val ic = new IndependentContext(config.processor.getUnderlyingConfiguration)
+        for ((prefix, uri) <- inScopeNS) {
+          ic.declareNamespace(prefix, uri)
+        }
+        _as = Some(parser.parseSequenceType(seqType.get, ic))
+      } catch {
+        case xpe: XPathException =>
+          throw XProcException.dynamicError(49, List(seqType.get, xpe.getMessage), location)
+        case t: Throwable =>
+          throw t
+      }
+    }
+
     val selattr = attributes.get(XProcConstants._select)
     if (selattr.isEmpty) {
       throw new ModelException(ExceptionCode.SELECTATTRREQ, this.toString, location)
     } else {
       val context = new ExpressionContext(baseURI, inScopeNS, location)
-      _expression = Some(new XProcXPathExpression(context, selattr.get))
+      _expression = Some(new XProcXPathExpression(context, selattr.get, as))
     }
-
-    _collection = lexicalBoolean(attributes.get(XProcConstants._collection)).getOrElse(false)
 
     for (key <- List(XProcConstants._name, XProcConstants._select, XProcConstants._collection)) {
       if (attributes.contains(key)) {

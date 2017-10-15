@@ -2,10 +2,14 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XProcExpression, XProcXPathExpression}
+import net.sf.saxon.expr.parser.XPathParser
 import net.sf.saxon.s9api.QName
+import net.sf.saxon.sxpath.IndependentContext
+import net.sf.saxon.trans.XPathException
+import net.sf.saxon.value.SequenceType
 
 class Variable(override val config: XMLCalabash,
                override val parent: Option[Artifact]) extends Artifact(config, parent) {
@@ -13,10 +17,12 @@ class Variable(override val config: XMLCalabash,
   private var _collection: Boolean = false
   private var _select = Option.empty[String]
   private var _expression = Option.empty[XProcExpression]
+  private var _as = Option.empty[SequenceType]
 
   def variableName: QName = _name
   def select: Option[String] = _select
   def expression: XProcExpression = _expression.get
+  def as: Option[SequenceType] = _as
 
   override def validate(): Boolean = {
     val qname = lexicalQName(attributes.get(XProcConstants._name))
@@ -32,7 +38,25 @@ class Variable(override val config: XMLCalabash,
 
     _collection = lexicalBoolean(attributes.get(XProcConstants._collection)).getOrElse(false)
 
-    for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._select, XProcConstants._collection)) {
+    val seqType = attributes.get(XProcConstants._as)
+    if (seqType.isDefined) {
+      try {
+        val parser = new XPathParser
+        parser.setLanguage(XPathParser.SEQUENCE_TYPE, 31)
+        val ic = new IndependentContext(config.processor.getUnderlyingConfiguration)
+        for ((prefix, uri) <- inScopeNS) {
+          ic.declareNamespace(prefix, uri)
+        }
+        _as = Some(parser.parseSequenceType(seqType.get, ic))
+      } catch {
+        case xpe: XPathException =>
+          throw XProcException.dynamicError(49, List(seqType.get, xpe.getMessage), location)
+        case t: Throwable =>
+          throw t
+      }
+    }
+
+    for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._as, XProcConstants._select, XProcConstants._collection)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -55,7 +79,7 @@ class Variable(override val config: XMLCalabash,
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
     val context = new ExpressionContext(_baseURI, inScopeNS, _location)
     val options = new SaxonExpressionOptions(Map("collection" -> _collection))
-    _expression = Some(new XProcXPathExpression(context, _select.get))
+    _expression = Some(new XProcXPathExpression(context, _select.get, as))
     val node = cnode.addVariable(_name.getClarkName, expression, options)
     _graphNode = Some(node)
     config.addNode(node.id, this)

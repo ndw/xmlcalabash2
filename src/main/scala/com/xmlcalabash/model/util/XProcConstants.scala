@@ -123,6 +123,7 @@ object XProcConstants {
   val cx_property_merge = new QName("cx", ns_cx, "property-merge")
   val cx_unknown = new QName("cx", ns_cx, "unknown")
 
+  val _as = new QName("", "as")
   val _byte_order_mark = new QName("", "byte-order-mark")
   val _cdata_section_elements = new QName("", "cdata-section-elements")
   val _code = new QName("", "code")

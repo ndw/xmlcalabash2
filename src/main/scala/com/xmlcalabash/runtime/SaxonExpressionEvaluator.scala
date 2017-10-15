@@ -14,8 +14,9 @@ import com.xmlcalabash.util.XProcVarValue
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.lib.{CollectionFinder, Resource, ResourceCollection}
 import net.sf.saxon.om.{Item, SpaceStrippingRule}
-import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.trans.XPathException
+import net.sf.saxon.value.SequenceType
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
@@ -151,7 +152,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         var evalAvt = false
         for (part <- avtexpr.avt) {
           if (evalAvt) {
-            val epart = computeValue(part, context, avtexpr.context, patchBindings.toMap, proxies, avtexpr.extensionFunctionsAllowed, options)
+            val epart = computeValue(part, None, context, avtexpr.context, patchBindings.toMap, proxies, avtexpr.extensionFunctionsAllowed, options)
             for (item <- epart) {
               result += item
             }
@@ -163,7 +164,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
           evalAvt = !evalAvt
         }
       case xpathexpr: XProcXPathExpression =>
-        val epart = computeValue(xpathexpr.expr, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed, options)
+        val epart = computeValue(xpathexpr.expr, xpathexpr.as, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed, options)
         for (item <- epart) {
           result += item
         }
@@ -183,6 +184,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
   }
 
   private def computeValue(xpath: String,
+                           as: Option[SequenceType],
                            contextItem: List[Message],
                            exprContext: ExpressionContext,
                            bindings: Map[QName,XdmItem],
@@ -264,11 +266,9 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         }
       }
 
+      var value: XdmValue = null
       try {
-        val values = selector.iterator()
-        while (values.hasNext) {
-          results += values.next()
-        }
+        value = selector.evaluate()
       } catch {
         case saue: SaxonApiUncheckedException =>
           saue.getCause match {
@@ -277,15 +277,31 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
               throw new StepException(code, xpe.getMessage, xpe, exprContext.location)
             case _ => throw saue
           }
+        case sae: SaxonApiException =>
+          sae.getCause match {
+            case xpe: XPathException =>
+              val code = new QName(xpe.getErrorCodeNamespace, xpe.getErrorCodeLocalPart)
+              throw new StepException(code, xpe.getMessage, xpe, exprContext.location)
+            case _ => throw sae
+          }
         case other: Throwable =>
           throw other
       }
 
+      if (as.isDefined) {
+        val matches = as.get.matches(value.getUnderlyingValue, config.getTypeHierarchy)
+        if (!matches) {
+          throw XProcException.dynamicError(36, List(value, as.get), exprContext.location)
+        }
+      }
 
+      val values = value.iterator()
+      while (values.hasNext) {
+        results += values.next()
+      }
     } catch {
       case sae: SaxonApiException => throw sae
       case other: Throwable => throw other
-
     }
 
     results.toList
