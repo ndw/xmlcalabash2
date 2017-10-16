@@ -34,6 +34,13 @@ class Document(override val config: XMLCalabash,
     bindingRefs ++= doc.bindingRefs
   }
 
+  def this(config: XMLCalabash, parent: Artifact, href: String) = {
+    this(config, Some(parent))
+    _href = Some(href)
+    hrefAvt = ValueParser.parseAvt(_href.get)
+    bindingRefs ++= lexicalVariables(_href.get)
+  }
+
   override def validate(): Boolean = {
     _href = attributes.get(XProcConstants._href)
     _params = attributes.get(XProcConstants._parameters)

@@ -2,10 +2,10 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Container
-import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
+import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
@@ -37,9 +37,10 @@ class WithInput(override val config: XMLCalabash,
       _expression = Some(new XProcXPathExpression(context, _select.get))
     }
 
-    val pipe = attributes.get(_pipe)
+    val href = attributes.get(XProcConstants._href)
+    val pipe = attributes.get(XProcConstants._pipe)
 
-    for (key <- List(XProcConstants._port, XProcConstants._select, _pipe)) {
+    for (key <- List(XProcConstants._port, XProcConstants._select, XProcConstants._pipe, XProcConstants._href)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -60,9 +61,21 @@ class WithInput(override val config: XMLCalabash,
       }
     }
 
+    if (href.isDefined) {
+      if (hasDataSources) {
+        throw XProcException.staticError(81, href.get, location)
+      }
+      hasDataSources = true
+
+      for (uri <- href.get.split("\\s+")) {
+        val doc = new Document(config, this, uri)
+        addChild(doc)
+      }
+    }
+
     if (pipe.isDefined) {
       if (hasDataSources) {
-        throw new ModelException(ExceptionCode.MIXEDPIPE, pipe.get, location)
+        throw XProcException.staticError(82, pipe.get, location)
       }
       for (spec <- pipe.get.split("\\s+")) {
         val pos = spec.indexOf("@")

@@ -5,7 +5,7 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Container
-import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
+import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
@@ -13,7 +13,6 @@ import scala.collection.mutable.ListBuffer
 
 class Input(override val config: XMLCalabash,
             override val parent: Option[Artifact]) extends IOPort(config, parent) {
-  protected val _pipe = new QName("", "pipe")
   protected var _select: Option[String] = None
   protected var _expression = Option.empty[XProcExpression]
 
@@ -59,9 +58,11 @@ class Input(override val config: XMLCalabash,
       _sequence = None
     }
 
-    val pipe = attributes.get(_pipe)
+    val href = attributes.get(XProcConstants._href)
+    val pipe = attributes.get(XProcConstants._pipe)
 
-    for (key <- List(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary, XProcConstants._select, _pipe)) {
+    for (key <- List(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary,
+      XProcConstants._select, XProcConstants._pipe, XProcConstants._href)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -105,9 +106,21 @@ class Input(override val config: XMLCalabash,
       }
     }
 
+    if (href.isDefined) {
+      if (hasDataSources) {
+        throw XProcException.staticError(81, href.get, location)
+      }
+      hasDataSources = true
+
+      for (uri <- href.get.split("\\s+")) {
+        val doc = new Document(config, this, uri)
+        addChild(doc)
+      }
+    }
+
     if (pipe.isDefined) {
       if (hasDataSources) {
-        throw new ModelException(ExceptionCode.MIXEDPIPE, pipe.get, location)
+        throw XProcException.staticError(82, pipe.get, location)
       }
       for (spec <- pipe.get.split("\\s+")) {
         val pos = spec.indexOf("@")

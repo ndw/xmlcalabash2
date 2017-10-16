@@ -46,6 +46,12 @@ It is an error to specify an encoding, “$1”, if the content type is an XML m
 XS0072
 For p:inline “$1” content, only text is allowed. Found: “$2”.
 
+XS0081
+If an href attribute is present, no other data bindings may be specified.
+
+XS0082
+If a pipe attribute is present, no other data bindings may be specified.
+
 {http://xmlcalabash.com/ns/extensions}XI0016
 No input specified for pipeline port “$1”.
 
