@@ -8,7 +8,7 @@ import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.xml.{DeclareStep, Parser}
 import com.xmlcalabash.runtime.{BufferingConsumer, DevNullConsumer, ExpressionContext, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.{Schematron, XProcVarValue}
-import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
+import net.sf.saxon.s9api.{QName, XdmItem, XdmNode, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -19,7 +19,7 @@ class Tester(runtimeConfig: XMLCalabash) {
   private var _pipeline = Option.empty[XdmNode]
   private var _schematron = Option.empty[XdmNode]
   private var _inputs   = mutable.HashMap.empty[String, ListBuffer[XdmNode]]
-  private var _bindings = mutable.HashMap.empty[String, XdmItem]
+  private var _bindings = mutable.HashMap.empty[String, XdmValue]
   private var _tests    = Option.empty[String]
   private val _test     = new QName("", "test")
 
@@ -51,7 +51,7 @@ class Tester(runtimeConfig: XMLCalabash) {
     }
   }
 
-  def addBinding(optname: QName, item: XdmItem): Unit = {
+  def addBinding(optname: QName, item: XdmValue): Unit = {
     _bindings.put(optname.getClarkName, item)
   }
 

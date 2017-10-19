@@ -9,7 +9,9 @@ object ExpressionContext {
   def NONE: ExpressionContext = _none
 }
 
-class ExpressionContext(val baseURI: Option[URI], val nsBindings: Map[String,String], val location: Option[Location]) {
+class ExpressionContext(val baseURI: Option[URI],
+                        val nsBindings: Map[String,String],
+                        val location: Option[Location]) {
   def this(nsBindings: Map[String,String]) {
     this(None, nsBindings, None)
   }

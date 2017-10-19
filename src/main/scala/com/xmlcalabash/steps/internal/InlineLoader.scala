@@ -9,7 +9,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
-import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
 
@@ -174,18 +174,21 @@ class InlineLoader(private val baseURI: Option[URI],
     }
   }
 
-  // FIXME: should return a list of XdmNode
   private def expandString(text: String): String = {
     val evaluator = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
     val expr = new XProcAvtExpression(context, text)
     var s = ""
-    for (msg <- evaluator.value(expr, List.empty[Message], bindings.toMap, None)) {
-      s += msg.item.toString
+    val iter = evaluator.value(expr, List.empty[Message], bindings.toMap, None).item.iterator()
+    while (iter.hasNext) {
+      if (s != "") {
+        s += " "
+      }
+      s += iter.next.getStringValue
     }
     s
   }
 
-  def xpathValue(expr: XProcExpression): XdmItem = {
+  def xpathValue(expr: XProcExpression): XdmValue = {
     val eval = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
     val dynContext = new DynamicContext()
     val msg = eval.withContext(dynContext) { eval.singletonValue(expr, List.empty[Message], bindings.toMap, None) }

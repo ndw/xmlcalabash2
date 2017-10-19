@@ -36,7 +36,7 @@ class JavaScript extends DefaultXmlStep {
     }
   }
 
-  override def receiveBinding(variable: QName, value: XdmItem, context: ExpressionContext): Unit = {
+  override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
     if (variable == XProcConstants._parameters) {
       parameters = ValueParser.parseParameters(value, context.nsBindings, context.location)
     }

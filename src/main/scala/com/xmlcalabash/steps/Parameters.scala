@@ -12,7 +12,7 @@ class Parameters() extends DefaultXmlStep {
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
-  override def receiveBinding(variable: QName, value: XdmItem, context: ExpressionContext): Unit = {
+  override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
     variable match {
       case XProcConstants._parameters => parameters = ValueParser.parseParameters(value, context.nsBindings, context.location)
       case _ =>

@@ -2,15 +2,15 @@ package com.xmlcalabash.steps
 
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
-import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
+import net.sf.saxon.s9api.{QName, XdmItem, XdmNode, XdmValue}
 
 class OptionValue extends DefaultXmlStep {
-  var value = Option.empty[XdmItem]
+  var value = Option.empty[XdmValue]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
-  override def receiveBinding(variable: QName, value: XdmItem, context: ExpressionContext): Unit = {
+  override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
     this.value = Some(value)
   }
 
@@ -19,9 +19,13 @@ class OptionValue extends DefaultXmlStep {
     builder.startDocument(None)
     builder.addStartElement(XProcConstants.c_result)
     builder.startContent()
-    value.get match {
-      case node: XdmNode => builder.addSubtree(node)
-      case _ => builder.addText(value.get.getStringValue)
+    val iter = value.get.iterator()
+    while (iter.hasNext) {
+      val item = iter.next()
+      item match {
+        case node: XdmNode => builder.addSubtree(node)
+        case _ => builder.addText(item.getStringValue)
+      }
     }
     builder.addEndElement()
     builder.endDocument()

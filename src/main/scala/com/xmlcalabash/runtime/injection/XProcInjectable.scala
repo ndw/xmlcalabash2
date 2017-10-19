@@ -98,12 +98,14 @@ abstract class XProcInjectable(injectable: Injectable) {
         var str = node.getStringValue
         if (str != "") {
           if (str.contains("{")) {
-            for (msg <- expandNodes(str, contextNode, context, opts)) {
-              msg.item match {
+            val iter = expandNodes(str, contextNode, context, opts).item.iterator()
+            while (iter.hasNext) {
+              val item = iter.next()
+              item match {
                 case node: XdmNode =>
                   builder.addSubtree(node)
                 case _ =>
-                  builder.addText(msg.item.getStringValue)
+                  builder.addText(item.getStringValue)
               }
             }
           } else {
@@ -117,14 +119,15 @@ abstract class XProcInjectable(injectable: Injectable) {
 
   private def expandString(text: String, contextNode: List[ItemMessage], context: ExpressionContext, opts: Option[SaxonExpressionOptions]): String = {
     var s = ""
-    for (msg <- expandNodes(text, contextNode, context, opts)) {
-      s += msg.item.toString
+    val iter = expandNodes(text, contextNode, context, opts).item.iterator()
+    while (iter.hasNext) {
+      s += iter.next.getStringValue
     }
     s
   }
 
-  private def expandNodes(text: String, contextNode: List[ItemMessage], context: ExpressionContext, opts: Option[SaxonExpressionOptions]): List[XPathItemMessage] = {
-    val evaluator = config.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
+  private def expandNodes(text: String, contextNode: List[ItemMessage], context: ExpressionContext, opts: Option[SaxonExpressionOptions]): XPathItemMessage = {
+    val evaluator = config.expressionEvaluator
     val expr = new XProcAvtExpression(context, text)
     evaluator.value(expr, contextNode, bindings.toMap, opts)
   }

@@ -3,7 +3,7 @@ package com.xmlcalabash.testers
 import java.io.{ByteArrayOutputStream, File, PrintStream}
 import java.net.InetAddress
 import java.text.SimpleDateFormat
-import java.util.{Calendar, GregorianCalendar}
+import java.util.Calendar
 import javax.xml.transform.sax.SAXSource
 
 import com.jafpl.messages.{ItemMessage, Message}
@@ -13,7 +13,7 @@ import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.{S9Api, URIUtils}
-import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.InputSource
 
@@ -404,7 +404,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     var pipeline = Option.empty[XdmNode]
     var schematron = Option.empty[XdmNode]
     var inputs = mutable.HashMap.empty[String, XdmNode]
-    var bindings = mutable.HashMap.empty[QName, XdmItem]
+    var bindings = mutable.HashMap.empty[QName, XdmValue]
 
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
@@ -530,7 +530,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     }
   }
 
-  private def loadBinding(node: XdmNode): Option[XdmItem] = {
+  private def loadBinding(node: XdmNode): Option[XdmValue] = {
     val children = ListBuffer.empty[XdmNode]
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
@@ -545,15 +545,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       val context = inlineDocument(node)
       val message = new ItemMessage(context.get, new XProcMetadata("application/xml"))
       val result = eval.singletonValue(new XProcXPathExpression(exprContext, value), List(message), Map.empty[String,Message], None)
-      result match {
-        case item: XPathItemMessage =>
-          Some(item.item)
-        case item: ItemMessage =>
-          Some(item.item.asInstanceOf[XdmItem])
-        case _ =>
-          logger.warn("Unexpected option result: " + result)
-          Some(new XdmAtomicValue(result.toString))
-      }
+      Some(result.item)
     } else {
       loadResource(node)
     }

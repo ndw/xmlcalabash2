@@ -7,8 +7,8 @@ import java.util.Base64
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.S9Api
-import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
+import com.xmlcalabash.util.{S9Api, ValueUtils}
+import net.sf.saxon.s9api.{QName, XdmItem, XdmNode, XdmValue}
 
 class CastContentType() extends DefaultXmlStep {
   private var item = Option.empty[Any]
@@ -23,9 +23,9 @@ class CastContentType() extends DefaultXmlStep {
     this.metadata = Some(metadata)
   }
 
-  override def receiveBinding(variable: QName, value: XdmItem, context: ExpressionContext): Unit = {
+  override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
     if (variable == XProcConstants._content_type) {
-      castTo = value.getStringValue
+      castTo = ValueUtils.singletonStringValue(value, context.location)
     }
   }
 

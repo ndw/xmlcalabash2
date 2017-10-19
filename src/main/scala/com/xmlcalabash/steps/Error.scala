@@ -17,15 +17,15 @@ class Error extends DefaultXmlStep {
 
   override def run(staticContext: StaticContext) {
     var code = new QName("", "test")
-    val name = bindings(_code).value.getStringValue
+    val name = bindings(_code).getStringValue
     if (bindings.contains(_code_prefix) || bindings.contains(_code_namespace)) {
       if (name.contains(":")) {
         throw StepException.dynamicError(34)
       }
       if (bindings.contains(_code_prefix)) {
-        code = new QName(bindings(_code_prefix).value.getStringValue, bindings(_code_namespace).value.getStringValue, name)
+        code = new QName(bindings(_code_prefix).getStringValue, bindings(_code_namespace).getStringValue, name)
       } else {
-        code = new QName(bindings(_code_namespace).value.getStringValue, name)
+        code = new QName(bindings(_code_namespace).getStringValue, name)
       }
     } else {
       code = ValueParser.parseQName(name, bindings(_code).context.nsBindings, location)
@@ -33,7 +33,7 @@ class Error extends DefaultXmlStep {
 
     val errors = new StepErrors(config)
     val errout = if (bindings.contains(_message)) {
-      errors.error(code, bindings(_message).value.getStringValue)
+      errors.error(code, bindings(_message).getStringValue)
     } else {
       errors.error(code)
     }

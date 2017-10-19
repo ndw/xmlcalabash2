@@ -40,9 +40,9 @@ class XProcStepInjectable(injectable: Injectable) extends XProcInjectable(inject
       if (messageXPath.isDefined) {
         val result = eval.value(messageXPath.get, List(), bindings.toMap, Some(opts))
         var s = ""
-        for (ritem <- result) {
-          val item = ritem.asInstanceOf[XPathItemMessage]
-          s += item.item.getStringValue
+        val iter = result.item.iterator()
+        while (iter.hasNext) {
+          s += iter.next.getStringValue
         }
         println(s)
       } else {

@@ -6,7 +6,7 @@ import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.model.xml.Injectable
 import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions}
-import com.xmlcalabash.util.URIUtils
+import com.xmlcalabash.util.{URIUtils, ValueUtils}
 
 class XProcPortInjectable(injectable: Injectable) extends XProcInjectable(injectable) with PortInjectable {
   protected var _port: Option[String] = injectable.port
@@ -28,12 +28,7 @@ class XProcPortInjectable(injectable: Injectable) extends XProcInjectable(inject
     if (cond) {
       if (messageXPath.isDefined) {
         val result = eval.value(messageXPath.get, List(context), bindings.toMap, Some(opts))
-        var s = ""
-        for (ritem <- result) {
-          val item = ritem.asInstanceOf[XPathItemMessage]
-          s += item.item.getStringValue
-        }
-        println(s)
+        println(ValueUtils.stringValue(result.item))
       } else {
         val builder = new SaxonTreeBuilder(config)
         builder.startDocument(baseURI.getOrElse(URIUtils.cwdAsURI))

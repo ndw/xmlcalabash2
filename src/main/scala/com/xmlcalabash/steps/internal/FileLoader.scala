@@ -92,7 +92,7 @@ class FileLoader(private val context: ExpressionContext,
       consumer.get.receive("result", new ItemMessage(node, new XProcMetadata(contentType, props.toMap)))
     } else if (ValueParser.jsonContentType(contentType)) {
       val expr = new XProcXPathExpression(context, s"json-doc('$href', $$parameters)")
-      val json = config.get.expressionEvaluator.singletonValue(expr, List(), bindings.toMap, None).asInstanceOf[XPathItemMessage]
+      val json = config.get.expressionEvaluator.singletonValue(expr, List(), bindings.toMap, None)
       consumer.get.receive("result", new ItemMessage(json.item, new XProcMetadata(contentType, props.toMap)))
     } else if (ValueParser.htmlContentType(contentType)) {
       val node = config.get.documentManager.parseHtml(href)
@@ -108,8 +108,8 @@ class FileLoader(private val context: ExpressionContext,
     }
   }
 
-  def xpathValue(expr: XProcExpression): XdmItem = {
-    val eval = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
+  def xpathValue(expr: XProcExpression): XdmValue = {
+    val eval = config.get.expressionEvaluator
     val dynContext = new DynamicContext()
     val msg = eval.withContext(dynContext) { eval.singletonValue(expr, List.empty[Message], bindings.toMap, None) }
     msg.asInstanceOf[XPathItemMessage].item

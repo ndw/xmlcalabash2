@@ -5,7 +5,7 @@ import javax.xml.transform.{Result, SourceLocator}
 
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.{S9Api, XProcCollectionFinder}
+import com.xmlcalabash.util.{S9Api, ValueUtils, XProcCollectionFinder}
 import net.sf.saxon.lib.OutputURIResolver
 import net.sf.saxon.s9api.{MessageListener, QName, ValidationMode, XdmDestination, XdmItem, XdmNode, XdmValue}
 
@@ -49,13 +49,13 @@ class Xslt extends DefaultXmlStep {
     }
   }
 
-  override def receiveBinding(variable: QName, value: XdmItem, context: ExpressionContext): Unit = {
+  override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
     variable match {
-      case `_initial_mode` => initialMode = Some(ValueParser.parseQName(value.getStringValue, context.nsBindings, location))
-      case `_template_name` => templateName = Some(ValueParser.parseQName(value.getStringValue, context.nsBindings, location))
-      case `_output_base_uri` => outputBaseURI = Some(value.getStringValue)
+      case `_initial_mode` => initialMode = Some(ValueParser.parseQName(ValueUtils.singletonStringValue(value, context.location), context.nsBindings, location))
+      case `_template_name` => templateName = Some(ValueParser.parseQName(ValueUtils.singletonStringValue(value, context.location), context.nsBindings, location))
+      case `_output_base_uri` => outputBaseURI = Some(ValueUtils.singletonStringValue(value, context.location))
       case `_parameters` => parameters = ValueParser.parseParameters(value, context.nsBindings, context.location)
-      case `_version` => version = Some(value.getStringValue)
+      case `_version` => version = Some(ValueUtils.singletonStringValue(value, context.location))
       case _ =>
         logger.info("Ignoring unexpected option to p:xslt: " + variable)
     }

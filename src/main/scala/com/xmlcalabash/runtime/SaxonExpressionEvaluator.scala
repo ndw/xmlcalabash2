@@ -40,25 +40,27 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
   }
 
   override def singletonValue(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XPathItemMessage = {
-    val msgs = value(xpath, context, bindings, options)
-    if (msgs.length == 1) {
-      msgs.head
+    val xdmval = value(xpath, context, bindings, options).item.asInstanceOf[XdmValue]
+
+    if (xdmval.size() == 1) {
+      new XPathItemMessage(xdmval, XProcMetadata.XML, xpath.asInstanceOf[XProcExpression].context)
     } else {
       xpath match {
         case xpath: XProcXPathExpression =>
           throw XProcException.xiSeqNotSupported(xpath.context.location, xpath)
         case xpath: XProcAvtExpression =>
+          val viter = xdmval.iterator()
           var s = ""
-          for (item <- msgs) {
-            s += item.item.getStringValue
+          while (viter.hasNext) {
+            s += viter.next().getStringValue
           }
-          new XPathItemMessage(new XdmAtomicValue(s), XProcMetadata.ANY, ExpressionContext.NONE)
+          new XPathItemMessage(xdmval, XProcMetadata.XML, xpath.context)
         // We should never fall off the end of this match because we got past the value() call above
       }
     }
   }
 
-  override def value(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): List[XPathItemMessage] = {
+  override def value(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XPathItemMessage = {
     val proxies = mutable.HashMap.empty[Any, XdmItem]
     val newContext = new DynamicContext()
     for (msg <- context) {
@@ -115,26 +117,33 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       }
     }
 
-    withContext(newContext) { compute(xpath.asInstanceOf[XProcExpression], context, bindings, proxies.toMap, options) }
+    val xdmvalue = withContext(newContext) { compute(xpath.asInstanceOf[XProcExpression], context, bindings, proxies.toMap, options) }
+    new XPathItemMessage(xdmvalue, XProcMetadata.XML, xpath.asInstanceOf[XProcExpression].context)
   }
 
   override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): Boolean = {
-    val msg = singletonValue(xpath, context, bindings, options)
+    val xdmval = singletonValue(xpath, context, bindings, options).item.asInstanceOf[XdmValue]
 
-    msg.item match {
-      case atomic: XdmAtomicValue => atomic.getBooleanValue
-      case _ => true
+    if (xdmval.size() == 1) {
+      xdmval.itemAt(0) match {
+        case atomic: XdmAtomicValue => atomic.getBooleanValue
+        case _ => true
+      }
+    } else {
+      // Is this right? Lists are always true?
+      true
     }
   }
 
-  def compute(xpath: XProcExpression, context: List[Message], bindings: Map[String, Message], proxies: Map[Any,XdmItem], options: Option[Any]): List[XPathItemMessage] = {
-    val patchBindings = mutable.HashMap.empty[QName, XdmItem]
+  def compute(xpath: XProcExpression, context: List[Message], bindings: Map[String, Message],
+              proxies: Map[Any,XdmItem], options: Option[Any]): XdmValue = {
+    val patchBindings = mutable.HashMap.empty[QName, XdmValue]
 
     for ((str, value) <- bindings) {
       value match {
         case item: ItemMessage =>
           item.item match {
-            case xitem: XdmItem =>
+            case xitem: XdmValue =>
               patchBindings.put(ValueParser.parseClarkName(str), xitem)
             case value: XProcVarValue =>
               patchBindings.put(ValueParser.parseClarkName(str), value.value)
@@ -146,51 +155,45 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       }
     }
 
-    val result = ListBuffer.empty[XdmItem]
     xpath match {
       case avtexpr: XProcAvtExpression =>
+        var xdmval: XdmValue = null
         var evalAvt = false
         for (part <- avtexpr.avt) {
           if (evalAvt) {
             val epart = computeValue(part, None, context, avtexpr.context, patchBindings.toMap, proxies, avtexpr.extensionFunctionsAllowed, options)
-            for (item <- epart) {
-              result += item
+            if (xdmval == null) {
+              xdmval = epart
+            } else {
+              xdmval = xdmval.append(epart)
             }
           } else {
             if (part != "") {
-              result += new XdmAtomicValue(part)
+              if (xdmval == null) {
+                xdmval = new XdmAtomicValue(part)
+              } else {
+                xdmval = xdmval.append(new XdmAtomicValue(part))
+              }
             }
           }
           evalAvt = !evalAvt
         }
+        xdmval
       case xpathexpr: XProcXPathExpression =>
-        val epart = computeValue(xpathexpr.expr, xpathexpr.as, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed, options)
-        for (item <- epart) {
-          result += item
-        }
+        computeValue(xpathexpr.expr, xpathexpr.as, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed, options)
       case _ =>
         throw XProcException.xiUnexpectedExprType(xpath.context.location, xpath)
     }
-
-    val messages = ListBuffer.empty[XPathItemMessage]
-    for (value <- result) {
-      value match {
-        case node: XdmNode => messages += new XPathItemMessage(value, XProcMetadata.XML, xpath.context)
-        case _ => messages += new XPathItemMessage(value, XProcMetadata.ANY, xpath.context)
-      }
-    }
-
-    messages.toList
   }
 
   private def computeValue(xpath: String,
                            as: Option[SequenceType],
                            contextItem: List[Message],
                            exprContext: ExpressionContext,
-                           bindings: Map[QName,XdmItem],
+                           bindings: Map[QName,XdmValue],
                            proxies: Map[Any, XdmItem],
                            extensionsOk: Boolean,
-                           options: Option[Any]): List[XdmItem] = {
+                           options: Option[Any]): XdmValue = {
     val results = ListBuffer.empty[XdmItem]
     val config = xmlCalabash.processor.getUnderlyingConfiguration
     val collection = List.empty[XdmNode]
@@ -255,7 +258,6 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       val selector = xexec.load()
 
       for ((varname, varvalue) <- bindings) {
-        // FIXME: parse Clark names
         selector.setVariable(varname, varvalue)
       }
 
@@ -266,27 +268,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         }
       }
 
-      var value: XdmValue = null
-      try {
-        value = selector.evaluate()
-      } catch {
-        case saue: SaxonApiUncheckedException =>
-          saue.getCause match {
-            case xpe: XPathException =>
-              val code = new QName(xpe.getErrorCodeNamespace, xpe.getErrorCodeLocalPart)
-              throw new StepException(code, xpe.getMessage, xpe, exprContext.location)
-            case _ => throw saue
-          }
-        case sae: SaxonApiException =>
-          sae.getCause match {
-            case xpe: XPathException =>
-              val code = new QName(xpe.getErrorCodeNamespace, xpe.getErrorCodeLocalPart)
-              throw new StepException(code, xpe.getMessage, xpe, exprContext.location)
-            case _ => throw sae
-          }
-        case other: Throwable =>
-          throw other
-      }
+      val value = selector.evaluate()
 
       if (as.isDefined) {
         val matches = as.get.matches(value.getUnderlyingValue, config.getTypeHierarchy)
@@ -295,16 +277,25 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         }
       }
 
-      val values = value.iterator()
-      while (values.hasNext) {
-        results += values.next()
-      }
+      value
     } catch {
-      case sae: SaxonApiException => throw sae
-      case other: Throwable => throw other
+      case saue: SaxonApiUncheckedException =>
+        saue.getCause match {
+          case xpe: XPathException =>
+            val code = new QName(xpe.getErrorCodeNamespace, xpe.getErrorCodeLocalPart)
+            throw new StepException(code, xpe.getMessage, xpe, exprContext.location)
+          case _ => throw saue
+        }
+      case sae: SaxonApiException =>
+        sae.getCause match {
+          case xpe: XPathException =>
+            val code = new QName(xpe.getErrorCodeNamespace, xpe.getErrorCodeLocalPart)
+            throw new StepException(code, xpe.getMessage, xpe, exprContext.location)
+          case _ => throw sae
+        }
+      case other: Throwable =>
+        throw other
     }
-
-    results.toList
   }
 
   // =========================================================================================================

@@ -192,14 +192,15 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
               val expr = config.expressionEvaluator.newInstance()
               val selectExpr = artifact.input(port).get.selectExpression
               val selected = expr.value(selectExpr, List(item), bindingsMap.toMap, None)
-              for (msg <- selected) {
-                val xitem = msg.asInstanceOf[XPathItemMessage]
-                xitem.item match {
+              val iter = selected.item.iterator()
+              while (iter.hasNext) {
+                val item = iter.next()
+                item match {
                   case node: XdmNode =>
                     dynamicContext.addDocument(node, message)
                   case _ => Unit
                 }
-                step.receive(port, xitem.item, xitem.metadata)
+                step.receive(port, item, selected.metadata)
               }
             } else {
               step.receive(port, item.item, xmlmeta)

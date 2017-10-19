@@ -2,7 +2,7 @@ package com.xmlcalabash.test
 
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.testers.XProcTestSpec
-import com.xmlcalabash.util.ArgBundle
+import com.xmlcalabash.util.{ArgBundle, ValueUtils}
 import net.sf.saxon.s9api.QName
 import org.scalatest.FlatSpec
 
@@ -387,7 +387,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "foo=bar pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.params(new QName("", "foo")).value.getStringValue == "bar")
+    assert(ValueUtils.singletonStringValue(bundle.params(new QName("", "foo")).value, None) == "bar")
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -395,7 +395,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "foo=2 pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.params(new QName("", "foo")).value.getStringValue == "2")
+    assert(ValueUtils.singletonStringValue(bundle.params(new QName("", "foo")).value, None) == "2")
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -403,7 +403,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "-bex=foo ex:foo=bar pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.params(new QName("foo", "foo")).value.getStringValue == "bar")
+    assert(ValueUtils.singletonStringValue(bundle.params(new QName("foo", "foo")).value, None) == "bar")
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -411,7 +411,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "--bind ex=foo ex:foo=bar pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.params(new QName("foo", "foo")).value.getStringValue == "bar")
+    assert(ValueUtils.singletonStringValue(bundle.params(new QName("foo", "foo")).value, None) == "bar")
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -433,7 +433,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "?foo=3+4 pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.params(new QName("", "foo")).value.getStringValue == "7")
+    assert(ValueUtils.singletonStringValue(bundle.params(new QName("", "foo")).value, None) == "7")
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -441,8 +441,8 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "?foo=3+4 ?bar=3+$foo pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.params(new QName("", "foo")).value.getStringValue == "7")
-    assert(bundle.params(new QName("", "bar")).value.getStringValue == "10")
+    assert(ValueUtils.singletonStringValue(bundle.params(new QName("", "foo")).value, None) == "7")
+    assert(ValueUtils.singletonStringValue(bundle.params(new QName("", "bar")).value, None) == "10")
     assert(bundle.pipeline == "pipe.xpl")
   }
 

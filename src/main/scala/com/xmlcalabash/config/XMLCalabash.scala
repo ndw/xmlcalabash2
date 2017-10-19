@@ -246,7 +246,7 @@ class XMLCalabash extends RuntimeConfiguration {
     new XPathParser(this)
   }
 
-  override def expressionEvaluator: ExpressionEvaluator = _expressionEvaluator
+  override def expressionEvaluator: SaxonExpressionEvaluator = _expressionEvaluator
 
   override def traceEnabled(trace: String): Boolean = traceEventManager.traceEnabled(trace)
 

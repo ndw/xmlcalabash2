@@ -153,7 +153,7 @@ object ValueParser {
   }
 
 
-  def parseParameters(value: XdmItem, nsBindings: Map[String,String], location: Option[Location]): Map[QName, XdmValue] = {
+  def parseParameters(value: XdmValue, nsBindings: Map[String,String], location: Option[Location]): Map[QName, XdmValue] = {
     val params = mutable.HashMap.empty[QName, XdmValue]
 
     value match {

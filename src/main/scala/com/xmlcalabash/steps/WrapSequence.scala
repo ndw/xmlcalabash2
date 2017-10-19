@@ -31,15 +31,15 @@ class WrapSequence extends DefaultXmlStep {
   override def run(staticContext: StaticContext) {
     var wrapper = new QName("", "INVALID")
 
-    val name = bindings(_wrapper).value.getStringValue
+    val name = bindings(_wrapper).getStringValue
     if (bindings.contains(_wrapper_prefix) || bindings.contains(_wrapper_namespace)) {
       if (name.contains(":")) {
         throw StepException.dynamicError(34)
       }
       if (bindings.contains(_wrapper_prefix)) {
-        wrapper = new QName(bindings(_wrapper_prefix).value.getStringValue, bindings(_wrapper_namespace).value.getStringValue, name)
+        wrapper = new QName(bindings(_wrapper_prefix).getStringValue, bindings(_wrapper_namespace).getStringValue, name)
       } else {
-        wrapper = new QName(bindings(_wrapper_namespace).value.getStringValue, name)
+        wrapper = new QName(bindings(_wrapper_namespace).getStringValue, name)
       }
     } else {
       wrapper = ValueParser.parseQName(name, bindings(_wrapper).context.nsBindings, location)

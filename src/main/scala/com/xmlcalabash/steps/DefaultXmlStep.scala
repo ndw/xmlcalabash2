@@ -5,9 +5,9 @@ import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.BindingSpecification
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
+import com.xmlcalabash.runtime.{StaticContext, XProcDataConsumer, ExpressionContext, XProcMetadata, XmlPortSpecification, XmlStep}
 import com.xmlcalabash.util.XProcVarValue
-import net.sf.saxon.s9api.{QName, XdmItem}
+import net.sf.saxon.s9api.{QName, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -30,7 +30,7 @@ class DefaultXmlStep extends XmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def bindingSpec: BindingSpecification = BindingSpecification.ANY
 
-  override def receiveBinding(variable: QName, value: XdmItem, context: ExpressionContext): Unit = {
+  override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
     bindings.put(variable, new XProcVarValue(value, context))
   }
 

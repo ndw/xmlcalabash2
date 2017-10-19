@@ -61,20 +61,17 @@ class Injectable(val config: XMLCalabash,
     val findContext = new XPathItemMessage(root, XProcMetadata.XML, ExpressionContext.NONE)
     val found = exprEval.value(stepXPath, List(findContext), Map.empty[String,Message], None)
 
-    if (found.isEmpty) {
+    if (found.item.size() == 0) {
       logger.warn(s"Injector XPath expression matches nothing: ${stepXPath.expr}")
     } else {
-      for (message <- found) {
-        message match {
-          case item: XPathItemMessage =>
-            item.item match {
-              case node: XdmNode =>
-                _nodes += node
-              case _ =>
-                logger.warn(s"Injector XPath expression matches non-node item: ${stepXPath.expr}")
-            }
+      val iter = found.item.iterator()
+      while (iter.hasNext) {
+        val item = iter.next()
+        item match {
+          case node: XdmNode =>
+            _nodes += node
           case _ =>
-            logger.error("Injector XPath returns invalid message: $message")
+            logger.warn(s"Injector XPath expression matches non-node item: ${stepXPath.expr}")
         }
       }
     }

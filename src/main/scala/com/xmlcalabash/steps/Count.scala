@@ -3,7 +3,7 @@ package com.xmlcalabash.steps
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.URIUtils
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmValue}
 
 class Count() extends DefaultXmlStep {
   private val _limit = new QName("", "limit")
@@ -30,7 +30,7 @@ class Count() extends DefaultXmlStep {
     }
   }
 
-  override def receiveBinding(variable: QName, value: XdmItem, context: ExpressionContext): Unit = {
+  override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
     if (variable == _limit) {
       limit = value.asInstanceOf[XdmAtomicValue].getLongValue
     }
