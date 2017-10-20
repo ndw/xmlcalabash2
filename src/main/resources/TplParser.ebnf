@@ -4,7 +4,7 @@
 //
 // It is designed to be fed to http://www.bottlecaps.de/rex/
 
-Pipeline       ::= "pipeline" PortMap? "{" ( VarBinding | Cut )+ "}" EOF
+Pipeline       ::= "pipeline" Opts? PortMap? "{" ( VarBinding | Cut )+ "}" EOF
 
 Cut            ::= Step ( ARR Step )*
 
@@ -16,9 +16,10 @@ ResultBindingList ::= BindingList
 
 PortMap        ::= "[" SourceBindingList? (";" ResultBindingList?)? "]"
 
-PortBinding    ::= AnyName ":" ( AnyName | StringLiteral )
+PortBinding    ::= AnyName (":" ( AnyName | StringLiteral | Markup | MultiBinding ))?
+MultiBinding   ::= "(" (AnyName | StringLiteral | Markup) ("," AnyName | StringLiteral | Markup)* ")"
 
-AtomicStep     ::= StepName Opts?
+AtomicStep     ::= StepType Opts?
 
 CompoundStep   ::= Group | ForEach | While | Until | Choose | Try
 
@@ -36,11 +37,12 @@ Catch          ::= "catch" Opts? PortMap? CompoundBody
 
 Opts           ::= "(" OptionBinding ("," OptionBinding)* ")"
 
-OptionBinding  ::= AnyName "=" StringLiteral
+OptionBinding  ::= AnyName ("=" StringLiteral)?
 
-VarBinding     ::= "$" AnyName ":=" StringLiteral
+VarBinding     ::= "$" AnyName VarContext? ":=" StringLiteral
 
 VarRef         ::= "$" AnyName
+VarContext     ::= "(" AnyName ")"
 
 Ignorable      ::= WhiteSpace | Comment /* ws: definition */
 
@@ -70,14 +72,23 @@ StringLiteral          ::= '"' ( EscapeQuot | [^"] )* '"'
 EscapeQuot             ::= '""'
 EscapeApos             ::= "''"
 
+Markup                 ::= "«" ( [^»] )* "»"
+                         | "„" ( [^“”] )* ("“"|"”")
+                         | "…" ( [^…] )* "…"
+                         | "「" ( [^」] )* "」"
+                         | "﹁" ( [^﹂] )* "﹂"
+                         | "『" ( [^』] )* "』"
+                         | "﹃" ( [^﹄] )* "﹄"
+                         | "《" ( [^》] )* "》"
+
 ARR                    ::= "->" | "→"
 EOF                    ::= $
 
 NameString             ::= NameStartChar NameChar*
 AnyName                ::= NameString
-StepName               ::= NameString - CompoundStepName
+StepType               ::= NameString - CompoundStepType
 
-CompoundStepName       ::= ("pipeline" | "group" | "for-each" | "while" | "until"
+CompoundStepType       ::= ("pipeline" | "group" | "for-each" | "while" | "until"
                             | "choose" | "when" | "otherwise" | "try" | "catch" )
 
 NameStartChar
@@ -92,9 +103,11 @@ NameStartChar
            | [#x200C-#x200D]
            | [#x2070-#x218F]
            | [#x2C00-#x2FEF]
-           | [#x3001-#xD7FF]
+           | [#x3001-#x3009]
+           | [#x3010-#xD7FF]
            | [#xF900-#xFDCF]
-           | [#xFDF0-#xFFFD]
+           | [#xFDF0-#xFE40]
+           | [#xFE45-#xFFFD]
            | [#x10000-#xEFFFF]
 
 NameChar ::= NameStartChar
