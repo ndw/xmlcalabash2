@@ -19,10 +19,12 @@ object TplDriver extends App {
   bufferedSource.close
 
   val config = XMLCalabash.newInstance()
-  val tbuilder = new TreeBuilder()
+  //val tbuilder = new TreeBuilder()
   val pbuilder = new PipelineBuilder(config)
   val parser = new TplParser(text, pbuilder)
   parser.parse
 
+  val pipeline = pbuilder.pipeline
+  println(pipeline)
 
 }

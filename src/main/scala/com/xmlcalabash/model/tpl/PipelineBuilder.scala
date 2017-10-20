@@ -10,8 +10,11 @@ import scala.collection.mutable
 
 class PipelineBuilder(config: XMLCalabash) extends EventHandler {
   private var input: String = null
+  private var _pipeline = Option.empty[Pipeline]
 
   val stack: mutable.ListBuffer[Artifact] = mutable.ListBuffer.empty[Artifact]
+
+  def pipeline: Option[Pipeline] = _pipeline
 
   def reset(string: String) {
     input = string
@@ -63,10 +66,9 @@ class PipelineBuilder(config: XMLCalabash) extends EventHandler {
           throw new ParseException(s"Stack empty at end of cut?", None)
         }
 
-
         val pipe = stack.last match {
           case art: Pipeline =>
-            art
+            _pipeline = Some(art)
           case _ => throw new ParseException(s"Unexpected stack at end of pipeline: ${stack.last}", None)
         }
         stack.remove(stack.size - 1)
