@@ -15,7 +15,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 
-class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: Artifact, context: StaticContext) extends Step with XProcDataConsumer {
+class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, context: StaticContext) extends Step with XProcDataConsumer {
   private val typeUtils = new TypeUtils(config)
   private var location = Option.empty[Location]
   private var _id: String = _
@@ -25,6 +25,8 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
   protected val bindingsMap = mutable.HashMap.empty[String, Message]
   protected var dynamicContext = new DynamicContext()
 
+  protected var defaultSelect = mutable.HashMap.empty[String, XProcExpression]
+
   def nodeId: String = _id
   def nodeId_=(id: String): Unit = {
     if (_id == null) {
@@ -32,6 +34,10 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
     } else {
       throw XProcException.xiRedefId(id, location)
     }
+  }
+
+  def setDefaultSelect(port: String, select: XProcExpression): Unit = {
+    defaultSelect.put(port, select)
   }
 
   // =============================================================================================
@@ -188,9 +194,9 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, artifact: A
       case item: ItemMessage =>
         item.metadata match {
           case xmlmeta: XProcMetadata =>
-            if (artifact.input(port).get.select.isDefined) {
+            if (defaultSelect.contains(port)) {
               val expr = config.expressionEvaluator.newInstance()
-              val selectExpr = artifact.input(port).get.selectExpression
+              val selectExpr = defaultSelect(port)
               val selected = expr.value(selectExpr, List(item), bindingsMap.toMap, None)
               val iter = selected.item.iterator()
               while (iter.hasNext) {

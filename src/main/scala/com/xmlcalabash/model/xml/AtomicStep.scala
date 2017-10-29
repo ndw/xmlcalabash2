@@ -115,7 +115,15 @@ class AtomicStep(override val config: XMLCalabash,
     val node = parent match {
       case start: ContainerStart =>
         val impl = config.stepImplementation(stepType, location.get)
-        proxy = new StepProxy(config, stepType, impl, this, context)
+        proxy = new StepProxy(config, stepType, impl, context)
+
+        for (port <- inputPorts) {
+          val in = input(port)
+          if (in.get.select.isDefined) {
+            proxy.setDefaultSelect(port, in.get.selectExpression)
+          }
+        }
+
         proxy.setLocation(location.get)
         start.addAtomic(proxy, name)
       case _ =>
