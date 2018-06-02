@@ -13,7 +13,7 @@ lazy val meerschaum = (project in file(".")).
 resolvers += DefaultMavenRepository
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 resolvers += "Restlet" at "http://maven.restlet.com"
-resolvers += "Private Maven Repository" at "http://nwalsh.com/scratch/repository"
+resolvers += "Private Maven Repository" at "https://nwalsh.com/scratch/repository"
 resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
 
 libraryDependencies ++= Seq(
