@@ -85,6 +85,10 @@ class FileLoader(private val context: ExpressionContext,
     val props = mutable.HashMap.empty[QName, XdmItem]
     props ++= docProps
 
+    if (props.contains(XProcConstants._content_type)) {
+      contentType = props.get(XProcConstants._content_type).get.getStringValue
+    }
+
     if (ValueParser.xmlContentType(contentType)) {
       val node = config.get.documentManager.parse(href)
       props.put(XProcConstants._base_uri, new XdmAtomicValue(node.getBaseURI))
