@@ -17,7 +17,12 @@ object TestDriver extends App {
   private val xmlOutput: Option[String] = None
   private val htmlOutput: Option[String] = Some("test-suite-report.html")
 
-  val singleTest: Option[String] = None // Some("ab-with-input-036.xml")
+  val testFile = System.getProperty("testFile")
+  val singleTest = if (testFile == null || "".equals(testFile)) {
+    None
+  } else {
+    Some(testFile)
+  }
 
   val runner = if (singleTest.isEmpty) {
     new TestRunner(xmlCalabash, "src/test/resources/test-suite/test-suite/tests")
