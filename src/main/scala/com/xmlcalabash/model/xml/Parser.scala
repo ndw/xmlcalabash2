@@ -4,7 +4,7 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Catch, Choose, Finally, ForEach, Group, Otherwise, Try, When, WithDocument, WithProperties}
-import com.xmlcalabash.model.xml.datasource.{Document, Inline, Pipe}
+import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcAvtExpression, XProcXPathExpression}
 import com.xmlcalabash.util.S9Api
@@ -91,6 +91,7 @@ class Parser(config: XMLCalabash) {
             case XProcConstants.p_option => Some(parseOption(parent, node))
             case XProcConstants.p_variable => Some(parseVariable(parent, node))
             case XProcConstants.p_inline => Some(parseInline(parent, node))
+            case XProcConstants.p_empty => Some(parseEmpty(parent, node))
             case XProcConstants.p_pipe => Some(parsePipe(parent, node))
             case XProcConstants.p_document => Some(parseDocument(parent, node))
             case XProcConstants.p_with_option => Some(parseWithOption(parent, node))
@@ -256,6 +257,13 @@ class Parser(config: XMLCalabash) {
     }
 
     val art = new Inline(config, parent, nodes.toList)
+    art.parse(node)
+    art
+  }
+
+  private def parseEmpty(parent: Option[Artifact], node: XdmNode): Artifact = {
+    // FIXME: check that p:empty is empty!
+    val art = new Empty(config, parent)
     art.parse(node)
     art
   }
