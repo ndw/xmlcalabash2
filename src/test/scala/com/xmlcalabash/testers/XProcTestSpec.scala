@@ -11,7 +11,6 @@ class XProcTestSpec extends FunSpec {
   private val fnregex = "^.*.xml".r
 
   protected val runtimeConfig: XMLCalabash = XMLCalabash.newInstance()
-  protected var error: Option[String] = Option.empty[String]
   protected val testFiles: ListBuffer[String] = ListBuffer.empty[String]
 
   protected def runtests(title: String, source: String): Unit = {
@@ -36,17 +35,17 @@ class XProcTestSpec extends FunSpec {
 
   protected def test(fn: String) {
     val runner = new TestRunner(runtimeConfig, fn)
-    try {
-      error = runner.run()
+    val results = try {
+      runner.run()
     } catch {
       case t: Throwable =>
         println(t)
         throw t
     }
-    if (error.isDefined) {
-      println(error.toString)
+
+    for (result <- results) {
+      assert(result.passed)
     }
-    assert(error.isEmpty)
   }
 
   protected def recurse(dir: File): Unit = {

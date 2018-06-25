@@ -90,8 +90,12 @@ object XProcException {
     dynamicError(code, List(details), location)
   }
   def dynamicError(code: Int, details: List[Any], location: Option[Location]): XProcException = {
-    val qname = new QName("err", XProcConstants.ns_err, "XD%04d".format(code))
+    val qname = dynamicErrorCode(code)
     new XProcException(qname, None, location, details)
+  }
+
+  def dynamicErrorCode(code: Int): QName = {
+    new QName("err", XProcConstants.ns_err, "XD%04d".format(code))
   }
 
   def staticError(code: Int): XProcException = {
@@ -110,8 +114,12 @@ object XProcException {
     staticError(code, List(details), location)
   }
   def staticError(code: Int, details: List[Any], location: Option[Location]): XProcException = {
-    val qname = new QName("err", XProcConstants.ns_err, "XS%04d".format(code))
+    val qname = staticErrorCode(code)
     new XProcException(qname, None, location, details)
+  }
+
+  def staticErrorCode(code: Int): QName = {
+    new QName("err", XProcConstants.ns_err, "XS%04d".format(code))
   }
 
   def stepError(code: Int): XProcException = {
@@ -154,6 +162,10 @@ class XProcException(val code: QName, val message: Option[String], val location:
 
   def this(code: QName, context: ExpressionContext) {
     this(code, None, context.location, List.empty[String])
+  }
+
+  override def getMessage(): String = {
+    message.getOrElse("")
   }
 
   override def toString: String = {

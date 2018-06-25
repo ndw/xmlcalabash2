@@ -2,8 +2,9 @@ package com.xmlcalabash.exceptions
 
 import com.jafpl.graph.Location
 import com.xmlcalabash.exceptions.ExceptionCode.ExceptionCode
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.NodeLocation
-import net.sf.saxon.s9api.XdmNode
+import net.sf.saxon.s9api.{QName, XdmNode}
 
 class ModelException(val code: ExceptionCode, val data: List[String], private val loc: Option[Location]) extends Throwable {
   private var _location = Option.empty[Location]
@@ -122,6 +123,14 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
 
       case ExceptionCode.INTERNAL => data.head
       case _ => "INTERNAL ERROR: No message for $code"
+    }
+  }
+
+  def exceptionQName: QName = {
+    code match {
+      case ExceptionCode.DUPCONTAINEROUTPUTPORT => XProcException.staticErrorCode(11)
+      case ExceptionCode.NAMEATTRREQ => XProcException.staticErrorCode(38)
+      case _ => new QName(XProcConstants.ns_cx, "ERROR")
     }
   }
 

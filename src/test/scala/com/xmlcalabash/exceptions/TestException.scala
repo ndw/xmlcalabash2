@@ -5,6 +5,10 @@ class TestException(val code: String, val message: String) extends Throwable {
     this("ERROR", msg)
   }
 
+  override def getMessage(): String = {
+    message
+  }
+
   override def toString: String = {
     "{" + code + ":" + message + "}"
   }

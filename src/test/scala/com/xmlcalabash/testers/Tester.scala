@@ -55,7 +55,8 @@ class Tester(runtimeConfig: XMLCalabash) {
     _bindings.put(optname.getClarkName, item)
   }
 
-  def run(): Option[String] = {
+  // Return None if the test passed, otherwise return the failure error code
+  def run(): TestResult = {
     if (_pipeline.isEmpty) {
       throw new TestException("No pipeline specified")
     }
@@ -112,28 +113,28 @@ class Tester(runtimeConfig: XMLCalabash) {
           }
         }
         if (results.isEmpty) {
-          None
+          new TestResult(true)
         } else {
           if (fail == "") {
-            Some("SCHEMATRON")
+            new TestResult(false, "SCHEMATRON")
           } else {
-            Some(fail)
+            new TestResult(false, fail)
           }
         }
       } else {
         logger.info(s"NONE: ${_pipeline.get.getBaseURI}")
-        None
+        new TestResult(true)
       }
     } catch {
       case model: ModelException =>
-        Some(model.code.toString)
+        new TestResult(model)
       case xproc: XProcException =>
-        Some(xproc.code.getClarkName)
+        new TestResult(xproc)
       case step: StepException =>
-        Some(step.code.getClarkName)
+        new TestResult(step)
       case t: Throwable =>
         t.printStackTrace(Console.err)
-        Some(Option(t.getMessage).getOrElse("ERROR"))
+        new TestResult(t)
     }
   }
 

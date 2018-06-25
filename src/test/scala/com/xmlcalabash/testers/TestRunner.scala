@@ -47,6 +47,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
   private val t_test_suite = new QName(tsns, "test-suite")
   private val t_div = new QName(tsns, "div")
   private val t_title = new QName(tsns, "title")
+  private val t_description = new QName(tsns, "description")
   private val t_test = new QName(tsns, "test")
   private val t_pipeline = new QName(tsns, "pipeline")
   private val t_schematron = new QName(tsns, "schematron")
@@ -77,24 +78,19 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     throw new TestException(s"Test runner cannot find tests at: $testloc")
   }
 
-  def run(): Option[String] = {
-    var firstError = Option.empty[String]
+  def run(): ListBuffer[TestResult] = {
+    val resultList = ListBuffer.empty[TestResult]
 
     for (fn <- testFiles) {
       val source = new SAXSource(new InputSource(fn))
       val node = builder.build(source)
-      val result = runTestDocument(node)
-      if (result.isDefined && firstError.isEmpty) {
-        firstError = result
-      }
+      resultList ++= runTestDocument(node)
     }
 
-    firstError
+    resultList
   }
 
   def junit(): XdmNode = {
-    var firstError = Option.empty[String]
-
     val junit = new SaxonTreeBuilder(runtimeConfig)
     junit.startDocument(URIUtils.cwdAsURI)
 
@@ -119,49 +115,54 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
           val source = new SAXSource(new InputSource(fn))
           val node = builder.build(source)
 
-          var result: Option[String] = None
           var error: Throwable = null
 
           val start_ms = Calendar.getInstance().getTimeInMillis
-          try {
-            result = runTestDocument(node)
+
+          val results = try {
+            runTestDocument(node)
           } catch {
             case t: Throwable =>
-              result = Some("ERROR")
               error = t
+              val tempResults = ListBuffer.empty[TestResult]
+              tempResults += new TestResult(false, "ERROR")
           }
+
           val end_ms = Calendar.getInstance().getTimeInMillis
           junit.addAttribute(_time, ((end_ms - start_ms) / 1000.0).toString)
           junit.startContent()
 
-          if (result.isDefined) {
-            failures += 1
-            logger.info(s"**** FAIL **** $failures **** $result")
-
-            if (firstError.isEmpty) {
-              firstError = result
-            }
-
-            if (Option(error).isDefined) {
-              junit.addStartElement(_error)
-              junit.addAttribute(_message, error.getMessage)
-              junit.addAttribute(_type, error.getClass.getName)
-              junit.startContent()
-
-              val stderr2 = new ByteArrayOutputStream()
-              val pstrace = new PrintStream(stderr2)
-              Console.withErr(pstrace) {
-                error.printStackTrace(Console.err)
+          for (result <- results) {
+            if (result.failed) {
+              failures += 1
+              logger.info(s"**** FAIL **** $failures **** ${result.message}")
+              if (result.baseURI.isDefined) {
+                logger.info(s"      ${result.baseURI.get}")
               }
 
-              junit.addText(stderr2.toString)
-              junit.addEndElement()
+              if (Option(error).isDefined) {
+                logger.info(error.getMessage)
+                junit.addStartElement(_error)
+                junit.addAttribute(_message, error.getMessage)
+                junit.addAttribute(_type, error.getClass.getName)
+                junit.startContent()
 
-            } else {
-              junit.addStartElement(_failure)
-              junit.startContent()
-              junit.addText(result.get)
-              junit.addEndElement()
+                val stderr2 = new ByteArrayOutputStream()
+                val pstrace = new PrintStream(stderr2)
+
+                Console.withErr(pstrace) {
+                  error.printStackTrace()
+                }
+
+                junit.addText(stderr2.toString)
+                junit.addEndElement()
+
+              } else {
+                junit.addStartElement(_failure)
+                junit.startContent()
+                junit.addText(result.toString())
+                junit.addEndElement()
+              }
             }
           }
         }
@@ -221,8 +222,8 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     wrapper.result
   }
 
-  private def runTestDocument(node: XdmNode): Option[String] = {
-    var firstError = Option.empty[String]
+  private def runTestDocument(node: XdmNode): ListBuffer[TestResult] = {
+    val resultList = ListBuffer.empty[TestResult]
 
     if (node.getNodeKind != XdmNodeKind.DOCUMENT) {
       throw new TestException("Unexpected node type in runTestSuite(): " + node.getNodeKind)
@@ -234,15 +235,9 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       child.getNodeKind match {
         case XdmNodeKind.ELEMENT =>
           if (child.getNodeName == t_test_suite) {
-            val result = runTestSuite(child)
-            if (result.isDefined && firstError.isEmpty) {
-              firstError = result
-            }
+            resultList ++= runTestSuite(child)
           } else if (child.getNodeName == t_test) {
-            val result = runTest(child)
-            if (result.isDefined && firstError.isEmpty) {
-              firstError = result
-            }
+            resultList += runTest(child)
           } else {
             throw new TestException(s"Unexpected element ${child.getNodeName} in ${child.getBaseURI}")
           }
@@ -254,11 +249,11 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       }
     }
 
-    firstError
+    resultList
   }
 
-  private def runTestSuite(node: XdmNode): Option[String] = {
-    var firstError = Option.empty[String]
+  private def runTestSuite(node: XdmNode): ListBuffer[TestResult] = {
+    val resultList = ListBuffer.empty[TestResult]
 
     if ((node.getNodeKind != XdmNodeKind.ELEMENT) || (node.getNodeName != t_test_suite)) {
       throw new TestException("Unexpected node in runTestSuite(): " + node.getNodeKind)
@@ -270,8 +265,10 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       val expr = new XProcXPathExpression(ExpressionContext.NONE, when)
       val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message], None)
       if (!run) {
-        logger.info("Skipping test-suite")
-        return None // FIXME: work out some way to communicate that a test was skipped
+        val result = new TestResult(true, "Skipped test suite")
+        result.skipped = true
+        resultList += result
+        return resultList
       }
     }
 
@@ -291,15 +288,9 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       child.getNodeKind match {
         case XdmNodeKind.ELEMENT =>
           if (child.getNodeName == t_div) {
-            val result = runTestDiv(child)
-            if (result.isDefined && firstError.isEmpty) {
-              firstError = result
-            }
+            resultList ++= runTestDiv(child)
           } else if (child.getNodeName == t_test) {
-            val result = runTest(child)
-            if (result.isDefined && firstError.isEmpty) {
-              firstError = result
-            }
+            resultList += runTest(child)
           } else if (child.getNodeName == t_title) {
             Unit
           } else {
@@ -313,11 +304,11 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       }
     }
 
-    firstError
+    resultList
   }
 
-  private def runTestDiv(node: XdmNode): Option[String] = {
-    var firstError = Option.empty[String]
+  private def runTestDiv(node: XdmNode): ListBuffer[TestResult] = {
+    val resultList = ListBuffer.empty[TestResult]
 
     if ((node.getNodeKind != XdmNodeKind.ELEMENT) || (node.getNodeName != t_div)) {
       throw new TestException("Unexpected node in runTestSuite(): " + node.getNodeKind)
@@ -330,7 +321,10 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message], None)
       if (!run) {
         logger.info("Skipping test-div")
-        return None // FIXME: work out some way to communicate that a test was skipped
+        val result = new TestResult(true, "Skipped test-div")
+        result.skipped = true
+        resultList += result
+        return resultList
       }
     }
 
@@ -350,10 +344,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       child.getNodeKind match {
         case XdmNodeKind.ELEMENT =>
           if (child.getNodeName == t_test) {
-            val result = runTest(child)
-            if (result.isDefined && firstError.isEmpty) {
-              firstError = result
-            }
+            resultList += runTest(child)
           } else if (child.getNodeName == t_title) {
             Unit
           } else {
@@ -367,10 +358,10 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       }
     }
 
-    firstError
+    resultList
   }
 
-  private def runTest(node: XdmNode): Option[String] = {
+  private def runTest(node: XdmNode): TestResult = {
     if ((node.getNodeKind != XdmNodeKind.ELEMENT) || (node.getNodeName != t_test)) {
       throw new TestException("Unexpected node in runTestSuite(): " + node.getNodeKind)
     }
@@ -381,8 +372,10 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       val expr = new XProcXPathExpression(ExpressionContext.NONE, when)
       val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message], None)
       if (!run) {
-        logger.info("Skipping test")
-        return None // FIXME: work out some way to communicate that a test was skipped
+        val result = new TestResult(true) // skipped counts as a pass...
+        result.baseURI = node.getBaseURI
+        result.skipped = true
+        return result
       }
     }
 
@@ -449,6 +442,8 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
               throw new TestException(s"Failed to load binding for $name")
             }
             bindings.put(qname, value.get)
+          } else if (child.getNodeName == t_title || child.getNodeName == t_description) {
+            Unit
           } else {
             throw new TestException(s"Unexpected element ${child.getNodeName} in ${child.getBaseURI}")
           }
@@ -486,25 +481,27 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     }
 
     val result = tester.run()
+    result.baseURI = node.getBaseURI
 
-    if (result.isEmpty) {
-      if (expected == "pass") {
-        result
-      } else {
-        Some("notfailed")
+    if (result.passed) {
+      if (expected != "pass") {
+        result.passed = false // it was supposed to fail...
       }
+      result
     } else {
       val code = node.getAttributeValue(_code)
       if (code == null) {
-        Some(s"null != ${result.get}")
+        // ???
       } else {
         val qcode = ValueParser.parseQName(code, S9Api.inScopeNamespaces(node), Some(new NodeLocation(node)))
-        if (qcode.getClarkName == result.get) {
-          None
-        } else {
-          Some(s"${qcode.getClarkName} != ${result.get}")
+        if (result.errQName.isDefined) {
+          if (qcode == result.errQName.get) {
+            result.passed = true
+          }
         }
       }
+
+      result
     }
   }
 
