@@ -27,9 +27,6 @@ class WithInput(override val config: XMLCalabash,
     _primary = None
 
     _port = attributes.get(XProcConstants._port)
-    if (_port.isEmpty) {
-      throw new ModelException(ExceptionCode.PORTATTRREQ, this.toString, location)
-    }
 
     _select = attributes.get(XProcConstants._select)
     if (_select.isDefined) {

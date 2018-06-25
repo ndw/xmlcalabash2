@@ -22,6 +22,13 @@ class IOPort(override val config: XMLCalabash,
   }
 
   def port: Option[String] = _port
+  def port_=(port: String): Unit = {
+    if (_port.isEmpty) {
+      _port = Some(port)
+    } else {
+      throw new RuntimeException("Attempt to reset port name")
+    }
+  }
 
   def primary: Option[Boolean] = _primary
   protected[xml] def primary_=(setPrimary: Boolean): Unit = {

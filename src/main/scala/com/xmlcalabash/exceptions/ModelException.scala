@@ -120,6 +120,8 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
       case ExceptionCode.MIXEDPIPE => s"You cannot specify connections with a pipe attribute and sub-elements"
       case ExceptionCode.NOSTEP => s"No step named ${data.head} is in scope"
       case ExceptionCode.NOPORT => s"Step named ${data.head} has no port named ${data(1)}"
+      case ExceptionCode.NOPRIMARYINPUTPORT => s"Step ${data.head} has no primary input port for defaulted input"
+      case ExceptionCode.DUPINPUTPORT => s"Duplicated input port name: ${data.head}"
 
       case ExceptionCode.INTERNAL => data.head
       case _ => "INTERNAL ERROR: No message for $code"
@@ -130,6 +132,8 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
     code match {
       case ExceptionCode.DUPCONTAINEROUTPUTPORT => XProcException.staticErrorCode(11)
       case ExceptionCode.NAMEATTRREQ => XProcException.staticErrorCode(38)
+      case ExceptionCode.NOPRIMARYINPUTPORT => XProcException.staticErrorCode(65)
+      case ExceptionCode.DUPINPUTPORT => XProcException.staticErrorCode(86)
       case _ => new QName(XProcConstants.ns_cx, "ERROR")
     }
   }

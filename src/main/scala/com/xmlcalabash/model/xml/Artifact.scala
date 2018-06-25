@@ -274,6 +274,18 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     list.toList
   }
 
+  def inputs(): List[Input] = {
+    val list = mutable.ListBuffer.empty[Input]
+    for (child <- children) {
+      child match {
+        case input: Input =>
+          list += input
+        case _ => Unit
+      }
+    }
+    list.toList
+  }
+
   def input(port: String): Option[Input] = {
     for (child <- children) {
       child match {

@@ -57,6 +57,36 @@ class AtomicStep(override val config: XMLCalabash,
   override def makeInputPortsExplicit(): Boolean = {
     val sig = config.signatures.step(stepType)
 
+    // Work out which input port is primary
+    var primaryInput = Option.empty[String]
+    for (port <- sig.inputPorts) {
+      val siginput = sig.input(port, location.get)
+      if (siginput.primary) {
+        primaryInput = Some(siginput.name)
+      }
+    }
+
+    // If the port has been omitted, it refers to the primary port
+    for (input <- inputs()) {
+      if (input.port.isEmpty) {
+        if (primaryInput.isEmpty) {
+          throw new ModelException(ExceptionCode.NOPRIMARYINPUTPORT, List(stepType.toString), location)
+        } else {
+          input.port = primaryInput.get
+        }
+      }
+    }
+
+    // It's an error to have two bindings for the same port name
+    val seenPorts = mutable.HashSet.empty[String]
+    for (input <- inputs()) {
+      val port = input.port.get
+      if (seenPorts.contains(port)) {
+        throw new ModelException(ExceptionCode.DUPINPUTPORT, List(port), location)
+      }
+      seenPorts += port
+    }
+
     for (port <- sig.inputPorts) {
       val siginput = sig.input(port, location.get)
       if (input(port).isEmpty) {
