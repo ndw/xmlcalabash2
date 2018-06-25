@@ -4,7 +4,7 @@ import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{ParserConfiguration, ValueParser, XProcConstants}
-import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, Output, Variable, WithInput, WithOption}
+import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, Input, OptionDecl, Output, Variable, WithInput, WithOption}
 import com.xmlcalabash.runtime.ExpressionContext
 import com.xmlcalabash.steps.internal.InlineLoader
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
@@ -73,6 +73,7 @@ class Inline(override val config: XMLCalabash,
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get match {
       case wi: WithInput => this.parent.get.parent.get.parent.get
+      case xi: Input => this.parent.get.parent.get
       case wo: WithOption => this.parent.get.parent.get.parent.get
       case _ => this.parent.get
     }

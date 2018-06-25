@@ -122,6 +122,7 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
       case ExceptionCode.NOPORT => s"Step named ${data.head} has no port named ${data(1)}"
       case ExceptionCode.NOPRIMARYINPUTPORT => s"Step ${data.head} has no primary input port for defaulted input"
       case ExceptionCode.DUPINPUTPORT => s"Duplicated input port name: ${data.head}"
+      case ExceptionCode.EMPTYNOTALONE => s"A p:empty cannot appear with other bindings"
 
       case ExceptionCode.INTERNAL => data.head
       case _ => "INTERNAL ERROR: No message for $code"
@@ -134,6 +135,7 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
       case ExceptionCode.NAMEATTRREQ => XProcException.staticErrorCode(38)
       case ExceptionCode.NOPRIMARYINPUTPORT => XProcException.staticErrorCode(65)
       case ExceptionCode.DUPINPUTPORT => XProcException.staticErrorCode(86)
+      case ExceptionCode.EMPTYNOTALONE => XProcException.staticErrorCode(89)
       case _ => new QName(XProcConstants.ns_cx, "ERROR")
     }
   }

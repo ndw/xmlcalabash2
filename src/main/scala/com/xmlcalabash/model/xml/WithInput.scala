@@ -5,7 +5,7 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Container
-import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Pipe}
+import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
@@ -49,13 +49,23 @@ class WithInput(override val config: XMLCalabash,
     }
 
     var hasDataSources = false
+    var emptyCount = 0
+    var nonEmptyCount = 0
     for (child <- children) {
       if (dataSourceClasses.contains(child.getClass)) {
         hasDataSources = true
         valid = valid && child.validate()
+        child match {
+          case empty: Empty => emptyCount += 1
+          case _ => nonEmptyCount += 1
+        }
       } else {
         throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
       }
+    }
+
+    if ((emptyCount > 0) && ((emptyCount != 1) || (nonEmptyCount != 0))) {
+      throw new ModelException(ExceptionCode.EMPTYNOTALONE, "", location)
     }
 
     if (href.isDefined) {
