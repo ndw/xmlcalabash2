@@ -7,7 +7,7 @@ import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
-import com.xmlcalabash.util.{SerializationOptions, TypeUtils}
+import com.xmlcalabash.util.{MediaType, SerializationOptions, TypeUtils}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap}
 
 import scala.collection.JavaConverters._
@@ -17,6 +17,7 @@ import scala.collection.mutable.ListBuffer
 class Output(override val config: XMLCalabash,
              override val parent: Option[Artifact]) extends IOPort(config, parent) {
   private var serOpts = new SerializationOptions(config)
+  protected var _contentTypes = ListBuffer.empty[MediaType]
 
   def serialization: SerializationOptions = serOpts
 
@@ -52,6 +53,13 @@ class Output(override val config: XMLCalabash,
       }
     } else {
       _sequence = None
+    }
+
+    val ctypes = attributes.get(XProcConstants._content_types)
+    if (ctypes.isDefined) {
+      _contentTypes ++= MediaType.parseList(ctypes.get)
+    } else {
+      _contentTypes += MediaType.ANY
     }
 
     val ser = attributes.get(XProcConstants._serialization)
@@ -90,7 +98,8 @@ class Output(override val config: XMLCalabash,
       serOpts = new SerializationOptions(config, opts.toMap)
     }
 
-    for (key <- List(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary, XProcConstants._serialization)) {
+    for (key <- List(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary,
+      XProcConstants._serialization, XProcConstants._content_types)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }

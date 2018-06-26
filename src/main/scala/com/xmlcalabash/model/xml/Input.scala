@@ -1,13 +1,13 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{Binding, Graph, Node}
+import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
-import net.sf.saxon.s9api.QName
+import com.xmlcalabash.util.MediaType
 
 import scala.collection.mutable.ListBuffer
 
@@ -15,6 +15,7 @@ class Input(override val config: XMLCalabash,
             override val parent: Option[Artifact]) extends IOPort(config, parent) {
   protected var _select: Option[String] = None
   protected var _expression = Option.empty[XProcExpression]
+  protected var _contentTypes = ListBuffer.empty[MediaType]
 
   protected[xml] def this(config: XMLCalabash, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
     this(config, Some(parent))
@@ -61,8 +62,15 @@ class Input(override val config: XMLCalabash,
     val href = attributes.get(XProcConstants._href)
     val pipe = attributes.get(XProcConstants._pipe)
 
+    val ctypes = attributes.get(XProcConstants._content_types)
+    if (ctypes.isDefined) {
+      _contentTypes ++= MediaType.parseList(ctypes.get)
+    } else {
+      _contentTypes += MediaType.ANY
+    }
+
     for (key <- List(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary,
-      XProcConstants._select, XProcConstants._pipe, XProcConstants._href)) {
+      XProcConstants._select, XProcConstants._pipe, XProcConstants._href, XProcConstants._content_types)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }

@@ -167,6 +167,7 @@ object XProcConstants {
   val _base_uri = new QName("", "base-uri")
   val _content_type = new QName("", "content-type")
   val _content_length = new QName("", "content-length")
+  val _content_types = new QName("", "content-types")
   val _collection = new QName("", "collection")
   val _message = new QName("", "message")
   val _condition = new QName("", "condition")
