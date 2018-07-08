@@ -29,11 +29,11 @@ class DeclareStep(override val config: XMLCalabash,
     val pipeline = graph.addPipeline(name)
 
     for (port <- inputPorts) {
-      graph.addInput(pipeline, "source")
+      graph.addInput(pipeline, port)
     }
 
     for (port <- outputPorts) {
-      graph.addOutput(pipeline, "result")
+      graph.addOutput(pipeline, port)
     }
 
     patchPipeline()
@@ -118,6 +118,12 @@ class DeclareStep(override val config: XMLCalabash,
         case _ => throw XProcException.xiBadPatch(patch, location)
       }
     }
+
+    for (input <- inputs()) {
+      if (input.defaultInputs().nonEmpty) {
+        patchDefaultInputs(input)
+      }
+    }
   }
 
   private def patchWithProperties(patch: Artifact, processProperties: Boolean): Unit = {
@@ -193,6 +199,59 @@ class DeclareStep(override val config: XMLCalabash,
       pipe = new Pipe(config, input, patch.name, output.get.port.get)
       input.addChild(pipe)
       merge.addChild(input)
+    }
+  }
+
+  // If an input on a declare-step has default bindings, then we construct an identity step
+  // and pipe both the external input binding and the default bindings through it. We arrange
+  // for the (necessary) join step to be a priority join so that if documents appear on
+  // the external binding, they will go through and none of the default bindings will.
+  // If no documents are bound externally, all the defaults will flow through.
+  //
+  // In principle an explicit identity step shouldn't be necessary here, but it simplifies
+  // the logic considerably and has very little performance impact.
+  //
+  private def patchDefaultInputs(input: Input): Unit = {
+    var firstChild: Option[Artifact] = None
+    for (child <- children) {
+      child match {
+        case input: Input => Unit
+        case output: Output => Unit
+        case variable: Variable => Unit
+        case art: Artifact =>
+          if (firstChild.isEmpty) {
+            firstChild = Some(art)
+          }
+      }
+    }
+
+    val identity = new AtomicStep(config, Some(this), XProcConstants.p_identity)
+    identity.location = input.location.get
+
+    val idinput = new WithInput(config, identity, "source")
+    identity.addChild(idinput)
+
+    insertChildBefore(firstChild.get, identity)
+    identity.makePortsExplicit()
+    patchPipe(name, List(input.port.get), identity.name, "result")
+
+    val pipe = new Pipe(config, idinput, name, input.port.get)
+    pipe.priority = true
+    idinput.addChild(pipe)
+
+    for (source <- input.defaultInputs()) {
+      source match {
+        case pipe: Pipe =>
+          idinput.addChild(new Pipe(config, idinput, pipe))
+        case doc: Document =>
+          idinput.addChild(new Document(config, idinput, doc))
+        case inline: Inline =>
+          idinput.addChild(new Inline(config, idinput, inline))
+        case empty: Empty =>
+          idinput.addChild(new Empty(config, idinput, empty))
+        case _ =>
+          throw XProcException.xiBadPatchChild(source, location)
+      }
     }
   }
 

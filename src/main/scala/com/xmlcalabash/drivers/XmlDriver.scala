@@ -42,7 +42,6 @@ object XmlDriver extends App {
     }
 
     val pipeline = parser.parsePipeline(node)
-
     val graph = pipeline.pipelineGraph()
 
     if (options.dumpXML.isDefined) {
@@ -70,14 +69,17 @@ object XmlDriver extends App {
     val runtime = new GraphRuntime(graph, xmlCalabash)
     runtime.traceEventManager = xmlCalabash.traceEventManager
 
-    for (port <- pipeline.inputPorts) {
+    for (input <- pipeline.inputs()) {
+      val port = input.port.get
       if (options.inputs.contains(port)) {
         for (fn <- options.inputs(port)) {
           val node = xmlCalabash.parse(fn, URIUtils.cwdAsURI)
           runtime.inputs(port).send(new XPathItemMessage(node, XProcMetadata.XML, ExpressionContext.NONE))
         }
       } else {
-        throw XProcException.xiNoBindingForPort(port)
+        if (!input.sequence && input.defaultInputs().isEmpty) {
+          throw XProcException.xiNoBindingForPort(port)
+        }
       }
     }
 

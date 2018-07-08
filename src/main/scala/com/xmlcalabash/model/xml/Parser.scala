@@ -24,32 +24,33 @@ class Parser(config: XMLCalabash) {
     }
 
     val art = parse(node)
-    if (exception.isEmpty) {
-      if (art.isEmpty) {
-        exception = Some(new ModelException(ExceptionCode.INTERNAL, "This can't happen", node))
-        config.errorListener.error(exception.get)
-        throw exception.get
-      }
+    if (exception.nonEmpty) {
+      throw exception.get
+    }
 
-      for (injectable <- injectables) {
-        if (!injectable.matched) {
-          if (injectable.nodes.nonEmpty) {
-            logger.warn(s"XPath expression did not match any steps: ${injectable.stepXPath.expr}")
-          }
+    if (art.isEmpty) {
+      exception = Some(new ModelException(ExceptionCode.INTERNAL, "This can't happen", node))
+      config.errorListener.error(exception.get)
+      throw exception.get
+    }
+
+    if (! art.get.isInstanceOf[DeclareStep]) {
+      exception = Some(new ModelException(ExceptionCode.BADPIPELINEROOT, node.toString, node))
+      config.errorListener.error(exception.get)
+      throw exception.get
+    }
+
+    val step = art.get.asInstanceOf[DeclareStep]
+
+    for (injectable <- injectables) {
+      if (!injectable.matched) {
+        if (injectable.nodes.nonEmpty) {
+          logger.warn(s"XPath expression did not match any steps: ${injectable.stepXPath.expr}")
         }
-      }
-
-      art.get match {
-        case step: DeclareStep =>
-          return step
-        case _ =>
-          val badroot = new ModelException(ExceptionCode.BADPIPELINEROOT, node.toString, node)
-          config.errorListener.error(badroot)
-          exception = Some(badroot)
       }
     }
 
-    throw exception.get
+    step
   }
 
   private def parse(node: XdmNode): Option[Artifact] = {
@@ -232,6 +233,7 @@ class Parser(config: XMLCalabash) {
     val art = new Input(config, parent)
     art.parse(node)
     parseChildren(art, node)
+    art.manageDefaultInputs()
     art
   }
 

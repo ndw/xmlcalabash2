@@ -86,7 +86,7 @@ class FileLoader(private val context: ExpressionContext,
     props ++= docProps
 
     if (props.contains(XProcConstants._content_type)) {
-      contentType = props.get(XProcConstants._content_type).get.getStringValue
+      contentType = props(XProcConstants._content_type).getStringValue
     }
 
     if (ValueParser.xmlContentType(contentType)) {

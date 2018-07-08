@@ -16,6 +16,7 @@ class Input(override val config: XMLCalabash,
   protected var _select: Option[String] = None
   protected var _expression = Option.empty[XProcExpression]
   protected var _contentTypes = ListBuffer.empty[MediaType]
+  protected var _defaultInputs = ListBuffer.empty[DataSource]
 
   protected[xml] def this(config: XMLCalabash, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
     this(config, Some(parent))
@@ -26,6 +27,25 @@ class Input(override val config: XMLCalabash,
 
   def select: Option[String] = _select
   def selectExpression: XProcExpression = _expression.get
+
+  protected[xml] def manageDefaultInputs(): Unit = {
+    val newChildren = ListBuffer.empty[Artifact]
+    for (child <- children) {
+      child match {
+        case ds: DataSource => _defaultInputs += ds
+        case _ => newChildren += child
+      }
+    }
+
+    children.clear()
+    for (child <- newChildren) {
+      children += child
+    }
+  }
+
+  def defaultInputs(): ListBuffer[DataSource] = {
+    _defaultInputs
+  }
 
   override def validate(): Boolean = {
     var valid = super.validate()
