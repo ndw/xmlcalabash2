@@ -32,28 +32,8 @@ class Output(override val config: XMLCalabash,
     var valid = super.validate()
 
     _port = attributes.get(XProcConstants._port)
-
-    var attr = attributes.get(XProcConstants._primary)
-    if (attr.isDefined) {
-      attr.get match {
-        case "true" => _primary = Some(true)
-        case "false" => _primary = Some(false)
-        case _ => throw XProcException.dynamicError(19, List(attr.get, "boolean"), location)
-      }
-    } else {
-      _primary = None
-    }
-
-    attr = attributes.get(XProcConstants._sequence)
-    if (attr.isDefined) {
-      attr.get match {
-        case "true" => _sequence = Some(true)
-        case "false" => _sequence = Some(false)
-        case _ => throw XProcException.dynamicError(19, List(attr.get, "boolean"), location)
-      }
-    } else {
-      _sequence = None
-    }
+    _primary = lexicalBoolean(attributes.get(XProcConstants._primary))
+    _sequence = lexicalBoolean(attributes.get(XProcConstants._sequence))
 
     val ctypes = attributes.get(XProcConstants._content_types)
     if (ctypes.isDefined) {

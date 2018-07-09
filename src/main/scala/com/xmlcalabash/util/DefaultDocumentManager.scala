@@ -1,11 +1,12 @@
 package com.xmlcalabash.util
 
 import java.net.URI
+
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
-
 import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.config.{DocumentManager, XMLCalabash}
+import com.xmlcalabash.exceptions.XProcException
 import net.sf.saxon.s9api.{SaxonApiException, XdmNode}
 import nu.validator.htmlparser.common.XmlViolationPolicy
 import nu.validator.htmlparser.dom.HtmlDocumentBuilder
@@ -76,11 +77,13 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabash) extends DocumentManager {
       case sae: SaxonApiException =>
         val msg = sae.getMessage
         if (msg.contains("validation")) {
-          throw new PipelineException("invalid", "validation failed", None)
+          throw XProcException.xdNotValidXML(msg)
         } else if (msg.contains("HTTP response code: 403 ")) {
-          throw new PipelineException("403", "xproc err 21", None)
+          throw XProcException.xdAuthFail(msg)
+        } else if (msg.contains("Error reported by XML parser")) {
+          throw XProcException.xdNotWFXML("not well-formed")
         } else {
-          throw new PipelineException("unk", "xproc err 11", None)
+          throw XProcException.xdNotWFXML(msg)
         }
     }
   }

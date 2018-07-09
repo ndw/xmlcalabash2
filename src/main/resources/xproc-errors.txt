@@ -15,6 +15,15 @@ There is no in-scope namespace for the QName “$1”.
 XD0019
 Invalid value specified: “$1”. Value must be $2.
 
+XD0011
+Failed to load XML: $1
+
+XD0021
+Access denied: $1
+
+XD0023
+XML document is not valid: $1
+
 XD0036
 Computed result “$1” does not match specified type “$2”.
 
@@ -51,6 +60,9 @@ It is an error to specify an encoding, “$1”, if the content type is an XML m
 
 XS0072
 For p:inline “$1” content, only text is allowed. Found: “$2”.
+
+XS0077
+Invalid value specified: “$1”. Value must be $2.
 
 XS0081
 If an href attribute is present, no other data bindings may be specified.
@@ -169,9 +181,3 @@ Internal error: configuration object differs from runtime configuration object.
 {http://xmlcalabash.com/ns/extensions}XI0053
 
 {http://xmlcalabash.com/ns/extensions}XI0055
-
-
-
-
-
-

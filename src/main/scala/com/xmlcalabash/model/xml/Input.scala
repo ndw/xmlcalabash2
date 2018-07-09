@@ -60,27 +60,8 @@ class Input(override val config: XMLCalabash,
       _expression = Some(new XProcXPathExpression(context, _select.get))
     }
 
-    var attr = attributes.get(XProcConstants._primary)
-    if (attr.isDefined) {
-      attr.get match {
-        case "true" => _primary = Some(true)
-        case "false" => _primary = Some(false)
-        case _ => throw XProcException.dynamicError(19, List(attr.get, "boolean"), location)
-      }
-    } else {
-      _primary = None
-    }
-
-    attr = attributes.get(XProcConstants._sequence)
-    if (attr.isDefined) {
-      attr.get match {
-        case "true" => _sequence = Some(true)
-        case "false" => _sequence = Some(false)
-        case _ => throw XProcException.dynamicError(19, List(attr.get, "boolean"), location)
-      }
-    } else {
-      _sequence = None
-    }
+    _primary = lexicalBoolean(attributes.get(XProcConstants._primary))
+    _sequence = lexicalBoolean(attributes.get(XProcConstants._sequence))
 
     val href = attributes.get(XProcConstants._href)
 

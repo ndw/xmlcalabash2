@@ -141,11 +141,19 @@ object ValueParser {
   }
 
   def parseBoolean(value: Option[String], location: Option[Location]): Option[Boolean] = {
+    parseBoolean(value, location, false)
+  }
+
+  def parseBoolean(value: Option[String], location: Option[Location], static: Boolean): Option[Boolean] = {
     if (value.isDefined) {
       if (value.get == "true" || value.get == "false") {
         Some(value.get == "true")
       } else {
-        throw XProcException.dynamicError(19, List(value.get, "boolean"), location)
+        if (static) {
+          throw XProcException.staticError(77, List(value.get, "boolean"), location)
+        } else {
+          throw XProcException.dynamicError(19, List(value.get, "boolean"), location)
+        }
       }
     } else {
       None

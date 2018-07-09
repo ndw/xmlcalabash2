@@ -194,7 +194,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   }
 
   def lexicalBoolean(value: Option[String]): Option[Boolean] = {
-    ValueParser.parseBoolean(value, location)
+    ValueParser.parseBoolean(value, location, true)
   }
 
   def lexicalQName(name: Option[String]): Option[QName] = {
