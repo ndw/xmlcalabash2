@@ -11,18 +11,18 @@ import net.sf.saxon.s9api.{QName, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
-class ContentTypeParams(types: List[MediaType]) extends ImplParams {
-  private var _contentTypes = ListBuffer.empty[MediaType]
-  for (mtype <- types) {
-    _contentTypes += mtype
-  }
-  def contentTypes(): List[MediaType] = {
-    _contentTypes.toList
-  }
+class ContentTypeParams(val port: String, val contentTypes: List[MediaType], val sequence: Boolean) extends ImplParams {
 }
 
+/**
+  * Checks the content type and cardinality of documents that flow through it.
+  *
+  * This is an internal step, it is not intended to be instantiated by pipeline authors.
+  * It's also slightly misnamed as it checks both the content type and cardinality of
+  * the documents that flow through it.
+  *
+  */
 class ContentTypeChecker() extends XmlStep {
   private var _location = Option.empty[Location]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
@@ -30,6 +30,9 @@ class ContentTypeChecker() extends XmlStep {
   protected var config: XMLCalabash = _
   protected val bindings = mutable.HashMap.empty[QName,XProcVarValue]
   protected var allowedTypes: List[MediaType] = _
+  protected var portName: String = _
+  protected var sequence = false
+  protected var documentCount = 0
 
   def location: Option[Location] = _location
 
@@ -52,6 +55,12 @@ class ContentTypeChecker() extends XmlStep {
   }
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
+    documentCount += 1
+
+    if (documentCount > 1 && !sequence) {
+      throw XProcException.xdSequenceNotAllowed(portName)
+    }
+
     if (allowedTypes.nonEmpty) {
       var allowed = false
       for (ctype <- allowedTypes) {
@@ -75,18 +84,23 @@ class ContentTypeChecker() extends XmlStep {
       throw XProcException.xiWrongImplParams()
     } else {
       params.get match {
-        case cp: ContentTypeParams => allowedTypes = cp.contentTypes()
+        case cp: ContentTypeParams =>
+          allowedTypes = cp.contentTypes
+          portName = cp.port
+          sequence = cp.sequence
         case _ => throw XProcException.xiWrongImplParams()
       }
     }
   }
 
   override def run(context: StaticContext): Unit = {
-    // nop
+    if (documentCount == 0 && !sequence) {
+      throw XProcException.xdSequenceNotAllowed(portName)
+    }
   }
 
   override def reset(): Unit = {
-    // nop
+    documentCount = 0
   }
 
   override def abort(): Unit = {

@@ -63,6 +63,7 @@ object XProcException {
   def xiNodesNotAllowed(node: XdmNode): XProcException = internalError(50, None, node)
   def xiWrongImplParams(): XProcException = internalError(51, None)
   def xdBadMediaType(ctype: MediaType, allowed: List[MediaType]): XProcException = dynamicError(38, List(ctype, allowed))
+  def xdSequenceNotAllowed(port: String) = dynamicError(6, port)
 
   private def internalError(code: Int, location: Option[Location]): XProcException = {
     internalError(code, location, List())

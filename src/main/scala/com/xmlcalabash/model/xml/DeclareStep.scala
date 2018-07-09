@@ -226,7 +226,7 @@ class DeclareStep(override val config: XMLCalabash,
       }
     }
 
-    val params = new ContentTypeParams(input.contentTypes())
+    val params = new ContentTypeParams(input.port.get, input.contentTypes(), input.sequence)
     val checker = new AtomicStep(config, Some(this), XProcConstants.cx_content_type_checker, Some(params))
     checker.location = input.location.get
 
