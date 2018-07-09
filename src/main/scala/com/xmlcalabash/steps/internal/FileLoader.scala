@@ -4,17 +4,13 @@ import java.io.File
 import java.net.{URI, URLConnection}
 import java.nio.file.Files
 
-import javax.xml.transform.dom.DOMSource
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
-import nu.validator.htmlparser.common.XmlViolationPolicy
-import nu.validator.htmlparser.dom.HtmlDocumentBuilder
-import org.xml.sax.InputSource
 
 import scala.collection.mutable
 
