@@ -4,7 +4,7 @@ import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.datasource.{Document, Empty, Pipe}
+import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
 
 import scala.collection.mutable.ListBuffer
@@ -50,15 +50,17 @@ class WithInput(override val config: XMLCalabash,
     var emptyCount = 0
     var nonEmptyCount = 0
     for (child <- children) {
-      if (dataSourceClasses.contains(child.getClass)) {
-        hasDataSources = true
-        valid = valid && child.validate()
-        child match {
-          case empty: Empty => emptyCount += 1
-          case _ => nonEmptyCount += 1
-        }
-      } else {
-        throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
+      child match {
+        case ds: DataSource =>
+          hasDataSources = true
+          valid = valid && child.validate()
+          child match {
+            case empty: Empty => emptyCount += 1
+            case _ => nonEmptyCount += 1
+          }
+        case d: Documentation => Unit
+        case p: PipeInfo => Unit
+        case _ => throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
       }
     }
 
