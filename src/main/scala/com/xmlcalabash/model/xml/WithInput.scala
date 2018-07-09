@@ -75,7 +75,8 @@ class WithInput(override val config: XMLCalabash,
       hasDataSources = true
 
       for (uri <- href.get.split("\\s+")) {
-        val doc = new Document(config, this, uri)
+        val ruri = baseURI.get.resolve(uri)
+        val doc = new Document(config, this, ruri.toASCIIString)
         addChild(doc)
       }
     }
