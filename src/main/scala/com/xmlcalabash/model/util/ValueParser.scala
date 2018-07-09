@@ -308,22 +308,6 @@ object ValueParser {
     variableRefs.toSet
   }
 
-  def textContentType(contentType: String): Boolean = {
-    contentType.startsWith("text/")
-  }
-
-  def xmlContentType(contentType: String): Boolean = {
-    contentType.startsWith("application/xml") || contentType.startsWith("text/xml") || contentType.contains("+xml")
-  }
-
-  def jsonContentType(contentType: String): Boolean = {
-    contentType.startsWith("application/json") || contentType.startsWith("text/json") || contentType.contains("+json")
-  }
-
-  def htmlContentType(contentType: String): Boolean = {
-    contentType.startsWith("text/html")
-  }
-
   object StateChange {
     val STRING = 0
     val EXPR = 1

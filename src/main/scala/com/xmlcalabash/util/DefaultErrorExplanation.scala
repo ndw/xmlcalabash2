@@ -49,9 +49,10 @@ class DefaultErrorExplanation(config: XMLCalabash) extends ErrorExplanation {
   }
 
   override def message(code: QName, details: List[Any]): String = {
-    val detail = "^(.*)\\$(\\d+)(.*)$".r
+    val detail = "^(.*?)\\$(\\d+)(.*)$".r
     var message = messages.getOrElse(code, "[No explanatory message for " + code + "]")
     var matched = true
+
     while (matched) {
       matched = false
       message match {
@@ -59,7 +60,7 @@ class DefaultErrorExplanation(config: XMLCalabash) extends ErrorExplanation {
           matched = true
           val detnum = detno.toInt - 1
           if (details.length > detnum) {
-            message = pre + details(detnum) + post
+            message = pre + stringify(details(detnum)) + post
           } else {
             message = pre + post
           }
@@ -67,6 +68,21 @@ class DefaultErrorExplanation(config: XMLCalabash) extends ErrorExplanation {
       }
     }
     message
+  }
+
+  private def stringify(any: Any): String = {
+    any match {
+      case list: List[Any] =>
+        var str = "["
+        var sep = ""
+        for (item <- list) {
+          str = str + sep + item.toString
+          sep = ", "
+        }
+        str = str + "]"
+        str
+      case _ => any.toString
+    }
   }
 
   override def explanation(code: QName): String = {

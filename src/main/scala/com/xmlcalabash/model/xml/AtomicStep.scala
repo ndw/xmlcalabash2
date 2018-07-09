@@ -4,7 +4,7 @@ import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.ValueParser
-import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, StepProxy, XProcAvtExpression, XProcExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, XProcAvtExpression, XProcExpression}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -12,8 +12,13 @@ import scala.collection.mutable.ListBuffer
 
 class AtomicStep(override val config: XMLCalabash,
                  override val parent: Option[Artifact],
-                 val stepType: QName) extends PipelineStep(config, parent) {
+                 val stepType: QName,
+                 params: Option[ImplParams]) extends PipelineStep(config, parent) {
   protected[xml] val options = mutable.HashMap.empty[QName, XProcExpression]
+
+  def this(config: XMLCalabash, parent: Option[Artifact], stepType: QName) = {
+    this(config, parent, stepType, None)
+  }
 
   override def validate(): Boolean = {
     val sig = config.signatures.step(stepType)
@@ -145,7 +150,7 @@ class AtomicStep(override val config: XMLCalabash,
     val node = parent match {
       case start: ContainerStart =>
         val impl = config.stepImplementation(stepType, location.get)
-        proxy = new StepProxy(config, stepType, impl, context)
+        proxy = new StepProxy(config, stepType, impl, params, context)
 
         for (port <- inputPorts) {
           val in = input(port)

@@ -4,10 +4,8 @@ import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.containers.Container
-import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Pipe}
-import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
-import net.sf.saxon.s9api.QName
+import com.xmlcalabash.model.xml.datasource.{Document, Empty, Pipe}
+import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
 
 import scala.collection.mutable.ListBuffer
 

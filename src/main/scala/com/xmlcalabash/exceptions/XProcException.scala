@@ -7,6 +7,7 @@ import com.jafpl.messages.{Message, Metadata}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.Artifact
 import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression}
+import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 object XProcException {
@@ -60,6 +61,8 @@ object XProcException {
   def xiNotXMLCalabash(): XProcException = internalError(48, None)
   def xiDifferentXMLCalabash(): XProcException = internalError(49, None)
   def xiNodesNotAllowed(node: XdmNode): XProcException = internalError(50, None, node)
+  def xiWrongImplParams(): XProcException = internalError(51, None)
+  def xdBadMediaType(ctype: MediaType, allowed: List[MediaType]): XProcException = dynamicError(38, List(ctype, allowed))
 
   private def internalError(code: Int, location: Option[Location]): XProcException = {
     internalError(code, location, List())

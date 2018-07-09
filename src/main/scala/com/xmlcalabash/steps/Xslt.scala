@@ -1,11 +1,11 @@
 package com.xmlcalabash.steps
 
 import java.net.URI
-import javax.xml.transform.{Result, SourceLocator}
 
+import javax.xml.transform.{Result, SourceLocator}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.{S9Api, ValueUtils, XProcCollectionFinder}
+import com.xmlcalabash.util.{MediaType, S9Api, ValueUtils, XProcCollectionFinder}
 import net.sf.saxon.lib.OutputURIResolver
 import net.sf.saxon.s9api.{MessageListener, QName, ValidationMode, XdmDestination, XdmItem, XdmNode, XdmValue}
 
@@ -121,7 +121,7 @@ class Xslt extends DefaultXmlStep {
 
     val xformed = Option(result.getXdmNode)
     if (xformed.isDefined) {
-      consumer.get.receive("result", xformed.get, new XProcMetadata("application/xml"))
+      consumer.get.receive("result", xformed.get, new XProcMetadata(MediaType.XML))
     }
   }
 
@@ -147,7 +147,7 @@ class Xslt extends DefaultXmlStep {
       val href = result.getSystemId
       val xdmResult = secondaryResults(href)
       val doc = xdmResult.getXdmNode
-      consumer.get.receive("secondary", doc, new XProcMetadata("application/xml"))
+      consumer.get.receive("secondary", doc, new XProcMetadata(MediaType.XML))
     }
   }
 

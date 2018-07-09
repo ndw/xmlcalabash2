@@ -81,6 +81,7 @@ class Inline(override val config: XMLCalabash,
 
     val context = new ExpressionContext(baseURI, inScopeNS, location)
     val produceInline = new InlineLoader(baseURI, nodes, context, _expandText, _excludeInlinePrefixes, _documentProperties, _encoding)
+
     produceInline.allowExpandText = allowExpandText
     produceInline.location = location
     val inlineProducer = cnode.addAtomic(produceInline)

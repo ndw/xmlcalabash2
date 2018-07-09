@@ -4,15 +4,15 @@ import java.io.{ByteArrayOutputStream, File, PrintStream}
 import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import javax.xml.transform.sax.SAXSource
 
+import javax.xml.transform.sax.SAXSource
 import com.jafpl.messages.{ItemMessage, Message}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.TestException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, XProcMetadata, XProcXPathExpression}
-import com.xmlcalabash.util.{S9Api, URIUtils}
+import com.xmlcalabash.util.{MediaType, S9Api, URIUtils}
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.InputSource
@@ -540,7 +540,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       val value = node.getAttributeValue(_select)
       val eval = runtimeConfig.expressionEvaluator
       val context = inlineDocument(node)
-      val message = new ItemMessage(context.get, new XProcMetadata("application/xml"))
+      val message = new ItemMessage(context.get, new XProcMetadata(MediaType.XML))
       val result = eval.singletonValue(new XProcXPathExpression(exprContext, value), List(message), Map.empty[String,Message], None)
       Some(result.item)
     } else {

@@ -9,6 +9,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
@@ -51,9 +52,9 @@ class InlineLoader(private val baseURI: Option[URI],
       }
     }
 
-    val contentType = docProps.getOrElse(XProcConstants._content_type, "application/xml").toString
+    val contentType = MediaType.parse(docProps.getOrElse(XProcConstants._content_type, "application/xml").toString)
     if (encoding.isDefined) {
-      if (ValueParser.xmlContentType(contentType)) {
+      if (contentType.xmlContentType) {
         throw XProcException.staticError(70, List(encoding.get, contentType), location)
       }
       if (encoding.get != "base64") {
@@ -68,7 +69,7 @@ class InlineLoader(private val baseURI: Option[URI],
       props.put(XProcConstants._base_uri, new XdmAtomicValue(baseURI.get))
     }
 
-    if (ValueParser.xmlContentType(contentType)) {
+    if (contentType.xmlContentType) {
       val builder = new SaxonTreeBuilder(config.get)
       builder.startDocument(baseURI)
       builder.startContent()
@@ -82,7 +83,7 @@ class InlineLoader(private val baseURI: Option[URI],
       builder.endDocument()
       val result = builder.result
       consumer.get.receive("result", new ItemMessage(result, new XProcMetadata(contentType, props.toMap)))
-    } else if (ValueParser.textContentType(contentType)) {
+    } else if (contentType.textContentType) {
       var str = ""
       for (node <- nodes) {
         if (node.getNodeKind == XdmNodeKind.TEXT) {

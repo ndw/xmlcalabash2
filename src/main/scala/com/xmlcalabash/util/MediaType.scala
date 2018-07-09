@@ -6,9 +6,10 @@ import scala.collection.mutable.ListBuffer
 // N.B. This class accepts "*" for type and subtype because it's used for matching
 
 object MediaType {
-  private val _any = new MediaType("*", "*")
-
-  def ANY = _any
+  def ANY = new MediaType("*", "*")
+  def OCTET_STREAM = new MediaType("application", "octet-stream")
+  def TEXT = new MediaType("text", "plain")
+  def XML = new MediaType("application", "xml")
 
   def parse(mtype: String): MediaType = {
     // type/subtype; name1=val1; name2=val2
@@ -69,14 +70,30 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
     this(mediaType, mediaSubtype, Some(suffix), None)
   }
 
-  def isXml: Boolean = {
+  def textContentType: Boolean = {
+    mediaType == "text"
+  }
+
+  def xmlContentType: Boolean = {
     ((mediaType == "application" && mediaSubtype == "xml")
       || (mediaType == "text" && mediaSubtype == "xml")
       || (suffix.isDefined && suffix.get == "xml"))
   }
 
+  def jsonContentType: Boolean = {
+    (mediaType == "application" || mediaType == "text") && (mediaSubtype == "json")
+  }
+
+  def htmlContentType: Boolean = {
+    (mediaType == "text" && mediaSubtype == "html")
+  }
+
+  def markupContentType: Boolean = {
+    xmlContentType || jsonContentType || htmlContentType
+  }
+
   def matches(mtype: MediaType): Boolean = {
-    if (isXml && mtype.isXml) {
+    if (xmlContentType && mtype.xmlContentType) {
       return true
     }
 
@@ -106,7 +123,7 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
     None
   }
 
-  override def toString(): String = {
+  override def toString: String = {
     var ctype = mediaType + "/" + mediaSubtype
     if (suffix.isDefined) {
       ctype = ctype + "+" + suffix

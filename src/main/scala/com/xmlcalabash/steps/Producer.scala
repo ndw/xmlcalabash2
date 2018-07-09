@@ -1,6 +1,7 @@
 package com.xmlcalabash.steps
 
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.util.MediaType
 
 import scala.collection.mutable
 
@@ -20,7 +21,7 @@ class Producer() extends DefaultXmlStep {
 
   override def run(staticContext: StaticContext): Unit = {
     for (item <- items) {
-      consumer.get.receive("result", item, new XProcMetadata("text/plain"))
+      consumer.get.receive("result", item, new XProcMetadata(MediaType.TEXT))
     }
   }
 }

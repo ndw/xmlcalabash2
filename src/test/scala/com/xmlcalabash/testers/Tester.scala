@@ -78,7 +78,7 @@ class Tester(runtimeConfig: XMLCalabash) {
             runtime.inputs(port).send(new ItemMessage(item, new XProcMetadata()))
           }
         } else {
-          logger.warn(s"No inputs specified for $port")
+          //logger.warn(s"No inputs specified for $port")
         }
       }
 

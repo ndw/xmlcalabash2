@@ -75,7 +75,7 @@ object TypeUtils {
     }
   }
 
-  def mediaType(value: Any): String = {
+  def mediaType(value: Any): MediaType = {
     value match {
       case v: XdmMap => vnd("map")
       case v: Boolean => vnd("boolean")
@@ -83,8 +83,8 @@ object TypeUtils {
     }
   }
 
-  private def vnd(t: String): String = {
-    s"application/vnd.xmlcalabash.$t+xml"
+  private def vnd(t: String): MediaType = {
+    MediaType.parse(s"application/vnd.xmlcalabash.$t+xml")
   }
 }
 

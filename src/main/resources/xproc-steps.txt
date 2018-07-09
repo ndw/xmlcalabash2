@@ -1,6 +1,7 @@
 prefix p = "{http://www.w3.org/ns/xproc}"
 prefix cx = "{http://xmlcalabash.com/ns/extensions}"
 prefix xc = "com.xmlcalabash.steps."
+prefix xci = "com.xmlcalabash.steps.internal."
 prefix xf = "com.xmlcalabash.functions."
 
 function p:system-property     has implementation xf:SystemProperty
@@ -74,6 +75,10 @@ step cx:property-merge has implementation xc:PropertyMerge
   primary input source
   input properties
   output result
+
+step cx:content-type-checker has implementation xci:ContentTypeChecker
+  input source*
+  output result*
 
 /*
 step p:add-attribute

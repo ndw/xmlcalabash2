@@ -3,13 +3,14 @@ package com.xmlcalabash.steps.internal
 import java.io.File
 import java.net.{URI, URLConnection}
 import java.nio.file.Files
-import javax.xml.transform.dom.DOMSource
 
+import javax.xml.transform.dom.DOMSource
 import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
 import nu.validator.htmlparser.common.XmlViolationPolicy
 import nu.validator.htmlparser.dom.HtmlDocumentBuilder
@@ -66,10 +67,12 @@ class FileLoader(private val context: ExpressionContext,
     // You can extend the set of known extensions by pointing the system property
     // `content.types.user.table` at your own mime types file. The default file to
     // start with is in $JAVA_HOME/lib/content-types.properties
-    var contentType = Option(URLConnection.guessContentTypeFromName(href.toASCIIString)).getOrElse("application/xml")
+    var contentTypeString = Option(URLConnection.guessContentTypeFromName(href.toASCIIString)).getOrElse("application/xml")
     if (_params.isDefined && _params.get.contains(XProcConstants._content_type)) {
-      contentType = _params.get(XProcConstants._content_type).toString
+      contentTypeString = _params.get(XProcConstants._content_type).toString
     }
+
+    var contentType = MediaType.parse(contentTypeString)
 
     if (docPropsExpr.isDefined) {
       val expr = new XProcXPathExpression(context, docPropsExpr.get)
@@ -86,19 +89,19 @@ class FileLoader(private val context: ExpressionContext,
     props ++= docProps
 
     if (props.contains(XProcConstants._content_type)) {
-      contentType = props(XProcConstants._content_type).getStringValue
+      contentType = MediaType.parse(props(XProcConstants._content_type).getStringValue)
     }
 
-    if (ValueParser.xmlContentType(contentType)) {
+    if (contentType.xmlContentType) {
       val node = config.get.documentManager.parse(href)
       props.put(XProcConstants._base_uri, new XdmAtomicValue(node.getBaseURI))
       logger.debug(s"Loaded $href as $contentType")
       consumer.get.receive("result", new ItemMessage(node, new XProcMetadata(contentType, props.toMap)))
-    } else if (ValueParser.jsonContentType(contentType)) {
+    } else if (contentType.jsonContentType) {
       val expr = new XProcXPathExpression(context, s"json-doc('$href', $$parameters)")
       val json = config.get.expressionEvaluator.singletonValue(expr, List(), bindings.toMap, None)
       consumer.get.receive("result", new ItemMessage(json.item, new XProcMetadata(contentType, props.toMap)))
-    } else if (ValueParser.htmlContentType(contentType)) {
+    } else if (contentType.htmlContentType) {
       val node = config.get.documentManager.parseHtml(href)
       logger.debug(s"Loaded $href as $contentType")
       consumer.get.receive("result", new ItemMessage(node, new XProcMetadata(contentType, props.toMap)))

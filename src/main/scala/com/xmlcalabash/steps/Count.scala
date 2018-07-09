@@ -2,7 +2,7 @@ package com.xmlcalabash.steps
 
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.URIUtils
+import com.xmlcalabash.util.{MediaType, URIUtils}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmValue}
 
 class Count() extends DefaultXmlStep {
@@ -60,6 +60,6 @@ class Count() extends DefaultXmlStep {
     builder.addText(value.toString)
     builder.addEndElement()
     builder.endDocument()
-    consumer.get.receive("result", builder.result, new XProcMetadata("application/xml"))
+    consumer.get.receive("result", builder.result, new XProcMetadata(MediaType.XML))
   }
 }

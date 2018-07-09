@@ -1,8 +1,8 @@
 package com.xmlcalabash.drivers
 
 import java.io.{File, PrintWriter}
-import javax.xml.transform.sax.SAXSource
 
+import javax.xml.transform.sax.SAXSource
 import com.jafpl.graph.Graph
 import com.jafpl.messages.{ItemMessage, Metadata}
 import com.jafpl.runtime.GraphRuntime
@@ -10,7 +10,7 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ModelException, ParseException}
 import com.xmlcalabash.model.xml.Parser
 import com.xmlcalabash.runtime.{BufferingConsumer, PrintingConsumer, XProcMetadata}
-import com.xmlcalabash.util.SerializationOptions
+import com.xmlcalabash.util.{MediaType, SerializationOptions}
 import org.xml.sax.InputSource
 
 object XmlTesting extends App {
@@ -42,7 +42,7 @@ object XmlTesting extends App {
     val runtime = new GraphRuntime(graph, xmlCalabash)
 
     for (port <- pipeline.inputPorts) {
-      runtime.inputs(port).send(new ItemMessage(data, new XProcMetadata("text/plain")))
+      runtime.inputs(port).send(new ItemMessage(data, new XProcMetadata(MediaType.TEXT)))
     }
 
     val bc = new BufferingConsumer()

@@ -1,9 +1,9 @@
 package com.xmlcalabash.config
 
 import java.net.URI
+
 import javax.xml.transform.URIResolver
 import javax.xml.transform.sax.SAXSource
-
 import com.jafpl.graph.Location
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.runtime.{ExpressionEvaluator, RuntimeConfiguration}
@@ -14,7 +14,7 @@ import com.xmlcalabash.functions.{Cwd, DocumentProperties, DocumentPropertiesDoc
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.Artifact
 import com.xmlcalabash.parsers.XPathParser
-import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XmlStep}
+import com.xmlcalabash.runtime.{ImplParams, SaxonExpressionEvaluator, XmlStep}
 import com.xmlcalabash.sbt.BuildInfo
 import com.xmlcalabash.util.{URIUtils, XProcURIResolver}
 import net.sf.saxon.lib.{ExtensionFunctionDefinition, ModuleURIResolver, UnparsedTextURIResolver}
@@ -223,6 +223,10 @@ class XMLCalabash extends RuntimeConfiguration {
   // ==============================================================================================
 
   def stepImplementation(stepType: QName, location: Location): XmlStep = {
+    stepImplementation(stepType, location, None)
+  }
+
+  def stepImplementation(stepType: QName, location: Location, implParams: Option[ImplParams]): XmlStep = {
     if (!_signatures.stepTypes.contains(stepType)) {
       throw new ModelException(ExceptionCode.NOTYPE, stepType.toString, location)
     }

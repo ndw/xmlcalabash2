@@ -1,11 +1,10 @@
 package com.xmlcalabash.steps
 
 import javax.script.ScriptEngineManager
-
 import com.jafpl.runtime.RuntimeConfiguration
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.TypeUtils
 import net.sf.saxon.s9api.{QName, XdmItem, XdmNode, XdmValue}
 
@@ -21,8 +20,8 @@ class JavaScript extends DefaultXmlStep {
 
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULT
 
-  override def initialize(config: RuntimeConfiguration): Unit = {
-    super.initialize(config)
+  override def initialize(config: RuntimeConfiguration, params: Option[ImplParams]): Unit = {
+    super.initialize(config, params)
     typeUtils = new TypeUtils(config.asInstanceOf[XMLCalabash])
   }
 

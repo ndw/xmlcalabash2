@@ -3,6 +3,7 @@ package com.xmlcalabash.steps
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode}
 
 class PropertyExtract extends DefaultXmlStep {
@@ -48,6 +49,6 @@ class PropertyExtract extends DefaultXmlStep {
     builder.addEndElement()
     builder.endDocument()
 
-    consumer.get.receive("properties", builder.result, new XProcMetadata("application/xml"))
+    consumer.get.receive("properties", builder.result, new XProcMetadata(MediaType.XML))
   }
 }

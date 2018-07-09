@@ -7,13 +7,13 @@ import java.util.Base64
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.{S9Api, ValueUtils}
+import com.xmlcalabash.util.{MediaType, S9Api, ValueUtils}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmNode, XdmValue}
 
 class CastContentType() extends DefaultXmlStep {
   private var item = Option.empty[Any]
   private var metadata = Option.empty[XProcMetadata]
-  private var castTo = "application/octet-stream"
+  private var castTo = MediaType.OCTET_STREAM
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULT
@@ -25,17 +25,17 @@ class CastContentType() extends DefaultXmlStep {
 
   override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
     if (variable == XProcConstants._content_type) {
-      castTo = ValueUtils.singletonStringValue(value, context.location)
+      castTo = MediaType.parse(ValueUtils.singletonStringValue(value, context.location))
     }
   }
 
   override def run(context: StaticContext): Unit = {
     val contentType = metadata.get.contentType
 
-    if (ValueParser.xmlContentType(castTo)) {
-      if (ValueParser.xmlContentType(contentType)) {
+    if (castTo.xmlContentType) {
+      if (contentType.xmlContentType) {
         consumer.get.receive("result", item.get, new XProcMetadata(castTo, metadata.get.properties))
-      } else if (ValueParser.textContentType(castTo)) {
+      } else if (castTo.textContentType) {
         val builder = new SaxonTreeBuilder(config)
 
         val baseURI = if (metadata.get.properties.contains(XProcConstants._base_uri)) {
@@ -46,7 +46,7 @@ class CastContentType() extends DefaultXmlStep {
 
         builder.startDocument(baseURI)
         builder.addStartElement(XProcConstants.c_data)
-        builder.addAttribute(XProcConstants._content_type, contentType)
+        builder.addAttribute(XProcConstants._content_type, contentType.toString)
         builder.startContent()
         builder.addText(item.get.asInstanceOf[XdmNode].getStringValue)
         builder.addEndElement()
@@ -63,7 +63,7 @@ class CastContentType() extends DefaultXmlStep {
 
         builder.startDocument(baseURI)
         builder.addStartElement(XProcConstants.c_data)
-        builder.addAttribute(XProcConstants._content_type, contentType)
+        builder.addAttribute(XProcConstants._content_type, contentType.toString)
         builder.addAttribute(XProcConstants._encoding, "base64")
         builder.startContent()
 
@@ -77,8 +77,8 @@ class CastContentType() extends DefaultXmlStep {
         val doc = builder.result
         consumer.get.receive("result", doc, new XProcMetadata(castTo, metadata.get.properties))
       }
-    } else if (ValueParser.textContentType(castTo)) {
-      if (ValueParser.xmlContentType(contentType)) {
+    } else if (castTo.textContentType) {
+      if (contentType.xmlContentType) {
         val baos = new ByteArrayOutputStream()
         val serializer = config.processor.newSerializer(baos)
         S9Api.serialize(config, item.get.asInstanceOf[XdmNode], serializer)
@@ -96,7 +96,7 @@ class CastContentType() extends DefaultXmlStep {
         builder.addEndElement()
         builder.endDocument()
         consumer.get.receive("result", builder.result, new XProcMetadata(castTo, metadata.get.properties))
-      } else if (ValueParser.textContentType(castTo)) {
+      } else if (castTo.textContentType) {
         consumer.get.receive("result", item.get, new XProcMetadata(castTo, metadata.get.properties))
       } else {
         // FIXME: Must handle the c:data case...

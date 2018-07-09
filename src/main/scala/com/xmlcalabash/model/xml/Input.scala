@@ -4,7 +4,6 @@ import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
 import com.xmlcalabash.util.MediaType
@@ -43,8 +42,12 @@ class Input(override val config: XMLCalabash,
     }
   }
 
-  def defaultInputs(): ListBuffer[DataSource] = {
-    _defaultInputs
+  def contentTypes(): List[MediaType] = {
+    _contentTypes.toList
+  }
+
+  def defaultInputs(): List[DataSource] = {
+    _defaultInputs.toList
   }
 
   override def validate(): Boolean = {
@@ -80,7 +83,6 @@ class Input(override val config: XMLCalabash,
     }
 
     val href = attributes.get(XProcConstants._href)
-    val pipe = attributes.get(XProcConstants._pipe)
 
     val ctypes = attributes.get(XProcConstants._content_types)
     if (ctypes.isDefined) {
@@ -101,37 +103,16 @@ class Input(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
+    // N.B. This is an *input*, not a *with-input*, so the data sources are now
+    // actually in the _defaultInputs list, not the children!
+
     var hasDataSources = false
-    if (parent.isDefined && parent.get.isInstanceOf[Container]) {
-      for (child <- children) {
-        child match {
-          case ds: DataSource =>
-            hasDataSources = true
-            if (child.isInstanceOf[Pipe]) {
-              throw new ModelException(ExceptionCode.BADPIPE, this.toString, location)
-            }
-            valid = valid && child.validate()
-          case doc: Documentation => Unit
-          case info: PipeInfo => Unit
-          case _ =>
-            throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
-        }
+    for (ds <- defaultInputs()) {
+      hasDataSources = true
+      if (ds.isInstanceOf[Pipe]) {
+        throw new ModelException(ExceptionCode.BADPIPE, this.toString, location)
       }
-    } else {
-      if (_sequence.isDefined) {
-        throw new ModelException(ExceptionCode.BADSEQ, "sequence", location)
-      }
-      if (_primary.isDefined) {
-        throw new ModelException(ExceptionCode.BADPRIMARY, "primary", location)
-      }
-      for (child <- children) {
-        if (dataSourceClasses.contains(child.getClass)) {
-          hasDataSources = true
-          valid = valid && child.validate()
-        } else {
-          throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
-        }
-      }
+      valid = valid && ds.validate()
     }
 
     if (href.isDefined) {
@@ -142,29 +123,7 @@ class Input(override val config: XMLCalabash,
 
       for (uri <- href.get.split("\\s+")) {
         val doc = new Document(config, this, uri)
-        addChild(doc)
-      }
-    }
-
-    if (pipe.isDefined) {
-      if (hasDataSources) {
-        throw XProcException.staticError(82, pipe.get, location)
-      }
-      for (spec <- pipe.get.split("\\s+")) {
-        val pos = spec.indexOf("@")
-        if (pos > 0) {
-          val step = spec.substring(0, pos)
-          val port = spec.substring(pos + 1)
-          val pipe = if (step == "") {
-            new Pipe(config, this, None, Some(port))
-          } else {
-            new Pipe(config, this, Some(step), Some(port))
-          }
-          addChild(pipe)
-        } else {
-          val pipe = new Pipe(config, this, spec)
-          addChild(pipe)
-        }
+        _defaultInputs += doc
       }
     }
 

@@ -15,7 +15,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 
-class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, context: StaticContext) extends Step with XProcDataConsumer {
+class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, params: Option[ImplParams], context: StaticContext) extends Step with XProcDataConsumer {
   private val typeUtils = new TypeUtils(config)
   private var location = Option.empty[Location]
   private var _id: String = _
@@ -145,7 +145,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, context: St
     if (this.config != config) {
       throw XProcException.xiDifferentXMLCalabash()
     }
-    step.initialize(config)
+    step.initialize(config, params)
   }
   override def run(): Unit = {
     val stepsig = config.signatures.step(stepType)

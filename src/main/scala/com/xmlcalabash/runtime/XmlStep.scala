@@ -13,7 +13,7 @@ trait XmlStep {
   def setLocation(location: Location)
   def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext)
   def receive(port: String, item: Any, metadata: XProcMetadata)
-  def initialize(config: RuntimeConfiguration)
+  def initialize(config: RuntimeConfiguration, params: Option[ImplParams])
   def run(context: StaticContext)
   def reset()
   def abort()

@@ -6,8 +6,8 @@ import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.steps.DataConsumer
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util.{MDUtils, UniqueId, XProcConstants}
-import com.xmlcalabash.util.{S9Api, SerializationOptions}
+import com.xmlcalabash.model.util.{UniqueId, XProcConstants}
+import com.xmlcalabash.util.{MediaType, S9Api, SerializationOptions}
 import net.sf.saxon.s9api.{Serializer, XdmValue}
 
 class PrintingConsumer private(config: XMLCalabash, serialization: SerializationOptions, outputs: Option[List[String]]) extends DataConsumer {
@@ -27,12 +27,17 @@ class PrintingConsumer private(config: XMLCalabash, serialization: Serialization
   override def receive(port: String, message: Message): Unit = {
     message match {
       case item: ItemMessage =>
+        val ctype = item.metadata match {
+          case meta: XProcMetadata => meta.contentType
+          case _ => MediaType.OCTET_STREAM
+        }
+
         if (outputs.isEmpty || (index >= outputs.get.length)) {
-          if (MDUtils.markupContentType(item.metadata)) {
+          if (ctype.markupContentType) {
             val stream = new ByteArrayOutputStream()
             val serializer = config.processor.newSerializer(stream)
 
-            if (MDUtils.jsonContentType(item.metadata)) {
+            if (ctype.jsonContentType) {
               serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
             } else {
               serialization.setOutputProperties(serializer)
@@ -42,10 +47,10 @@ class PrintingConsumer private(config: XMLCalabash, serialization: Serialization
               case value: XdmValue => S9Api.serialize(config, value, serializer)
             }
             println(stream.toString("UTF-8"))
-          } else if (MDUtils.textContentType(item.metadata)) {
+          } else if (ctype.textContentType) {
             println(item.item)
           } else {
-            println(s"Eliding ${MDUtils.contentType(item.metadata)} content")
+            println(s"Eliding $ctype content")
           }
         } else {
           val file = new File(outputs.get(index))
@@ -53,9 +58,9 @@ class PrintingConsumer private(config: XMLCalabash, serialization: Serialization
 
           val fos = new FileOutputStream(file)
           val pos = new PrintStream(fos)
-          if (MDUtils.textContentType(item.metadata)) {
+          if (ctype.textContentType) {
             pos.print(item.item)
-          } else if (MDUtils.xmlContentType(item.metadata)) {
+          } else if (ctype.xmlContentType) {
             pos.print(item.item)
           } else {
             val bytes: Array[Byte] = item.item.asInstanceOf[Array[Byte]]

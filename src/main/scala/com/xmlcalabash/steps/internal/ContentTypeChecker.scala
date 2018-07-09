@@ -1,4 +1,4 @@
-package com.xmlcalabash.steps
+package com.xmlcalabash.steps.internal
 
 import com.jafpl.graph.Location
 import com.jafpl.runtime.RuntimeConfiguration
@@ -6,18 +6,30 @@ import com.jafpl.steps.BindingSpecification
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
-import com.xmlcalabash.util.XProcVarValue
+import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import net.sf.saxon.s9api.{QName, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
-class DefaultXmlStep extends XmlStep {
+class ContentTypeParams(types: List[MediaType]) extends ImplParams {
+  private var _contentTypes = ListBuffer.empty[MediaType]
+  for (mtype <- types) {
+    _contentTypes += mtype
+  }
+  def contentTypes(): List[MediaType] = {
+    _contentTypes.toList
+  }
+}
+
+class ContentTypeChecker() extends XmlStep {
   private var _location = Option.empty[Location]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[XProcDataConsumer] = None
   protected var config: XMLCalabash = _
   protected val bindings = mutable.HashMap.empty[QName,XProcVarValue]
+  protected var allowedTypes: List[MediaType] = _
 
   def location: Option[Location] = _location
 
@@ -26,8 +38,9 @@ class DefaultXmlStep extends XmlStep {
   override def setLocation(location: Location): Unit = {
     _location = Some(location)
   }
-  override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
-  override def outputSpec: XmlPortSpecification = XmlPortSpecification.NONE
+
+  override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCESEQ
+  override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULTSEQ
   override def bindingSpec: BindingSpecification = BindingSpecification.ANY
 
   override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
@@ -39,14 +52,32 @@ class DefaultXmlStep extends XmlStep {
   }
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
-    // nop
+    if (allowedTypes.nonEmpty) {
+      var allowed = false
+      for (ctype <- allowedTypes) {
+        allowed = allowed || metadata.contentType.matches(ctype)
+      }
+
+      if (!allowed) {
+        throw XProcException.xdBadMediaType(metadata.contentType, allowedTypes)
+      }
+    }
+    consumer.get.receive("result", item, metadata)
   }
 
   override def initialize(config: RuntimeConfiguration, params: Option[ImplParams]): Unit = {
     config match {
-      case xmlCalabash: XMLCalabash =>
-        this.config = xmlCalabash
+      case xmlCalabash: XMLCalabash => this.config = xmlCalabash
       case _ => throw XProcException.xiNotXMLCalabash()
+    }
+
+    if (params.isEmpty) {
+      throw XProcException.xiWrongImplParams()
+    } else {
+      params.get match {
+        case cp: ContentTypeParams => allowedTypes = cp.contentTypes()
+        case _ => throw XProcException.xiWrongImplParams()
+      }
     }
   }
 
@@ -73,7 +104,6 @@ class DefaultXmlStep extends XmlStep {
       defStr match {
         case objstr(name) => name
         case _ => defStr
-
       }
     } else {
       defStr

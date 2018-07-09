@@ -4,6 +4,7 @@ import java.net.URI
 
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmItem, XdmValue}
 
 class Parameters() extends DefaultXmlStep {
@@ -48,7 +49,7 @@ class Parameters() extends DefaultXmlStep {
     builder.addEndElement()
     builder.endDocument()
 
-    consumer.get.receive("result", builder.result, new XProcMetadata("application/xml"))
+    consumer.get.receive("result", builder.result, new XProcMetadata(MediaType.XML))
   }
 
 

@@ -9,6 +9,7 @@ import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.{Container, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.XProcExpression
+import com.xmlcalabash.steps.internal.ContentTypeParams
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -120,7 +121,7 @@ class DeclareStep(override val config: XMLCalabash,
     }
 
     for (input <- inputs()) {
-      if (input.defaultInputs().nonEmpty) {
+      if (input.defaultInputs().nonEmpty || input.contentTypes().nonEmpty) {
         patchDefaultInputs(input)
       }
     }
@@ -225,15 +226,16 @@ class DeclareStep(override val config: XMLCalabash,
       }
     }
 
-    val identity = new AtomicStep(config, Some(this), XProcConstants.p_identity)
-    identity.location = input.location.get
+    val params = new ContentTypeParams(input.contentTypes())
+    val checker = new AtomicStep(config, Some(this), XProcConstants.cx_content_type_checker, Some(params))
+    checker.location = input.location.get
 
-    val idinput = new WithInput(config, identity, "source")
-    identity.addChild(idinput)
+    val idinput = new WithInput(config, checker, "source")
+    checker.addChild(idinput)
 
-    insertChildBefore(firstChild.get, identity)
-    identity.makePortsExplicit()
-    patchPipe(name, List(input.port.get), identity.name, "result")
+    insertChildBefore(firstChild.get, checker)
+    checker.makePortsExplicit()
+    patchPipe(name, List(input.port.get), checker.name, "result")
 
     val pipe = new Pipe(config, idinput, name, input.port.get)
     pipe.priority = true
