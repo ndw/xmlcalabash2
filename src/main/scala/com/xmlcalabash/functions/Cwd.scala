@@ -1,6 +1,5 @@
 package com.xmlcalabash.functions
 
-import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants

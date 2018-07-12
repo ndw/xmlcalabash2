@@ -95,12 +95,12 @@ class Output(override val config: XMLCalabash,
         if (dataSourceClasses.contains(child.getClass)) {
           valid = valid && child.validate()
         } else {
-          throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
+          throw XProcException.xsElementNotAllowed(location, child.nodeName)
         }
       }
     } else {
       if (children.nonEmpty) {
-        throw new ModelException(ExceptionCode.BADCHILD, children.head.toString, location)
+        throw XProcException.xsElementNotAllowed(location, children.head.nodeName)
       }
     }
 

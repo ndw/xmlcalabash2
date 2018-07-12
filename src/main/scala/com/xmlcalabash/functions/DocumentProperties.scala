@@ -2,20 +2,16 @@ package com.xmlcalabash.functions
 
 import java.net.URI
 
-import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.ItemMessage
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcMetadata}
 import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
-import net.sf.saxon.functions.AccessorFn.Component
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
 import net.sf.saxon.om.{NodeInfo, Sequence, StructuredQName}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode}
-import net.sf.saxon.value.{QNameValue, SequenceType, StringValue}
-
-import scala.collection.mutable
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap}
+import net.sf.saxon.value.SequenceType
 
 class DocumentProperties private extends ExtensionFunctionDefinition {
   private val funcname = new StructuredQName("p", XProcConstants.ns_p, "document-properties")

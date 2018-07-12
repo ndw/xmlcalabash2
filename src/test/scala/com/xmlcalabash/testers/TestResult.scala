@@ -41,23 +41,20 @@ class TestResult(pass: Boolean) {
     _message = msg
   }
 
-  def this(model: ModelException) = {
-    this(false, model.message)
-    _except = Some(model)
-    _errQName = Some(model.exceptionQName)
-    _errCode = Some(model.code)
-  }
-
-  def this(xproc: XProcException) = {
-    this(false, xproc.message.getOrElse(""))
-    _except = Some(xproc)
-    _errQName = Some(xproc.code)
-  }
-
-  def this(step: StepException) = {
-    this(false, step.message.getOrElse(""))
-    _except = Some(step)
-    _errQName = Some(step.code)
+  def this(except: Exception) = {
+    this(false, except.getMessage)
+    _except = Some(except)
+    except match {
+      case model: ModelException =>
+        _errQName = Some(model.exceptionQName)
+        _errCode = Some(model.code)
+      case xproc: XProcException =>
+        _errQName = Some(xproc.code)
+      case step: StepException =>
+        _errQName = Some(step.code)
+      case _ =>
+        Unit
+    }
   }
 
   def this(thrown: Throwable) = {
@@ -65,7 +62,7 @@ class TestResult(pass: Boolean) {
     _except = Some(thrown)
   }
 
-  override def toString(): String = {
+  override def toString: String = {
     message
   }
 }

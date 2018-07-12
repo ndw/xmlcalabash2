@@ -32,8 +32,8 @@
   </p:identity>
 
   <cx:property-merge>
-    <p:with-input port="source" pipe="doc@result"/>
-    <p:with-input port="properties" pipe="prop@result"/>
+    <p:with-input port="source" pipe="result@doc"/>
+    <p:with-input port="properties" pipe="result@prop"/>
   </cx:property-merge>
 
   <cx:property-extract name="extract"/>

@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{ParserConfiguration, XProcConstants}
 import com.xmlcalabash.model.xml.datasource.DataSource
 
@@ -61,7 +61,7 @@ class IOPort(override val config: XMLCalabash,
       case info: PipeInfo =>
         super.addChild(info)
       case _ =>
-        throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
+        throw XProcException.xsElementNotAllowed(location, child.nodeName)
     }
   }
 

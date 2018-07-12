@@ -138,7 +138,7 @@ class StepConfigBuilder() extends EventHandler {
           logger.debug("No implementation for step: " + step.get.stepType)
         }
 
-        signatures.addStep(step.get)
+       signatures.addStep(step.get)
       case "Implementation" => Unit
       case "Input" => step.get.addInput(port.get, location(end))
       case "Output" => step.get.addOutput(port.get, location(end))

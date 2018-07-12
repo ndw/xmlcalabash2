@@ -1,8 +1,8 @@
 package com.xmlcalabash.runtime
 
-import com.jafpl.exceptions.PipelineException
 import com.jafpl.steps.PortSpecification
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.sun.org.apache.xpath.internal.XPathProcessorException
+import com.xmlcalabash.exceptions.XProcException
 
 import scala.collection.immutable
 
@@ -56,7 +56,7 @@ class XmlPortSpecification(spec: immutable.Map[String,String],
                            accept: immutable.Map[String, List[String]]) extends PortSpecification(spec) {
   for (port <- accept.keySet) {
     if (!spec.contains(port)) {
-      throw new PipelineException("badport", "Cannot specify accept for a port that isn't specified", None)
+      throw XProcException.xiNoSuchPortOnAccept(port)
     }
   }
 

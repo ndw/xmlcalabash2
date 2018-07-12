@@ -2,6 +2,7 @@ package com.xmlcalabash.exceptions
 
 import java.net.URI
 
+import com.jafpl.exceptions.JafplException
 import com.jafpl.graph.Location
 import com.jafpl.messages.{Message, Metadata}
 import com.xmlcalabash.model.util.XProcConstants
@@ -62,11 +63,24 @@ object XProcException {
   def xiDifferentXMLCalabash(): XProcException = internalError(49, None)
   def xiNodesNotAllowed(node: XdmNode): XProcException = internalError(50, None, node)
   def xiWrongImplParams(): XProcException = internalError(51, None)
+  def xiNoSuchPortOnAccept(port: String): XProcException = internalError(52, None, List(port))
+  def xiBadValueOnFileLoader(variable: String): XProcException = internalError(53, None, List(variable))
+
   def xdBadMediaType(ctype: MediaType, allowed: List[MediaType]): XProcException = dynamicError(38, List(ctype, allowed))
   def xdSequenceNotAllowed(port: String): XProcException = dynamicError(6, port)
-  def xdNotValidXML(message: String): XProcException = dynamicError(23, message)
-  def xdNotWFXML(message: String): XProcException = dynamicError(11, message)
-  def xdAuthFail(message: String): XProcException = dynamicError(21, message)
+  def xdNotValidXML(href: String, message: String): XProcException = dynamicError(23, List(href, message))
+  def xdNotWFXML(href: String, message: String): XProcException = dynamicError(11, List(href, message))
+  def xdNotAuthorized(href: String, message: String): XProcException = dynamicError(21, List(href, message))
+
+  //def xsUnconnectedInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(3, List(step,port), location)
+  def xsDupOptionname(location: Option[Location], name: String): XProcException = staticError(4, name, location)
+  def xsUnconnectedOutputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(6, List(step, port), location)
+  def xsDupPortName(port: String, location: Option[Location]): XProcException = staticError(11, port, location)
+  def xsDupPrimaryPort(port: String, primaryPort: String, location: Option[Location]): XProcException = staticError(30, List(port, primaryPort), location)
+  def xsUnconnectedInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(32, List(step,port), location)
+  def xsElementNotAllowed(location: Option[Location], element: QName): XProcException = staticError(44, element, location)
+  def xsBadTypeValue(name: String, reqdType: String): XProcException = staticError(77, List(name, reqdType), None)
+  def xsNoSiblingsOnEmpty(location: Option[Location]): XProcException = staticError(89, None, location)
 
   private def internalError(code: Int, location: Option[Location]): XProcException = {
     internalError(code, location, List())
@@ -148,9 +162,17 @@ object XProcException {
     val qname = new QName("err", XProcConstants.ns_err, "XC%04d".format(code))
     new XProcException(qname, None, location, details)
   }
+
+  def mapPipelineException(jex: JafplException): Exception = {
+    jex.code match {
+      case JafplException.DUP_OPTION_NAME => XProcException.xsDupOptionname(jex.location, jex.details.head)
+      case JafplException.INPUT_PORT_MISSING => XProcException.xsUnconnectedInputPort(jex.details.head, jex.details(1), jex.location)
+      case _ => jex
+    }
+  }
 }
 
-class XProcException(val code: QName, val message: Option[String], val location: Option[Location], val details: List[Any]) extends Throwable {
+class XProcException(val code: QName, val message: Option[String], val location: Option[Location], val details: List[Any]) extends Exception {
   def this(code: QName) {
     this(code, None, None, List.empty[String])
   }
@@ -171,7 +193,7 @@ class XProcException(val code: QName, val message: Option[String], val location:
     this(code, None, context.location, List.empty[String])
   }
 
-  override def getMessage(): String = {
+  override def getMessage: String = {
     message.getOrElse("")
   }
 

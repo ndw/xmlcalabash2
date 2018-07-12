@@ -25,7 +25,7 @@
   </p:identity>
 
   <p:identity name="combine">
-    <p:with-input port="source" pipe="id1 id2"/>
+    <p:with-input port="source" pipe="@id1 @id2"/>
   </p:identity>
 
   <p:variable name="a" select="0"/>

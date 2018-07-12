@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, XProcAvtExpression, XProcExpression}
 import net.sf.saxon.s9api.QName
@@ -51,7 +51,7 @@ class AtomicStep(override val config: XMLCalabash,
     val okChildren = List(classOf[WithInput], classOf[WithOption])
     for (child <- relevantChildren()) {
       if (!okChildren.contains(child.getClass)) {
-        throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
+        throw XProcException.xsElementNotAllowed(location, child.nodeName)
       }
       valid = valid && child.validate()
     }

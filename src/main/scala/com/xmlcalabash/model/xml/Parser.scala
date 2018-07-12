@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Catch, Choose, Finally, ForEach, Group, Otherwise, Try, When, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
@@ -60,6 +60,7 @@ class Parser(config: XMLCalabash) {
       valid = valid && root.get.makePortsExplicit()
       valid = valid && root.get.makePipesExplicit()
       valid = valid && root.get.makeBindingsExplicit()
+      println("VALID:", valid)
       if (!valid) {
         config.errorListener.error(new ModelException(ExceptionCode.INVALIDPIPELINE, List(), node))
       }
@@ -121,8 +122,13 @@ class Parser(config: XMLCalabash) {
                     case input: Input =>
                       logger.debug("Interpreting naked content of p:input as a p:inline")
                       Some(parseInline(parent, node))
-                    case _ =>
+                    case variable: Variable =>
+                      logger.debug("Interpreting naked content of p:input as a p:inline")
+                      Some(parseInline(parent, node))
+                    case ds: DeclareStep =>
                       throw new ModelException(ExceptionCode.NOTASTEP, node.getNodeName.toString, node)
+                    case _ =>
+                      throw XProcException.xsElementNotAllowed(Some(new NodeLocation(node)), node.getNodeName)
                   }
                 } else {
                   throw new ModelException(ExceptionCode.NOTASTEP, node.getNodeName.toString, node)

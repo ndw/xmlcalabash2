@@ -4,7 +4,6 @@ import java.net.URI
 
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
-import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.config.{DocumentManager, XMLCalabash}
 import com.xmlcalabash.exceptions.XProcException
 import net.sf.saxon.s9api.{SaxonApiException, XdmNode}
@@ -77,13 +76,11 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabash) extends DocumentManager {
       case sae: SaxonApiException =>
         val msg = sae.getMessage
         if (msg.contains("validation")) {
-          throw XProcException.xdNotValidXML(msg)
+          throw XProcException.xdNotValidXML(href, msg)
         } else if (msg.contains("HTTP response code: 403 ")) {
-          throw XProcException.xdAuthFail(msg)
-        } else if (msg.contains("Error reported by XML parser")) {
-          throw XProcException.xdNotWFXML("not well-formed")
+          throw XProcException.xdNotAuthorized(href, msg)
         } else {
-          throw XProcException.xdNotWFXML(msg)
+          throw XProcException.xdNotWFXML(href, msg)
         }
     }
   }
@@ -102,11 +99,11 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabash) extends DocumentManager {
       case sae: SaxonApiException =>
         val msg = sae.getMessage
         if (msg.contains("validation")) {
-          throw new PipelineException("unk", "xproc err 27", None)
+          throw XProcException.xdNotValidXML(isource.getSystemId, msg)
         } else if (msg.contains("HTTP response code: 403 ")) {
-          throw new PipelineException("403", "xproc err 21", None)
+          throw XProcException.xdNotAuthorized(isource.getSystemId, msg)
         } else {
-          throw new PipelineException("unk", "xproc err 11", None)
+          throw XProcException.xdNotWFXML(isource.getSystemId, msg)
         }
     }
   }

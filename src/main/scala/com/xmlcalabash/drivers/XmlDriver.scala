@@ -1,9 +1,9 @@
 package com.xmlcalabash.drivers
 
 import java.io.{File, PrintWriter}
-import javax.xml.transform.sax.SAXSource
 
-import com.jafpl.exceptions.GraphException
+import javax.xml.transform.sax.SAXSource
+import com.jafpl.exceptions.{JafplException}
 import com.jafpl.graph.Graph
 import com.jafpl.messages.Message
 import com.jafpl.runtime.GraphRuntime
@@ -41,32 +41,41 @@ object XmlDriver extends App {
       parser.parseInjectables(doc)
     }
 
-    val pipeline = parser.parsePipeline(node)
-    val graph = pipeline.pipelineGraph()
+    var pipeline: DeclareStep = null
+    var graph: Graph = null
+    var runtime: GraphRuntime = null
+    try {
+      pipeline = parser.parsePipeline(node)
+      graph = pipeline.pipelineGraph()
 
-    if (options.dumpXML.isDefined) {
-      dumpXML(pipeline, options.dumpXML.get)
+      if (options.dumpXML.isDefined) {
+        dumpXML(pipeline, options.dumpXML.get)
+      }
+
+      if (options.graphBefore.isDefined) {
+        dumpGraph(graph, options.graphBefore.get)
+      }
+
+      graph.close()
+
+      if (options.raw) {
+        dumpRaw(graph)
+      }
+
+      if (options.graph.isDefined) {
+        dumpGraph(graph, options.graph.get)
+      }
+
+      if (options.norun) {
+        System.exit(0)
+      }
+
+      runtime = new GraphRuntime(graph, xmlCalabash)
+    } catch {
+      case jafpl: JafplException =>
+        throw XProcException.mapPipelineException(jafpl)
     }
 
-    if (options.graphBefore.isDefined) {
-      dumpGraph(graph, options.graphBefore.get)
-    }
-
-    graph.close()
-
-    if (options.raw) {
-      dumpRaw(graph)
-    }
-
-    if (options.graph.isDefined) {
-      dumpGraph(graph, options.graph.get)
-    }
-
-    if (options.norun) {
-      System.exit(0)
-    }
-
-    val runtime = new GraphRuntime(graph, xmlCalabash)
     runtime.traceEventManager = xmlCalabash.traceEventManager
 
     for (input <- pipeline.inputs()) {
@@ -109,8 +118,8 @@ object XmlDriver extends App {
           println(model)
         case parse: ParseException =>
           println(parse)
-        case graph: GraphException =>
-          println(graph)
+        case jafpl: JafplException =>
+          println(jafpl)
         case xproc: XProcException =>
           val code = xproc.code
           val message = if (xproc.message.isDefined) {
@@ -174,7 +183,7 @@ object XmlDriver extends App {
         xmlCalabash.trace(s"Binding option $bind to '${options.params(bind)}'", "ExternalBindings")
         val value = options.params(bind)
         val msg = new XPathItemMessage(value.value, XProcMetadata.XML, value.context)
-        runtime.bindings(jcbind).set(value)
+        runtime.setOption(jcbind, value)
         bindingsMap.put(jcbind, msg)
       } else {
         xmlCalabash.trace(s"No binding provided for option $bind; using default", "ExternalBindings")
@@ -183,15 +192,20 @@ object XmlDriver extends App {
           if (decl.get.select.isDefined) {
             val context = new ExpressionContext(None, options.inScopeNamespaces, None)
             val expr = new XProcXPathExpression(context, decl.get.select.get)
-            val msg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+            val msg = xmlCalabash.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
             val eval = msg.asInstanceOf[XPathItemMessage].item
-            runtime.bindings(jcbind).set(new XProcVarValue(eval, context))
+            runtime.setOption(jcbind, new XProcVarValue(eval, context))
             bindingsMap.put(jcbind, msg)
           } else {
             if (decl.get.required) {
               throw XProcException.staticError(18, bind.toString, pipeline.location)
             } else {
-              xmlCalabash.trace(s"No default for option $bind", "ExternalBindings")
+              val context = new ExpressionContext(None, options.inScopeNamespaces, None)
+              val expr = new XProcXPathExpression(context, "()")
+              val msg = xmlCalabash.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
+              val eval = msg.asInstanceOf[XPathItemMessage].item
+              runtime.setOption(jcbind, new XProcVarValue(eval, context))
+              bindingsMap.put(jcbind, msg)
             }
           }
         } else {

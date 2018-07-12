@@ -3,7 +3,6 @@ package com.xmlcalabash.steps.internal
 import java.net.URI
 import java.util.Base64
 
-import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{ItemMessage, Message}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
@@ -48,7 +47,7 @@ class InlineLoader(private val baseURI: Option[URI],
         case map: XdmMap =>
           ValueParser.parseDocumentProperties(map, location)
         case _ =>
-          throw new PipelineException("notmap", "The document-properties attribute must be a map", None)
+          throw XProcException.xsBadTypeValue("document-properties", "map")
       }
     }
 
@@ -165,9 +164,8 @@ class InlineLoader(private val baseURI: Option[URI],
       case XdmNodeKind.TEXT =>
         var str = node.getStringValue
         if (expandText && str.contains("{")) {
-          str = expandString(str)
-        }
-        if (str != "") {
+          expandNodes(str, builder)
+        } else {
           builder.addText(str)
         }
       case _ =>
@@ -176,17 +174,29 @@ class InlineLoader(private val baseURI: Option[URI],
   }
 
   private def expandString(text: String): String = {
-    val evaluator = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
+    val evaluator = config.get.expressionEvaluator
     val expr = new XProcAvtExpression(context, text)
     var s = ""
     val iter = evaluator.value(expr, List.empty[Message], bindings.toMap, None).item.iterator()
     while (iter.hasNext) {
-      if (s != "") {
-        s += " "
-      }
-      s += iter.next.getStringValue
+      val next = iter.next()
+      println(next)
+      s += next.getStringValue
     }
     s
+  }
+
+  private def expandNodes(text: String, builder: SaxonTreeBuilder): Unit = {
+    val evaluator = config.get.expressionEvaluator
+    val expr = new XProcAvtExpression(context, text)
+    val iter = evaluator.value(expr, List.empty[Message], bindings.toMap, None).item.iterator()
+    while (iter.hasNext) {
+      val next = iter.next()
+      next match {
+        case node: XdmNode => builder.addSubtree(node)
+        case _ => builder.addText(next.getStringValue)
+      }
+    }
   }
 
   def xpathValue(expr: XProcExpression): XdmValue = {

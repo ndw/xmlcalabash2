@@ -2,14 +2,14 @@ package com.xmlcalabash.model.xml
 
 import java.net.URI
 
-import com.jafpl.graph.{Binding, ContainerStart, Graph, Location, Node}
+import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionOptions, XProcAvtExpression, XProcExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcAvtExpression, XProcExpression}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
@@ -17,7 +17,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
+abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected[xml] var id: Long = UniqueId.nextId
   protected[xml] val attributes = mutable.HashMap.empty[QName, String]
@@ -33,6 +33,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   protected[xml] var dump_attr = Option.empty[xml.MetaData]
   protected[xml] var _location = Option.empty[Location]
   protected[xml] var _baseURI = Option.empty[URI]
+  protected[xml] var _nodeName = XProcConstants.UNKNOWN
   protected[xml] var _xmlId = Option.empty[String]
   protected[xml] val _inputInjectables: ListBuffer[XProcPortInjectable] = ListBuffer.empty[XProcPortInjectable]
   protected[xml] val _outputInjectables: ListBuffer[XProcPortInjectable] = ListBuffer.empty[XProcPortInjectable]
@@ -52,6 +53,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
 
   def baseURI: Option[URI] = _baseURI
   def xmlId: Option[String] = _xmlId
+  def nodeName: QName = _nodeName
 
   override def toString: String = {
     "{step " + name + " " + super.toString + "}"
@@ -105,6 +107,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   protected[xml] def parse(node: XdmNode): Unit = {
     _location = Some(new NodeLocation(node))
     _baseURI = Some(node.getBaseURI)
+    _nodeName = node.getNodeName
     val ns = S9Api.inScopeNamespaces(node)
 
     // Parse attributes
@@ -131,6 +134,29 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
       inScopeNS = parent.get.inScopeNS
     } else {
       inScopeNS = ns.toMap
+    }
+  }
+
+  protected[xml] def parsePipeAttribute(pipe: String): Unit = {
+    for (spec <- pipe.split("\\s+")) {
+      val pos = spec.indexOf("@")
+      if (pos >= 0) {
+        val port = spec.substring(0, pos)
+        val step = spec.substring(pos + 1)
+        val pipe = if (step == "") {
+          new Pipe(config, this, None, Some(port))
+        } else {
+          if (port =="") {
+            new Pipe(config, this, Some(step), None)
+          } else {
+            new Pipe(config, this, Some(step), Some(port))
+          }
+        }
+        addChild(pipe)
+      } else {
+        val pipe = new Pipe(config, this, None, Some(spec))
+        addChild(pipe)
+      }
     }
   }
 
@@ -249,6 +275,11 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   }
 
   def relevantChildren(): List[Artifact] = {
+    relevantChildren(children.toList)
+  }
+
+  def relevantChildren(children: List[Artifact]): List[Artifact] = {
+    // FIXME: use a proper scala map
     val list = ListBuffer.empty[Artifact]
     for (node <- children) {
       node match {
@@ -525,7 +556,7 @@ class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   }
 
   def makePortsExplicit(): Boolean = {
-    println(s"ERROR: $this doesn't override makeBindingsExplicit")
+    println(s"ERROR: $this doesn't override makePortsExplicit")
     false
   }
 

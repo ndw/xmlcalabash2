@@ -98,7 +98,7 @@ object XmlTesting extends App {
 
       for (bind <- pipeline.bindings) {
         xmlCalabash.trace(s"Binding option {$bind} to 'pipe'", "ExternalBindings")
-        runtime.bindings(bind.getClarkName).set("pipe")
+        runtime.setOption(bind.getClarkName, "pipe")
       }
 
       runtime.run()

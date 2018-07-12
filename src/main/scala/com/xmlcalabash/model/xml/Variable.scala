@@ -1,9 +1,10 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{ContainerStart, Graph, Node}
+import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.expr.parser.XPathParser
 import net.sf.saxon.s9api.QName
@@ -25,6 +26,8 @@ class Variable(override val config: XMLCalabash,
   def as: Option[SequenceType] = _as
 
   override def validate(): Boolean = {
+    var valid = true
+
     val qname = lexicalQName(attributes.get(XProcConstants._name))
     if (qname.isEmpty) {
       throw new ModelException(ExceptionCode.NAMEATTRREQ, this.toString, location)
@@ -35,6 +38,9 @@ class Variable(override val config: XMLCalabash,
     if (_select.isEmpty) {
       throw new ModelException(ExceptionCode.SELECTATTRREQ, this.toString, location)
     }
+
+    val pipe = attributes.get(XProcConstants._pipe)
+    val href = attributes.get(XProcConstants._href)
 
     _collection = lexicalBoolean(attributes.get(XProcConstants._collection)).getOrElse(false)
 
@@ -56,7 +62,8 @@ class Variable(override val config: XMLCalabash,
       }
     }
 
-    for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._as, XProcConstants._select, XProcConstants._collection)) {
+    for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._as,
+      XProcConstants._select, XProcConstants._pipe, XProcConstants._href, XProcConstants._collection)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -67,11 +74,49 @@ class Variable(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
-    if (relevantChildren().nonEmpty) {
-      throw new ModelException(ExceptionCode.BADCHILD, children.head.toString, location)
+    var hasDataSources = false
+    var emptyCount = 0
+    var nonEmptyCount = 0
+    for (child <- children) {
+      child match {
+        case ds: DataSource =>
+          hasDataSources = true
+          valid = valid && child.validate()
+          child match {
+            case empty: Empty => emptyCount += 1
+            case _ => nonEmptyCount += 1
+          }
+        case d: Documentation => Unit
+        case p: PipeInfo => Unit
+        case _ => throw XProcException.xsElementNotAllowed(location, child.nodeName)
+      }
     }
 
-    true
+    if ((emptyCount > 0) && ((emptyCount != 1) || (nonEmptyCount != 0))) {
+      throw XProcException.xsNoSiblingsOnEmpty(location)
+    }
+
+    if (href.isDefined) {
+      if (hasDataSources) {
+        throw XProcException.staticError(81, href.get, location)
+      }
+      hasDataSources = true
+
+      for (uri <- href.get.split("\\s+")) {
+        val ruri = baseURI.get.resolve(uri)
+        val doc = new Document(config, this, ruri.toASCIIString)
+        addChild(doc)
+      }
+    }
+
+    if (pipe.isDefined) {
+      if (hasDataSources) {
+        throw XProcException.staticError(82, pipe.get, location)
+      }
+      parsePipeAttribute(pipe.get)
+    }
+
+    valid
   }
 
   override def makeGraph(graph: Graph, parent: Node) {
@@ -83,18 +128,40 @@ class Variable(override val config: XMLCalabash,
     val node = cnode.addVariable(_name.getClarkName, expression, options)
     _graphNode = Some(node)
     config.addNode(node.id, this)
+
+    for (child <- children) {
+      child.makeGraph(graph, parent)
+    }
   }
 
   override def makeEdges(graph: Graph, parent: Node): Unit = {
-    val drp = defaultReadablePort
-    if (drp.isDefined) {
-      val src = drp.get.parent.get
-      graph.addEdge(src._graphNode.get, drp.get.port.get, _graphNode.get, "source")
+    var explicitBinding = false
+    for (child <- children) {
+      child match {
+        case doc: Documentation => Unit
+        case pipe: PipeInfo => Unit
+        case _ =>
+          child.makeEdges(graph, parent)
+          explicitBinding = true
+      }
+    }
+
+    if (!explicitBinding) {
+      val drp = defaultReadablePort
+      if (drp.isDefined) {
+        val src = drp.get.parent.get
+        graph.addEdge(src._graphNode.get, drp.get.port.get, _graphNode.get, "source")
+      }
     }
 
     val variableRefs = findVariableRefs(expression)
     for (ref <- variableRefs) {
       this.parent.get.asInstanceOf[PipelineStep].addVariableRef(ref)
+      val bind = findBinding(ref)
+      if (bind.isEmpty) {
+        throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
+      }
+      graph.addBindingEdge(bind.get._graphNode.get.asInstanceOf[Binding], _graphNode.get)
     }
   }
 }

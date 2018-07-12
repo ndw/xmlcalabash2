@@ -5,7 +5,7 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Catch
-import com.xmlcalabash.model.xml.{Artifact, IOPort, WithOption}
+import com.xmlcalabash.model.xml.{Artifact, IOPort, Variable, WithOption}
 
 import scala.collection.mutable.ListBuffer
 
@@ -115,6 +115,9 @@ class Pipe(override val config: XMLCalabash,
       case port: IOPort =>
         toNode = parent.get.parent.get._graphNode
         toPort = port.port.get
+      case variable: Variable =>
+        toNode = variable._graphNode
+        toPort = "source"
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "p:pipe points to " + parent.get, location)
     }

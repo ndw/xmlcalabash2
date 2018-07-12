@@ -1,9 +1,9 @@
 package com.xmlcalabash.util
 
-import com.jafpl.exceptions.PipelineException
+import com.jafpl.exceptions.JafplException
 import com.jafpl.graph.Location
 import com.jafpl.util.ErrorListener
-import com.xmlcalabash.exceptions.ModelException
+import com.xmlcalabash.exceptions.{ModelException, XProcException}
 
 class DefaultErrorListener extends ErrorListener {
   override def error(message: String, location: Option[Location]): Unit = {
@@ -16,8 +16,9 @@ class DefaultErrorListener extends ErrorListener {
 
   override def error(cause: Throwable): Unit = {
     val location = cause match {
+      case jafpl: JafplException => jafpl.location
       case model: ModelException => model.location
-      case pipe: PipelineException => pipe.location
+      case xproc: XProcException => xproc.location
       case _ => None
     }
     msg("error", cause, location)
@@ -33,8 +34,9 @@ class DefaultErrorListener extends ErrorListener {
 
   override def warning(cause: Throwable): Unit = {
     val location = cause match {
+      case jafpl: JafplException => jafpl.location
       case model: ModelException => model.location
-      case pipe: PipelineException => pipe.location
+      case xproc: XProcException => xproc.location
       case _ => None
     }
     msg("warn", cause, location)
@@ -49,7 +51,12 @@ class DefaultErrorListener extends ErrorListener {
     var msg = ""
 
     cause match {
-      case pe: PipelineException =>
+      case je: JafplException =>
+        if (loc.isEmpty) {
+          loc = je.location
+        }
+        msg = je.getMessage()
+      case pe: XProcException =>
         if (loc.isEmpty) {
           loc = pe.location
         }

@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import net.sf.saxon.s9api.QName
 
@@ -79,7 +79,7 @@ class Serialization(override val config: XMLCalabash,
         throw new ModelException(ExceptionCode.BADSERSTANDALONE, _standalone.get, location)
       }
       if (children.nonEmpty) {
-        throw new ModelException(ExceptionCode.BADCHILD, children.head.toString, location)
+        throw XProcException.xsElementNotAllowed(location, children.head.nodeName)
       }
     }
 

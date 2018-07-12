@@ -71,6 +71,7 @@ class DocumentPropertiesDocument private extends ExtensionFunctionDefinition {
       builder.addNamespace("xs", XProcConstants.ns_xs)
       builder.startContent()
       for (key <- props.keySet) {
+        builder.addText("\n  ")
         builder.addStartElement(key)
         props(key) match {
           case node: XdmNode =>
@@ -89,6 +90,7 @@ class DocumentPropertiesDocument private extends ExtensionFunctionDefinition {
         }
         builder.addEndElement()
       }
+      builder.addText("\n")
       builder.addEndElement()
       builder.endDocument()
 

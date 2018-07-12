@@ -9,7 +9,6 @@ import javax.xml.transform.sax.SAXSource
 import com.jafpl.messages.{ItemMessage, Message}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.TestException
-import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.{MediaType, S9Api, URIUtils}

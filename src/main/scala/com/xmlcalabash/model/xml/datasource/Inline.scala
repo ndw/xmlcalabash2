@@ -75,6 +75,7 @@ class Inline(override val config: XMLCalabash,
       case wi: WithInput => this.parent.get.parent.get.parent.get
       case xi: Input => this.parent.get.parent.get
       case wo: WithOption => this.parent.get.parent.get.parent.get
+      case v: Variable => this.parent.get.parent.get
       case _ => this.parent.get
     }
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
@@ -97,6 +98,7 @@ class Inline(override val config: XMLCalabash,
 
       bind.get match {
         case declStep: DeclareStep =>
+          // ???
           var optDecl = Option.empty[OptionDecl]
           for (child <- declStep.children) {
             child match {
@@ -111,6 +113,8 @@ class Inline(override val config: XMLCalabash,
             throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
           }
           graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], inlineProducer)
+        case optDecl: OptionDecl =>
+          graph.addBindingEdge(optDecl._graphNode.get.asInstanceOf[Binding], inlineProducer)
         case varDecl: Variable =>
           graph.addBindingEdge(varDecl._graphNode.get.asInstanceOf[Binding], inlineProducer)
         case _ =>
@@ -130,6 +134,9 @@ class Inline(override val config: XMLCalabash,
       case port: IOPort =>
         toNode = parent.get.parent.get._graphNode
         toPort = port.port.get
+      case variable: Variable =>
+        toNode = variable._graphNode
+        toPort = "source"
       case _ =>
         // It must be an explicit link from somewhere else; make an output to link from
         val out = new Output(config, this, "result", primary=true, sequence=true)

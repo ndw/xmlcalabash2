@@ -60,12 +60,12 @@ class WithInput(override val config: XMLCalabash,
           }
         case d: Documentation => Unit
         case p: PipeInfo => Unit
-        case _ => throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
+        case _ => throw XProcException.xsElementNotAllowed(location, child.nodeName)
       }
     }
 
     if ((emptyCount > 0) && ((emptyCount != 1) || (nonEmptyCount != 0))) {
-      throw new ModelException(ExceptionCode.EMPTYNOTALONE, "", location)
+      throw XProcException.xsNoSiblingsOnEmpty(location)
     }
 
     if (href.isDefined) {
@@ -85,22 +85,7 @@ class WithInput(override val config: XMLCalabash,
       if (hasDataSources) {
         throw XProcException.staticError(82, pipe.get, location)
       }
-      for (spec <- pipe.get.split("\\s+")) {
-        val pos = spec.indexOf("@")
-        if (pos > 0) {
-          val step = spec.substring(0, pos)
-          val port = spec.substring(pos + 1)
-          val pipe = if (step == "") {
-            new Pipe(config, this, None, Some(port))
-          } else {
-            new Pipe(config, this, Some(step), Some(port))
-          }
-          addChild(pipe)
-        } else {
-          val pipe = new Pipe(config, this, spec)
-          addChild(pipe)
-        }
-      }
+      parsePipeAttribute(pipe.get)
     }
 
     valid

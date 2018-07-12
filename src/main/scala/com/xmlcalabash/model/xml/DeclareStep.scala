@@ -306,7 +306,7 @@ class DeclareStep(override val config: XMLCalabash,
       index += 1
     }
     if (index < children.length) {
-      throw new ModelException(ExceptionCode.BADCHILD, children(index).toString, location)
+      throw XProcException.xsElementNotAllowed(location, children(index).nodeName)
     }
 
     valid

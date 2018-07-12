@@ -1,6 +1,5 @@
 package com.xmlcalabash.runtime
 
-import com.jafpl.exceptions.PipelineException
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.ValueParser
 

@@ -1,9 +1,9 @@
 package com.xmlcalabash.model.xml.containers
 
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.xml.datasource.Pipe
-import com.xmlcalabash.model.xml.{Artifact, Input, Output, PipelineStep, Variable}
+import com.xmlcalabash.model.xml.{Artifact, Input, Output, PipelineStep}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -73,13 +73,13 @@ class Container(override val config: XMLCalabash,
       child match {
         case input: Input =>
           if (ports.contains(input.port.get)) {
-            throw new ModelException(ExceptionCode.DUPCONTAINERINPUTPORT, input.port.get, location)
+            throw XProcException.xsDupPortName(input.port.get, input.location)
           }
           ports += input.port.get
 
           if (input.primary.getOrElse(false)) {
             if (primary.isDefined) {
-              throw new ModelException(ExceptionCode.DUPPRIMARYINPUT, List(input.port.get, primary.get.port.get), location)
+              throw XProcException.xsDupPrimaryPort(input.port.get, primary.get.port.get, input.location)
             }
             primary = Some(input)
           }
@@ -102,13 +102,13 @@ class Container(override val config: XMLCalabash,
       child match {
         case output: Output =>
           if (ports.contains(output.port.get)) {
-            throw new ModelException(ExceptionCode.DUPCONTAINEROUTPUTPORT, output.port.get, location)
+            throw XProcException.xsDupPortName(output.port.get, output.location)
           }
           ports += output.port.get
 
           if (output.primary.getOrElse(false)) {
             if (primary.isDefined) {
-              throw new ModelException(ExceptionCode.DUPPRIMARYINPUT, List(output.port.get, primary.get.port.get), location)
+              throw XProcException.xsDupPrimaryPort(output.port.get, primary.get.port.get, output.location)
             }
             primary = Some(output)
           }
@@ -145,6 +145,16 @@ class Container(override val config: XMLCalabash,
       }
     }
     valid = valid && makeInputPortsExplicit() && makeOutputPortsExplicit()
+
+    if (valid) {
+      for (port <- outputPorts) {
+        val out = output(port)
+        if (inputPorts.contains(port)) {
+          throw XProcException.xsDupPortName(port, out.get.location)
+        }
+      }
+    }
+
     valid
   }
 
@@ -166,10 +176,10 @@ class Container(override val config: XMLCalabash,
             val pipe = new Pipe(config, out, last.get.name, output.get.port.get)
             out.addChild(pipe)
           } else {
-            throw new ModelException(ExceptionCode.NOCONTAINEROUTPUT, port, location)
+            throw XProcException.xsUnconnectedOutputPort(name, port, location)
           }
         } else {
-          throw new ModelException(ExceptionCode.NOCONTAINEROUTPUT, port, location)
+          throw XProcException.xsUnconnectedOutputPort(name, port, location)
         }
       }
     }
@@ -177,15 +187,16 @@ class Container(override val config: XMLCalabash,
   }
 
   override def makeBindingsExplicit(): Boolean = {
+    var valid = true
     for (child <- children) {
       child match {
         case step: PipelineStep =>
-          step.makeBindingsExplicit()
+          valid = valid && step.makeBindingsExplicit()
         case _ => Unit
       }
     }
 
-    makeInputBindingsExplicit() && makeOutputBindingsExplicit()
+    valid && makeInputBindingsExplicit() && makeOutputBindingsExplicit()
   }
 
   override def asXML: xml.Elem = {

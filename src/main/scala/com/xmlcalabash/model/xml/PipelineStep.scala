@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
 import net.sf.saxon.s9api.QName
@@ -63,7 +63,7 @@ class PipelineStep(override val config: XMLCalabash,
     if (drp.isDefined) {
       for (port <- inputPorts) {
         val in = input(port).get
-        if (in.children.isEmpty) {
+        if (relevantChildren(in.children.toList).isEmpty) {
           val pipe = new Pipe(config, in, drp.get.parent.get.name, drp.get.port.get)
           in.addChild(pipe)
         }
@@ -72,14 +72,19 @@ class PipelineStep(override val config: XMLCalabash,
       for (port <- inputPorts) {
         val in = input(port).get
         var binding = Option.empty[DataSource]
-        for (child <- children) {
+        for (child <- relevantChildren()) {
           child match {
             case data: DataSource =>
+              println("sdata $data")
               binding = Some(data)
             case _ => Unit
           }
         }
-        valid = valid && binding.isDefined
+
+        if (binding.isEmpty) {
+          valid = false
+          throw XProcException.xsUnconnectedInputPort(name, port, location)
+        }
       }
     }
 

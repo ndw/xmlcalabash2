@@ -85,7 +85,7 @@ class WithOption(override val config: XMLCalabash,
     val okChildren = List(classOf[Empty], classOf[Inline], classOf[Pipe], classOf[Document])
     for (child <- relevantChildren()) {
       if (!okChildren.contains(child.getClass)) {
-        throw new ModelException(ExceptionCode.BADCHILD, child.toString, location)
+        throw XProcException.xsElementNotAllowed(location, child.nodeName)
       }
       valid = valid && child.validate()
     }

@@ -12,6 +12,8 @@ object XProcConstants {
   val ns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
   val ns_xml = "http://www.w3.org/XML/1998/namespace"
 
+  val UNKNOWN = new QName("", "UNKNOWN")
+
   val xml_base = new QName("xml", ns_xml, "base")
   val xml_id = new QName("xml", ns_xml, "id")
 

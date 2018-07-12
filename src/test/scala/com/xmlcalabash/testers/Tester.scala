@@ -1,8 +1,10 @@
 package com.xmlcalabash.testers
 
+import com.jafpl.exceptions.JafplException
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.runtime.GraphRuntime
 import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.drivers.XmlDriver.xmlCalabash
 import com.xmlcalabash.exceptions.{ModelException, StepException, TestException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.xml.{DeclareStep, Parser}
@@ -126,6 +128,8 @@ class Tester(runtimeConfig: XMLCalabash) {
         new TestResult(true)
       }
     } catch {
+      case jafpl: JafplException =>
+        new TestResult(XProcException.mapPipelineException(jafpl))
       case model: ModelException =>
         new TestResult(model)
       case xproc: XProcException =>
@@ -146,7 +150,7 @@ class Tester(runtimeConfig: XMLCalabash) {
       if (_bindings.contains(bind.getClarkName)) {
         val value = _bindings(jcbind)
         val msg = new XPathItemMessage(value, XProcMetadata.XML, ExpressionContext.NONE)
-        runtime.bindings(jcbind).set(value)
+        runtime.setOption(jcbind, value)
         bindingsMap.put(jcbind, msg)
       } else {
         val decl = pipeline.bindingDeclaration(bind)
@@ -156,13 +160,18 @@ class Tester(runtimeConfig: XMLCalabash) {
             val expr = new XProcXPathExpression(context, decl.get.select.get)
             val msg = runtimeConfig.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
             val eval = msg.asInstanceOf[XPathItemMessage].item
-            runtime.bindings(jcbind).set(new XProcVarValue(eval, context))
+            runtime.setOption(jcbind, new XProcVarValue(eval, context))
             bindingsMap.put(jcbind, msg)
           } else {
             if (decl.get.required) {
               throw XProcException.staticError(18, bind.toString, pipeline.location)
             } else {
-              println(s"Missing binding for $bind, supplied nothing")
+              val context = ExpressionContext.NONE
+              val expr = new XProcXPathExpression(context, "()")
+              val msg = runtimeConfig.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
+              val eval = msg.asInstanceOf[XPathItemMessage].item
+              runtime.setOption(jcbind, new XProcVarValue(eval, context))
+              bindingsMap.put(jcbind, msg)
             }
           }
         } else {

@@ -48,8 +48,23 @@ The serialization options must be a map. Invalid: “$1”
 XD0049
 Invalid sequence type: “$1”. $2.
 
+XS0004
+Option names must not be repeated; the “$1” option appears more than once.
+
+XS0011
+Duplicate port name: ‘$1’
+
 XS0018
 The option named “$1” is required, but no value was provided for it.
+
+XS0030
+Attempt to make port ‘$1’ primary when ‘$2’ is already primary.
+
+XS0032
+No connection provided for input port ‘$1’ on step ‘$2’ and no default readable port exists.
+
+XS0044
+The element named “$1” is not allowed here.
 
 XS0069
 The encoding “$1” is not supported.

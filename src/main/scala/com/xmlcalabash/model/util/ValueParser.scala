@@ -1,6 +1,5 @@
 package com.xmlcalabash.model.util
 
-import com.jafpl.exceptions.PipelineException
 import com.jafpl.graph.Location
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}

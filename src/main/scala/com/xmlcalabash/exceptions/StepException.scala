@@ -1,8 +1,7 @@
 package com.xmlcalabash.exceptions
 
-import com.jafpl.exceptions.PipelineException
+import com.jafpl.exceptions.JafplExceptionCode
 import com.jafpl.graph.Location
-import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.ExpressionContext
 import net.sf.saxon.s9api.{QName, XdmNode}
 
@@ -46,8 +45,17 @@ object StepException {
   }
 }
 
-class StepException(override val code: QName) extends PipelineException(code) {
+class StepException(val code: QName) extends RuntimeException with JafplExceptionCode {
   private var _errors = Option.empty[XdmNode]
+  private var _message = Option.empty[String]
+  private var _location = Option.empty[Location]
+  private var _cause = Option.empty[Throwable]
+
+  def location: Option[Location] = _location
+  def message: Option[String] = _message
+  def cause: Option[Throwable] = _cause
+
+  override def jafplExceptionCode: Any = code
 
   def this(code: QName, message: String) {
     this(code)

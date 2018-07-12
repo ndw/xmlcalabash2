@@ -3,20 +3,19 @@ package com.xmlcalabash.runtime
 import java.net.URI
 import java.util
 
-import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.runtime.ExpressionEvaluator
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.util.XProcVarValue
+import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.lib.{CollectionFinder, Resource, ResourceCollection}
 import net.sf.saxon.om.{Item, SpaceStrippingRule}
 import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.trans.XPathException
-import net.sf.saxon.value.SequenceType
+import net.sf.saxon.value.{SequenceType, UntypedAtomicValue}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
@@ -118,7 +117,19 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     }
 
     val xdmvalue = withContext(newContext) { compute(xpath.asInstanceOf[XProcExpression], context, bindings, proxies.toMap, options) }
-    new XPathItemMessage(xdmvalue, XProcMetadata.XML, xpath.asInstanceOf[XProcExpression].context)
+
+    val metadata = xdmvalue match {
+      case node: XdmNode =>
+        val baseURI = new XdmAtomicValue(node.getBaseURI)
+        val pmap = mutable.Map.empty[QName,XdmItem]
+        pmap.put(XProcConstants._base_uri, baseURI)
+        new XProcMetadata(MediaType.XML, pmap.toMap)
+      case _ => Unit
+        // I'm suspicious that this isn't right in the general case
+        XProcMetadata.XML
+    }
+
+    new XPathItemMessage(xdmvalue, metadata, xpath.asInstanceOf[XProcExpression].context)
   }
 
   override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): Boolean = {
@@ -133,6 +144,52 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       // Is this right? Lists are always true?
       true
     }
+  }
+
+  override def precomputedValue(xpath: Any, value: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XPathItemMessage = {
+    val config = xmlCalabash.processor.getUnderlyingConfiguration
+
+    var xdmval = value match {
+      case xdmval: XdmValue => xdmval
+      case xpvv: XProcVarValue => xpvv.value
+      case _ => throw new RuntimeException("Unexpected value type passed to precomputedValue") // FIXME:
+    }
+
+    val as = xpath match {
+      case xxe: XProcXPathExpression => xxe.as
+      case _ => None
+    }
+
+    val expr = xpath.asInstanceOf[XProcExpression]
+
+    if (as.isDefined) {
+      var matches = as.get.matches(xdmval.getUnderlyingValue, config.getTypeHierarchy)
+
+      xdmval.getUnderlyingValue match {
+        // Special case for untyped atomic values
+        case ua: UntypedAtomicValue =>
+          if (!matches) {
+            // FIXME: This is a hack
+            val castExpr = "\"" + ua.getStringValue.replace("\"", "\"\"") + "\" cast as " + as.get
+            val cxpath = new XProcXPathExpression(expr.context, castExpr, as)
+            try {
+              val casted = singletonValue(cxpath, List(), Map(), None)
+              xdmval = casted.item
+              matches = true
+            } catch {
+              case _:  Throwable => Unit
+            }
+          }
+        case _ =>
+          Unit
+      }
+
+      if (!matches) {
+        throw XProcException.dynamicError(36, List(xdmval, as.get), expr.context.location)
+      }
+    }
+
+    new XPathItemMessage(xdmval, XProcMetadata.XML, expr.context)
   }
 
   def compute(xpath: XProcExpression, context: List[Message], bindings: Map[String, Message],
@@ -245,7 +302,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
           sae.getCause match {
             case xpe: XPathException =>
               if (xpe.getMessage.contains("Undeclared variable")) {
-                throw new PipelineException("undecl", xpe.getMessage, None)
+                throw new XProcException(sae.getErrorCode,sae.getMessage)
               } else {
                 throw sae
               }
@@ -264,7 +321,12 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       if (contextItem.nonEmpty) {
         contextItem.head match {
           case item: ItemMessage =>
-            selector.setContextItem(proxies(item.item))
+            item.item match {
+              case node: XdmNode =>
+                selector.setContextItem(proxies(node))
+              case _ =>
+                selector.setContextItem(proxies(item.item))
+            }
         }
       }
 
@@ -320,7 +382,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       case item: ItemMessage =>
         item.item match {
           case node: XdmNode => return node
-          case item: XdmItem => return item
+          //case item: XdmItem => return item
           case _ => Unit
         }
 

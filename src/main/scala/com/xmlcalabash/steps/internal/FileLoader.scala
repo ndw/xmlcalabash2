@@ -4,8 +4,8 @@ import java.io.File
 import java.net.{URI, URLConnection}
 import java.nio.file.Files
 
-import com.jafpl.exceptions.PipelineException
 import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
@@ -38,7 +38,7 @@ class FileLoader(private val context: ExpressionContext,
     }
 
     if (valueitem.isEmpty) {
-      throw new PipelineException("badtype", s"binding for $variable must be an item", None)
+      throw XProcException.xiBadValueOnFileLoader(variable.toString)
     }
 
     variable match {
@@ -63,6 +63,7 @@ class FileLoader(private val context: ExpressionContext,
     // You can extend the set of known extensions by pointing the system property
     // `content.types.user.table` at your own mime types file. The default file to
     // start with is in $JAVA_HOME/lib/content-types.properties
+    val map = URLConnection.getFileNameMap
     var contentTypeString = Option(URLConnection.guessContentTypeFromName(href.toASCIIString)).getOrElse("application/xml")
     if (_params.isDefined && _params.get.contains(XProcConstants._content_type)) {
       contentTypeString = _params.get(XProcConstants._content_type).toString
@@ -77,7 +78,7 @@ class FileLoader(private val context: ExpressionContext,
         case map: XdmMap =>
           ValueParser.parseDocumentProperties(map, location)
         case _ =>
-          throw new PipelineException("notmap", "The document-properties attribute must be a map", None)
+          throw XProcException.xsBadTypeValue("document-properties", "map")
       }
     }
 
@@ -88,27 +89,26 @@ class FileLoader(private val context: ExpressionContext,
       contentType = MediaType.parse(props(XProcConstants._content_type).getStringValue)
     }
 
+    props.put(XProcConstants._base_uri, new XdmAtomicValue(href.toASCIIString))
+
     if (contentType.xmlContentType) {
       val node = config.get.documentManager.parse(href)
-      props.put(XProcConstants._base_uri, new XdmAtomicValue(node.getBaseURI))
-      logger.debug(s"Loaded $href as $contentType")
       consumer.get.receive("result", new ItemMessage(node, new XProcMetadata(contentType, props.toMap)))
     } else if (contentType.jsonContentType) {
-      val expr = new XProcXPathExpression(context, s"json-doc('$href', $$parameters)")
+      val expr = new XProcXPathExpression(context, s"json-doc('$href')")
       val json = config.get.expressionEvaluator.singletonValue(expr, List(), bindings.toMap, None)
       consumer.get.receive("result", new ItemMessage(json.item, new XProcMetadata(contentType, props.toMap)))
     } else if (contentType.htmlContentType) {
       val node = config.get.documentManager.parseHtml(href)
-      logger.debug(s"Loaded $href as $contentType")
       consumer.get.receive("result", new ItemMessage(node, new XProcMetadata(contentType, props.toMap)))
     } else {
       val file = new File(href)
       props.put(XProcConstants._content_length, new XdmAtomicValue(file.length()))
-      props.put(XProcConstants._base_uri, new XdmAtomicValue(file.toURI))
       val bytes = Files.readAllBytes(new File(href).toPath)
-      logger.debug(s"Loaded $href as $contentType")
       consumer.get.receive("result", new ItemMessage(bytes, new XProcMetadata(contentType, props.toMap)))
     }
+
+    logger.debug(s"Loaded $href as $contentType")
   }
 
   def xpathValue(expr: XProcExpression): XdmValue = {

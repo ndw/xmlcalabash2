@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml.datasource
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcAvtExpression}
@@ -62,7 +62,7 @@ class Document(override val config: XMLCalabash,
     }
 
     if (children.nonEmpty) {
-      throw new ModelException(ExceptionCode.BADCHILD, children.head.toString, location)
+      throw XProcException.xsElementNotAllowed(location, children.head.nodeName)
     }
 
     hrefAvt = ValueParser.parseAvt(_href.get)
