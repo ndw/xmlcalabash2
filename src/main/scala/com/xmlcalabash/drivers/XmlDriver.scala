@@ -78,7 +78,7 @@ object XmlDriver extends App {
 
     runtime.traceEventManager = xmlCalabash.traceEventManager
 
-    for (input <- pipeline.inputs()) {
+    for (input <- pipeline.inputs) {
       val port = input.port.get
       if (options.inputs.contains(port)) {
         for (fn <- options.inputs(port)) {

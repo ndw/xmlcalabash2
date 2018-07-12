@@ -11,7 +11,7 @@ import scala.collection.mutable.ListBuffer
 
 class Container(override val config: XMLCalabash,
                 override val parent: Option[Artifact],
-                val stepType: QName) extends PipelineStep(config, parent) {
+                override val stepType: QName) extends PipelineStep(config, parent, stepType) {
   def steps: List[PipelineStep] = {
     val list = ListBuffer.empty[PipelineStep]
 

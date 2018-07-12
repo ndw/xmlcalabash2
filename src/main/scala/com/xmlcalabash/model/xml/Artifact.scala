@@ -274,7 +274,7 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     ValueParser.findVariableRefsInString(config, inScopeNS, expr, location)
   }
 
-  def relevantChildren(): List[Artifact] = {
+  def relevantChildren: List[Artifact] = {
     relevantChildren(children.toList)
   }
 
@@ -305,7 +305,7 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     list.toList
   }
 
-  def inputs(): List[Input] = {
+  def inputs: List[Input] = {
     val list = mutable.ListBuffer.empty[Input]
     for (child <- children) {
       child match {

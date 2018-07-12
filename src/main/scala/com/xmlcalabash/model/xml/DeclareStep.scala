@@ -120,7 +120,7 @@ class DeclareStep(override val config: XMLCalabash,
       }
     }
 
-    for (input <- inputs()) {
+    for (input <- inputs) {
       if (input.defaultInputs().nonEmpty || input.contentTypes().nonEmpty) {
         patchDefaultInputs(input)
       }

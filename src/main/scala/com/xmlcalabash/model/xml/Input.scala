@@ -119,13 +119,11 @@ class Input(override val config: XMLCalabash,
   }
 
   override def makeEdges(graph: Graph, parent: Node) {
-    println(s"makeEdges $this")
     for (child <- children) {
       child match {
         case doc: Documentation => Unit
         case pipe: PipeInfo => Unit
         case _ =>
-          println("EDGE")
           child.makeEdges(graph, parent)
       }
     }

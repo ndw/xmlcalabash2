@@ -4,19 +4,28 @@ import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
+import com.xmlcalabash.model.xml.datasource.Pipe
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
 
 class PipelineStep(override val config: XMLCalabash,
-                   override val parent: Option[Artifact]) extends Artifact(config, parent) {
+                   override val parent: Option[Artifact],
+                   val stepType: QName) extends Artifact(config, parent) {
   protected var _name: Option[String] = None
   // Can be used to create additional variable bindings, e.g., for injectables
   protected[xml] val variableRefs = mutable.HashSet.empty[QName]
 
   protected[xml] def name_=(name: String): Unit = {
     _name = Some(name)
+  }
+
+  override def name: String = {
+    if (label.isDefined && !label.get.startsWith("!")) {
+      label.get
+    } else {
+      stepType.toString
+    }
   }
 
   def graphNode: Node = _graphNode.get // Steps always have graphNodes
@@ -58,30 +67,21 @@ class PipelineStep(override val config: XMLCalabash,
 
   def makeInputBindingsExplicit(): Boolean = {
     var valid = true
-
     val drp = defaultReadablePort
-    if (drp.isDefined) {
-      for (port <- inputPorts) {
-        val in = input(port).get
-        if (relevantChildren(in.children.toList).isEmpty) {
-          val pipe = new Pipe(config, in, drp.get.parent.get.name, drp.get.port.get)
-          in.addChild(pipe)
-        }
-      }
-    } else {
-      for (port <- inputPorts) {
-        val in = input(port).get
-        var binding = Option.empty[DataSource]
-        for (child <- relevantChildren()) {
-          child match {
-            case data: DataSource =>
-              println("sdata $data")
-              binding = Some(data)
-            case _ => Unit
-          }
-        }
 
-        if (binding.isEmpty) {
+    for (in <- inputs) {
+      val port = in.port.get
+
+      if (relevantChildren(in.children.toList).isEmpty) {
+        if (in.primary.get) {
+          if (drp.isDefined) {
+            val pipe = new Pipe(config, in, drp.get.parent.get.name, drp.get.port.get)
+            in.addChild(pipe)
+          } else {
+            valid = false
+            throw XProcException.xsUnconnectedPrimaryInputPort(name, port, location)
+          }
+        } else {
           valid = false
           throw XProcException.xsUnconnectedInputPort(name, port, location)
         }

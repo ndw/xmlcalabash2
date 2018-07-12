@@ -19,7 +19,7 @@ class Finally(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
-    for (child <- relevantChildren()) {
+    for (child <- relevantChildren) {
       valid = valid && child.validate()
     }
 

@@ -60,7 +60,6 @@ class Parser(config: XMLCalabash) {
       valid = valid && root.get.makePortsExplicit()
       valid = valid && root.get.makePipesExplicit()
       valid = valid && root.get.makeBindingsExplicit()
-      println("VALID:", valid)
       if (!valid) {
         config.errorListener.error(new ModelException(ExceptionCode.INVALIDPIPELINE, List(), node))
       }

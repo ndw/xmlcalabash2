@@ -12,8 +12,8 @@ import scala.collection.mutable.ListBuffer
 
 class AtomicStep(override val config: XMLCalabash,
                  override val parent: Option[Artifact],
-                 val stepType: QName,
-                 params: Option[ImplParams]) extends PipelineStep(config, parent) {
+                 override val stepType: QName,
+                 params: Option[ImplParams]) extends PipelineStep(config, parent, stepType) {
   protected[xml] val options = mutable.HashMap.empty[QName, XProcExpression]
 
   def this(config: XMLCalabash, parent: Option[Artifact], stepType: QName) = {
@@ -49,7 +49,7 @@ class AtomicStep(override val config: XMLCalabash,
     }
 
     val okChildren = List(classOf[WithInput], classOf[WithOption])
-    for (child <- relevantChildren()) {
+    for (child <- relevantChildren) {
       if (!okChildren.contains(child.getClass)) {
         throw XProcException.xsElementNotAllowed(location, child.nodeName)
       }
@@ -72,7 +72,7 @@ class AtomicStep(override val config: XMLCalabash,
     }
 
     // If the port has been omitted, it refers to the primary port
-    for (input <- inputs()) {
+    for (input <- inputs) {
       if (input.port.isEmpty) {
         if (primaryInput.isEmpty) {
           throw new ModelException(ExceptionCode.NOPRIMARYINPUTPORT, List(stepType.toString), location)
@@ -84,7 +84,7 @@ class AtomicStep(override val config: XMLCalabash,
 
     // It's an error to have two bindings for the same port name
     val seenPorts = mutable.HashSet.empty[String]
-    for (input <- inputs()) {
+    for (input <- inputs) {
       val port = input.port.get
       if (seenPorts.contains(port)) {
         throw new ModelException(ExceptionCode.DUPINPUTPORT, List(port), location)

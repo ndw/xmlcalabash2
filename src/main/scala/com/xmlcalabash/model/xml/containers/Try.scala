@@ -19,7 +19,7 @@ class Try(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
-    var relChildren = relevantChildren()
+    var relChildren = relevantChildren
     var pos = 0
     while (pos < relChildren.length && relChildren(pos).isInstanceOf[Variable]) {
       valid = valid && relChildren(pos).validate()
@@ -69,7 +69,7 @@ class Try(override val config: XMLCalabash,
     var primaryOutputPort = Option.empty[String]
 
     val impliedOutputs = mutable.HashSet.empty[String]
-    for (child <- relevantChildren()) {
+    for (child <- relevantChildren) {
       // We can do this in one pass because inputs and outputs are always first
       var process = false
       child match {

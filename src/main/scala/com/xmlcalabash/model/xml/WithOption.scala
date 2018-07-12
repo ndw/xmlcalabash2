@@ -83,7 +83,7 @@ class WithOption(override val config: XMLCalabash,
     }
 
     val okChildren = List(classOf[Empty], classOf[Inline], classOf[Pipe], classOf[Document])
-    for (child <- relevantChildren()) {
+    for (child <- relevantChildren) {
       if (!okChildren.contains(child.getClass)) {
         throw XProcException.xsElementNotAllowed(location, child.nodeName)
       }
