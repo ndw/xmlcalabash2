@@ -6,7 +6,7 @@ import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
-import com.xmlcalabash.model.xml.containers.{Choose, ForEach, Group, Try, Viewport, WithDocument, WithProperties}
+import com.xmlcalabash.model.xml.containers.{Choose, Container, ForEach, Group, Try, Viewport, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcAvtExpression, XProcExpression}
@@ -138,6 +138,11 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   }
 
   protected[xml] def parsePipeAttribute(pipe: String): Unit = {
+    if (pipe.trim() == "") {
+      addChild(new Pipe(config, this, None, None))
+      return
+    }
+
     for (spec <- pipe.split("\\s+")) {
       val pos = spec.indexOf("@")
       if (pos >= 0) {
@@ -351,6 +356,18 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
           if (output.port.isDefined) {
             list += output.port.get
           }
+        case _ => Unit
+      }
+    }
+    list.toList
+  }
+
+  def outputs: List[Output] = {
+    val list = mutable.ListBuffer.empty[Output]
+    for (child <- children) {
+      child match {
+        case output: Output =>
+          list += output
         case _ => Unit
       }
     }
@@ -576,10 +593,19 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
           if (pipe.port.isEmpty) {
             val step = findStep(pipe.step.get)
             if (step.isDefined) {
-              if (step.get.primaryOutput.isDefined) {
-                pipe.port = step.get.primaryOutput.get.port.get
-              } else {
-                throw new ModelException(ExceptionCode.NODRP, List(), location)
+              step.get match {
+                case c: Container =>
+                  if (step.get.primaryInput.isDefined) {
+                    pipe.port = step.get.primaryInput.get.port.get
+                  } else {
+                    throw new ModelException(ExceptionCode.NODRP, List(), location)
+                  }
+                case _ =>
+                  if (step.get.primaryOutput.isDefined) {
+                    pipe.port = step.get.primaryOutput.get.port.get
+                  } else {
+                    throw new ModelException(ExceptionCode.NODRP, List(), location)
+                  }
               }
             } else {
               throw new ModelException(ExceptionCode.NODRP, List(), location)
