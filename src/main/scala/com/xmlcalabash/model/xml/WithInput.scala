@@ -91,6 +91,16 @@ class WithInput(override val config: XMLCalabash,
     valid
   }
 
+  override def defaultReadablePort: Option[IOPort] = {
+    // From the point of view of a p:with-input, the DRP is not relative to "me",
+    // it's relative to the step that contains me.
+    if (parent.isDefined) {
+      parent.get.defaultReadablePort
+    } else {
+      None
+    }
+  }
+
   override def makeGraph(graph: Graph, parent: Node) {
     // Process the children in the context of our parent
     for (child <- children) {
