@@ -5,6 +5,7 @@ import java.net.URI
 import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
+import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Choose, Container, ForEach, Group, Try, Viewport, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
@@ -166,6 +167,7 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   }
 
   protected[xml] def addChild(child: Artifact): Unit = {
+    /* Variables everywhere means document order matters.
     child match {
       case ioport: IOPort =>
         var pos = 0
@@ -189,6 +191,8 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
       case _ =>
         children += child
     }
+    */
+    children += child
   }
 
   protected[xml] def insertChildBefore(node: Artifact, insert: Artifact): Unit = {
@@ -277,6 +281,37 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
 
   def lexicalVariables(expr: String): Set[QName] = {
     ValueParser.findVariableRefsInString(config, inScopeNS, expr, location)
+  }
+
+  def staticValue(vref: QName): Option[XPathItemMessage] = {
+    var msg: Option[XPathItemMessage] = None
+    if (parent.isDefined) {
+      var found = false
+      for (child <- parent.get.relevantChildren) {
+        found = found || (child == this)
+        //println(s"$child: $found")
+        if (!found) {
+          child match {
+            case vdef: Variable =>
+              if (vdef.static && vdef.variableName == vref) {
+                msg = vdef.staticValueMessage
+              }
+            case odef: OptionDecl =>
+              if (odef.static && odef.optionName == vref) {
+                msg = odef.staticValueMessage
+              }
+            case _ => Unit
+          }
+        }
+      }
+      if (msg.isDefined) {
+        msg
+      } else {
+        parent.get.staticValue(vref)
+      }
+    } else {
+      None
+    }
   }
 
   def relevantChildren: List[Artifact] = {

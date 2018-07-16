@@ -48,8 +48,17 @@ class Output(override val config: XMLCalabash,
       val context = new ExpressionContext(baseURI, inScopeNS, location)
       val serAvt = new XProcXPathExpression(context, ser.get)
       val bindingRefs = lexicalVariables(ser.get)
+      val staticVariableMap = mutable.HashMap.empty[String, XPathItemMessage]
+      for (vref <- bindingRefs) {
+        val msg = staticValue(vref)
+        if (msg.isDefined) {
+          staticVariableMap.put(vref.getClarkName, msg.get)
+        } else {
+          throw new ModelException(ExceptionCode.NOBINDING, vref.toString, location)
+        }
+      }
       val eval = config.expressionEvaluator
-      val message = eval.singletonValue(serAvt, List(), Map(), None)
+      val message = eval.singletonValue(serAvt, List(), staticVariableMap.toMap, None)
       message match {
         case item: XPathItemMessage =>
           item.item match {

@@ -287,7 +287,7 @@ class DeclareStep(override val config: XMLCalabash,
     }
 
     val groupOne = List(classOf[Input], classOf[Output], classOf[OptionDecl],
-      classOf[Serialization], classOf[Documentation], classOf[PipeInfo])
+      classOf[Serialization], classOf[Documentation], classOf[PipeInfo], classOf[Variable])
     val groupTwo = List(classOf[DeclareStep], classOf[Import], classOf[Documentation], classOf[PipeInfo])
     val groupThree = subpiplineClasses ++ List(classOf[Documentation], classOf[PipeInfo])
 

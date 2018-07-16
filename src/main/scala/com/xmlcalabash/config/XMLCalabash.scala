@@ -18,7 +18,7 @@ import com.xmlcalabash.runtime.{ImplParams, SaxonExpressionEvaluator, XmlStep}
 import com.xmlcalabash.sbt.BuildInfo
 import com.xmlcalabash.util.{URIUtils, XProcURIResolver}
 import net.sf.saxon.lib.{ExtensionFunctionDefinition, ModuleURIResolver, UnparsedTextURIResolver}
-import net.sf.saxon.s9api.{Processor, QName, XdmNode}
+import net.sf.saxon.s9api.{Processor, QName, XdmNode, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.helpers.XMLReaderFactory
 import org.xml.sax.{EntityResolver, InputSource}
@@ -45,6 +45,7 @@ class XMLCalabash extends RuntimeConfiguration {
   private val _expressionEvaluator = new SaxonExpressionEvaluator(this)
   private val _collections = mutable.HashMap.empty[String, List[XdmNode]]
   private val idMap = mutable.HashMap.empty[String,Artifact]
+  private val staticOptionBindings = mutable.HashMap.empty[QName, XdmValue]
 
   private var closed = false
   private var _processor: Processor = _
@@ -218,6 +219,11 @@ class XMLCalabash extends RuntimeConfiguration {
   def episode_=(episode: String): Unit = {
     checkClosed()
     _episode = episode
+  }
+
+  def staticOptionValue(option: QName): Option[XdmValue] = staticOptionBindings.get(option)
+  def setStaticOptionValue(option: QName, value: XdmValue): Unit = {
+    staticOptionBindings.put(option, value)
   }
 
   // ==============================================================================================

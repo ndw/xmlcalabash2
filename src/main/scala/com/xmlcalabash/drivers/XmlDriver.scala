@@ -3,7 +3,7 @@ package com.xmlcalabash.drivers
 import java.io.{File, PrintWriter}
 
 import javax.xml.transform.sax.SAXSource
-import com.jafpl.exceptions.{JafplException}
+import com.jafpl.exceptions.JafplException
 import com.jafpl.graph.Graph
 import com.jafpl.messages.Message
 import com.jafpl.runtime.GraphRuntime
@@ -14,6 +14,7 @@ import com.xmlcalabash.model.xml.{DeclareStep, Parser}
 import com.xmlcalabash.runtime.{ExpressionContext, PrintingConsumer, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.{ArgBundle, URIUtils, XProcVarValue}
 import net.sf.saxon.s9api.QName
+import net.sf.saxon.value.UntypedAtomicValue
 import org.xml.sax.InputSource
 
 import scala.collection.mutable
@@ -31,6 +32,10 @@ object XmlDriver extends App {
   builder.setLineNumbering(true)
 
   val node = builder.build(source)
+
+  for (bind <- options.params.keySet) {
+    xmlCalabash.setStaticOptionValue(bind, options.params(bind).value)
+  }
 
   var errored = false
   try {
@@ -178,7 +183,6 @@ object XmlDriver extends App {
     val bindingsMap = mutable.HashMap.empty[String, Message]
     for (bind <- pipeline.bindings) {
       val jcbind = bind.getClarkName
-
       if (options.params.contains(bind)) {
         xmlCalabash.trace(s"Binding option $bind to '${options.params(bind)}'", "ExternalBindings")
         val value = options.params(bind)
@@ -189,23 +193,27 @@ object XmlDriver extends App {
         xmlCalabash.trace(s"No binding provided for option $bind; using default", "ExternalBindings")
         val decl = pipeline.bindingDeclaration(bind)
         if (decl.isDefined) {
-          if (decl.get.select.isDefined) {
-            val context = new ExpressionContext(None, options.inScopeNamespaces, None)
-            val expr = new XProcXPathExpression(context, decl.get.select.get)
-            val msg = xmlCalabash.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
-            val eval = msg.asInstanceOf[XPathItemMessage].item
-            runtime.setOption(jcbind, new XProcVarValue(eval, context))
-            bindingsMap.put(jcbind, msg)
+          if (decl.get.static) {
+            // nop
           } else {
-            if (decl.get.required) {
-              throw XProcException.staticError(18, bind.toString, pipeline.location)
-            } else {
+            if (decl.get.select.isDefined) {
               val context = new ExpressionContext(None, options.inScopeNamespaces, None)
-              val expr = new XProcXPathExpression(context, "()")
+              val expr = new XProcXPathExpression(context, decl.get.select.get)
               val msg = xmlCalabash.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
               val eval = msg.asInstanceOf[XPathItemMessage].item
               runtime.setOption(jcbind, new XProcVarValue(eval, context))
               bindingsMap.put(jcbind, msg)
+            } else {
+              if (decl.get.required) {
+                throw XProcException.staticError(18, bind.toString, pipeline.location)
+              } else {
+                val context = new ExpressionContext(None, options.inScopeNamespaces, None)
+                val expr = new XProcXPathExpression(context, "()")
+                val msg = xmlCalabash.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
+                val eval = msg.asInstanceOf[XPathItemMessage].item
+                runtime.setOption(jcbind, new XProcVarValue(eval, context))
+                bindingsMap.put(jcbind, msg)
+              }
             }
           }
         } else {

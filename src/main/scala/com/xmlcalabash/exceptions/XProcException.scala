@@ -82,6 +82,8 @@ object XProcException {
   def xsElementNotAllowed(location: Option[Location], element: QName): XProcException = staticError(44, element, location)
   def xsBadTypeValue(name: String, reqdType: String): XProcException = staticError(77, List(name, reqdType), None)
   def xsNoSiblingsOnEmpty(location: Option[Location]): XProcException = staticError(89, None, location)
+  def xsNoSelectOnStaticOption(location: Option[Location]): XProcException = staticError(93, None, location)
+  def xsNoSelectOnVariable(location: Option[Location]): XProcException = staticError(94, None, location)
 
   private def internalError(code: Int, location: Option[Location]): XProcException = {
     internalError(code, location, List())

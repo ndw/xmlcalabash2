@@ -3,35 +3,52 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
+import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.expr.parser.XPathParser
 import net.sf.saxon.s9api.QName
 import net.sf.saxon.sxpath.IndependentContext
 import net.sf.saxon.trans.XPathException
 import net.sf.saxon.value.SequenceType
 
+import scala.collection.mutable
+
 class OptionDecl(override val config: XMLCalabash,
                  override val parent: Option[Artifact]) extends Artifact(config, parent) {
   private var _name: QName = new QName("", "UNINITIALIZED")
   private var _required = false
   private var _select = Option.empty[String]
+  private var _expression = Option.empty[XProcExpression]
   private var _as = Option.empty[SequenceType]
+  private var _static = false
+  private var _staticValueMessage = Option.empty[XPathItemMessage]
 
   def optionName: QName = _name
   def required: Boolean = _required
   def select: Option[String] = _select
+  def expression: XProcExpression = _expression.get
   def as: Option[SequenceType] = _as
+
+  def static: Boolean = _static
+  def staticValueMessage: Option[XPathItemMessage] = {
+    if (_static && _staticValueMessage.isDefined) {
+      _staticValueMessage
+    } else {
+      None
+    }
+  }
 
   override def validate(): Boolean = {
     val qname = lexicalQName(attributes.get(XProcConstants._name))
     if (qname.isEmpty) {
       throw new ModelException(ExceptionCode.NAMEATTRREQ, this.toString, location)
     }
-
     _name = qname.get
+
     _required = lexicalBoolean(attributes.get(XProcConstants._required)).getOrElse(false)
     _select = attributes.get(XProcConstants._select)
+    _static = lexicalBoolean(attributes.get(XProcConstants._static)).getOrElse(false)
 
     val seqType = attributes.get(XProcConstants._as)
     if (seqType.isDefined) {
@@ -51,7 +68,34 @@ class OptionDecl(override val config: XMLCalabash,
       }
     }
 
-    for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._select, XProcConstants._as)) {
+    if (_static) {
+      if (_select.isEmpty) {
+        throw XProcException.xsNoSelectOnStaticOption(location)
+      }
+
+      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      val varExpr = new XProcXPathExpression(context, _select.get, _as)
+      val bindingRefs = lexicalVariables(_select.get)
+      val staticVariableMap = mutable.HashMap.empty[String, XPathItemMessage]
+      for (vref <- bindingRefs) {
+        val msg = staticValue(vref)
+        if (msg.isDefined) {
+          staticVariableMap.put(vref.getClarkName, msg.get)
+        } else {
+          throw new ModelException(ExceptionCode.NOBINDING, vref.toString, location)
+        }
+      }
+      val eval = config.expressionEvaluator
+      if (config.staticOptionValue(optionName).isDefined) {
+        logger.debug(s"Using static option value: $optionName = ${config.staticOptionValue(optionName).get}")
+        _staticValueMessage = Some(eval.precomputedValue(varExpr, config.staticOptionValue(optionName).get, List(), staticVariableMap.toMap, None))
+      } else {
+        _staticValueMessage = Some(eval.value(varExpr, List(), staticVariableMap.toMap, None))
+      }
+    }
+
+    for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._as,
+      XProcConstants._select, XProcConstants._static)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -79,28 +123,13 @@ class OptionDecl(override val config: XMLCalabash,
     val context = new ExpressionContext(_baseURI, inScopeNS, _location)
     val options = new SaxonExpressionOptions(Map("collection" -> false, "optiondecl" -> true))
     val init = new XProcXPathExpression(context, _select.getOrElse("()"), as)
-    val node = graph.addOption(_name.getClarkName, init)
+    val node = graph.addOption(_name.getClarkName, init, _staticValueMessage)
     _graphNode = Some(node)
     config.addNode(node.id, this)
   }
-  /*
-    val container = this.parent.get
-    val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
-    val context = new ExpressionContext(_baseURI, inScopeNS, _location)
-    val options = new SaxonExpressionOptions(Map("collection" -> _collection))
-    _expression = Some(new XProcXPathExpression(context, _select.get, as))
-    val node = cnode.addVariable(_name.getClarkName, expression, options)
-    _graphNode = Some(node)
-    config.addNode(node.id, this)
-
-    for (child <- children) {
-      child.makeGraph(graph, parent)
-    }
-
-   */
 
   override def makeEdges(graph: Graph, parent: Node): Unit = {
-    if (_select.isDefined) {
+    if (_select.isDefined && !_static) {
       val context = new ExpressionContext(_baseURI, inScopeNS, _location)
       val variableRefs = findVariableRefs(new XProcXPathExpression(context, _select.get))
       for (ref <- variableRefs) {

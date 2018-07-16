@@ -3,14 +3,17 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
+import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Pipe}
-import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XProcExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionEvaluator, SaxonExpressionOptions, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.expr.parser.XPathParser
-import net.sf.saxon.s9api.QName
+import net.sf.saxon.s9api.{QName, XdmValue}
 import net.sf.saxon.sxpath.IndependentContext
 import net.sf.saxon.trans.XPathException
 import net.sf.saxon.value.SequenceType
+
+import scala.collection.mutable
 
 class Variable(override val config: XMLCalabash,
                override val parent: Option[Artifact]) extends Artifact(config, parent) {
@@ -19,11 +22,22 @@ class Variable(override val config: XMLCalabash,
   private var _select = Option.empty[String]
   private var _expression = Option.empty[XProcExpression]
   private var _as = Option.empty[SequenceType]
+  private var _static = false
+  private var _staticValueMessage = Option.empty[XPathItemMessage]
 
   def variableName: QName = _name
   def select: Option[String] = _select
   def expression: XProcExpression = _expression.get
   def as: Option[SequenceType] = _as
+
+  def static: Boolean = _static
+  def staticValueMessage: Option[XPathItemMessage] = {
+    if (_static && _staticValueMessage.isDefined) {
+      _staticValueMessage
+    } else {
+      None
+    }
+  }
 
   override def validate(): Boolean = {
     var valid = true
@@ -35,14 +49,14 @@ class Variable(override val config: XMLCalabash,
     _name = qname.get
 
     _select = attributes.get(XProcConstants._select)
+    _static = lexicalBoolean(attributes.get(XProcConstants._static)).getOrElse(false)
+    _collection = lexicalBoolean(attributes.get(XProcConstants._collection)).getOrElse(false)
     if (_select.isEmpty) {
-      throw new ModelException(ExceptionCode.SELECTATTRREQ, this.toString, location)
+      throw XProcException.xsNoSelectOnVariable(location)
     }
 
     val pipe = attributes.get(XProcConstants._pipe)
     val href = attributes.get(XProcConstants._href)
-
-    _collection = lexicalBoolean(attributes.get(XProcConstants._collection)).getOrElse(false)
 
     val seqType = attributes.get(XProcConstants._as)
     if (seqType.isDefined) {
@@ -62,8 +76,26 @@ class Variable(override val config: XMLCalabash,
       }
     }
 
+    if (_static) {
+      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      val varExpr = new XProcXPathExpression(context, _select.get, _as)
+      val bindingRefs = lexicalVariables(_select.get)
+      val staticVariableMap = mutable.HashMap.empty[String, XPathItemMessage]
+      for (vref <- bindingRefs) {
+        val msg = staticValue(vref)
+        if (msg.isDefined) {
+          staticVariableMap.put(vref.getClarkName, msg.get)
+        } else {
+          throw new ModelException(ExceptionCode.NOBINDING, vref.toString, location)
+        }
+      }
+      val eval = config.expressionEvaluator
+      _staticValueMessage = Some(eval.value(varExpr, List(), staticVariableMap.toMap, None))
+    }
+
     for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._as,
-      XProcConstants._select, XProcConstants._pipe, XProcConstants._href, XProcConstants._collection)) {
+      XProcConstants._select, XProcConstants._pipe, XProcConstants._href, XProcConstants._collection,
+      XProcConstants._static)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -125,7 +157,7 @@ class Variable(override val config: XMLCalabash,
     val context = new ExpressionContext(_baseURI, inScopeNS, _location)
     val options = new SaxonExpressionOptions(Map("collection" -> _collection))
     _expression = Some(new XProcXPathExpression(context, _select.get, as))
-    val node = cnode.addVariable(_name.getClarkName, expression, options)
+    val node = cnode.addVariable(_name.getClarkName, expression, _staticValueMessage, options)
     _graphNode = Some(node)
     config.addNode(node.id, this)
 
