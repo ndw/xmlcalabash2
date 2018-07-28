@@ -20,6 +20,7 @@ class PipelineStep(override val config: XMLCalabash,
     _name = Some(name)
   }
 
+  /* this breaks implicit pipeline connections.
   override def name: String = {
     if (label.isDefined && !label.get.startsWith("!")) {
       label.get
@@ -27,6 +28,7 @@ class PipelineStep(override val config: XMLCalabash,
       stepType.toString
     }
   }
+  */
 
   def graphNode: Node = _graphNode.get // Steps always have graphNodes
 
