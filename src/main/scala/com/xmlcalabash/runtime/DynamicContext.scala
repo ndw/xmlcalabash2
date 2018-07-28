@@ -3,10 +3,9 @@ package com.xmlcalabash.runtime
 import java.net.URI
 
 import com.jafpl.graph.Location
-import com.jafpl.messages.{ItemMessage, Message}
-import com.xmlcalabash.messages.XPathItemMessage
+import com.jafpl.messages.Message
 import net.sf.saxon.om.NodeInfo
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode}
+import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable
 import scala.util.DynamicVariable
