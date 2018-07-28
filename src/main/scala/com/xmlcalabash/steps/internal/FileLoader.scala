@@ -3,6 +3,8 @@ package com.xmlcalabash.steps.internal
 import java.io.File
 import java.net.{URI, URLConnection}
 import java.nio.file.Files
+import java.text.SimpleDateFormat
+import java.util.Date
 
 import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
 import com.xmlcalabash.exceptions.XProcException
@@ -103,7 +105,12 @@ class FileLoader(private val context: ExpressionContext,
       val node = config.get.documentManager.parseHtml(href)
       consumer.get.receive("result", new ItemMessage(node, new XProcMetadata(contentType, props.toMap)))
     } else {
+      // FIXME: this isn't necessarily a file URI!
       val file = new File(href)
+      props.put(new QName("cx", XProcConstants.ns_cx, "last-modified"),
+        new XdmAtomicValue(
+          new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(
+          new Date(file.lastModified()))))
       props.put(XProcConstants._content_length, new XdmAtomicValue(file.length()))
       val bytes = Files.readAllBytes(new File(href).toPath)
       val javaItem = new ObjectValue(bytes)
