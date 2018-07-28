@@ -11,6 +11,7 @@ import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
+import net.sf.saxon.value.ObjectValue
 
 import scala.collection.mutable
 
@@ -105,7 +106,8 @@ class FileLoader(private val context: ExpressionContext,
       val file = new File(href)
       props.put(XProcConstants._content_length, new XdmAtomicValue(file.length()))
       val bytes = Files.readAllBytes(new File(href).toPath)
-      consumer.get.receive("result", new ItemMessage(bytes, new XProcMetadata(contentType, props.toMap)))
+      val javaItem = new ObjectValue(bytes)
+      consumer.get.receive("result", new ItemMessage(javaItem, new XProcMetadata(contentType, props.toMap)))
     }
 
     logger.debug(s"Loaded $href as $contentType")
