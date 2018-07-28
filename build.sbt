@@ -1,7 +1,7 @@
 name         := "XML Calabash"
 organization := "com.xmlcalabash"
 version      := "1.9.1"
-scalaVersion := "2.12.3"
+scalaVersion := "2.12.6"
 
 lazy val meerschaum = (project in file(".")).
   enablePlugins(BuildInfoPlugin).
@@ -43,7 +43,7 @@ libraryDependencies ++= Seq(
   "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
   "org.xmlresolver" % "xmlresolver" % "0.12.3",
   "nu.validator" % "htmlparser" % "1.4.6",
-  "com.jafpl" % "jafpl_2.12" % "0.0.53"
+  "com.jafpl" % "jafpl_2.12" % "0.0.53-SNAPSHOT"
 )
 
 // Yes, this is an odd place for local use, but it's where the website
