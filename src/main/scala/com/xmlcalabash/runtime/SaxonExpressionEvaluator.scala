@@ -13,7 +13,7 @@ import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.lib.{CollectionFinder, Resource, ResourceCollection}
 import net.sf.saxon.om.{Item, SpaceStrippingRule}
-import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.trans.XPathException
 import net.sf.saxon.value.{SequenceType, UntypedAtomicValue}
 import org.slf4j.{Logger, LoggerFactory}
@@ -107,7 +107,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       value match {
         case item: ItemMessage =>
           item.item match {
-            case xitem: XdmNode =>
+            case xitem: XdmItem =>
               checkDocument(newContext, xitem, value)
             case _ => Unit
           }
@@ -373,6 +373,8 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         if (p.getNodeKind == XdmNodeKind.DOCUMENT) {
           dynContext.addDocument(p, msg)
         }
+      case item: XdmItem =>
+        dynContext.addItem(item.getUnderlyingValue, msg)
       case _ => Unit
     }
   }
@@ -382,7 +384,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       case item: ItemMessage =>
         item.item match {
           case node: XdmNode => return node
-          //case item: XdmItem => return item
+          case item: XdmItem => return item
           case _ => Unit
         }
 

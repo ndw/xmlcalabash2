@@ -25,7 +25,7 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
 
   override def getFunctionQName: StructuredQName = funcname
 
-  override def getArgumentTypes: Array[SequenceType] = Array(SequenceType.SINGLE_NODE)
+  override def getArgumentTypes: Array[SequenceType] = Array(SequenceType.SINGLE_ITEM)
 
   override def getResultType(suppliedArgumentTypes: Array[SequenceType]): SequenceType = SequenceType.SINGLE_ITEM
 
@@ -41,15 +41,19 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
     }
 
     override def call(context: XPathContext, arguments: Array[Sequence]): Sequence = {
-      val exprEval = runtime.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
+      val exprEval = runtime.expressionEvaluator
       if (exprEval.dynContext.isEmpty) {
         throw XProcException.xiExtFunctionNotAllowed()
       }
 
       val doc = arguments(0).head
-      val msg = exprEval.dynContext.get.message(doc.asInstanceOf[NodeInfo])
+      val msg = exprEval.dynContext.get.message(doc)
       if (msg.isEmpty) {
-        throw XProcException.xiDocPropsUnavail(exprEval.dynContext.get.location, new URI(doc.asInstanceOf[NodeInfo].getBaseURI))
+        val baseURI = doc match {
+          case ni: NodeInfo => ni.getBaseURI
+          case _ => ""
+        }
+        throw XProcException.xiDocPropsUnavail(exprEval.dynContext.get.location, new URI(baseURI))
       }
 
       val props: Map[QName,XdmItem] = msg.get match {
@@ -67,7 +71,11 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
       var map = new XdmMap()
       for (key <- props.keySet) {
         val value = props(key)
-        map = map.put(new XdmAtomicValue(key), value)
+        if (key.getNamespaceURI == "") {
+          map = map.put(new XdmAtomicValue(key.getLocalName), value)
+        } else {
+          map = map.put(new XdmAtomicValue(key), value)
+        }
       }
 
       map.getUnderlyingValue

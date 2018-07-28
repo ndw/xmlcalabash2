@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.jafpl.graph.Location
 import com.jafpl.messages.Message
-import net.sf.saxon.om.NodeInfo
+import net.sf.saxon.om.{Item, NodeInfo}
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable
@@ -19,8 +19,9 @@ object DynamicContext {
 class DynamicContext {
   private var _iterationPosition = Option.empty[Long]
   private var _iterationSize = Option.empty[Long]
-  private var _documents = mutable.HashMap.empty[NodeInfo,Message]
-  private var _messages = mutable.HashMap.empty[Message,XdmNode]
+  private val _documents = mutable.HashMap.empty[Item,Message]
+  private val _imessages = mutable.HashMap.empty[Message,Item]
+  private val _messages = mutable.HashMap.empty[Message,XdmNode]
   private var _location = Option.empty[Location]
   private var _baseURI = Option.empty[URI]
   private var _injElapsed = Option.empty[Double]
@@ -31,7 +32,7 @@ class DynamicContext {
   def iterationPosition: Option[Long] = _iterationPosition
   def iterationSize: Option[Long] = _iterationSize
 
-  def message(document: NodeInfo): Option[Message] = {
+  def message(document: Item): Option[Message] = {
     _documents.get(document)
   }
 
@@ -67,5 +68,11 @@ class DynamicContext {
   def addDocument(doc: XdmNode, msg: Message): Unit = {
     _documents.put(doc.getUnderlyingNode, msg)
     _messages.put(msg, doc)
+    _imessages.put(msg, doc.getUnderlyingNode)
+  }
+
+  def addItem(item: Item, msg: Message): Unit = {
+    _documents.put(item, msg)
+    _imessages.put(msg, item)
   }
 }
