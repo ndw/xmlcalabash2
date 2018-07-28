@@ -34,7 +34,7 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   protected[xml] var dump_attr = Option.empty[xml.MetaData]
   protected[xml] var _location = Option.empty[Location]
   protected[xml] var _baseURI = Option.empty[URI]
-  protected[xml] var _nodeName = XProcConstants.UNKNOWN
+  protected[xml] var _nodeName: QName = XProcConstants.UNKNOWN
   protected[xml] var _xmlId = Option.empty[String]
   protected[xml] val _inputInjectables: ListBuffer[XProcPortInjectable] = ListBuffer.empty[XProcPortInjectable]
   protected[xml] val _outputInjectables: ListBuffer[XProcPortInjectable] = ListBuffer.empty[XProcPortInjectable]
