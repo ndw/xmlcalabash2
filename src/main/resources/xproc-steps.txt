@@ -18,6 +18,12 @@ step p:count has implementation xc:Count
   output result
   option limit? as integer = "0"
 
+step p:directory-list has implementation xc:DirectoryList
+  output result
+  option path as anyURI
+  option include-filter? as RegularExpression
+  option exclude-filter? as RegularExpression
+
 step p:error has implementation xc:Error
   option code as QName
   option code-prefix? as NCName
@@ -97,12 +103,6 @@ step p:delete
   input source
   output result
   option match as XSLTMatchPattern
-
-step p:directory-list
-  output result
-  option path as anyURI
-  option include-filter? as RegularExpression
-  option exclude-filter? as RegularExpression
 
 step p:escape-markup
   input source

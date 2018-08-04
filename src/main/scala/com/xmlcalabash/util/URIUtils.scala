@@ -1,5 +1,6 @@
 package com.xmlcalabash.util
 
+import java.io.File
 import java.net.URI
 
 object URIUtils {
@@ -50,5 +51,17 @@ object URIUtils {
     }
 
     encoded
+  }
+
+  def toFile(uri: URI): File = {
+    if (!"file".equalsIgnoreCase(uri.getScheme)) {
+      throw new IllegalStateException("Expecting a file URI: " + uri.toASCIIString)
+    }
+    if (uri.getAuthority != null && uri.getAuthority.length > 0) {
+      new File("//" + uri.getAuthority + uri.getPath)
+    }
+    else {
+      new File(uri.getPath)
+    }
   }
 }

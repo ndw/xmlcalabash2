@@ -120,6 +120,9 @@ object XProcConstants {
   val c_document_properties = new QName("c", ns_c, "document-properties")
   val c_property = new QName("c", ns_c, "property")
   val c_result = new QName("c", ns_c, "result")
+  val c_directory = new QName("c", ns_c, "directory")
+  val c_file = new QName("c", ns_c, "file")
+  val c_other = new QName("c", ns_c, "other")
 
   // Extensions
   val cx_document = new QName("cx", ns_cx, "document")
