@@ -1,9 +1,9 @@
 package com.xmlcalabash.parsers
 
-// This file was generated on Tue Aug 29, 2017 19:50 (UTC-05) by REx v5.45 which is Copyright (c) 1979-2017 by Gunther Rademacher <grd@gmx.net>
+// This file was generated on Wed Aug 15, 2018 16:55 (UTC+01) by REx v5.47 which is Copyright (c) 1979-2017 by Gunther Rademacher <grd@gmx.net>
 // REx command line: StepConfigParser.ebnf -ll 2 -scala -tree
 
-import scala.collection.mutable.ArrayBuffer
+import collection.mutable.ArrayBuffer
 
 class StepConfigParser {
 
@@ -12,11 +12,23 @@ class StepConfigParser {
     initialize(string, eh)
   }
 
-  def initialize(string: String, eh: StepConfigParser.EventHandler) {
-    eventHandler = eh
-    input = string
-    size = input.length
+  def initialize(source: String, parsingEventHandler: StepConfigParser.EventHandler) {
+    eventHandler = parsingEventHandler
+    input = source
+    size = source.length
     reset(0, 0, 0)
+  }
+
+  def getInput: String = {
+    return input
+  }
+
+  def getTokenOffset: Int = {
+    return b0
+  }
+
+  def getTokenEnd: Int = {
+    return e0
   }
 
   def reset(l: Int, b: Int, e: Int) {
@@ -36,7 +48,7 @@ class StepConfigParser {
     var c1 = true
     while (c1) {
       lookahead1W(19)               // Comment | WhiteSpace | EOF | 'function' | 'prefix' | 'step'
-      if (l1 != 27) {               // 'prefix'
+      if (l1 != 28) {               // 'prefix'
         c1 = false
       }
       else {
@@ -51,7 +63,7 @@ class StepConfigParser {
       }
       else {
         l1 match {
-          case 29 =>                  // 'step'
+          case 30 =>                  // 'step'
             whitespace
             parse_Step
           case _ =>
@@ -66,11 +78,11 @@ class StepConfigParser {
 
   private def parse_Prefix {
     eventHandler.startNonterminal("Prefix", e0)
-    consume(27)                     // 'prefix'
+    consume(28)                     // 'prefix'
     lookahead1W(7)                  // Comment | WhiteSpace | Macro
     consume(11)                     // Macro
     lookahead1W(11)                 // Comment | WhiteSpace | '='
-    consume(17)                     // '='
+    consume(18)                     // '='
     lookahead1W(9)                  // Comment | WhiteSpace | Expansion
     consume(13)                     // Expansion
     eventHandler.endNonterminal("Prefix", e0)
@@ -78,14 +90,14 @@ class StepConfigParser {
 
   private def parse_Step {
     eventHandler.startNonterminal("Step", e0)
-    consume(29)                     // 'step'
+    consume(30)                     // 'step'
     lookahead1W(2)                  // Comment | WhiteSpace | StepName
     consume(6)                      // StepName
     var c1 = true
     while (c1) {
-      lookahead1W(27)               // Comment | WhiteSpace | EOF | 'function' | 'has' | 'input' | 'option' | 'output' |
+      lookahead1W(28)               // Comment | WhiteSpace | EOF | 'function' | 'has' | 'input' | 'option' | 'output' |
       // 'primary' | 'step'
-      if (l1 != 21) {               // 'has'
+      if (l1 != 22) {               // 'has'
         c1 = false
       }
       else {
@@ -95,16 +107,16 @@ class StepConfigParser {
     }
     var c2 = true
     while (c2) {
-      lookahead1W(24)               // Comment | WhiteSpace | EOF | 'function' | 'input' | 'option' | 'output' |
+      lookahead1W(25)               // Comment | WhiteSpace | EOF | 'function' | 'input' | 'option' | 'output' |
       // 'primary' | 'step'
       l1 match {
-        case 28 =>                    // 'primary'
+        case 29 =>                    // 'primary'
           lookahead2W(16)             // Comment | WhiteSpace | 'input' | 'output'
         case _ =>
           lk = l1
       }
-      if (lk != 23                  // 'input'
-        && lk != 1500) {             // 'primary' 'input'
+      if (lk != 24                  // 'input'
+        && lk != 1565) {             // 'primary' 'input'
         c2 = false
       }
       else {
@@ -114,10 +126,10 @@ class StepConfigParser {
     }
     var c3 = true
     while (c3) {
-      lookahead1W(21)               // Comment | WhiteSpace | EOF | 'function' | 'option' | 'output' | 'primary' |
+      lookahead1W(22)               // Comment | WhiteSpace | EOF | 'function' | 'option' | 'output' | 'primary' |
       // 'step'
-      if (l1 != 26                  // 'output'
-        && l1 != 28) {               // 'primary'
+      if (l1 != 27                  // 'output'
+        && l1 != 29) {               // 'primary'
         c3 = false
       }
       else {
@@ -128,7 +140,7 @@ class StepConfigParser {
     var c4 = true
     while (c4) {
       lookahead1W(18)               // Comment | WhiteSpace | EOF | 'function' | 'option' | 'step'
-      if (l1 != 25) {               // 'option'
+      if (l1 != 26) {               // 'option'
         c4 = false
       }
       else {
@@ -141,13 +153,13 @@ class StepConfigParser {
 
   private def parse_Function {
     eventHandler.startNonterminal("Function", e0)
-    consume(20)                     // 'function'
+    consume(21)                     // 'function'
     lookahead1W(8)                  // Comment | WhiteSpace | FunctionName
     consume(12)                     // FunctionName
     var c1 = true
     while (c1) {
       lookahead1W(17)               // Comment | WhiteSpace | EOF | 'function' | 'has' | 'step'
-      if (l1 != 21) {               // 'has'
+      if (l1 != 22) {               // 'has'
         c1 = false
       }
       else {
@@ -160,9 +172,9 @@ class StepConfigParser {
 
   private def parse_Implementation {
     eventHandler.startNonterminal("Implementation", e0)
-    consume(21)                     // 'has'
+    consume(22)                     // 'has'
     lookahead1W(12)                 // Comment | WhiteSpace | 'implementation'
-    consume(22)                     // 'implementation'
+    consume(23)                     // 'implementation'
     lookahead1W(4)                  // Comment | WhiteSpace | ClassName
     consume(8)                      // ClassName
     eventHandler.endNonterminal("Implementation", e0)
@@ -170,57 +182,57 @@ class StepConfigParser {
 
   private def parse_Input {
     eventHandler.startNonterminal("Input", e0)
-    if (l1 == 28) {                 // 'primary'
-      consume(28)                   // 'primary'
+    if (l1 == 29) {                 // 'primary'
+      consume(29)                   // 'primary'
     }
     lookahead1W(13)                 // Comment | WhiteSpace | 'input'
-    consume(23)                     // 'input'
+    consume(24)                     // 'input'
     lookahead1W(1)                  // Comment | WhiteSpace | PortName
     consume(5)                      // PortName
-    lookahead1W(25)                 // Comment | WhiteSpace | EOF | '*' | 'function' | 'input' | 'option' | 'output' |
+    lookahead1W(26)                 // Comment | WhiteSpace | EOF | '*' | 'function' | 'input' | 'option' | 'output' |
     // 'primary' | 'step'
-    if (l1 == 16) {                 // '*'
-      consume(16)                   // '*'
+    if (l1 == 17) {                 // '*'
+      consume(17)                   // '*'
     }
     eventHandler.endNonterminal("Input", e0)
   }
 
   private def parse_Output {
     eventHandler.startNonterminal("Output", e0)
-    if (l1 == 28) {                 // 'primary'
-      consume(28)                   // 'primary'
+    if (l1 == 29) {                 // 'primary'
+      consume(29)                   // 'primary'
     }
     lookahead1W(14)                 // Comment | WhiteSpace | 'output'
-    consume(26)                     // 'output'
+    consume(27)                     // 'output'
     lookahead1W(1)                  // Comment | WhiteSpace | PortName
     consume(5)                      // PortName
-    lookahead1W(22)                 // Comment | WhiteSpace | EOF | '*' | 'function' | 'option' | 'output' | 'primary' |
+    lookahead1W(23)                 // Comment | WhiteSpace | EOF | '*' | 'function' | 'option' | 'output' | 'primary' |
     // 'step'
-    if (l1 == 16) {                 // '*'
-      consume(16)                   // '*'
+    if (l1 == 17) {                 // '*'
+      consume(17)                   // '*'
     }
     eventHandler.endNonterminal("Output", e0)
   }
 
   private def parse_Option {
     eventHandler.startNonterminal("Option", e0)
-    consume(25)                     // 'option'
+    consume(26)                     // 'option'
     lookahead1W(3)                  // Comment | WhiteSpace | OptionName
     consume(7)                      // OptionName
-    lookahead1W(26)                 // Comment | WhiteSpace | EOF | '=' | '?' | 'as' | 'function' | 'of' | 'option' |
+    lookahead1W(27)                 // Comment | WhiteSpace | EOF | '=' | '?' | 'as' | 'function' | 'of' | 'option' |
     // 'step'
-    if (l1 == 18) {                 // '?'
-      consume(18)                   // '?'
+    if (l1 == 19) {                 // '?'
+      consume(19)                   // '?'
     }
-    lookahead1W(23)                 // Comment | WhiteSpace | EOF | '=' | 'as' | 'function' | 'of' | 'option' | 'step'
-    if (l1 == 19                    // 'as'
-      || l1 == 24) {                 // 'of'
+    lookahead1W(24)                 // Comment | WhiteSpace | EOF | '=' | 'as' | 'function' | 'of' | 'option' | 'step'
+    if (l1 == 20                    // 'as'
+      || l1 == 25) {                 // 'of'
       whitespace
       parse_DeclaredType
     }
     lookahead1W(20)                 // Comment | WhiteSpace | EOF | '=' | 'function' | 'option' | 'step'
-    if (l1 == 17) {                 // '='
-      consume(17)                   // '='
+    if (l1 == 18) {                 // '='
+      consume(18)                   // '='
       lookahead1W(0)                // Comment | WhiteSpace | StringLiteral
       consume(3)                    // StringLiteral
     }
@@ -230,12 +242,13 @@ class StepConfigParser {
   private def parse_DeclaredType {
     eventHandler.startNonterminal("DeclaredType", e0)
     l1 match {
-      case 19 =>                      // 'as'
-        consume(19)                   // 'as'
+      case 20 =>                      // 'as'
+        consume(20)                   // 'as'
         lookahead1W(5)                // Comment | WhiteSpace | TypeName
-        consume(9)                    // TypeName
+        whitespace
+        parse_SeqType
       case _ =>
-        consume(24)                   // 'of'
+        consume(25)                   // 'of'
         lookahead1W(10)               // Comment | WhiteSpace | '('
         whitespace
         parse_TokenList
@@ -245,23 +258,49 @@ class StepConfigParser {
 
   private def parse_TokenList {
     eventHandler.startNonterminal("TokenList", e0)
-    consume(14)                     // '('
+    consume(15)                     // '('
     lookahead1W(6)                  // Comment | WhiteSpace | Literal
     consume(10)                     // Literal
     var c1 = true
     while (c1) {
       lookahead1W(15)               // Comment | WhiteSpace | ')' | '|'
-      if (l1 != 30) {               // '|'
+      if (l1 != 31) {               // '|'
         c1 = false
       }
       else {
-        consume(30)                 // '|'
+        consume(31)                 // '|'
         lookahead1W(6)              // Comment | WhiteSpace | Literal
         consume(10)                 // Literal
       }
     }
-    consume(15)                     // ')'
+    consume(16)                     // ')'
     eventHandler.endNonterminal("TokenList", e0)
+  }
+
+  private def parse_SeqType {
+    eventHandler.startNonterminal("SeqType", e0)
+    consume(9)                      // TypeName
+    lookahead1W(21)                 // Comment | WhiteSpace | EOF | Occurrence | '=' | 'function' | 'option' | 'step'
+    if (l1 == 14) {                 // Occurrence
+      consume(14)                   // Occurrence
+    }
+    eventHandler.endNonterminal("SeqType", e0)
+  }
+
+  def getErrorMessage(e: StepConfigParser.ParseException) = {
+    var message = e.getMessage
+    val tokenSet = StepConfigParser.getExpectedTokenSet(e)
+    val found = StepConfigParser.getOffendingToken(e)
+    val size = e.end - e.begin
+    message += (if (found == null) "" else ", found " + found) + "\nwhile expecting " +
+      (if (tokenSet.length == 1) tokenSet(0) else "[" + (tokenSet mkString ", ") + "]") + "\n" +
+      (if (size == 0 || found != null) "" else "after successfully scanning " + size + " characters beginning ")
+    val prefix = input.substring(0, e.begin)
+    val line = prefix.replaceAll("[^\n]", "").length + 1
+    val column = prefix.length - prefix.lastIndexOf('\n')
+    message +
+      "at line " + line + ", column " + column + ":\n..." +
+      input.substring(e.begin, math.min(input.length, e.begin + 64)) + "..."
   }
 
   private def consume(t: Int) {
@@ -283,7 +322,7 @@ class StepConfigParser {
     }
   }
 
-  private def matchW(set: Int): Int =  {
+  private def matchW(set: Int): Int = {
     var continue = true
     var code = 0
     while (continue) {
@@ -311,20 +350,6 @@ class StepConfigParser {
       e2 = end
     }
     lk = (l2 << 6) | l1
-  }
-
-  def getErrorMessage(e: StepConfigParser.ParseException) = {
-    val tokenSet = StepConfigParser.getExpectedTokenSet(e)
-    val found = StepConfigParser.getOffendingToken(e)
-    val prefix = input.substring(0, e.begin)
-    val line = prefix.replaceAll("[^\n]", "").length + 1
-    val column = prefix.length - prefix.lastIndexOf('\n')
-    val size = e.end - e.begin
-    e.getMessage + (if (found == null) "" else ", found " + found) + "\nwhile expecting " +
-      (if (tokenSet.length == 1) tokenSet(0) else "[" + (tokenSet mkString ", ") + "]") + "\n" +
-      (if (size == 0 || found != null) "" else "after successfully scanning " + size + " characters beginning ") +
-      "at line " + line + ", column " + column + ":\n..." +
-      input.substring(e.begin, math.min(input.length, e.begin + 64)) + "..."
   }
 
   def error(b: Int, e: Int, s: Int, l: Int, t: Int): Int = {
@@ -391,14 +416,13 @@ class StepConfigParser {
     }
     else {
       if (end > size) end = size
-      (result & 31) - 1
+      (result & 63) - 1
     }
   }
 
-  var input: String = null
-  var size = 0
   var begin = 0
   var end = 0
+
   var lk = 0
   var b0 = 0
   var e0 = 0
@@ -409,6 +433,8 @@ class StepConfigParser {
   var b2 = 0
   var e2 = 0
   var eventHandler: StepConfigParser.EventHandler = null
+  var input: String = null
+  var size = 0
 }
 
 object StepConfigParser {
@@ -418,6 +444,7 @@ object StepConfigParser {
   }
 
   class ParseException(val begin: Int, val end: Int, val state: Int, val offending: Int, val expected: Int) extends RuntimeException {
+
     override def getMessage = {
       if (offending < 0) "lexical analysis failed" else "syntax error"
     }
@@ -451,7 +478,7 @@ object StepConfigParser {
     }
 
     override def startNonterminal(name: String, begin: Int) {
-      val nonterminal = new Nonterminal(name, begin, begin, new ArrayBuffer[Symbol])
+      val nonterminal = new Nonterminal(name, begin, begin, ArrayBuffer[Symbol]())
       if (top >= 0) addChild(nonterminal)
       top += 1
       if (top == stack.length) stack += nonterminal else stack(top) = nonterminal
@@ -512,12 +539,12 @@ object StepConfigParser {
   }
 
   private def getTokenSet(tokenSetId: Int) = {
-    var expected = new ArrayBuffer[String]
+    var expected = ArrayBuffer[String]()
     val s = if (tokenSetId < 0) - tokenSetId else INITIAL(tokenSetId) & 127
     var i = 0
-    while (i < 31) {
+    while (i < 32) {
       var j = i
-      val i0 = (i >> 5) * 105 + s - 1
+      val i0 = (i >> 5) * 106 + s - 1
       var f = EXPECTED(i0)
       while (f != 0) {
         if ((f & 1) != 0) {
@@ -532,11 +559,11 @@ object StepConfigParser {
   }
 
   private final val MAP0 = Array(
-    /*   0 */ 36, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 1, 4, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 6, 7,
-    /*  35 */ 6, 6, 6, 6, 8, 9, 10, 11, 6, 6, 12, 12, 13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 14, 6, 6, 15, 6, 16,
-    /*  64 */ 6, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    /*  91 */ 6, 6, 6, 6, 17, 6, 18, 17, 19, 17, 20, 21, 17, 22, 23, 17, 17, 24, 25, 26, 27, 28, 17, 29, 30, 31, 32, 17,
-    /* 119 */ 17, 33, 34, 17, 6, 35, 6, 6, 6
+    /*   0 */ 37, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 1, 4, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 6, 7,
+    /*  35 */ 6, 6, 6, 6, 8, 9, 10, 11, 12, 6, 13, 13, 14, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 15, 6, 6, 16, 6, 17,
+    /*  64 */ 6, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18,
+    /*  91 */ 6, 6, 6, 6, 18, 6, 19, 18, 20, 18, 21, 22, 18, 23, 24, 18, 18, 25, 26, 27, 28, 29, 18, 30, 31, 32, 33, 18,
+    /* 119 */ 18, 34, 35, 18, 6, 36, 6, 6, 6
   )
 
   private final val MAP1 = Array(
@@ -551,89 +578,90 @@ object StepConfigParser {
     /* 168 */ 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 392, 392, 392, 392, 392, 392, 392, 392,
     /* 189 */ 392, 392, 392, 392, 392, 392, 392, 392, 392, 392, 392, 392, 392, 392, 392, 392, 392, 392, 392, 392, 392,
     /* 210 */ 392, 392, 392, 322, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323,
-    /* 231 */ 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 392, 36, 1, 1, 1, 1, 1, 1, 1,
-    /* 255 */ 1, 2, 3, 1, 4, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 6, 7, 6, 6, 6, 6, 8, 9, 10, 11, 6, 6,
-    /* 290 */ 12, 12, 13, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 6, 6, 6, 6, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    /* 317 */ 17, 17, 17, 17, 17, 6, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 6, 18, 17, 19, 17,
-    /* 344 */ 20, 21, 17, 22, 23, 17, 17, 24, 25, 26, 27, 28, 17, 29, 30, 31, 32, 17, 17, 33, 34, 17, 6, 35, 6, 6, 6, 6,
-    /* 372 */ 6, 6, 6, 6, 6, 6, 6, 6, 17, 17, 6, 6, 6, 6, 6, 6, 6, 6, 6, 12, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-    /* 406 */ 6, 6, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 14, 6, 6, 15, 6, 16
+    /* 231 */ 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 323, 392, 37, 1, 1, 1, 1, 1, 1, 1,
+    /* 255 */ 1, 2, 3, 1, 4, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 6, 7, 6, 6, 6, 6, 8, 9, 10, 11, 12,
+    /* 289 */ 6, 13, 13, 14, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 6, 6, 6, 6, 18, 18, 18, 18, 18, 18, 18, 18, 18,
+    /* 317 */ 18, 18, 18, 18, 18, 6, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 6, 19, 18, 20, 18,
+    /* 344 */ 21, 22, 18, 23, 24, 18, 18, 25, 26, 27, 28, 29, 18, 30, 31, 32, 33, 18, 18, 34, 35, 18, 6, 36, 6, 6, 6, 6,
+    /* 372 */ 6, 6, 6, 6, 6, 6, 6, 6, 18, 18, 6, 6, 6, 6, 6, 6, 6, 6, 6, 13, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+    /* 406 */ 6, 6, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 15, 6, 6, 16, 6, 17
   )
 
   private final val MAP2 = Array(
-    /*  0 */ 57344, 63744, 64976, 65008, 65536, 983040, 63743, 64975, 65007, 65533, 983039, 1114111, 6, 17, 6, 17, 17,
+    /*  0 */ 57344, 63744, 64976, 65008, 65536, 983040, 63743, 64975, 65007, 65533, 983039, 1114111, 6, 18, 6, 18, 18,
     /* 17 */ 6
   )
 
   private final val INITIAL = Array(
     /*  0 */ 1, 2, 899, 4, 1157, 6, 7, 8, 1673, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
-    /* 27 */ 28
+    /* 27 */ 28, 29
   )
 
   private final val TRANSITION = Array(
-    /*    0 */ 915, 915, 915, 915, 915, 915, 915, 915, 915, 915, 915, 915, 915, 915, 915, 915, 915, 915, 915, 915, 915,
-    /*   21 */ 915, 915, 1161, 915, 914, 915, 915, 915, 915, 915, 915, 592, 592, 592, 603, 915, 1166, 915, 1161, 915,
-    /*   41 */ 914, 915, 915, 915, 915, 915, 915, 592, 592, 592, 595, 915, 1166, 915, 911, 915, 914, 915, 915, 915, 915,
-    /*   62 */ 915, 915, 592, 592, 592, 618, 915, 915, 915, 1161, 915, 914, 915, 915, 915, 915, 915, 915, 630, 630, 630,
-    /*   83 */ 634, 915, 1166, 915, 911, 915, 914, 915, 915, 915, 915, 915, 915, 915, 915, 915, 1100, 915, 1166, 915,
-    /*  103 */ 1161, 915, 914, 915, 915, 915, 915, 915, 915, 642, 868, 915, 927, 915, 790, 915, 840, 915, 914, 915, 915,
-    /*  124 */ 915, 915, 915, 915, 609, 851, 915, 811, 915, 1171, 915, 846, 915, 914, 915, 915, 915, 915, 915, 915, 915,
-    /*  145 */ 1097, 915, 1100, 915, 1166, 915, 1161, 915, 914, 915, 915, 915, 915, 915, 915, 915, 705, 915, 1100, 915,
-    /*  165 */ 1166, 915, 1161, 915, 914, 915, 915, 915, 915, 915, 915, 915, 915, 777, 651, 915, 1166, 915, 906, 915,
-    /*  185 */ 666, 915, 915, 915, 915, 915, 915, 1156, 675, 915, 1100, 684, 720, 915, 1161, 915, 914, 915, 915, 915,
-    /*  205 */ 915, 915, 915, 692, 692, 692, 696, 915, 1166, 915, 1161, 915, 704, 915, 915, 915, 915, 915, 915, 915,
-    /*  225 */ 915, 915, 1100, 895, 901, 915, 1161, 915, 914, 915, 915, 915, 915, 915, 915, 915, 971, 1054, 1122, 915,
-    /*  245 */ 1166, 915, 1161, 915, 914, 915, 915, 915, 915, 915, 915, 915, 915, 915, 1136, 915, 1166, 915, 1161, 915,
-    /*  265 */ 914, 915, 915, 915, 915, 915, 915, 713, 738, 915, 1100, 684, 720, 915, 1161, 915, 914, 915, 915, 915,
-    /*  285 */ 915, 915, 915, 713, 738, 916, 1030, 684, 720, 747, 1161, 915, 914, 610, 915, 939, 915, 915, 915, 713,
-    /*  305 */ 738, 915, 1100, 684, 720, 915, 1161, 915, 757, 915, 915, 915, 915, 915, 915, 713, 738, 915, 1100, 684,
-    /*  325 */ 720, 915, 1161, 975, 914, 775, 853, 915, 915, 915, 915, 713, 738, 954, 958, 684, 720, 915, 785, 915, 658,
-    /*  346 */ 915, 915, 915, 915, 915, 915, 713, 738, 808, 1176, 684, 720, 915, 1161, 915, 914, 915, 915, 915, 915,
-    /*  366 */ 915, 915, 713, 819, 824, 833, 684, 720, 915, 1161, 643, 861, 870, 1080, 749, 915, 915, 915, 713, 738,
-    /*  386 */ 915, 1100, 684, 720, 915, 1161, 915, 878, 915, 915, 915, 915, 915, 915, 713, 738, 915, 1100, 684, 889,
-    /*  406 */ 915, 1161, 915, 914, 924, 935, 915, 915, 915, 915, 713, 738, 915, 1100, 684, 947, 915, 1161, 1050, 914,
-    /*  426 */ 915, 993, 966, 983, 915, 915, 713, 1005, 1011, 1016, 684, 720, 915, 1161, 915, 914, 1083, 667, 676, 915,
-    /*  446 */ 915, 915, 713, 738, 795, 800, 684, 720, 725, 730, 1024, 1038, 915, 915, 915, 915, 915, 915, 713, 738,
-    /*  466 */ 915, 1100, 684, 720, 622, 1161, 915, 914, 915, 881, 915, 915, 915, 915, 713, 738, 1062, 1066, 684, 720,
-    /*  486 */ 739, 1161, 988, 914, 915, 915, 915, 915, 915, 915, 713, 738, 915, 1100, 684, 720, 1044, 1161, 1074, 914,
-    /*  506 */ 1150, 1091, 767, 915, 915, 915, 713, 738, 915, 1100, 684, 1108, 1116, 1161, 915, 1130, 762, 915, 915,
-    /*  525 */ 915, 915, 915, 713, 738, 915, 1100, 684, 720, 915, 1161, 915, 914, 915, 997, 915, 915, 915, 915, 713,
-    /*  545 */ 738, 915, 1100, 684, 720, 915, 1161, 915, 914, 915, 915, 1144, 915, 915, 915, 915, 825, 915, 1100, 915,
-    /*  565 */ 1166, 915, 1161, 915, 914, 915, 915, 915, 915, 915, 915, 915, 915, 1184, 1188, 915, 915, 915, 915, 915,
-    /*  585 */ 915, 915, 915, 915, 915, 915, 915, 384, 384, 384, 384, 384, 384, 384, 384, 30, 31, 0, 384, 384, 384, 384,
-    /*  607 */ 0, 30, 31, 0, 0, 0, 0, 0, 0, 0, 94, 384, 384, 384, 384, 0, 0, 0, 0, 71, 0, 72, 0, 413, 413, 413, 413,
-    /*  634 */ 413, 413, 413, 413, 0, 30, 31, 0, 30, 0, 0, 0, 0, 0, 0, 0, 81, 0, 2176, 0, 0, 0, 30, 31, 60, 0, 0, 0, 0,
-    /*  663 */ 0, 0, 87, 73, 0, 0, 0, 0, 0, 0, 0, 99, 1706, 0, 0, 0, 0, 0, 0, 0, 105, 801, 930, 931, 1060, 1189, 1190,
-    /*  690 */ 1319, 1448, 32, 32, 32, 32, 32, 32, 32, 32, 0, 30, 31, 317, 256, 0, 0, 0, 0, 0, 0, 0, 2048, 0, 801, 931,
-    /*  716 */ 1060, 1190, 1319, 1448, 1577, 1706, 1707, 44, 45, 0, 0, 0, 70, 0, 70, 0, 0, 60, 317, 0, 0, 74, 1707, 0,
-    /*  740 */ 0, 0, 0, 0, 0, 0, 2560, 0, 68, 0, 0, 0, 0, 0, 0, 104, 0, 60, 0, 0, 0, 85, 0, 0, 0, 90, 0, 0, 0, 0, 101,
-    /*  771 */ 0, 103, 0, 0, 0, 89, 0, 0, 0, 0, 0, 0, 2176, 0, 3200, 0, 0, 60, 317, 0, 0, 0, 1854, 45, 0, 0, 0, 53, 0,
-    /*  800 */ 55, 55, 0, 55, 0, 30, 31, 0, 0, 50, 0, 0, 0, 0, 0, 0, 30, 571, 0, 1707, 0, 0, 0, 46, 47, 0, 0, 0, 0, 0,
-    /*  830 */ 0, 0, 3968, 47, 47, 0, 47, 0, 30, 31, 0, 30, 0, 60, 317, 44, 0, 0, 31, 60, 317, 0, 45, 0, 0, 0, 0, 0, 0,
-    /*  859 */ 98, 0, 60, 0, 0, 0, 0, 0, 86, 0, 44, 0, 0, 0, 0, 0, 0, 93, 0, 60, 82, 0, 0, 0, 0, 0, 0, 97, 0, 0, 1577,
-    /*  890 */ 1706, 1707, 44, 45, 64, 0, 0, 34, 0, 0, 37, 0, 0, 42, 44, 45, 0, 0, 0, 73, 317, 0, 0, 0, 60, 0, 0, 0, 0,
-    /*  919 */ 0, 0, 0, 0, 56, 88, 0, 0, 0, 0, 0, 0, 0, 570, 31, 0, 95, 0, 0, 0, 0, 0, 0, 0, 102, 0, 0, 0, 1577, 1706,
-    /*  949 */ 1707, 44, 45, 0, 65, 0, 49, 49, 49, 49, 49, 49, 49, 0, 30, 31, 0, 0, 100, 2688, 0, 0, 0, 0, 0, 2304, 0,
-    /*  976 */ 0, 0, 0, 78, 0, 80, 0, 2944, 0, 0, 0, 0, 0, 0, 0, 2816, 0, 0, 0, 0, 3328, 0, 0, 0, 0, 3584, 0, 0, 0,
-    /* 1005 */ 1707, 0, 0, 0, 0, 0, 48, 0, 52, 0, 52, 54, 54, 57, 54, 0, 30, 31, 0, 75, 0, 0, 0, 0, 0, 0, 0, 56, 0, 0,
-    /* 1035 */ 30, 31, 0, 60, 0, 0, 84, 0, 3840, 0, 0, 69, 0, 0, 0, 0, 0, 77, 0, 0, 0, 0, 0, 2304, 0, 0, 2304, 0, 51,
-    /* 1064 */ 51, 51, 51, 51, 51, 51, 0, 30, 31, 0, 0, 76, 0, 0, 0, 79, 0, 0, 96, 0, 0, 0, 0, 0, 92, 0, 0, 0, 3456, 0,
-    /* 1094 */ 0, 0, 0, 0, 0, 1920, 0, 0, 0, 0, 0, 30, 31, 0, 1577, 1706, 1707, 44, 45, 0, 0, 66, 67, 0, 0, 0, 0, 66, 0,
-    /* 1123 */ 0, 2304, 0, 0, 30, 31, 0, 60, 0, 83, 0, 0, 0, 0, 0, 2432, 0, 0, 30, 31, 0, 3712, 0, 0, 0, 0, 0, 0, 0,
-    /* 1152 */ 3072, 0, 91, 0, 0, 0, 930, 0, 1189, 0, 0, 0, 60, 317, 0, 0, 0, 44, 45, 0, 0, 0, 44, 1855, 0, 0, 0, 50, 0,
-    /* 1181 */ 30, 31, 0, 0, 640, 640, 640, 640, 640, 640, 640, 0, 0, 0, 0
+    /*    0 */ 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935,
+    /*   21 */ 935, 935, 969, 935, 933, 935, 935, 935, 935, 935, 935, 608, 608, 608, 618, 935, 1077, 935, 969, 935, 933,
+    /*   42 */ 935, 935, 935, 935, 935, 935, 608, 608, 608, 610, 935, 1077, 935, 930, 935, 933, 935, 935, 935, 935, 935,
+    /*   63 */ 935, 608, 608, 608, 634, 935, 935, 935, 969, 935, 933, 935, 935, 935, 935, 935, 935, 647, 647, 647, 650,
+    /*   84 */ 935, 1077, 935, 930, 935, 933, 935, 935, 935, 935, 935, 935, 935, 935, 935, 669, 935, 1077, 935, 969,
+    /*  104 */ 935, 933, 935, 935, 935, 935, 935, 935, 658, 667, 935, 801, 935, 1047, 935, 957, 935, 933, 935, 935, 935,
+    /*  125 */ 935, 935, 935, 625, 677, 935, 679, 935, 902, 935, 639, 935, 933, 935, 935, 935, 935, 935, 935, 935, 687,
+    /*  146 */ 935, 669, 935, 1077, 935, 969, 935, 933, 935, 935, 935, 935, 935, 935, 935, 730, 935, 669, 935, 1077,
+    /*  166 */ 935, 969, 935, 933, 935, 935, 935, 935, 935, 935, 935, 935, 874, 698, 934, 1077, 935, 791, 935, 706, 935,
+    /*  187 */ 935, 935, 935, 935, 935, 935, 935, 1170, 669, 935, 1077, 935, 969, 935, 933, 935, 935, 935, 935, 935,
+    /*  207 */ 935, 716, 729, 935, 669, 738, 781, 935, 969, 935, 933, 935, 935, 935, 935, 935, 935, 746, 746, 746, 749,
+    /*  228 */ 862, 1077, 935, 969, 935, 757, 935, 935, 935, 935, 935, 935, 935, 935, 935, 669, 721, 1145, 935, 969,
+    /*  248 */ 935, 933, 935, 935, 935, 935, 935, 935, 935, 1073, 1059, 767, 935, 1077, 935, 969, 935, 933, 935, 935,
+    /*  268 */ 935, 935, 935, 935, 935, 935, 1170, 1132, 935, 1077, 935, 969, 935, 933, 935, 935, 935, 935, 935, 935,
+    /*  288 */ 775, 799, 935, 669, 738, 781, 935, 969, 935, 933, 935, 935, 935, 935, 935, 935, 775, 799, 935, 809, 738,
+    /*  309 */ 781, 1104, 969, 935, 933, 935, 817, 820, 935, 935, 935, 775, 799, 935, 669, 738, 781, 935, 969, 935, 828,
+    /*  330 */ 935, 935, 935, 935, 935, 935, 775, 799, 935, 669, 738, 781, 935, 969, 1107, 933, 1167, 659, 935, 935,
+    /*  350 */ 935, 935, 775, 799, 846, 849, 738, 781, 935, 857, 935, 933, 871, 935, 935, 935, 935, 935, 775, 799, 882,
+    /*  371 */ 838, 738, 781, 935, 969, 935, 933, 935, 935, 935, 935, 935, 935, 775, 893, 898, 910, 738, 781, 935, 969,
+    /*  392 */ 935, 918, 936, 834, 626, 935, 935, 935, 775, 799, 935, 669, 738, 781, 935, 969, 935, 926, 935, 935, 935,
+    /*  413 */ 935, 935, 935, 775, 799, 935, 669, 738, 944, 935, 969, 935, 933, 965, 977, 935, 935, 935, 935, 775, 799,
+    /*  434 */ 935, 669, 738, 989, 935, 969, 787, 933, 935, 1205, 997, 1009, 935, 935, 775, 1021, 1027, 1035, 738, 781,
+    /*  454 */ 935, 969, 935, 933, 708, 935, 1043, 1055, 935, 935, 775, 799, 1183, 1188, 738, 781, 981, 1067, 1085,
+    /*  473 */ 1097, 935, 935, 935, 935, 935, 935, 775, 799, 935, 669, 738, 781, 690, 969, 935, 933, 935, 759, 935, 935,
+    /*  494 */ 935, 935, 775, 799, 1115, 1118, 738, 781, 935, 1126, 1089, 933, 935, 935, 935, 935, 935, 935, 775, 799,
+    /*  514 */ 935, 669, 738, 781, 1201, 969, 1160, 933, 951, 1140, 1013, 935, 935, 935, 775, 799, 935, 669, 738, 781,
+    /*  534 */ 1153, 969, 935, 1178, 1001, 935, 935, 935, 935, 935, 775, 799, 935, 669, 738, 781, 935, 969, 935, 933,
+    /*  554 */ 935, 885, 935, 935, 935, 935, 775, 799, 935, 669, 738, 781, 935, 969, 935, 933, 935, 935, 1196, 935, 935,
+    /*  575 */ 935, 935, 863, 935, 669, 935, 1077, 935, 969, 935, 933, 935, 935, 935, 935, 935, 935, 935, 935, 1213,
+    /*  595 */ 1216, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 384, 384, 384, 384, 384, 384, 384, 384,
+    /*  616 */ 31, 32, 384, 384, 384, 384, 384, 0, 31, 32, 0, 0, 0, 0, 0, 0, 0, 105, 384, 384, 384, 384, 384, 0, 0, 0,
+    /*  642 */ 32, 61, 318, 0, 46, 414, 414, 414, 414, 414, 414, 414, 414, 0, 31, 32, 31, 0, 0, 0, 0, 0, 0, 0, 99, 0,
+    /*  668 */ 45, 0, 0, 0, 0, 0, 0, 31, 32, 0, 46, 0, 0, 0, 0, 0, 0, 31, 572, 0, 0, 2048, 0, 0, 0, 0, 0, 72, 0, 73, 0,
+    /*  699 */ 0, 2304, 0, 0, 0, 31, 32, 0, 74, 0, 0, 0, 0, 0, 0, 93, 0, 0, 0, 931, 0, 1190, 0, 0, 0, 35, 0, 0, 38, 0,
+    /*  729 */ 1707, 0, 0, 0, 0, 0, 0, 0, 2176, 0, 802, 931, 932, 1061, 1190, 1191, 1320, 33, 33, 33, 33, 33, 33, 33,
+    /*  753 */ 33, 0, 31, 32, 0, 256, 0, 0, 0, 0, 0, 0, 98, 0, 2432, 0, 0, 2432, 0, 0, 31, 32, 0, 802, 932, 1061, 1191,
+    /*  780 */ 1320, 1449, 1578, 1707, 1708, 45, 46, 0, 0, 0, 78, 0, 0, 0, 0, 74, 318, 0, 0, 1708, 0, 0, 0, 0, 0, 0, 0,
+    /*  807 */ 571, 32, 57, 0, 0, 57, 0, 0, 31, 32, 95, 0, 0, 0, 0, 0, 0, 0, 103, 0, 0, 0, 61, 0, 0, 0, 86, 0, 0, 0, 97,
+    /*  838 */ 0, 0, 0, 0, 51, 0, 31, 32, 0, 50, 50, 50, 50, 50, 50, 50, 0, 31, 32, 0, 3328, 0, 0, 61, 318, 0, 0, 0, 0,
+    /*  867 */ 0, 0, 0, 4096, 88, 0, 0, 0, 0, 0, 0, 0, 1920, 0, 2304, 0, 51, 0, 0, 0, 0, 0, 0, 3712, 0, 0, 1708, 0, 0,
+    /*  896 */ 0, 47, 48, 0, 0, 0, 0, 0, 0, 0, 45, 1856, 0, 0, 0, 48, 48, 0, 48, 0, 31, 32, 82, 61, 0, 0, 0, 0, 0, 87,
+    /*  926 */ 0, 61, 83, 0, 0, 0, 0, 0, 61, 0, 0, 0, 0, 0, 0, 0, 0, 94, 1449, 1578, 1707, 1708, 45, 46, 65, 0, 0, 0,
+    /*  954 */ 3200, 0, 92, 0, 0, 31, 0, 61, 318, 45, 0, 0, 89, 0, 0, 0, 0, 0, 0, 61, 318, 0, 0, 0, 96, 0, 0, 0, 0, 0,
+    /*  984 */ 0, 71, 0, 71, 0, 1449, 1578, 1707, 1708, 45, 46, 0, 66, 0, 0, 101, 2816, 0, 0, 0, 0, 91, 0, 0, 0, 0,
+    /* 1010 */ 3072, 0, 0, 0, 0, 0, 0, 102, 0, 104, 0, 1708, 0, 0, 0, 0, 0, 49, 0, 53, 0, 53, 53, 55, 55, 58, 55, 55,
+    /* 1038 */ 58, 55, 0, 31, 32, 100, 0, 0, 0, 0, 0, 0, 0, 1855, 46, 0, 0, 106, 0, 0, 0, 0, 0, 0, 0, 2432, 2432, 0, 0,
+    /* 1067 */ 0, 71, 0, 0, 61, 318, 0, 0, 0, 2432, 0, 0, 0, 0, 45, 46, 0, 0, 75, 76, 0, 0, 0, 0, 0, 0, 2944, 0, 0, 0,
+    /* 1097 */ 0, 61, 0, 0, 85, 0, 3968, 0, 0, 69, 0, 0, 0, 0, 0, 79, 0, 81, 0, 52, 52, 52, 52, 52, 52, 52, 0, 31, 32,
+    /* 1126 */ 2688, 0, 0, 0, 61, 318, 0, 0, 0, 2560, 0, 0, 31, 32, 0, 0, 3584, 0, 0, 0, 0, 0, 43, 45, 46, 0, 0, 67, 68,
+    /* 1155 */ 0, 0, 0, 0, 67, 0, 0, 77, 0, 0, 0, 80, 0, 0, 90, 0, 0, 0, 0, 0, 1920, 0, 0, 0, 61, 0, 84, 0, 0, 0, 0, 54,
+    /* 1187 */ 0, 0, 56, 56, 0, 56, 0, 31, 32, 0, 3840, 0, 0, 0, 0, 0, 0, 70, 0, 0, 0, 0, 3456, 0, 0, 0, 0, 640, 640,
+    /* 1216 */ 640, 640, 640, 640, 640, 0, 0, 0
   )
 
   private final val EXPECTED = Array(
-    /*   0 */ 14, 38, 70, 134, 262, 518, 1030, 2054, 4102, 8198, 16390, 131078, 4194310, 8388614, 67108870, 1073774598,
-    /*  16 */ 75497478, 540016662, 571473942, 672137238, 571605014, 907018262, 907083798, 588906518, 915406870,
-    /*  25 */ 915472406, 589168662, 917504022, 4, 8, 8, 2, 32, 64, 64, 128, 256, 256, 512, 1024, 2048, 4096, 4096, 8192,
-    /*  44 */ 8192, 4194304, 8388608, 67108864, 1048576, 2097152, 536870912, 33554432, 134217728, 100663296, 268435456,
-    /*  55 */ 524288, 50331648, 8, 8, 2, 2, 8192, 8192, 4194304, 8388608, 67108864, 1048576, 2097152, 536870912,
-    /*  69 */ 33554432, 134217728, 268435456, 2, 4194304, 8388608, 67108864, 1048576, 536870912, 33554432, 134217728,
-    /*  80 */ 268435456, 4194304, 8388608, 67108864, 1048576, 33554432, 134217728, 268435456, 4194304, 67108864,
-    /*  90 */ 1048576, 33554432, 134217728, 268435456, 4194304, 1048576, 268435456, 4194304, 1048576, 4194304, 4194304,
-    /* 101 */ 4194304, 4194304, 4194304, 4194304
+    /*   0 */ 14, 38, 70, 134, 262, 518, 1030, 2054, 4102, 8198, 32774, 262150, 8388614, 16777222, 134217734,
+    /*  15 */ -2147418106, 150994950, 1080033302, 1142947862, 1344274454, 1143210006, 1143226390, 1814036502,
+    /*  23 */ 1814167574, 1177813014, 1830813718, 1830944790, 1178337302, 1835008022, 4, 8, 8, 2, 32, 64, 64, 128, 256,
+    /*  38 */ 256, 512, 1024, 2048, 4096, 4096, 8192, 8192, 8388608, 16777216, 134217728, 2097152, 4194304, 1073741824,
+    /*  52 */ 67108864, 268435456, 201326592, 536870912, 1048576, 100663296, 8, 8, 2, 2, 8192, 8192, 8388608, 16777216,
+    /*  66 */ 134217728, 2097152, 4194304, 1073741824, 67108864, 268435456, 536870912, 2, 8388608, 16777216, 134217728,
+    /*  77 */ 2097152, 1073741824, 67108864, 268435456, 536870912, 8388608, 16777216, 134217728, 2097152, 67108864,
+    /*  87 */ 268435456, 536870912, 8388608, 134217728, 2097152, 67108864, 268435456, 536870912, 8388608, 2097152,
+    /*  97 */ 536870912, 8388608, 2097152, 8388608, 8388608, 8388608, 8388608, 8388608, 8388608
   )
 
   private final val TOKEN = Array(
@@ -651,6 +679,7 @@ object StepConfigParser {
     "Macro",
     "FunctionName",
     "Expansion",
+    "Occurrence",
     "'('",
     "')'",
     "'*'",

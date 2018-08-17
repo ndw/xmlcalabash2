@@ -21,8 +21,9 @@ step p:count has implementation xc:Count
 step p:directory-list has implementation xc:DirectoryList
   output result
   option path as anyURI
-  option include-filter? as RegularExpression
-  option exclude-filter? as RegularExpression
+  option detailed? as boolean = 'false'
+  option include-filter? as string*
+  option exclude-filter? as string*
 
 step p:error has implementation xc:Error
   option code as QName

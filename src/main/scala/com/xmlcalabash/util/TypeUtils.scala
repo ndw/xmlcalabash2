@@ -1,11 +1,16 @@
 package com.xmlcalabash.util
 
+import java.util
+
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
+import com.xmlcalabash.parsers.SequenceBuilder
 import com.xmlcalabash.runtime.ExpressionContext
 import jdk.nashorn.api.scripting.ScriptObjectMirror
-import net.sf.saxon.s9api.{ItemTypeFactory, QName, XdmArray, XdmAtomicValue, XdmEmptySequence, XdmMap, XdmNode, XdmValue}
+import net.sf.saxon.om.Item
+import net.sf.saxon.s9api._
+import net.sf.saxon.value.SequenceExtent
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -106,5 +111,26 @@ class TypeUtils(val config: XMLCalabash) {
 
     val itype = typeFactory.getAtomicType(xsdtype.get)
     new XdmAtomicValue(value.getStringValue, itype)
+  }
+
+  def castSequenceAs(value: XdmAtomicValue, xsdtype: Option[QName], occurrence: String, context: ExpressionContext): XdmValue = {
+    // Today, we only need to handle a sequence of strings
+    if (xsdtype.isEmpty || xsdtype.get != XProcConstants.xs_string) {
+      throw new IllegalArgumentException("Only lists of strings are supported")
+    }
+
+    val builder = new SequenceBuilder()
+    val list = builder.parse(value.getStringValue)
+    val alist = new util.ArrayList[XdmAtomicValue]
+
+    val itype = typeFactory.getAtomicType(XProcConstants.xs_string)
+    for (item <- list) {
+      if (item.as != XProcConstants.xs_string) {
+        throw new IllegalArgumentException("Only lists of strings are supported")
+      }
+      alist.add(new XdmAtomicValue(item.item, itype))
+    }
+
+    new XdmValue(alist)
   }
 }

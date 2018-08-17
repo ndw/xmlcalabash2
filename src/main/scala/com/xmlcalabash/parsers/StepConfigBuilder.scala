@@ -92,6 +92,7 @@ class StepConfigBuilder() extends EventHandler {
       case "DeclaredType" => Unit
       case "TokenList" => Unit
       case "Function" => Unit
+      case "SeqType" => Unit
       case _ => println(s"Unexpected NT: $name")
     }
   }
@@ -152,6 +153,7 @@ class StepConfigBuilder() extends EventHandler {
           logger.debug("No implementation for extension function: " + functionName.get)
         }
         functionName = None
+      case "SeqType" => Unit
       case _ => println("Unexpected /NT: " + name)
     }
   }
@@ -238,6 +240,7 @@ class StepConfigBuilder() extends EventHandler {
           }
         case "Macro" => prefix = text
         case "Expansion" => prefixes.put(prefix, text.substring(1, text.length - 1))
+        case "Occurrence" => opt.get.occurrence = text
         case "EOF" => Unit
         case _ => println("Unexpected T: " + name + ": " + text)
       }

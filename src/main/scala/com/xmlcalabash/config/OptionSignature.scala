@@ -7,6 +7,7 @@ import scala.collection.mutable.ListBuffer
 class OptionSignature(val name: QName) {
   private var _required = true
   private var _declaredType = Option.empty[String]
+  private var _occurrence = Option.empty[String]
   private var _tokenList: Option[ListBuffer[String]] = None
   private var _defaultValue = Option.empty[String]
 
@@ -24,6 +25,11 @@ class OptionSignature(val name: QName) {
   def declaredType: Option[String] = _declaredType
   def declaredType_=(value: String): Unit = {
     _declaredType = Some(value)
+  }
+
+  def occurrence: Option[String] = _occurrence
+  def occurrence_=(value: String): Unit = {
+    _occurrence = Some(value)
   }
 
   def tokenList: Option[List[String]] = {

@@ -21,8 +21,10 @@ Output         ::= "primary"? "output" PortName "*"?
 
 Option         ::= "option" OptionName "?"? DeclaredType? ("=" StringLiteral)?
 
-DeclaredType   ::=  ("as" TypeName) | ("of" TokenList)
+DeclaredType   ::=  ("as" SeqType) | ("of" TokenList)
 TokenList      ::= '(' Literal ('|' Literal)* ')'
+
+SeqType        ::= TypeName Occurrence?
 
 // ...
 
@@ -68,6 +70,8 @@ Literal                ::= NameString
 Macro                  ::= NameString
 FunctionName           ::= QName
 Expansion              ::= StringLiteral
+
+Occurrence             ::= '*' | '?' | '+'
 
 NameStartChar
          ::= [A-Z]

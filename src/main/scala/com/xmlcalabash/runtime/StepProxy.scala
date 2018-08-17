@@ -111,21 +111,32 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, params: Opt
       } else {
         None
       }
+      val occurrence = optsig.occurrence
 
       bindmsg.message match {
         case item: XPathItemMessage =>
           item.item match {
             case atomic: XdmAtomicValue =>
-              val value = typeUtils.castAtomicAs(atomic, opttype, item.context)
-              step.receiveBinding(qname, value, item.context)
+              if (occurrence.isDefined) {
+                val seq = typeUtils.castSequenceAs(atomic, opttype, occurrence.get, item.context)
+                step.receiveBinding(qname, seq, item.context)
+              } else {
+                val value = typeUtils.castAtomicAs(atomic, opttype, item.context)
+                step.receiveBinding(qname, value, item.context)
+              }
             case _ => Unit
               step.receiveBinding(qname, item.item, item.context)
           }
         case item: ItemMessage =>
           item.item match {
             case atomic: XdmAtomicValue =>
-              val value = typeUtils.castAtomicAs(atomic, opttype, ExpressionContext.NONE)
-              step.receiveBinding(qname, value, ExpressionContext.NONE)
+              if (occurrence.isDefined) {
+                val seq = typeUtils.castSequenceAs(atomic, opttype, occurrence.get, ExpressionContext.NONE)
+                step.receiveBinding(qname, seq, ExpressionContext.NONE)
+              } else {
+                val value = typeUtils.castAtomicAs(atomic, opttype, ExpressionContext.NONE)
+                step.receiveBinding(qname, value, ExpressionContext.NONE)
+              }
             case opt: XProcVarValue =>
               step.receiveBinding(qname, opt.value, ExpressionContext.NONE)
             case _ => Unit
