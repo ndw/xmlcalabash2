@@ -117,7 +117,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, params: Opt
         case item: XPathItemMessage =>
           item.item match {
             case atomic: XdmAtomicValue =>
-              if (occurrence.isDefined) {
+              if (false && occurrence.isDefined) {
                 val seq = typeUtils.castSequenceAs(atomic, opttype, occurrence.get, item.context)
                 step.receiveBinding(qname, seq, item.context)
               } else {
@@ -130,7 +130,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, params: Opt
         case item: ItemMessage =>
           item.item match {
             case atomic: XdmAtomicValue =>
-              if (occurrence.isDefined) {
+              if (false && occurrence.isDefined) {
                 val seq = typeUtils.castSequenceAs(atomic, opttype, occurrence.get, ExpressionContext.NONE)
                 step.receiveBinding(qname, seq, ExpressionContext.NONE)
               } else {

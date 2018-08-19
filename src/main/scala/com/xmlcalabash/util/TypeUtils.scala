@@ -8,9 +8,7 @@ import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.parsers.SequenceBuilder
 import com.xmlcalabash.runtime.ExpressionContext
 import jdk.nashorn.api.scripting.ScriptObjectMirror
-import net.sf.saxon.om.Item
 import net.sf.saxon.s9api._
-import net.sf.saxon.value.SequenceExtent
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -113,6 +111,10 @@ class TypeUtils(val config: XMLCalabash) {
     new XdmAtomicValue(value.getStringValue, itype)
   }
 
+  // This was added experimentally to handle lists in literal values for include-filter and exclude-filter.
+  // It was subsequently decided that literal values shouldn't be lists, so this is no longer being used.
+  // I'm leaving it around for the time being (19 Aug 2018) in case it turns out to be useful somewhere
+  // else.
   def castSequenceAs(value: XdmAtomicValue, xsdtype: Option[QName], occurrence: String, context: ExpressionContext): XdmValue = {
     // Today, we only need to handle a sequence of strings
     if (xsdtype.isEmpty || xsdtype.get != XProcConstants.xs_string) {
