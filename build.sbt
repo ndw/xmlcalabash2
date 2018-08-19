@@ -16,8 +16,7 @@ lazy val meerschaum = (project in file(".")).
 resolvers += DefaultMavenRepository
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 resolvers += "Restlet" at "http://maven.restlet.com"
-resolvers += "Private Maven Repository" at "https://nwalsh.com/scratch/repository"
-resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
+resolvers += "Private Maven Repository" at "https://nwalsh.com/maven/repo"
 
 libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
@@ -43,7 +42,7 @@ libraryDependencies ++= Seq(
   "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
   "org.xmlresolver" % "xmlresolver" % "0.12.3",
   "nu.validator" % "htmlparser" % "1.4.6",
-  "com.jafpl" % "jafpl_2.12" % "0.0.53-SNAPSHOT"
+  "com.jafpl" % "jafpl_2.12" % "0.0.54"
 )
 
 // Yes, this is an odd place for local use, but it's where the website
