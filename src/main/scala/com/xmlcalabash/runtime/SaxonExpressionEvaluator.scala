@@ -13,7 +13,7 @@ import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.lib.{CollectionFinder, Resource, ResourceCollection}
 import net.sf.saxon.om.{Item, SpaceStrippingRule}
-import net.sf.saxon.s9api.{QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{ItemTypeFactory, QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.trans.XPathException
 import net.sf.saxon.value.{SequenceType, UntypedAtomicValue}
 import org.slf4j.{Logger, LoggerFactory}
@@ -50,7 +50,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         case xpath: XProcVtExpression =>
           val viter = xdmval.iterator()
           var s = ""
+          var pos = 0
           while (viter.hasNext) {
+            if (pos > 0) {
+              s += " "
+            }
             s += viter.next().getStringValue
           }
           new XPathItemMessage(xdmval, XProcMetadata.XML, xpath.context)
@@ -235,6 +239,24 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
           }
           evalAvt = !evalAvt
         }
+
+        if (avtexpr.stringResult) {
+          val viter = xdmval.iterator()
+          var s = ""
+          var pos = 0
+          while (viter.hasNext) {
+            if (pos > 0) {
+              s += " "
+            }
+            s += viter.next().getStringValue
+            pos += 1
+          }
+
+          val typeFactory = new ItemTypeFactory(xmlCalabash.processor)
+          val untypedAtomicType = typeFactory.getAtomicType(XProcConstants.xs_untypedAtomic)
+          xdmval = new XdmAtomicValue(s, untypedAtomicType)
+        }
+
         xdmval
       case xpathexpr: XProcXPathExpression =>
         computeValue(xpathexpr.expr, xpathexpr.as, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed, options)
