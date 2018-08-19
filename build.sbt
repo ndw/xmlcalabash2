@@ -1,4 +1,4 @@
-name         := "XML Calabash"
+name         := "meerschaum"
 organization := "com.xmlcalabash"
 version      := "1.9.1"
 scalaVersion := "2.12.6"
