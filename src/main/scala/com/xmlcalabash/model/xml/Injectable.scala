@@ -8,7 +8,7 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.ValueParser
-import com.xmlcalabash.runtime.{ExpressionContext, XProcAvtExpression, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, XProcVtExpression, XProcMetadata, XProcXPathExpression}
 import net.sf.saxon.s9api.{QName, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -23,14 +23,14 @@ class Injectable(val config: XMLCalabash,
                  val baseURI: Option[URI],
                  val location: Location) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  private var _messageXPath = Option.empty[XProcAvtExpression]
+  private var _messageXPath = Option.empty[XProcVtExpression]
   private var _messageNodes = Option.empty[List[XdmNode]]
   private val _nodes = ListBuffer.empty[XdmNode]
   private var _port = Option.empty[String]
   private var _matched = false
 
-  def messageXPath: Option[XProcAvtExpression] = _messageXPath
-  def messageXPath_=(expr: XProcAvtExpression): Unit = {
+  def messageXPath: Option[XProcVtExpression] = _messageXPath
+  def messageXPath_=(expr: XProcVtExpression): Unit = {
     if (messageXPath.isDefined || messageNodes.isDefined) {
       throw XProcException.xiInjectMessageNodes(Some(location))
     }

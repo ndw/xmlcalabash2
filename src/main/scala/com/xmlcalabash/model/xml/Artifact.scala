@@ -10,7 +10,7 @@ import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Choose, Container, ForEach, Group, Try, Viewport, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcAvtExpression, XProcExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcVtExpression, XProcExpression}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
@@ -269,11 +269,11 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
     }
   }
 
-  def lexicalAvt(name: String, value: String): XProcAvtExpression = {
+  def lexicalAvt(name: String, value: String): XProcVtExpression = {
     val avt = ValueParser.parseAvt(value)
     if (avt.isDefined) {
       val context = new ExpressionContext(_baseURI, inScopeNS, _location)
-      new XProcAvtExpression(context, avt.get)
+      new XProcVtExpression(context, avt.get, true)
     } else {
       throw new ModelException(ExceptionCode.BADAVT, List(name, value), location)
     }

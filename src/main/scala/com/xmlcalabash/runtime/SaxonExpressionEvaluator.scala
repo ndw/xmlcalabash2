@@ -47,7 +47,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       xpath match {
         case xpath: XProcXPathExpression =>
           throw XProcException.xiSeqNotSupported(xpath.context.location, xpath)
-        case xpath: XProcAvtExpression =>
+        case xpath: XProcVtExpression =>
           val viter = xdmval.iterator()
           var s = ""
           while (viter.hasNext) {
@@ -95,7 +95,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         if (xpath.context.location.isDefined) {
           newContext.location = xpath.context.location.get
         }
-      case xpath: XProcAvtExpression =>
+      case xpath: XProcVtExpression =>
         if (xpath.context.location.isDefined) {
           newContext.location = xpath.context.location.get
         }
@@ -213,7 +213,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
     }
 
     xpath match {
-      case avtexpr: XProcAvtExpression =>
+      case avtexpr: XProcVtExpression =>
         var xdmval: XdmValue = null
         var evalAvt = false
         for (part <- avtexpr.avt) {

@@ -7,7 +7,7 @@ import com.jafpl.messages.{ItemMessage, Message}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcAvtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcVtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 
@@ -175,7 +175,7 @@ class InlineLoader(private val baseURI: Option[URI],
 
   private def expandString(text: String): String = {
     val evaluator = config.get.expressionEvaluator
-    val expr = new XProcAvtExpression(context, text)
+    val expr = new XProcVtExpression(context, text)
     var s = ""
     val iter = evaluator.value(expr, List.empty[Message], bindings.toMap, None).item.iterator()
     while (iter.hasNext) {
@@ -188,7 +188,7 @@ class InlineLoader(private val baseURI: Option[URI],
 
   private def expandNodes(text: String, builder: SaxonTreeBuilder): Unit = {
     val evaluator = config.get.expressionEvaluator
-    val expr = new XProcAvtExpression(context, text)
+    val expr = new XProcVtExpression(context, text)
     val iter = evaluator.value(expr, List.empty[Message], bindings.toMap, None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()

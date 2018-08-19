@@ -6,7 +6,7 @@ import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Catch, Choose, Finally, ForEach, Group, Otherwise, Try, When, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcAvtExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcVtExpression, XProcXPathExpression}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
@@ -548,7 +548,7 @@ class Parser(config: XMLCalabash) {
     }
 
     if (message.isDefined) {
-      val messageExpr = new XProcAvtExpression(context, message.get)
+      val messageExpr = new XProcVtExpression(context, message.get, true)
       injectable.messageXPath = messageExpr
     } else {
       injectable.messageNodes = messageNodes.get.toList

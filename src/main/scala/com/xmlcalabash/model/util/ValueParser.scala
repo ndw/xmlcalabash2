@@ -3,7 +3,7 @@ package com.xmlcalabash.model.util
 import com.jafpl.graph.Location
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
-import com.xmlcalabash.runtime.{XProcAvtExpression, XProcExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{XProcVtExpression, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
@@ -232,7 +232,7 @@ object ValueParser {
           val qname = ValueParser.parseClarkName(ref)
           variableRefs += qname
         }
-      case expr: XProcAvtExpression =>
+      case expr: XProcVtExpression =>
         var avt = false
         for (subexpr <- expr.avt) {
           if (avt) {

@@ -5,7 +5,7 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl}
-import com.xmlcalabash.runtime.{ExpressionContext, XProcAvtExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, XProcVtExpression}
 import com.xmlcalabash.steps.internal.FileLoader
 import net.sf.saxon.s9api.QName
 
@@ -87,10 +87,10 @@ class Document(override val config: XMLCalabash,
     val step = new FileLoader(context, _docProps)
     val docReader = cnode.addAtomic(step, "document")
 
-    val hrefBinding = cnode.addVariable("href", new XProcAvtExpression(context, hrefAvt.get))
+    val hrefBinding = cnode.addVariable("href", new XProcVtExpression(context, hrefAvt.get, true))
     graph.addBindingEdge(hrefBinding, docReader)
     if (paramsAvt.isDefined) {
-      val binding = cnode.addVariable("parameters", new XProcAvtExpression(context, paramsAvt.get))
+      val binding = cnode.addVariable("parameters", new XProcVtExpression(context, paramsAvt.get))
       graph.addBindingEdge(binding, docReader)
     }
 

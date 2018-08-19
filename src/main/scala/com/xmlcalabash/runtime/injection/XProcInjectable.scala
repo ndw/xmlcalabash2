@@ -8,7 +8,7 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.model.xml.Injectable
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, SaxonExpressionOptions, XProcAvtExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, SaxonExpressionOptions, XProcVtExpression, XProcXPathExpression}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
@@ -23,7 +23,7 @@ abstract class XProcInjectable(injectable: Injectable) {
   protected var _matched = false
   protected var config: XMLCalabash = _
   protected var _stepXPath: XProcXPathExpression = _
-  protected var _messageXPath: Option[XProcAvtExpression] = _
+  protected var _messageXPath: Option[XProcVtExpression] = _
   protected var _messageNodes: Option[List[XdmNode]] = _
   protected var _conditionXPath: XProcXPathExpression = _
   protected var _baseURI: Option[URI] = _
@@ -42,7 +42,7 @@ abstract class XProcInjectable(injectable: Injectable) {
   _id = injectable.id
 
   def stepXPath: XProcXPathExpression = _stepXPath
-  def messageXPath: Option[XProcAvtExpression] = _messageXPath
+  def messageXPath: Option[XProcVtExpression] = _messageXPath
   def messageNodes: Option[List[XdmNode]] = _messageNodes
   def conditionXPath: XProcXPathExpression = _conditionXPath
   def baseURI: Option[URI] = _baseURI
@@ -128,7 +128,7 @@ abstract class XProcInjectable(injectable: Injectable) {
 
   private def expandNodes(text: String, contextNode: List[ItemMessage], context: ExpressionContext, opts: Option[SaxonExpressionOptions]): XPathItemMessage = {
     val evaluator = config.expressionEvaluator
-    val expr = new XProcAvtExpression(context, text)
+    val expr = new XProcVtExpression(context, text)
     evaluator.value(expr, contextNode, bindings.toMap, opts)
   }
 }

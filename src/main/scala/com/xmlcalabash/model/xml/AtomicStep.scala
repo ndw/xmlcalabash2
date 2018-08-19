@@ -4,7 +4,7 @@ import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.ValueParser
-import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, XProcAvtExpression, XProcExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, XProcVtExpression, XProcExpression}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -30,7 +30,7 @@ class AtomicStep(override val config: XMLCalabash,
           val avt = ValueParser.parseAvt(attributes(key))
           if (avt.isDefined) {
             val context = new ExpressionContext(baseURI, inScopeNS, location)
-            options.put(key, new XProcAvtExpression(context, avt.get))
+            options.put(key, new XProcVtExpression(context, avt.get, true))
           } else {
             throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), location)
           }
@@ -41,7 +41,7 @@ class AtomicStep(override val config: XMLCalabash,
         val avt = ValueParser.parseAvt(attributes(key))
         if (avt.isDefined) {
           val context = new ExpressionContext(_baseURI, inScopeNS, _location)
-          options.put(key, new XProcAvtExpression(context, avt.get))
+          options.put(key, new XProcVtExpression(context, avt.get, true))
         } else {
           throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), location)
         }
