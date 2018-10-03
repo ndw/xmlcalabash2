@@ -16,7 +16,7 @@ lazy val meerschaum = (project in file(".")).
 resolvers += DefaultMavenRepository
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 resolvers += "Restlet" at "http://maven.restlet.com"
-resolvers += "Private Maven Repository" at "https://nwalsh.com/maven/repo"
+resolvers += "My Maven Repository" at "https://nwalsh.com/maven/repo"
 
 libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
@@ -31,7 +31,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.0",
   "org.scala-lang.modules" %% "scala-swing" % "2.0.3",
-  "net.sf.saxon" % "Saxon-HE" % "9.8.0-4",
+  "net.sf.saxon" % "Saxon-HE" % "9.8.0-14",
   //"com.thaiopensource" % "jing" % "20091111",
   "net.java.dev.msv" % "msv-core" % "2013.6.1",
   "com.ibm.icu" % "icu4j" % "59.1",
