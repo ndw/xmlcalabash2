@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
+import com.xmlcalabash.config.XProcTypes
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
@@ -20,7 +21,7 @@ import scala.collection.mutable
 class FileLoader(private val context: ExpressionContext,
                  private val docPropsExpr: Option[String]) extends DefaultStep {
   private var _href = ""
-  private var _params = Option.empty[Map[QName,XdmValue]]
+  private var _params = Option.empty[XProcTypes.Parameters]
   private var docProps = Map.empty[QName, XdmItem]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
@@ -62,14 +63,21 @@ class FileLoader(private val context: ExpressionContext,
       new URI(_href)
     }
 
+    var params = Map.empty[QName, XdmValue]
+    if (_params.isDefined) {
+      for ((key,value) <- _params.get) {
+        params += (key -> value)
+      }
+    }
+
     // Using the filename sort of sucks, but it's what the OSes do at this point so...sigh
     // You can extend the set of known extensions by pointing the system property
     // `content.types.user.table` at your own mime types file. The default file to
     // start with is in $JAVA_HOME/lib/content-types.properties
     val map = URLConnection.getFileNameMap
     var contentTypeString = Option(URLConnection.guessContentTypeFromName(href.toASCIIString)).getOrElse("application/xml")
-    if (_params.isDefined && _params.get.contains(XProcConstants._content_type)) {
-      contentTypeString = _params.get(XProcConstants._content_type).toString
+    if (params.contains(XProcConstants._content_type)) {
+      contentTypeString = params(XProcConstants._content_type).toString
     }
 
     var contentType = MediaType.parse(contentTypeString)
@@ -95,7 +103,12 @@ class FileLoader(private val context: ExpressionContext,
     props.put(XProcConstants._base_uri, new XdmAtomicValue(href.toASCIIString))
 
     if (contentType.xmlContentType) {
-      val node = config.get.documentManager.parse(href)
+      val node = if (params.contains(XProcConstants._dtd_validate)) {
+        // FIXME: It should be possible to convert the XdmItem to a proper boolean
+        config.get.documentManager.parse(href, None, params(XProcConstants._dtd_validate).toString == "true")
+      } else {
+        config.get.documentManager.parse(href)
+      }
       consumer.get.receive("result", new ItemMessage(node, new XProcMetadata(contentType, props.toMap)))
     } else if (contentType.jsonContentType) {
       val expr = new XProcXPathExpression(context, s"json-doc('$href')")

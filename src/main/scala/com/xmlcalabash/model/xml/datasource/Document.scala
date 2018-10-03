@@ -5,7 +5,7 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl}
-import com.xmlcalabash.runtime.{ExpressionContext, XProcVtExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, XProcVtExpression, XProcXPathExpression}
 import com.xmlcalabash.steps.internal.FileLoader
 import net.sf.saxon.s9api.QName
 
@@ -20,7 +20,7 @@ class Document(override val config: XMLCalabash,
   private var _params = Option.empty[String]
   private var _docProps = Option.empty[String]
   private var hrefAvt = Option.empty[List[String]]
-  private var paramsAvt = Option.empty[List[String]]
+  private var paramsExpr = Option.empty[String]
   private val bindingRefs = mutable.HashSet.empty[QName]
 
   def this(config: XMLCalabash, parent: Artifact, doc: Document) = {
@@ -29,7 +29,7 @@ class Document(override val config: XMLCalabash,
     _params = doc._params
     _docProps = doc._docProps
     hrefAvt = doc.hrefAvt
-    paramsAvt = doc.paramsAvt
+    paramsExpr = doc.paramsExpr
     bindingRefs.clear()
     bindingRefs ++= doc.bindingRefs
   }
@@ -69,8 +69,8 @@ class Document(override val config: XMLCalabash,
     bindingRefs ++= lexicalVariables(_href.get)
 
     if (_params.isDefined) {
-      paramsAvt = ValueParser.parseAvt(_params.get)
       bindingRefs ++= lexicalVariables(_params.get)
+      paramsExpr = Some(_params.get);
     }
 
     if (_docProps.isDefined) {
@@ -89,8 +89,8 @@ class Document(override val config: XMLCalabash,
 
     val hrefBinding = cnode.addVariable("href", new XProcVtExpression(context, hrefAvt.get, true))
     graph.addBindingEdge(hrefBinding, docReader)
-    if (paramsAvt.isDefined) {
-      val binding = cnode.addVariable("parameters", new XProcVtExpression(context, paramsAvt.get))
+    if (paramsExpr.isDefined) {
+      val binding = cnode.addVariable("parameters", new XProcXPathExpression(context, paramsExpr.get))
       graph.addBindingEdge(binding, docReader)
     }
 

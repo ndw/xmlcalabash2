@@ -17,24 +17,25 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabash) extends DocumentManager {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   override def parse(uri: URI): XdmNode = {
-    parse(uri.toASCIIString, xmlCalabash.staticBaseURI.toASCIIString)
+    parse(uri, None)
   }
 
-  override def parse(href: String): XdmNode = {
-    parse(href, xmlCalabash.staticBaseURI.toASCIIString)
+  override def parse(uri: URI, base: Option[URI]): XdmNode = {
+    parse(uri, base, dtdValidate=false)
   }
 
-  override def parse(href: String, base: String): XdmNode = {
-    parse(href, base, dtdValidate=false)
-  }
+  override def parse(href: URI, hbase: Option[URI], dtdValidate: Boolean): XdmNode = {
+    val baseURI = if (hbase.isDefined) {
+      hbase.get
+    } else {
+      xmlCalabash.staticBaseURI
+    }
 
-  override def parse(href: String, base: String, dtdValidate: Boolean): XdmNode = {
     val ehref = URIUtils.encode(href)
-    logger.trace("Attempting to parse: " + ehref + " (" + base + ")")
+    logger.trace("Attempting to parse: " + ehref + " (" + URIUtils.encode(baseURI) + ")")
 
-    var source = xmlCalabash.uriResolver.resolve(ehref, base)
+    var source = xmlCalabash.uriResolver.resolve(ehref, baseURI.toASCIIString)
     if (source == null) {
-      val baseURI = new URI(base)
       var resURI = baseURI.resolve(ehref)
       val path = baseURI.toASCIIString
       val pos = path.indexOf("!")
@@ -76,11 +77,11 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabash) extends DocumentManager {
       case sae: SaxonApiException =>
         val msg = sae.getMessage
         if (msg.contains("validation")) {
-          throw XProcException.xdNotValidXML(href, msg)
+          throw XProcException.xdNotValidXML(href.toASCIIString, msg)
         } else if (msg.contains("HTTP response code: 403 ")) {
-          throw XProcException.xdNotAuthorized(href, msg)
+          throw XProcException.xdNotAuthorized(href.toASCIIString, msg)
         } else {
-          throw XProcException.xdNotWFXML(href, msg)
+          throw XProcException.xdNotWFXML(href.toASCIIString, msg)
         }
     }
   }

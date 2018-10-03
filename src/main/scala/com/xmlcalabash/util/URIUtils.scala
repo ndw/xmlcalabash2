@@ -23,6 +23,10 @@ object URIUtils {
     new URI("file:" + path)
   }
 
+  def encode(uri: URI): String = {
+    encode(uri.toASCIIString)
+  }
+
   def encode(src: String): String = {
     val genDelims = ":/?#[]@"
     val subDelims = "!$&'()*+,;="
