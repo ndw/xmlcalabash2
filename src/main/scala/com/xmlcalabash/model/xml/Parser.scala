@@ -263,7 +263,7 @@ class Parser(config: XMLCalabash) {
       }
     }
 
-    val art = new Inline(config, parent, nodes.toList)
+    val art = new Inline(config, parent, node.getNodeName != XProcConstants.p_inline, nodes.toList)
     art.parse(node)
     art
   }

@@ -14,6 +14,7 @@ import scala.collection.mutable.ListBuffer
 
 class Inline(override val config: XMLCalabash,
              override val parent: Option[Artifact],
+             val isImplicit: Boolean,
              val nodes: List[XdmNode]) extends DataSource(config, parent) {
   private var _excludeInlinePrefixes = Map.empty[String,String]
   private var _expandText = true
@@ -22,8 +23,12 @@ class Inline(override val config: XMLCalabash,
   private var _encoding = Option.empty[String]
   protected[xml] val variableRefs = mutable.HashSet.empty[QName]
 
+  def this(config: XMLCalabash, parent: Option[Artifact], nodes: List[XdmNode]) {
+    this(config, parent, false, nodes)
+  }
+
   def this(config: XMLCalabash, parent: Artifact, inline: Inline) {
-    this(config, Some(parent), inline.nodes)
+    this(config, Some(parent), inline.isImplicit, inline.nodes)
     _excludeInlinePrefixes = inline._excludeInlinePrefixes
     _expandText = inline._expandText
     _documentProperties = inline._documentProperties

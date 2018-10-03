@@ -4,7 +4,7 @@ import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Pipe}
+import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
 
 import scala.collection.mutable.ListBuffer
@@ -49,17 +49,38 @@ class WithInput(override val config: XMLCalabash,
     var hasDataSources = false
     var emptyCount = 0
     var nonEmptyCount = 0
+    var hasImplicit = false
+    var hasExplicit = false
     for (child <- children) {
       child match {
         case ds: DataSource =>
           hasDataSources = true
           valid = valid && child.validate()
           child match {
-            case empty: Empty => emptyCount += 1
-            case _ => nonEmptyCount += 1
+            case inline: Inline =>
+              hasImplicit = hasImplicit || inline.isImplicit
+              hasExplicit = hasExplicit || !inline.isImplicit
+              nonEmptyCount += 1
+            case empty: Empty =>
+              emptyCount += 1
+              hasExplicit = true
+            case _ =>
+              nonEmptyCount += 1
+              hasExplicit = true
           }
-        case d: Documentation => Unit
-        case p: PipeInfo => Unit
+          if (hasImplicit && hasExplicit) {
+            throw XProcException.xsElementNotAllowed(child.location, child.nodeName, "cannot mix implicit inlines with elements in the XProc namespace")
+          }
+        case d: Documentation =>
+          hasExplicit = true
+          if (hasImplicit) {
+            throw XProcException.xsElementNotAllowed(child.location, child.nodeName, "cannot mix implicit inlines with elements in the XProc namespace")
+          }
+        case p: PipeInfo =>
+          hasExplicit = true
+          if (hasImplicit) {
+            throw XProcException.xsElementNotAllowed(child.location, child.nodeName, "cannot mix implicit inlines with elements in the XProc namespace")
+          }
         case _ => throw XProcException.xsElementNotAllowed(location, child.nodeName)
       }
     }

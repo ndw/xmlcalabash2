@@ -67,7 +67,7 @@ XS0032
 No connection provided for primary input port ‘$2’ on step ‘$1’ and no default readable port exists.
 
 XS0044
-The element named “$1” is not allowed here.
+The element named “$1” is not allowed: $2.
 
 XS0069
 The encoding “$1” is not supported.
