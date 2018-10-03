@@ -86,6 +86,7 @@ object XProcException {
   def xsNoSiblingsOnEmpty(location: Option[Location]): XProcException = staticError(89, None, location)
   def xsNoSelectOnStaticOption(location: Option[Location]): XProcException = staticError(93, None, location)
   def xsNoSelectOnVariable(location: Option[Location]): XProcException = staticError(94, None, location)
+  def xsInvalidSequenceType(seqType: String, errMsg: String, location: Option[Location]): XProcException = staticError(96, List(seqType, errMsg), location)
 
   private def internalError(code: Int, location: Option[Location]): XProcException = {
     internalError(code, location, List())

@@ -10,9 +10,13 @@ import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Choose, Container, ForEach, Group, Try, Viewport, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcVtExpression, XProcExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcExpression, XProcVtExpression}
 import com.xmlcalabash.util.S9Api
+import net.sf.saxon.expr.parser.XPathParser
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
+import net.sf.saxon.sxpath.IndependentContext
+import net.sf.saxon.trans.XPathException
+import net.sf.saxon.value.SequenceType
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -308,6 +312,27 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
         msg
       } else {
         parent.get.staticValue(vref)
+      }
+    } else {
+      None
+    }
+  }
+
+  def sequenceType(seqType: Option[String]): Option[SequenceType] = {
+    if (seqType.isDefined) {
+      try {
+        val parser = new XPathParser
+        parser.setLanguage(XPathParser.SEQUENCE_TYPE, 31)
+        val ic = new IndependentContext(config.processor.getUnderlyingConfiguration)
+        for ((prefix, uri) <- inScopeNS) {
+          ic.declareNamespace(prefix, uri)
+        }
+        Some(parser.parseSequenceType(seqType.get, ic))
+      } catch {
+        case xpe: XPathException =>
+          throw XProcException.xsInvalidSequenceType(seqType.get, xpe.getMessage, location)
+        case t: Throwable =>
+          throw t
       }
     } else {
       None

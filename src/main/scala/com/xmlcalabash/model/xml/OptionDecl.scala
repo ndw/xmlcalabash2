@@ -50,23 +50,7 @@ class OptionDecl(override val config: XMLCalabash,
     _select = attributes.get(XProcConstants._select)
     _static = lexicalBoolean(attributes.get(XProcConstants._static)).getOrElse(false)
 
-    val seqType = attributes.get(XProcConstants._as)
-    if (seqType.isDefined) {
-      try {
-        val parser = new XPathParser
-        parser.setLanguage(XPathParser.SEQUENCE_TYPE, 31)
-        val ic = new IndependentContext(config.processor.getUnderlyingConfiguration)
-        for ((prefix, uri) <- inScopeNS) {
-          ic.declareNamespace(prefix, uri)
-        }
-        _as = Some(parser.parseSequenceType(seqType.get, ic))
-      } catch {
-        case xpe: XPathException =>
-          throw XProcException.dynamicError(49, List(seqType.get, xpe.getMessage), location)
-        case t: Throwable =>
-          throw t
-      }
-    }
+    _as = sequenceType(attributes.get(XProcConstants._as))
 
     if (_static) {
       if (_select.isEmpty) {

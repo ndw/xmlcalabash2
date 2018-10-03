@@ -45,9 +45,6 @@ The values of the serialization options must be atomic. Invalid: “$1”
 XD0048
 The serialization options must be a map. Invalid: “$1”
 
-XD0049
-Invalid sequence type: “$1”. $2.
-
 XS0003
 No connection provided for input port ‘$2’ on step ‘$1’.
 
@@ -93,6 +90,9 @@ If an href attribute is present, no other data bindings may be specified.
 
 XS0082
 If a pipe attribute is present, no other data bindings may be specified.
+
+XS0096
+Invalid sequence type: “$1”. $2.
 
 {http://xmlcalabash.com/ns/extensions}XI0016
 No input specified for pipeline port “$1”.
