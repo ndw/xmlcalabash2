@@ -82,6 +82,7 @@ object XProcException {
   def xsUnconnectedPrimaryInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(32, List(step,port), location)
   def xsElementNotAllowed(location: Option[Location], element: QName): XProcException = staticError(44, element, location)
   def xsBadTypeValue(name: String, reqdType: String): XProcException = staticError(77, List(name, reqdType), None)
+  def xsDupWithOptionName(optName: QName, location: Option[Location]) = staticError(80, optName, location)
   def xsNoSiblingsOnEmpty(location: Option[Location]): XProcException = staticError(89, None, location)
   def xsNoSelectOnStaticOption(location: Option[Location]): XProcException = staticError(93, None, location)
   def xsNoSelectOnVariable(location: Option[Location]): XProcException = staticError(94, None, location)

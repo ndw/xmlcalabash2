@@ -4,7 +4,7 @@ import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.ValueParser
-import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, XProcVtExpression, XProcExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, XProcExpression, XProcVtExpression}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -48,6 +48,7 @@ class AtomicStep(override val config: XMLCalabash,
       }
     }
 
+    var seenOptions = mutable.HashSet.empty[QName]
     val okChildren = List(classOf[WithInput], classOf[WithOption])
     for (child <- relevantChildren) {
       if (!okChildren.contains(child.getClass)) {
@@ -57,8 +58,14 @@ class AtomicStep(override val config: XMLCalabash,
 
       child match {
         case wo: WithOption =>
+          if (seenOptions.contains(wo.optionName)) {
+            throw XProcException.xsDupWithOptionName(wo.optionName, wo.location)
+          } else {
+            seenOptions += wo.optionName
+          }
+
           if (!sig.options.contains(wo.optionName)) {
-            throw XProcException.xsUndeclaredOption(sig.stepType, wo.optionName, location)
+            throw XProcException.xsUndeclaredOption(sig.stepType, wo.optionName, wo.location)
           }
         case _ => Unit
       }

@@ -85,6 +85,9 @@ For p:inline “$1” content, only text is allowed. Found: “$2”.
 XS0077
 Invalid value specified: “$1”. Value must be $2.
 
+XS0080
+Duplicated option name: “$1”.
+
 XS0081
 If an href attribute is present, no other data bindings may be specified.
 
