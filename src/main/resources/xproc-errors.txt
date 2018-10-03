@@ -63,6 +63,9 @@ The option named “$1” is required, but no value was provided for it.
 XS0030
 Attempt to make port ‘$1’ primary when ‘$2’ is already primary.
 
+XS0031
+The option named ‘$2’ is not allowed on a ‘$1’ step.
+
 XS0032
 No connection provided for primary input port ‘$2’ on step ‘$1’ and no default readable port exists.
 

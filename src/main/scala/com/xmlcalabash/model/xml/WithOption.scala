@@ -30,10 +30,6 @@ class WithOption(override val config: XMLCalabash,
   def as: Option[SequenceType] = _as
 
   override def validate(): Boolean = {
-    if (_expression.isDefined) {
-      return true
-    }
-
     var valid = true
 
     val qname = lexicalQName(attributes.get(XProcConstants._name))

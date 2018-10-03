@@ -54,6 +54,14 @@ class AtomicStep(override val config: XMLCalabash,
         throw XProcException.xsElementNotAllowed(location, child.nodeName)
       }
       valid = valid && child.validate()
+
+      child match {
+        case wo: WithOption =>
+          if (!sig.options.contains(wo.optionName)) {
+            throw XProcException.xsUndeclaredOption(sig.stepType, wo.optionName, location)
+          }
+        case _ => Unit
+      }
     }
 
     valid
