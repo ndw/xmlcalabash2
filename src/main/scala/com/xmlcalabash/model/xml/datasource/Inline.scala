@@ -44,7 +44,7 @@ class Inline(override val config: XMLCalabash,
     _encoding = attributes.get(XProcConstants._encoding)
 
     for (key <- List(XProcConstants._exclude_inline_prefixes, XProcConstants._expand_text,
-      XProcConstants._document_properties, XProcConstants._encoding)) {
+      XProcConstants._document_properties, XProcConstants._encoding, XProcConstants._content_type)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
