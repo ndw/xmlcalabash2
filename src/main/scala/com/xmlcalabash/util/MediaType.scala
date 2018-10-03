@@ -1,5 +1,7 @@
 package com.xmlcalabash.util
 
+import com.xmlcalabash.exceptions.XProcException
+
 import scala.collection.mutable.ListBuffer
 
 // This isn't trying very hard to be strict about the rules
@@ -15,7 +17,7 @@ object MediaType {
     // type/subtype; name1=val1; name2=val2
     var pos = mtype.indexOf("/")
     if (pos <= 0) {
-      throw new IllegalArgumentException("Invalid media type: " + mtype)
+      throw XProcException.xsBadTypeValue("content-types", "content type")
     }
     val mediaType = mtype.substring(0, pos).trim
     var rest = mtype.substring(pos + 1)
