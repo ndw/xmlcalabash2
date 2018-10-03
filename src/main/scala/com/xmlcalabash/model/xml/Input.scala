@@ -91,7 +91,7 @@ class Input(override val config: XMLCalabash,
     for (ds <- defaultInputs()) {
       hasDataSources = true
       if (ds.isInstanceOf[Pipe]) {
-        throw new ModelException(ExceptionCode.BADPIPE, this.toString, location)
+        throw XProcException.xsElementNotAllowed(ds.location, XProcConstants.p_pipe)
       }
       valid = valid && ds.validate()
     }
