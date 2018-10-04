@@ -35,7 +35,7 @@ class AtomicStep(override val config: XMLCalabash,
             throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), location)
           }
         } else {
-          throw new ModelException(ExceptionCode.BADATOMICATTR, key.getLocalName, location)
+          throw XProcException.xsUndeclaredOption(stepType, key, location)
         }
       } else {
         val avt = ValueParser.parseAvt(attributes(key))
