@@ -5,6 +5,8 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{ParserConfiguration, XProcConstants}
 import com.xmlcalabash.model.xml.datasource.DataSource
+import com.xmlcalabash.util.TypeUtils
+import net.sf.saxon.s9api.{SaxonApiException, XdmAtomicValue}
 
 import scala.collection.mutable.ListBuffer
 
@@ -74,7 +76,16 @@ class IOPort(override val config: XMLCalabash,
       throw new ModelException(ExceptionCode.PORTATTRREQ, this.toString, location)
     }
 
-    true
+    try {
+      val typeUtils = new TypeUtils(config)
+      val ncname = typeUtils.castAtomicAs(XdmAtomicValue.makeAtomicValue(_port.get), Some(XProcConstants.xs_NCName), null)
+      true
+    } catch {
+      case sae: SaxonApiException =>
+        throw XProcException.xsBadTypeValue(_port.get, "NCName")
+      case e: Exception =>
+        throw e
+    }
   }
 
   override def makeEdges(graph: Graph, parent: Node) {
