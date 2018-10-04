@@ -31,6 +31,7 @@ class Document(override val config: XMLCalabash,
     _params = doc._params
     _docProps = doc._docProps
     _contentType = doc._contentType
+    _baseURI = doc._baseURI
     hrefAvt = doc.hrefAvt
     paramsExpr = doc.paramsExpr
     bindingRefs.clear()

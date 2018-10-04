@@ -104,6 +104,7 @@ class Input(override val config: XMLCalabash,
 
       for (uri <- href.get.split("\\s+")) {
         val doc = new Document(config, this, uri)
+        doc._baseURI = baseURI
         _defaultInputs += doc
       }
     }
