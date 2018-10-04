@@ -8,9 +8,8 @@ import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.Artifact
 import com.xmlcalabash.util.{TypeUtils, XProcVarValue}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -214,6 +213,9 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, params: Opt
                 val item = iter.next()
                 item match {
                   case node: XdmNode =>
+                    if (node.getNodeKind == XdmNodeKind.ATTRIBUTE) {
+                      throw XProcException.xdInvalidSelection(selectExpr.toString, "an attribute", location)
+                    }
                     dynamicContext.addDocument(node, message)
                   case _ => Unit
                 }

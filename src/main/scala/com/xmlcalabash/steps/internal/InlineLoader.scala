@@ -180,7 +180,6 @@ class InlineLoader(private val baseURI: Option[URI],
     val iter = evaluator.value(expr, List.empty[Message], bindings.toMap, None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
-      println(next)
       s += next.getStringValue
     }
     s

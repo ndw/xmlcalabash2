@@ -12,6 +12,9 @@ A sequence of documents is not allowed on the “$1” port.
 XD0015
 There is no in-scope namespace for the QName “$1”.
 
+XD0016
+Invalid selection, “$1” selects $2.
+
 XD0019
 Invalid value specified: “$1”. Value must be $2.
 

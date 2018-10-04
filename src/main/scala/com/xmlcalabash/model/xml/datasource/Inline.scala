@@ -42,6 +42,14 @@ class Inline(override val config: XMLCalabash,
     _allowExpandText = allow
   }
 
+  override protected[xml] def parse(node: XdmNode): Unit = {
+    super.parse(node)
+    if (node.getNodeName != XProcConstants.p_inline) {
+      // If this isn't a literal inline, then the attributes aren't for the inline
+      attributes.clear()
+    }
+  }
+
   override def validate(): Boolean = {
     _excludeInlinePrefixes = lexicalPrefixes(attributes.get(XProcConstants._exclude_inline_prefixes))
     _expandText = lexicalBoolean(attributes.get(XProcConstants._expand_text)).getOrElse(true)

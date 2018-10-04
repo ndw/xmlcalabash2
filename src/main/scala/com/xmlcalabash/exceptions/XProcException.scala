@@ -70,6 +70,7 @@ object XProcException {
   def xdSequenceNotAllowed(port: String): XProcException = dynamicError(6, port)
   def xdNotValidXML(href: String, message: String): XProcException = dynamicError(23, List(href, message))
   def xdNotWFXML(href: String, message: String): XProcException = dynamicError(11, List(href, message))
+  def xdInvalidSelection(expr: String, selected: String, location: Option[Location]): XProcException = dynamicError(16, List(expr,selected), location)
   def xdNotAuthorized(href: String, message: String): XProcException = dynamicError(21, List(href, message))
 
   //def xsUnconnectedInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(3, List(step,port), location)
