@@ -7,6 +7,7 @@ import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcVtExpression, XProcXPathExpression}
 import com.xmlcalabash.steps.internal.FileLoader
+import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -19,6 +20,7 @@ class Document(override val config: XMLCalabash,
   private var _href = Option.empty[String]
   private var _params = Option.empty[String]
   private var _docProps = Option.empty[String]
+  private var _contentType = Option.empty[MediaType]
   private var hrefAvt = Option.empty[List[String]]
   private var paramsExpr = Option.empty[String]
   private val bindingRefs = mutable.HashSet.empty[QName]
@@ -28,6 +30,7 @@ class Document(override val config: XMLCalabash,
     _href = doc._href
     _params = doc._params
     _docProps = doc._docProps
+    _contentType = doc._contentType
     hrefAvt = doc.hrefAvt
     paramsExpr = doc.paramsExpr
     bindingRefs.clear()
@@ -45,8 +48,10 @@ class Document(override val config: XMLCalabash,
     _href = attributes.get(XProcConstants._href)
     _params = attributes.get(XProcConstants._parameters)
     _docProps = attributes.get(XProcConstants._document_properties)
+    _contentType = MediaType.parse(attributes.get(XProcConstants._content_type))
 
-    for (key <- List(XProcConstants._href, XProcConstants._document_properties, XProcConstants._parameters)) {
+    for (key <- List(XProcConstants._href, XProcConstants._document_properties, XProcConstants._parameters,
+      XProcConstants._content_type)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -84,7 +89,7 @@ class Document(override val config: XMLCalabash,
     val container = this.parent.get.parent.get.parent.get
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
     val context = new ExpressionContext(baseURI, inScopeNS, location)
-    val step = new FileLoader(context, _docProps)
+    val step = new FileLoader(context, _contentType, _docProps)
     val docReader = cnode.addAtomic(step, "document")
 
     val hrefBinding = cnode.addVariable("href", new XProcVtExpression(context, hrefAvt.get, true))

@@ -3,12 +3,12 @@ package com.xmlcalabash.model.xml.datasource
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.model.util.{ParserConfiguration, ValueParser, XProcConstants}
+import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, Input, OptionDecl, Output, Variable, WithInput, WithOption}
 import com.xmlcalabash.runtime.ExpressionContext
 import com.xmlcalabash.steps.internal.InlineLoader
 import com.xmlcalabash.util.MediaType
-import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer

@@ -19,6 +19,7 @@ import net.sf.saxon.value.ObjectValue
 import scala.collection.mutable
 
 class FileLoader(private val context: ExpressionContext,
+                 private val declContentType: Option[MediaType],
                  private val docPropsExpr: Option[String]) extends DefaultStep {
   private var _href = ""
   private var _params = Option.empty[XProcTypes.Parameters]
@@ -70,18 +71,6 @@ class FileLoader(private val context: ExpressionContext,
       }
     }
 
-    // Using the filename sort of sucks, but it's what the OSes do at this point so...sigh
-    // You can extend the set of known extensions by pointing the system property
-    // `content.types.user.table` at your own mime types file. The default file to
-    // start with is in $JAVA_HOME/lib/content-types.properties
-    val map = URLConnection.getFileNameMap
-    var contentTypeString = Option(URLConnection.guessContentTypeFromName(href.toASCIIString)).getOrElse("application/xml")
-    if (params.contains(XProcConstants._content_type)) {
-      contentTypeString = params(XProcConstants._content_type).toString
-    }
-
-    var contentType = MediaType.parse(contentTypeString)
-
     if (docPropsExpr.isDefined) {
       val expr = new XProcXPathExpression(context, docPropsExpr.get)
       val result = xpathValue(expr)
@@ -96,8 +85,32 @@ class FileLoader(private val context: ExpressionContext,
     val props = mutable.HashMap.empty[QName, XdmItem]
     props ++= docProps
 
-    if (props.contains(XProcConstants._content_type)) {
-      contentType = MediaType.parse(props(XProcConstants._content_type).getStringValue)
+    // Using the filename sort of sucks, but it's what the OSes do at this point so...sigh
+    // You can extend the set of known extensions by pointing the system property
+    // `content.types.user.table` at your own mime types file. The default file to
+    // start with is in $JAVA_HOME/lib/content-types.properties
+    val map = URLConnection.getFileNameMap
+    var contentTypeString = Option(URLConnection.guessContentTypeFromName(href.toASCIIString)).getOrElse("application/xml")
+
+    var propContentType = if (docProps.contains(XProcConstants._content_type)) {
+      Some(MediaType.parse(docProps.get(XProcConstants._content_type).toString))
+    } else {
+      None
+    }
+
+    val contentType = if (propContentType.isDefined) {
+      if (declContentType.isDefined) {
+        if (!declContentType.get.matches(propContentType.get)) {
+          throw XProcException.xdMismatchedContentType(declContentType.get, propContentType.get, location)
+        }
+      }
+      propContentType.get
+    } else {
+      if (declContentType.isDefined) {
+        declContentType.get
+      } else {
+        MediaType.parse(contentTypeString)
+      }
     }
 
     props.put(XProcConstants._base_uri, new XdmAtomicValue(href.toASCIIString))
