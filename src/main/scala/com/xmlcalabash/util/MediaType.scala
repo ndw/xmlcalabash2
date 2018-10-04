@@ -13,6 +13,14 @@ object MediaType {
   def TEXT = new MediaType("text", "plain")
   def XML = new MediaType("application", "xml")
 
+  def parse(mtype: Option[String]): Option[MediaType] = {
+    if (mtype.isDefined) {
+      Some(parse(mtype.get))
+    } else {
+      None
+    }
+  }
+
   def parse(mtype: String): MediaType = {
     // type/subtype; name1=val1; name2=val2
     var pos = mtype.indexOf("/")

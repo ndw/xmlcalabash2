@@ -7,6 +7,7 @@ import com.xmlcalabash.model.util.{ParserConfiguration, ValueParser, XProcConsta
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, Input, OptionDecl, Output, Variable, WithInput, WithOption}
 import com.xmlcalabash.runtime.ExpressionContext
 import com.xmlcalabash.steps.internal.InlineLoader
+import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
@@ -21,6 +22,7 @@ class Inline(override val config: XMLCalabash,
   private var _allowExpandText = true
   private var _documentProperties = Option.empty[String]
   private var _encoding = Option.empty[String]
+  private var _contentType = Option.empty[MediaType]
   protected[xml] val variableRefs = mutable.HashSet.empty[QName]
 
   def this(config: XMLCalabash, parent: Option[Artifact], nodes: List[XdmNode]) {
@@ -33,6 +35,7 @@ class Inline(override val config: XMLCalabash,
     _expandText = inline._expandText
     _documentProperties = inline._documentProperties
     _encoding = inline._encoding
+    _contentType = inline._contentType
     variableRefs.clear()
     variableRefs ++= inline.variableRefs
   }
@@ -55,6 +58,7 @@ class Inline(override val config: XMLCalabash,
     _expandText = lexicalBoolean(attributes.get(XProcConstants._expand_text)).getOrElse(true)
     _documentProperties = attributes.get(XProcConstants._document_properties)
     _encoding = attributes.get(XProcConstants._encoding)
+    _contentType = MediaType.parse(attributes.get(XProcConstants._content_type))
 
     for (key <- List(XProcConstants._exclude_inline_prefixes, XProcConstants._expand_text,
       XProcConstants._document_properties, XProcConstants._encoding, XProcConstants._content_type)) {
@@ -94,7 +98,7 @@ class Inline(override val config: XMLCalabash,
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
 
     val context = new ExpressionContext(baseURI, inScopeNS, location)
-    val produceInline = new InlineLoader(baseURI, nodes, context, _expandText, _excludeInlinePrefixes, _documentProperties, _encoding)
+    val produceInline = new InlineLoader(baseURI, nodes, context, _expandText, _excludeInlinePrefixes, _contentType, _documentProperties, _encoding)
 
     produceInline.allowExpandText = allowExpandText
     produceInline.location = location

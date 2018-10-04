@@ -48,6 +48,9 @@ The values of the serialization options must be atomic. Invalid: “$1”
 XD0048
 The serialization options must be a map. Invalid: “$1”
 
+XD0062
+Mismatched content types: “$1” is not the same as “$2”.
+
 XS0003
 No connection provided for input port ‘$2’ on step ‘$1’.
 

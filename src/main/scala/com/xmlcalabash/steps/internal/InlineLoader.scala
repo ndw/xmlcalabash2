@@ -18,6 +18,7 @@ class InlineLoader(private val baseURI: Option[URI],
                    private val context: ExpressionContext,
                    private val expandText: Boolean,
                    private val excludeInlinePrefixes: Map[String,String],
+                   private val declContentType: Option[MediaType],
                    private val docPropsExpr: Option[String],
                    private val encoding: Option[String]) extends DefaultStep {
   private var include_expand_text_attribute = false
@@ -51,7 +52,27 @@ class InlineLoader(private val baseURI: Option[URI],
       }
     }
 
-    val contentType = MediaType.parse(docProps.getOrElse(XProcConstants._content_type, "application/xml").toString)
+    var propContentType = if (docProps.contains(XProcConstants._content_type)) {
+      Some(MediaType.parse(docProps.get(XProcConstants._content_type).toString))
+    } else {
+      None
+    }
+
+    val contentType = if (propContentType.isDefined) {
+      if (declContentType.isDefined) {
+        if (!declContentType.get.matches(propContentType.get)) {
+          throw XProcException.xdMismatchedContentType(declContentType.get, propContentType.get, location)
+        }
+      }
+      propContentType.get
+    } else {
+      if (declContentType.isDefined) {
+        declContentType.get
+      } else {
+        MediaType.XML
+      }
+    }
+
     if (encoding.isDefined) {
       if (contentType.xmlContentType) {
         throw XProcException.staticError(70, List(encoding.get, contentType), location)
