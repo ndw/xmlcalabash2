@@ -9,6 +9,9 @@ p:choose does not contain a selected p:when or a p:otherwise.
 XD0006
 A sequence of documents is not allowed on the “$1” port.
 
+XD0008
+A sequence of documents is not allowed as the context item.
+
 XD0015
 There is no in-scope namespace for the QName “$1”.
 

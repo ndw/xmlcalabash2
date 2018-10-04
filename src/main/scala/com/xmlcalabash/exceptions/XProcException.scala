@@ -66,12 +66,13 @@ object XProcException {
   def xiNoSuchPortOnAccept(port: String): XProcException = internalError(52, None, List(port))
   def xiBadValueOnFileLoader(variable: String): XProcException = internalError(53, None, List(variable))
 
-  def xdBadMediaType(ctype: MediaType, allowed: List[MediaType]): XProcException = dynamicError(38, List(ctype, allowed))
-  def xdSequenceNotAllowed(port: String): XProcException = dynamicError(6, port)
-  def xdNotValidXML(href: String, message: String): XProcException = dynamicError(23, List(href, message))
+  def xdSequenceNotAllowed(port: String, location: Option[Location]): XProcException = dynamicError(6, port, location)
+  def xdContextItemSequence(location: Option[Location]): XProcException = dynamicError(8, location)
   def xdNotWFXML(href: String, message: String): XProcException = dynamicError(11, List(href, message))
   def xdInvalidSelection(expr: String, selected: String, location: Option[Location]): XProcException = dynamicError(16, List(expr,selected), location)
   def xdNotAuthorized(href: String, message: String): XProcException = dynamicError(21, List(href, message))
+  def xdNotValidXML(href: String, message: String): XProcException = dynamicError(23, List(href, message))
+  def xdBadMediaType(ctype: MediaType, allowed: List[MediaType]): XProcException = dynamicError(38, List(ctype, allowed))
   def xdMismatchedContentType(declType: MediaType, propType: MediaType, location: Option[Location]): XProcException = dynamicError(62, List(declType,propType), location)
 
   //def xsUnconnectedInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(3, List(step,port), location)

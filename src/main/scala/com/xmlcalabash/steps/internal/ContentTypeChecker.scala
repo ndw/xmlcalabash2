@@ -58,7 +58,7 @@ class ContentTypeChecker() extends XmlStep {
     documentCount += 1
 
     if (documentCount > 1 && !sequence) {
-      throw XProcException.xdSequenceNotAllowed(portName)
+      throw XProcException.xdSequenceNotAllowed(portName, location)
     }
 
     if (allowedTypes.nonEmpty) {
@@ -95,7 +95,7 @@ class ContentTypeChecker() extends XmlStep {
 
   override def run(context: StaticContext): Unit = {
     if (documentCount == 0 && !sequence) {
-      throw XProcException.xdSequenceNotAllowed(portName)
+      throw XProcException.xdSequenceNotAllowed(portName, location)
     }
   }
 

@@ -288,7 +288,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
 
     if (contextItem.size > 1) {
       if (!useCollection) {
-        throw XProcException.dynamicError(5, exprContext.location)
+        throw XProcException.xdContextItemSequence(exprContext.location)
       }
     }
 
