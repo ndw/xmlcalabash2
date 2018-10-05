@@ -72,6 +72,16 @@ class AtomicStep(override val config: XMLCalabash,
       }
     }
 
+    for (optName <- sig.options) {
+      val opt = sig.option(optName, location.get)
+      if (opt.required) {
+        if (!seenOptions.contains(optName)) {
+          throw XProcException.xsMissingRequiredOption(optName, location)
+        }
+      }
+
+    }
+
     valid
   }
 
