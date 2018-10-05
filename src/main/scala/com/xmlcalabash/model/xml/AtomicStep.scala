@@ -24,6 +24,7 @@ class AtomicStep(override val config: XMLCalabash,
     val sig = config.signatures.step(stepType)
     var valid = super.validate()
 
+    val seenOptions = mutable.HashSet.empty[QName]
     for (key <- attributes.keySet) {
       if (key.getNamespaceURI == "") {
         if (sig.options.contains(key)) {
@@ -31,6 +32,7 @@ class AtomicStep(override val config: XMLCalabash,
           if (avt.isDefined) {
             val context = new ExpressionContext(baseURI, inScopeNS, location)
             options.put(key, new XProcVtExpression(context, avt.get, true))
+            seenOptions += key
           } else {
             throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), location)
           }
@@ -48,7 +50,6 @@ class AtomicStep(override val config: XMLCalabash,
       }
     }
 
-    var seenOptions = mutable.HashSet.empty[QName]
     val okChildren = List(classOf[WithInput], classOf[WithOption])
     for (child <- relevantChildren) {
       if (!okChildren.contains(child.getClass)) {
