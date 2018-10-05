@@ -10,6 +10,11 @@ class Empty(override val config: XMLCalabash,
     this(config, Some(parent))
   }
 
+  override def validate(): Boolean = {
+    // nop?
+    true
+  }
+
   override def makeEdges(graph: Graph, parent: Node): Unit = {
     // nop?
   }
