@@ -81,7 +81,7 @@ class Input(override val config: XMLCalabash,
 
     if (attributes.nonEmpty) {
       val key = attributes.keySet.head
-      throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
+      throw XProcException.xsBadAttribute(key, location)
     }
 
     // N.B. This is an *input*, not a *with-input*, so the data sources are now

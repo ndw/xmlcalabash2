@@ -60,6 +60,9 @@ No connection provided for input port ‘$2’ on step ‘$1’.
 XS0004
 Option names must not be repeated; the “$1” option appears more than once.
 
+XS0008
+Attribute not allowed here: “$1”.
+
 XS0011
 Duplicate port name: ‘$1’
 
