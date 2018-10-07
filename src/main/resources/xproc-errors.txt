@@ -78,6 +78,9 @@ The option named ‘$2’ is not allowed on a ‘$1’ step.
 XS0032
 No connection provided for primary input port ‘$2’ on step ‘$1’ and no default readable port exists.
 
+XS0038
+Required attribute “$1” is missing.
+
 XS0044
 The element named “$1” is not allowed: $2.
 

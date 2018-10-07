@@ -85,6 +85,7 @@ object XProcException {
   def xsDupPrimaryPort(port: String, primaryPort: String, location: Option[Location]): XProcException = staticError(30, List(port, primaryPort), location)
   def xsUndeclaredOption(stepType: QName, optName: QName, location: Option[Location]): XProcException = staticError(31, List(stepType,optName), location)
   def xsUnconnectedPrimaryInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(32, List(step,port), location)
+  def xsMissingRequiredAttribute(attName: QName, location: Option[Location]): XProcException = staticError(38, attName, location)
   def xsElementNotAllowed(location: Option[Location], element: QName, message: String): XProcException = staticError(44, List(element, message), location)
   def xsElementNotAllowed(location: Option[Location], element: QName): XProcException = staticError(44, List(element, "element is not allowed here"), location)
   def xsBadTypeValue(name: String, reqdType: String): XProcException = staticError(77, List(name, reqdType), None)

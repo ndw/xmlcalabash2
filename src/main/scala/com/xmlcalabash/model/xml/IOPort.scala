@@ -73,7 +73,7 @@ class IOPort(override val config: XMLCalabash,
     _primary = lexicalBoolean(attributes.get(XProcConstants._primary))
 
     if (_port.isEmpty) {
-      throw new ModelException(ExceptionCode.PORTATTRREQ, this.toString, location)
+      throw XProcException.xsMissingRequiredAttribute(XProcConstants._port, location)
     }
 
     try {

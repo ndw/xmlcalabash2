@@ -75,7 +75,6 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
         val port = data(1)
         s"Atomic $stepType steps have no output port named $port"
       case ExceptionCode.BADCONTAINERATTR => s"Unqualified attribute not allowed: ${data.head}"
-      case ExceptionCode.PORTATTRREQ => s"The `port' attribute is required on ${data.head}"
       case ExceptionCode.BADPIPE => s"The `p:pipe' element is not allowed here: ${data.head}"
       case ExceptionCode.BADSEQ => s"Attribute not allowed here: ${data.head}"
       case ExceptionCode.BADPRIMARY => s"Attribute not allowed here: ${data.head}"

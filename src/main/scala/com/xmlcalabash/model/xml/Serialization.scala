@@ -67,7 +67,7 @@ class Serialization(override val config: XMLCalabash,
     }
 
     if (_port.isEmpty) {
-      throw new ModelException(ExceptionCode.PORTATTRREQ, this.toString, location)
+      throw XProcException.xsMissingRequiredAttribute(XProcConstants._port, location)
     }
 
     if (parent.isDefined && !parent.get.outputPorts.contains(_port.get)) {
