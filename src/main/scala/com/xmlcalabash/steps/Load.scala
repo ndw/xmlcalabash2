@@ -95,7 +95,11 @@ class Load() extends DefaultXmlStep {
       false
     }
 
-    val result = config.documentManager.parse(new DocumentRequest(href, declContentType, dtdValidate))
+    val request = new DocumentRequest(href, declContentType, dtdValidate)
+    request.params = params.toMap
+    request.docprops = docprops.toMap
+
+    val result = config.documentManager.parse(request)
 
     consumer.get.receive("result", result.value, new XProcMetadata(result.contentType, result.props))
   }

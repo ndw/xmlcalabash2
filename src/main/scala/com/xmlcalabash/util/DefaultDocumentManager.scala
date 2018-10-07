@@ -84,7 +84,9 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabash) extends DocumentManager {
     request.baseURI = file.getAbsoluteFile.toURI
 
     val props = mutable.HashMap.empty[QName,XdmValue] ++ request.docprops
-    props.put(XProcConstants._base_uri, new XdmAtomicValue(href.toASCIIString))
+    if (!props.contains(XProcConstants._base_uri)) {
+      props.put(XProcConstants._base_uri, new XdmAtomicValue(href.toASCIIString))
+    }
     props.put(XProcConstants._content_type, new XdmAtomicValue(contentType.toString))
     props.put(XProcConstants._content_length, new XdmAtomicValue(file.length()))
 
@@ -114,7 +116,9 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabash) extends DocumentManager {
           }
 
           val props = mutable.HashMap.empty[QName,XdmValue] ++ request.docprops
-          props.put(XProcConstants._base_uri, new XdmAtomicValue(href.toASCIIString))
+          if (!props.contains(XProcConstants._base_uri)) {
+            props.put(XProcConstants._base_uri, new XdmAtomicValue(href.toASCIIString))
+          }
           props.put(XProcConstants._content_type, new XdmAtomicValue(contentType.toString))
           if (responseEntity.get.getContentLength >= 0) {
             props.put(XProcConstants._content_length, new XdmAtomicValue(responseEntity.get.getContentLength))
@@ -185,7 +189,22 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabash) extends DocumentManager {
       val builder = xmlCalabash.processor.newDocumentBuilder
       builder.setDTDValidation(request.dtdValidate)
       builder.setLineNumbering(true)
-      builder.build(source)
+
+      val node = try {
+        builder.build(source)
+      } catch {
+        case sae: SaxonApiException =>
+          val msg = sae.getMessage
+          if (msg.contains("validation")) {
+            throw XProcException.xdNotValidXML(request.href.toASCIIString, msg)
+          } else if (msg.contains("HTTP response code: 403 ")) {
+            throw XProcException.xdNotAuthorized(request.href.toASCIIString, msg)
+          } else {
+            throw XProcException.xdNotWFXML(request.href.toASCIIString, msg)
+          }
+      }
+
+      node
     } else if (contentType.jsonContentType) {
       val encoding = contentType.charset.getOrElse("UTF-8") // FIXME: What should the default be?
       val bytes = streamToByteArray(stream)

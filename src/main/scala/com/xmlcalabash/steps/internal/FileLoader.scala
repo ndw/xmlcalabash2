@@ -13,7 +13,7 @@ import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmValue}
 import net.sf.saxon.value.ObjectValue
 
 import scala.collection.mutable
@@ -82,8 +82,7 @@ class FileLoader(private val context: ExpressionContext,
       }
     }
 
-    val props = mutable.HashMap.empty[QName, XdmValue]
-    props ++= docProps
+    val props = Map.empty[QName, XdmValue] ++ docProps
 
     // Using the filename sort of sucks, but it's what the OSes do at this point so...sigh
     // You can extend the set of known extensions by pointing the system property
@@ -123,7 +122,16 @@ class FileLoader(private val context: ExpressionContext,
       false
     }
 
-    val result = config.get.documentManager.parse(new DocumentRequest(href, Some(contentType), dtdValidate))
+    val request = new DocumentRequest(href, Some(contentType), dtdValidate)
+    request.params = params
+    request.docprops = props
+
+    val result = config.get.documentManager.parse(request)
+    result.value match {
+      case node: XdmNode =>
+        println(node.getBaseURI)
+      case _ => Unit
+    }
     consumer.get.receive("result", new ItemMessage(result.value, new XProcMetadata(result.contentType, result.props)))
   }
 
