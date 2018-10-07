@@ -174,6 +174,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabash) extends DocumentManager {
     } else if (contentType.xmlContentType) {
 
       val source = new SAXSource(new InputSource(stream))
+      source.setSystemId(request.href.toASCIIString)
       var reader = source.asInstanceOf[SAXSource].getXMLReader
       if (reader == null) {
         try {
