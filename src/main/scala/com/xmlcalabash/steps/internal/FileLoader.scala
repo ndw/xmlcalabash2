@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
-import com.xmlcalabash.config.XProcTypes
+import com.xmlcalabash.config.{DocumentRequest, XMLCalabash, XProcTypes}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
@@ -82,7 +82,7 @@ class FileLoader(private val context: ExpressionContext,
       }
     }
 
-    val props = mutable.HashMap.empty[QName, XdmItem]
+    val props = mutable.HashMap.empty[QName, XdmValue]
     props ++= docProps
 
     // Using the filename sort of sucks, but it's what the OSes do at this point so...sigh
@@ -113,37 +113,18 @@ class FileLoader(private val context: ExpressionContext,
       }
     }
 
-    props.put(XProcConstants._base_uri, new XdmAtomicValue(href.toASCIIString))
-
-    if (contentType.xmlContentType) {
-      val node = if (params.contains(XProcConstants._dtd_validate)) {
-        // FIXME: It should be possible to convert the XdmItem to a proper boolean
-        config.get.documentManager.parse(href, None, params(XProcConstants._dtd_validate).toString == "true")
+    val dtdValidate = if (params.contains(XProcConstants._dtd_validate)) {
+      if (params(XProcConstants._dtd_validate).size > 1) {
+        throw new IllegalArgumentException("dtd validate parameter is not a singleton")
       } else {
-        config.get.documentManager.parse(href)
+        params(XProcConstants._dtd_validate).itemAt(0).getStringValue == "true"
       }
-      consumer.get.receive("result", new ItemMessage(node, new XProcMetadata(contentType, props.toMap)))
-    } else if (contentType.jsonContentType) {
-      val expr = new XProcXPathExpression(context, s"json-doc('$href')")
-      val json = config.get.expressionEvaluator.singletonValue(expr, List(), bindings.toMap, None)
-      consumer.get.receive("result", new ItemMessage(json.item, new XProcMetadata(contentType, props.toMap)))
-    } else if (contentType.htmlContentType) {
-      val node = config.get.documentManager.parseHtml(href)
-      consumer.get.receive("result", new ItemMessage(node, new XProcMetadata(contentType, props.toMap)))
     } else {
-      // FIXME: this isn't necessarily a file URI!
-      val file = new File(href)
-      props.put(new QName("cx", XProcConstants.ns_cx, "last-modified"),
-        new XdmAtomicValue(
-          new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(
-          new Date(file.lastModified()))))
-      props.put(XProcConstants._content_length, new XdmAtomicValue(file.length()))
-      val bytes = Files.readAllBytes(new File(href).toPath)
-      val javaItem = new ObjectValue(bytes)
-      consumer.get.receive("result", new ItemMessage(javaItem, new XProcMetadata(contentType, props.toMap)))
+      false
     }
 
-    logger.debug(s"Loaded $href as $contentType")
+    val result = config.get.documentManager.parse(new DocumentRequest(href, Some(contentType), dtdValidate))
+    consumer.get.receive("result", new ItemMessage(result.value, new XProcMetadata(result.contentType, result.props)))
   }
 
   def xpathValue(expr: XProcExpression): XdmValue = {

@@ -4,12 +4,13 @@ import java.net.URI
 
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.util.S9Api
 import net.sf.saxon.Controller
 import net.sf.saxon.`type`.{BuiltInType, SchemaType, SimpleType}
 import net.sf.saxon.event.{NamespaceReducer, Receiver}
 import net.sf.saxon.expr.instruct.Executable
 import net.sf.saxon.om.{FingerprintedQName, NamespaceBinding, NodeName, StandardNames}
-import net.sf.saxon.s9api.{Axis, QName, XdmDestination, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api.{Axis, QName, XdmDestination, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.tree.util.NamespaceIterator
 
 import scala.collection.mutable.ListBuffer
@@ -103,6 +104,10 @@ class SaxonTreeBuilder(runtime: XMLCalabash) {
       case _ =>
         throw new ModelException(ExceptionCode.BADTREENODE, List(node.getNodeKind.toString, node.getNodeName.toString), node)
     }
+  }
+
+  def addValues(values: XdmValue): Unit = {
+    addText(S9Api.valuesToString(values))
   }
 
   protected def writeChildren(node: XdmNode): Unit = {

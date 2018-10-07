@@ -421,7 +421,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
               builder.addStartElement(key)
               builder.startContent()
               value match {
-                case atom: XdmAtomicValue => builder.addText(value.getStringValue)
+                case atom: XdmAtomicValue => builder.addValues(value)
                 case node: XdmNode => builder.addSubtree(node)
                 case _ => throw XProcException.xiInvalidPropertyValue(value, None)
               }

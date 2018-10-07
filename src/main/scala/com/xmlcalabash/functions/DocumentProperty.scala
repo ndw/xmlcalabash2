@@ -11,7 +11,7 @@ import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
 import net.sf.saxon.functions.AccessorFn.Component
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
 import net.sf.saxon.om.{NodeInfo, Sequence, StructuredQName}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode, XdmValue}
 import net.sf.saxon.value.{QNameValue, SequenceType, StringValue}
 
 class DocumentProperty private extends ExtensionFunctionDefinition {
@@ -63,7 +63,7 @@ class DocumentProperty private extends ExtensionFunctionDefinition {
         throw XProcException.xiDocPropsUnavail(exprEval.dynContext.get.location, new URI(doc.asInstanceOf[NodeInfo].getBaseURI))
       }
 
-      val props: Map[QName,XdmItem] = msg.get match {
+      val props: Map[QName,XdmValue] = msg.get match {
         case item: ItemMessage =>
           item.metadata match {
             case xml: XProcMetadata =>

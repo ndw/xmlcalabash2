@@ -4,7 +4,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.S9Api
-import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
 
@@ -13,7 +13,7 @@ class PropertyMerge extends DefaultXmlStep {
   private var sourceMeta = Option.empty[XProcMetadata]
   private var propDoc = Option.empty[Any]
   private var propMeta = Option.empty[XProcMetadata]
-  private var prop = Option.empty[Map[QName,XdmItem]]
+  private var prop = Option.empty[Map[QName,XdmValue]]
 
   override def inputSpec: XmlPortSpecification = new XmlPortSpecification(Map("source" -> "1", "properties" -> "1"),
     Map("source" -> List("*"), "properties" -> List("application/xml")))
@@ -57,8 +57,8 @@ class PropertyMerge extends DefaultXmlStep {
     consumer.get.receive("result", sourceDoc.get, newmeta)
   }
 
-  private def extractProperties(node: XdmNode): Map[QName,XdmItem] = {
-    val prop = mutable.HashMap.empty[QName,XdmItem]
+  private def extractProperties(node: XdmNode): Map[QName,XdmValue] = {
+    val prop = mutable.HashMap.empty[QName,XdmValue]
 
    val piter = node.axisIterator(Axis.CHILD)
     while (piter.hasNext) {

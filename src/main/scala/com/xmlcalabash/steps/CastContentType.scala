@@ -54,7 +54,7 @@ class CastContentType() extends DefaultXmlStep {
       val builder = new SaxonTreeBuilder(config)
 
       val baseURI = if (metadata.get.properties.contains(XProcConstants._base_uri)) {
-        Some(new URI(metadata.get.properties(XProcConstants._base_uri).getStringValue))
+        Some(new URI(S9Api.valuesToString(metadata.get.properties(XProcConstants._base_uri))))
       } else {
         None
       }
@@ -87,7 +87,7 @@ class CastContentType() extends DefaultXmlStep {
       val builder = new SaxonTreeBuilder(config)
 
       val baseURI = if (metadata.get.properties.contains(XProcConstants._base_uri)) {
-        Some(new URI(metadata.get.properties(XProcConstants._base_uri).getStringValue))
+        Some(new URI(S9Api.valuesToString(metadata.get.properties(XProcConstants._base_uri))))
       } else {
         None
       }
@@ -121,7 +121,7 @@ class CastContentType() extends DefaultXmlStep {
       val builder = new SaxonTreeBuilder(config)
 
       val baseURI = if (metadata.get.properties.contains(XProcConstants._base_uri)) {
-        Some(new URI(metadata.get.properties(XProcConstants._base_uri).getStringValue))
+        Some(new URI(S9Api.valuesToString(metadata.get.properties(XProcConstants._base_uri))))
       } else {
         None
       }

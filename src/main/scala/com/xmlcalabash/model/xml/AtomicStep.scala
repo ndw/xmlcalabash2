@@ -4,7 +4,7 @@ import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.ValueParser
-import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, XProcExpression, XProcVtExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, XProcExpression, XProcVtExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -28,13 +28,19 @@ class AtomicStep(override val config: XMLCalabash,
     for (key <- attributes.keySet) {
       if (key.getNamespaceURI == "") {
         if (sig.options.contains(key)) {
-          val avt = ValueParser.parseAvt(attributes(key))
-          if (avt.isDefined) {
-            val context = new ExpressionContext(baseURI, inScopeNS, location)
-            options.put(key, new XProcVtExpression(context, avt.get, true))
-            seenOptions += key
+          val opt = sig.option(key, location.get)
+          val context = new ExpressionContext(baseURI, inScopeNS, location)
+          seenOptions += key
+
+          if (opt.declaredType.getOrElse("") == "map") {
+            options.put(key, new XProcXPathExpression(context, attributes(key)))
           } else {
-            throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), location)
+            val avt = ValueParser.parseAvt(attributes(key))
+            if (avt.isDefined) {
+              options.put(key, new XProcVtExpression(context, avt.get, true))
+            } else {
+              throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), location)
+            }
           }
         } else {
           throw XProcException.xsUndeclaredOption(stepType, key, location)

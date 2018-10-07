@@ -10,7 +10,7 @@ import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcMetadata}
 import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
 import net.sf.saxon.om.{NodeInfo, Sequence, StructuredQName}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode, XdmValue}
 import net.sf.saxon.value.SequenceType
 
 class DocumentPropertiesDocument private extends ExtensionFunctionDefinition {
@@ -56,7 +56,7 @@ class DocumentPropertiesDocument private extends ExtensionFunctionDefinition {
         throw XProcException.xiDocPropsUnavail(exprEval.dynContext.get.location, new URI(baseURI))
       }
 
-      val props: Map[QName,XdmItem] = msg.get match {
+      val props: Map[QName,XdmValue] = msg.get match {
         case item: ItemMessage =>
           item.metadata match {
             case xml: XProcMetadata =>
@@ -88,9 +88,9 @@ class DocumentPropertiesDocument private extends ExtensionFunctionDefinition {
             }
             builder.startContent()
             builder.addText(atomic.getStringValue)
-          case item: XdmItem =>
+          case value: XdmValue =>
             builder.startContent()
-            builder.addText(item.getStringValue)
+            builder.addValues(value)
         }
         builder.addEndElement()
       }

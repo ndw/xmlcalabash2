@@ -40,7 +40,7 @@ class PropertyExtract extends DefaultXmlStep {
             builder.addAttribute(XProcConstants.xsi_type, xtype.toString)
           }
           builder.startContent()
-          builder.addText(value.getStringValue)
+          builder.addValues(value)
         case _ =>
           throw XProcException.xiInvalidPropertyValue(value, location)
       }

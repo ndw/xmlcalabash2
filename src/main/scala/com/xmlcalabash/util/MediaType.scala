@@ -12,6 +12,8 @@ object MediaType {
   def OCTET_STREAM = new MediaType("application", "octet-stream")
   def TEXT = new MediaType("text", "plain")
   def XML = new MediaType("application", "xml")
+  def JSON = new MediaType("application", "json")
+  def HTML = new MediaType("text", "html")
 
   def parse(mtype: Option[String]): Option[MediaType] = {
     if (mtype.isDefined) {
@@ -95,7 +97,8 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
   }
 
   def htmlContentType: Boolean = {
-    (mediaType == "text" && mediaSubtype == "html")
+    ((mediaType == "text" && mediaSubtype == "html")
+      || (mediaType == "application" && mediaSubtype == "html"))
   }
 
   def markupContentType: Boolean = {

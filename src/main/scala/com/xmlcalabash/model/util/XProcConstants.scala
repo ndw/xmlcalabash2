@@ -178,6 +178,7 @@ object XProcConstants {
   val _content_types = new QName("", "content-types")
   val _collection = new QName("", "collection")
   val _dtd_validate = new QName("", "dtd-validate")
+  val _last_modified = new QName("", "", "last-modified")
   val _message = new QName("", "message")
   val _condition = new QName("", "condition")
 

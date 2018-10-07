@@ -35,6 +35,13 @@ step p:identity has implementation xc:Identity
   input source*
   output result*
 
+step p:load has implementation xc:Load
+  output result
+  option href as anyURI
+  option parameters? as map
+  option content-type? as string
+  option document-properties? as map
+
 step p:parameters has implementation xc:Parameters
   output result
   option parameters
@@ -161,11 +168,6 @@ step p:label-elements
   option label? as XPathExpression = 'concat("_",$p:index)'
   option match? as XSLTMatchPattern = '*'
   option replace? as boolean = 'true'
-
-step p:load
-  output result
-  option href as anyURI
-  option dtd-validate? as boolean = 'false'
 
 step p:make-absolute-uris
   input source

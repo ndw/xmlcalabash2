@@ -6,14 +6,9 @@ import net.sf.saxon.s9api.XdmNode
 import org.xml.sax.InputSource
 
 trait DocumentManager {
-  def parse(uri: URI): XdmNode
-  def parse(uri: URI, base: Option[URI]): XdmNode
-  def parse(uri: URI, base: Option[URI], dtdValidate: Boolean): XdmNode
-  def parse(isource: InputSource): XdmNode
+  def parse(request: DocumentRequest): DocumentResponse
+  def parse(request: DocumentRequest, isource: InputSource): DocumentResponse
 
-  def parseHtml(uri: URI): XdmNode
-  def parseHtml(href: String): XdmNode
-  def parseHtml(href: String, base: String): XdmNode
-  def parseHtml(href: String, base: String, dtdValidate: Boolean): XdmNode
-  def parseHtml(isource: InputSource): XdmNode
+  def parseHtml(request: DocumentRequest): DocumentResponse
+  def parseHtml(request: DocumentRequest, isource: InputSource): DocumentResponse
 }

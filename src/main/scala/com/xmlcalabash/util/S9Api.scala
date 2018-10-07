@@ -70,6 +70,16 @@ object S9Api {
     isource
   }
 
+  def valuesToString(values: XdmValue): String = {
+    var str = ""
+    var sep = ""
+    for (pos <- 1 to values.size) {
+      str = str + sep + values.itemAt(pos - 1).getStringValue
+      sep = " "
+    }
+    str
+  }
+
   def serialize(config: XMLCalabash, value: XdmValue, serializer: Serializer): Unit = {
     serialize(config, List(value), serializer)
   }
