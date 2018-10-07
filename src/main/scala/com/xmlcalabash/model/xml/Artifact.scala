@@ -171,31 +171,6 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   }
 
   protected[xml] def addChild(child: Artifact): Unit = {
-    /* Variables everywhere means document order matters.
-    child match {
-      case ioport: IOPort =>
-        var pos = 0
-        var found = false
-        while (pos < children.length && !found) {
-          children(pos) match {
-            case doc: Documentation => Unit
-            case pipe: PipeInfo => Unit
-            case port: IOPort => Unit
-            case _ => found = true
-          }
-          if (!found) {
-            pos += 1
-          }
-        }
-        if (found) {
-          children.insert(pos, child)
-        } else {
-          children += child
-        }
-      case _ =>
-        children += child
-    }
-    */
     children += child
   }
 
@@ -584,7 +559,11 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
       for (port <- parent.get.inputPorts) {
         val in = parent.get.input(port)
         if (in.get.primary.getOrElse(false)) {
-          return in
+          if (DrpRemap.map(in.get).isDefined) {
+            return DrpRemap.map(in.get)
+          } else {
+            return in
+          }
         }
       }
 

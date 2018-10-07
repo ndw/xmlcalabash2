@@ -222,24 +222,6 @@ class AtomicStep(override val config: XMLCalabash,
       }
 
       bind.get match {
-          /*
-        case declStep: DeclareStep =>
-          // FIXME: Does this case ever happen anymore?
-          var optDecl = Option.empty[OptionDecl]
-          for (child <- declStep.children) {
-            child match {
-              case opt: OptionDecl =>
-                if (opt.optionName == ref) {
-                  optDecl = Some(opt)
-                }
-              case _ => Unit
-            }
-          }
-          if (optDecl.isEmpty) {
-            throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
-          }
-          graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], graphNode)
-          */
         case optDecl: OptionDecl =>
           graph.addBindingEdge(optDecl._graphNode.get.asInstanceOf[Binding], graphNode)
         case varDecl: Variable =>

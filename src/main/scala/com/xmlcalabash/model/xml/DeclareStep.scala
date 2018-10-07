@@ -235,7 +235,12 @@ class DeclareStep(override val config: XMLCalabash,
 
     insertChildBefore(firstChild.get, checker)
     checker.makePortsExplicit()
+
+    val sinput = this.input(input.port.get)
+    val cresult = checker.output("result")
+
     patchPipe(name, List(input.port.get), checker.name, "result")
+    DrpRemap.remap(sinput.get, cresult.get)
 
     val pipe = new Pipe(config, idinput, name, input.port.get)
     pipe.priority = true
