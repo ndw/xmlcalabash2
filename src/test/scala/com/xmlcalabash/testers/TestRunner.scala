@@ -490,14 +490,14 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     } else {
       val code = node.getAttributeValue(_code)
       if (code == null) {
-        // ???
+        throw new TestException("No code attribute for failing test?")
       } else {
-        val qcode = ValueParser.parseQName(code, S9Api.inScopeNamespaces(node), Some(new NodeLocation(node)))
-        if (result.errQName.isDefined) {
-          if (qcode == result.errQName.get) {
-            result.passed = true
-          }
+        var passed = false
+        for (ecode <- code.split("\\s+")) {
+          val qcode = ValueParser.parseQName(ecode, S9Api.inScopeNamespaces(node), Some(new NodeLocation(node)))
+          passed = passed || qcode == result.errQName.get
         }
+        result.passed = passed
       }
 
       result
