@@ -8,6 +8,15 @@ function p:system-property     has implementation xf:SystemProperty
 function p:document-properties has implementation xf:DocumentProperties
 function cx:cwd                has implementation xf:Cwd
 
+step p:add-attribute has implementation xc:AddAttribute
+  input source
+  output result
+  option match as XSLTMatchPattern
+  option attribute-name as QName
+  option attribute-prefix? as NCName
+  option attribute-namespace? as anyURI
+  option attribute-value
+
 step p:cast-content-type has implementation xc:CastContentType
   input source
   output result
@@ -85,15 +94,6 @@ step cx:property-merge has implementation xc:PropertyMerge
 step cx:content-type-checker has implementation xci:ContentTypeChecker
   input source*
   output result*
-
-step p:add-attribute
-  input source
-  output result
-  option match as XSLTMatchPattern
-  option attribute-name as QName
-  option attribute-prefix? as NCName
-  option attribute-namespace? as anyURI
-  option attribute-value
 
 step p:add-xml-base
   input source

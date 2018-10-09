@@ -107,6 +107,11 @@ class TypeUtils(val config: XMLCalabash) {
       return new XdmAtomicValue(ValueParser.parseQName(value.getStringValue, context.nsBindings, None))
     }
 
+    // FIXME: deal with the psuedo-types in some more rational way
+    if (xsdtype.get == XProcConstants.pxs_XSLTMatchPattern) {
+      return value
+    }
+
     val itype = typeFactory.getAtomicType(xsdtype.get)
     new XdmAtomicValue(value.getStringValue, itype)
   }

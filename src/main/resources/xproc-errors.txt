@@ -19,7 +19,7 @@ XD0016
 Invalid selection, “$1” selects $2.
 
 XD0019
-Invalid value specified: “$1”. Value must be $2.
+Invalid value specified: “$1”. Value must be of type “$2”: $3.
 
 XD0011
 Failed to load XML: $1
@@ -29,6 +29,9 @@ Access denied: $1
 
 XD0023
 XML document is not valid: $1
+
+XD0034
+$1
 
 XD0036
 Computed result “$1” does not match specified type “$2”.
@@ -108,6 +111,9 @@ If a pipe attribute is present, no other data bindings may be specified.
 
 XS0096
 Invalid sequence type: “$1”. $2.
+
+XC0023
+Bad pattern: “$1”. Matches $2 node where it must only match elements.
 
 {http://xmlcalabash.com/ns/extensions}XI0016
 No input specified for pipeline port “$1”.

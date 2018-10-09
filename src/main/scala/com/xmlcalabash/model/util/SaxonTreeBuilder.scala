@@ -16,19 +16,22 @@ import net.sf.saxon.tree.util.NamespaceIterator
 import scala.collection.mutable.ListBuffer
 
 class SaxonTreeBuilder(runtime: XMLCalabash) {
-  private val config = runtime.processor.getUnderlyingConfiguration
-  private val pool = config.getNamePool
-  private val controller = new Controller(config)
+  protected val config = runtime.processor.getUnderlyingConfiguration
+  protected val pool = config.getNamePool
+  protected val controller = new Controller(config)
 
-  private var exec: Executable = _
-  private var destination: XdmDestination = _
-  private var receiver: Receiver = _
+  protected var exec: Executable = _
+  protected var destination: XdmDestination = _
+  protected var receiver: Receiver = _
   private var _inDocument = false
-  private var seenRoot = false
+  protected var seenRoot = false
 
   def result: XdmNode = destination.getXdmNode
 
   def inDocument: Boolean = _inDocument
+  protected def inDocument_=(in: Boolean): Unit = {
+    _inDocument = in
+  }
 
   def startDocument(baseURI: URI): Unit = {
     startDocument(Some(baseURI))

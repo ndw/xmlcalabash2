@@ -70,8 +70,10 @@ object XProcException {
   def xdContextItemSequence(location: Option[Location]): XProcException = dynamicError(8, location)
   def xdNotWFXML(href: String, message: String): XProcException = dynamicError(11, List(href, message))
   def xdInvalidSelection(expr: String, selected: String, location: Option[Location]): XProcException = dynamicError(16, List(expr,selected), location)
+  def xdBadValue(value: String, vtype: String, message: String, location: Option[Location]): XProcException = dynamicError(19, List(value,vtype, message), location)
   def xdNotAuthorized(href: String, message: String): XProcException = dynamicError(21, List(href, message))
   def xdNotValidXML(href: String, message: String): XProcException = dynamicError(23, List(href, message))
+  def xdConflictingNamespaceDeclarations(msg: String, location: Option[Location]): XProcException = dynamicError(34, msg, location)
   def xdBadMediaType(ctype: MediaType, allowed: List[MediaType]): XProcException = dynamicError(38, List(ctype, allowed))
   def xdMismatchedContentType(declType: MediaType, propType: MediaType, location: Option[Location]): XProcException = dynamicError(62, List(declType,propType), location)
 
@@ -94,6 +96,8 @@ object XProcException {
   def xsNoSelectOnStaticOption(location: Option[Location]): XProcException = staticError(93, None, location)
   def xsNoSelectOnVariable(location: Option[Location]): XProcException = staticError(94, None, location)
   def xsInvalidSequenceType(seqType: String, errMsg: String, location: Option[Location]): XProcException = staticError(96, List(seqType, errMsg), location)
+
+  def xcNotAnElement(pattern: String, nodeType: String, location: Option[Location]): XProcException = stepError(23, List(pattern, nodeType), location)
 
   private def internalError(code: Int, location: Option[Location]): XProcException = {
     internalError(code, location, List())

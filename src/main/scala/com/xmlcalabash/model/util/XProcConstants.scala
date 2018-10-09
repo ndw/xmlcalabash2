@@ -11,6 +11,7 @@ object XProcConstants {
   val ns_exf = "http://exproc.org/standard/functions"
   val ns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
   val ns_xml = "http://www.w3.org/XML/1998/namespace"
+  val ns_xmlns = "http://www.w3.org/2000/xmlns/"
 
   val UNKNOWN = new QName("", "UNKNOWN")
 
@@ -108,6 +109,9 @@ object XProcConstants {
   val xs_untypedAtomic = new QName("xs", ns_xs, "untypedAtomic")
   val xs_yearMonthDuration = new QName("xs", ns_xs, "yearMonthDuration")
 
+  // These are psuedo-types used in this implemention.
+  val pxs_XSLTMatchPattern = new QName("xs", ns_xs, "XSLTMatchPattern")
+
   val xsi_type = new QName("xsi", ns_xsi, "type")
 
   // Extras for testing
@@ -146,6 +150,7 @@ object XProcConstants {
   val _include_content_type = new QName("", "include-content-type")
   val _indent = new QName("", "indent")
   val _item_separator = new QName("", "item-separator")
+  val _match = new QName("", "match")
   val _media_type = new QName("", "media-type")
   val _method = new QName("", "method")
   val _name = new QName("", "name")
