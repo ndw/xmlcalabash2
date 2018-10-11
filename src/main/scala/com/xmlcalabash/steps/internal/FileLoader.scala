@@ -127,11 +127,6 @@ class FileLoader(private val context: ExpressionContext,
     request.docprops = props
 
     val result = config.get.documentManager.parse(request)
-    result.value match {
-      case node: XdmNode =>
-        println(node.getBaseURI)
-      case _ => Unit
-    }
     consumer.get.receive("result", new ItemMessage(result.value, new XProcMetadata(result.contentType, result.props)))
   }
 
