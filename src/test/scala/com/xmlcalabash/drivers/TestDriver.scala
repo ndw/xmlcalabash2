@@ -14,7 +14,7 @@ import org.xml.sax.InputSource
 object TestDriver extends App {
   private val xmlCalabash = XMLCalabash.newInstance()
 
-  private val xmlOutput: Option[String] = None
+  private val xmlOutput: Option[String] = Some("test-report.xml")
   private val htmlOutput: Option[String] = Some("test-suite-report.html")
 
   val testFile = System.getProperty("testFile")

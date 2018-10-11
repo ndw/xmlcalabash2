@@ -65,6 +65,7 @@ class Tester(runtimeConfig: XMLCalabash) {
 
     val processor = runtimeConfig.processor
     val builder = processor.newDocumentBuilder()
+    var runtime: GraphRuntime = null
 
     try {
       val parser = new Parser(runtimeConfig)
@@ -72,7 +73,7 @@ class Tester(runtimeConfig: XMLCalabash) {
       val graph = pipeline.pipelineGraph()
       graph.close()
 
-      val runtime = new GraphRuntime(graph, runtimeConfig)
+      runtime = new GraphRuntime(graph, runtimeConfig)
 
       for (port <- pipeline.inputPorts) {
         if (_inputs.contains(port)) {
@@ -128,17 +129,12 @@ class Tester(runtimeConfig: XMLCalabash) {
         new TestResult(true)
       }
     } catch {
-      case jafpl: JafplException =>
-        new TestResult(XProcException.mapPipelineException(jafpl))
-      case model: ModelException =>
-        new TestResult(model)
-      case xproc: XProcException =>
-        new TestResult(xproc)
-      case step: StepException =>
-        new TestResult(step)
-      case t: Throwable =>
-        t.printStackTrace(Console.err)
-        new TestResult(t)
+      case ex: Exception =>
+        if (runtime != null) {
+          runtime.stop
+        }
+        ex.printStackTrace(Console.err)
+        new TestResult(ex)
     }
   }
 

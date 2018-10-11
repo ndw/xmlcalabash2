@@ -27,6 +27,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
   private val _testcase = new QName("", "testcase")
   private val _classname = new QName("", "classname")
   private val _time = new QName("", "time")
+  private val _errors = new QName("", "errors")
   private val _timestamp = new QName("", "timestamp")
   private val _system_out = new QName("", "system-out")
   private val _system_err = new QName("", "system-err")
@@ -45,6 +46,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
   private val tsns = "http://xproc.org/ns/testsuite/3.0"
   private val t_test_suite = new QName(tsns, "test-suite")
   private val t_div = new QName(tsns, "div")
+  private val t_info= new QName(tsns, "info")
   private val t_title = new QName(tsns, "title")
   private val t_description = new QName(tsns, "description")
   private val t_test = new QName(tsns, "test")
@@ -93,6 +95,8 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     val junit = new SaxonTreeBuilder(runtimeConfig)
     junit.startDocument(URIUtils.cwdAsURI)
 
+    val suite_start_ms = Calendar.getInstance().getTimeInMillis
+
     var count = 0
     var failures = 0
     for (fn <- testFiles) {
@@ -105,9 +109,12 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       val stderr = new ByteArrayOutputStream()
       val pserr = new PrintStream(stderr)
 
+      val pos = fn.lastIndexOf("/")
+      val name = fn.substring(pos+1)
+
       junit.addStartElement(_testcase)
-      junit.addAttribute(_name, fn)
-      junit.addAttribute(_classname, "NA")
+      junit.addAttribute(_name, name)
+      junit.addAttribute(_classname, this.getClass.getName)
 
       Console.withOut(psout) {
         Console.withErr(pserr) {
@@ -134,7 +141,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
           for (result <- results) {
             if (result.failed) {
               failures += 1
-              logger.info(s"**** FAIL **** $failures **** ${result.message}")
+              logger.info(s"**** FAIL **** $failures **** ")
               if (result.baseURI.isDefined) {
                 logger.info(s"      ${result.baseURI.get}")
               }
@@ -180,12 +187,16 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       junit.addEndElement()
     }
 
+    junit.endDocument()
+
+    val suite_end_ms = Calendar.getInstance().getTimeInMillis
+
     logger.info(s"$failures of $count tests failed")
 
     val wrapper = new SaxonTreeBuilder(runtimeConfig)
     wrapper.startDocument(URIUtils.cwdAsURI)
     wrapper.addStartElement(_testsuite)
-    wrapper.addAttribute(_name, "NA")
+    wrapper.addAttribute(_name, "XProc Test Suite")
 
     val today   = Calendar.getInstance().getTime
     val dformat = new SimpleDateFormat("YYYY-MM-dd")
@@ -193,9 +204,12 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     var stamp   = dformat.format(today) + "T" + tformat.format(today)
     wrapper.addAttribute(_timestamp, stamp)
 
+    wrapper.addAttribute(_time, ((suite_end_ms - suite_start_ms) / 1000.0).toString)
+
     wrapper.addAttribute(_hostname, InetAddress.getLocalHost.getHostName)
     wrapper.addAttribute(_tests, count.toString)
-    wrapper.addAttribute(_failures, failures.toString)
+    wrapper.addAttribute(_failures, "0")
+    wrapper.addAttribute(_errors, failures.toString)
 
     wrapper.startContent()
     wrapper.addStartElement(_properties)
@@ -212,6 +226,21 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     wrapper.addAttribute(_value, runtimeConfig.productVersion)
     wrapper.startContent()
     wrapper.addEndElement()
+
+    /*
+    val properties = System.getProperties
+    val enum = properties.keys()
+    while (enum.hasMoreElements) {
+      val name = enum.nextElement().asInstanceOf[String]
+      val value = properties.get(name).asInstanceOf[String]
+      wrapper.addStartElement(_property)
+      wrapper.addAttribute(_name, name)
+      wrapper.addAttribute(_value, value)
+      wrapper.startContent()
+      wrapper.addEndElement()
+    }
+    */
+
     wrapper.addEndElement()
 
     wrapper.addSubtree(junit.result)
@@ -441,7 +470,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
               throw new TestException(s"Failed to load binding for $name")
             }
             bindings.put(qname, value.get)
-          } else if (child.getNodeName == t_title || child.getNodeName == t_description) {
+          } else if (child.getNodeName == t_info || child.getNodeName == t_title || child.getNodeName == t_description) {
             Unit
           } else {
             throw new TestException(s"Unexpected element ${child.getNodeName} in ${child.getBaseURI}")
@@ -455,11 +484,11 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       }
     }
 
-    val tester = new Tester(runtimeConfig)
-
     if (pipeline.isEmpty) {
       throw new TestException("No pipeline for test")
     }
+
+    val tester = new Tester(runtimeConfig)
 
     tester.pipeline = pipeline.get
 
@@ -488,16 +517,20 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
       }
       result
     } else {
-      val code = node.getAttributeValue(_code)
-      if (code == null) {
-        throw new TestException("No code attribute for failing test?")
+      if (expected != "fail") {
+        result.passed = false // It was supposed to succeed...
       } else {
-        var passed = false
-        for (ecode <- code.split("\\s+")) {
-          val qcode = ValueParser.parseQName(ecode, S9Api.inScopeNamespaces(node), Some(new NodeLocation(node)))
-          passed = passed || qcode == result.errQName.get
+        val code = node.getAttributeValue(_code)
+        if (code == null) {
+          throw new TestException("No code attribute for failing test?")
+        } else {
+          var passed = false
+          for (ecode <- code.split("\\s+")) {
+            val qcode = ValueParser.parseQName(ecode, S9Api.inScopeNamespaces(node), Some(new NodeLocation(node)))
+            passed = passed || qcode == result.errQName.get
+          }
+          result.passed = passed
         }
-        result.passed = passed
       }
 
       result
