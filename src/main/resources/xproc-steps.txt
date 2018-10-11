@@ -53,14 +53,14 @@ step p:load has implementation xc:Load
 
 step p:parameters has implementation xc:Parameters
   output result
-  option parameters
+  option parameters as map
 
 step p:xslt has implementation xc:Xslt
   primary input source*
   input stylesheet
   primary output result
   output secondary*
-  option parameters
+  option parameters as map
   option initial-mode? as QName
   option template-name? as QName
   option output-base-uri? as anyURI
@@ -71,7 +71,7 @@ step p:xslt has implementation xc:Xslt
 step cx:javascript has implementation xc:JavaScript
   input script
   output result
-  option parameters
+  option parameters? as map
 
 step cx:peephole has implementation xc:Peephole
   input source
