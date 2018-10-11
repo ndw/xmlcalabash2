@@ -1,6 +1,6 @@
 name         := "meerschaum"
 organization := "com.xmlcalabash"
-version      := "1.9.1"
+version      := "1.9.2"
 scalaVersion := "2.12.6"
 
 lazy val meerschaum = (project in file(".")).
@@ -42,7 +42,7 @@ libraryDependencies ++= Seq(
   "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
   "org.xmlresolver" % "xmlresolver" % "0.12.3",
   "nu.validator" % "htmlparser" % "1.4.6",
-  "com.jafpl" % "jafpl_2.12" % "0.0.54"
+  "com.jafpl" % "jafpl_2.12" % "0.0.56"
 )
 
 // Yes, this is an odd place for local use, but it's where the website
