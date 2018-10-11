@@ -90,6 +90,9 @@ object XProcException {
   def xsMissingRequiredAttribute(attName: QName, location: Option[Location]): XProcException = staticError(38, attName, location)
   def xsElementNotAllowed(location: Option[Location], element: QName, message: String): XProcException = staticError(44, List(element, message), location)
   def xsElementNotAllowed(location: Option[Location], element: QName): XProcException = staticError(44, List(element, "element is not allowed here"), location)
+
+  def xsTextNotAllowed(location: Option[Location], text: String): XProcException = staticError(999, text, location)
+
   def xsBadTypeValue(name: String, reqdType: String): XProcException = staticError(77, List(name, reqdType), None)
   def xsDupWithOptionName(optName: QName, location: Option[Location]): XProcException = staticError(80, optName, location)
   def xsNoSiblingsOnEmpty(location: Option[Location]): XProcException = staticError(89, None, location)

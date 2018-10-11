@@ -172,6 +172,11 @@ class Parser(config: XMLCalabash) {
             config.errorListener.error(t)
             None
         }
+      case XdmNodeKind.TEXT =>
+        if (node.getStringValue.trim != "") {
+          throw XProcException.xsTextNotAllowed(Some(new NodeLocation(node)), node.getStringValue.trim)
+        }
+        None
       case _ => None
     }
   }
