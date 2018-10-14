@@ -3,6 +3,28 @@ organization := "com.xmlcalabash"
 version      := "1.9.2"
 scalaVersion := "2.12.6"
 
+lazy val jafplVersion = "0.0.63"
+
+buildInfoKeys ++= Seq[BuildInfoKey](
+  "jafplVersion" -> jafplVersion,
+  BuildInfoKey.action("buildTime") {
+    System.currentTimeMillis
+  } // re-computed each time at compile
+)
+
+/*
+buildInfoKeys ++= Seq[BuildInfoKey](
+  "jafplVersion" -> jafplVersion
+  resolvers,
+  libraryDependencies in Test,
+  BuildInfoKey.map(name) { case (k, v) => "project" + k.capitalize -> v.capitalize },
+  "custom" -> 1234, // computed at project load time
+  BuildInfoKey.action("buildTime") {
+    System.currentTimeMillis
+  } // re-computed each time at compile
+)
+*/
+
 lazy val meerschaum = (project in file(".")).
   enablePlugins(BuildInfoPlugin).
   settings(
@@ -17,6 +39,7 @@ resolvers += DefaultMavenRepository
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 resolvers += "Restlet" at "http://maven.restlet.com"
 resolvers += "My Maven Repository" at "https://nwalsh.com/maven/repo"
+resolvers += "Local Maven Repository" at "file:///space/websites/nwalsh.com/build/website/maven/repo"
 
 libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
@@ -42,7 +65,7 @@ libraryDependencies ++= Seq(
   "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
   "org.xmlresolver" % "xmlresolver" % "0.12.3",
   "nu.validator" % "htmlparser" % "1.4.6",
-  "com.jafpl" % "jafpl_2.12" % "0.0.56"
+  "com.jafpl" % "jafpl_2.12" % jafplVersion
 )
 
 // Yes, this is an odd place for local use, but it's where the website

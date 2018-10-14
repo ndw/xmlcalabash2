@@ -65,10 +65,15 @@ class XMLCalabash extends RuntimeConfiguration {
   private var _episode = defaultEpisode
 
   def productName: String = BuildInfo.name
-  def productVersion: String = {
+  def productVersion: String = BuildInfo.version
+  def jafplVersion: String = BuildInfo.jafplVersion
+  def saxonVersion: String = {
     val sver = processor.getSaxonProductVersion
     val sed = processor.getUnderlyingConfiguration.getEditionCode
-    BuildInfo.version + " (for Saxon " + sver + "/" + sed + ")"
+    s"$sver/$sed"
+  }
+  def productConfig: String = {
+    s"${BuildInfo.version} (with JAFPL $jafplVersion for Saxon $saxonVersion)"
   }
   def vendor: String = "Norman Walsh"
   def vendorURI: String = "http://xmlcalabash.com/"
