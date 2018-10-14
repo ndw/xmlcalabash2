@@ -164,22 +164,27 @@ class Container(override val config: XMLCalabash,
       val sources = out.dataSources
       if (sources.isEmpty) {
         val last = lastChildStep
-        if (last.isDefined) {
-          var output = Option.empty[Output]
-          for (oport <- last.get.outputPorts) {
-            val oput = last.get.output(oport).get
-            if (oput.primary.getOrElse(false)) {
-              output = Some(oput)
+
+        if (out.primary.get) {
+          if (last.isDefined) {
+            var output = Option.empty[Output]
+            for (oport <- last.get.outputPorts) {
+              val oput = last.get.output(oport).get
+              if (oput.primary.getOrElse(false)) {
+                output = Some(oput)
+              }
             }
-          }
-          if (output.isDefined) {
-            val pipe = new Pipe(config, out, last.get.name, output.get.port.get)
-            out.addChild(pipe)
+            if (output.isDefined) {
+              val pipe = new Pipe(config, out, last.get.name, output.get.port.get)
+              out.addChild(pipe)
+            } else {
+              throw XProcException.xsUnconnectedOutputPort(name, port, location)
+            }
           } else {
             throw XProcException.xsUnconnectedOutputPort(name, port, location)
           }
         } else {
-          throw XProcException.xsUnconnectedOutputPort(name, port, location)
+          // secondary outputs can be left hanging; they'll get sinks later
         }
       }
     }
