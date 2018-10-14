@@ -66,7 +66,10 @@ object XProcException {
   def xiNoSuchPortOnAccept(port: String): XProcException = internalError(52, None, List(port))
   def xiBadValueOnFileLoader(variable: String): XProcException = internalError(53, None, List(variable))
 
-  def xdSequenceNotAllowed(port: String, location: Option[Location]): XProcException = dynamicError(6, port, location)
+  def xdSequenceNotAllowedOnIf(location: Option[Location]): XProcException = dynamicError(5, location)
+  def xdInputSequenceNotAllowed(port: String, location: Option[Location]): XProcException = dynamicError(6, port, location)
+  def xdOutputSequenceNotAllowed(port: String, location: Option[Location]): XProcException = dynamicError(7, port, location)
+  def xdSequenceNotAllowedAsContext(location: Option[Location]): XProcException = dynamicError(8, location)
   def xdContextItemSequence(location: Option[Location]): XProcException = dynamicError(8, location)
   def xdNotWFXML(href: String, message: String): XProcException = dynamicError(11, List(href, message))
   def xdInvalidSelection(expr: String, selected: String, location: Option[Location]): XProcException = dynamicError(16, List(expr,selected), location)
@@ -183,11 +186,17 @@ object XProcException {
     new XProcException(qname, None, location, details)
   }
 
-  def mapPipelineException(jex: JafplException): Exception = {
-    jex.code match {
-      case JafplException.DUP_OPTION_NAME => XProcException.xsDupOptionname(jex.location, jex.details.head)
-      case JafplException.INPUT_PORT_MISSING => XProcException.xsUnconnectedInputPort(jex.details.head, jex.details(1), jex.location)
-      case _ => jex
+  def mapPipelineException(ex: Exception): Exception = {
+    ex match {
+      case jex: JafplException =>
+        jex.code match {
+          case JafplException.DUP_OPTION_NAME => XProcException.xsDupOptionname(jex.location, jex.details.head.asInstanceOf[String])
+          case JafplException.INPUT_PORT_MISSING => XProcException.xsUnconnectedInputPort(jex.details.head.asInstanceOf[String], jex.details(1).asInstanceOf[String], jex.location)
+          case JafplException.INPUT_CARDINALITY_ERROR => XProcException.xdInputSequenceNotAllowed(jex.details.head.asInstanceOf[String], jex.location)
+          case JafplException.OUTPUT_CARDINALITY_ERROR => XProcException.xdOutputSequenceNotAllowed(jex.details.head.asInstanceOf[String], jex.location)
+          case _ => jex
+        }
+      case _ => ex
     }
   }
 }

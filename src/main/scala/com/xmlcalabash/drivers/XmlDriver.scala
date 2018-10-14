@@ -113,12 +113,14 @@ object XmlDriver extends App {
 
     runtime.run()
   } catch {
-    case t: Throwable =>
+    case ex: Exception =>
       if (options.debug) {
-        t.printStackTrace()
+        ex.printStackTrace()
       }
 
-      t match {
+      val mappedex = XProcException.mapPipelineException(ex)
+
+      mappedex match {
         case model: ModelException =>
           println(model)
         case parse: ParseException =>
@@ -166,9 +168,9 @@ object XmlDriver extends App {
           }
 
         case _ =>
-          println("Caught unexpected error: " + t)
-          t.printStackTrace()
-          throw t
+          println("Caught unexpected error: " + ex)
+          ex.printStackTrace()
+          throw ex
       }
       errored = true
   }

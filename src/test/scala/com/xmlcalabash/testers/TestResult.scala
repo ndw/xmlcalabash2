@@ -13,27 +13,34 @@ class TestResult(pass: Boolean) {
   private var _baseURI = Option.empty[URI]
   private var _errQName = Option.empty[QName]
   private var _errCode = Option.empty[ExceptionCode]
-  private var _except = Option.empty[Throwable]
+  private var _except = Option.empty[Exception]
 
   def failed: Boolean = !passed
+
   def passed: Boolean = _passed
+
   def passed_=(pass: Boolean): Unit = {
     _passed = pass
   }
 
   def skipped: Boolean = _skipped
+
   def skipped_=(skip: Boolean): Unit = {
     _skipped = skip
   }
 
   def baseURI: Option[URI] = _baseURI
+
   def baseURI_=(base: URI): Unit = {
     _baseURI = Some(base)
   }
 
   def message: String = _message
+
   def errQName: Option[QName] = _errQName
+
   def errCode: Option[ExceptionCode] = _errCode
+
   def exception: Option[Throwable] = _except
 
   def this(pass: Boolean, msg: String) = {
@@ -43,8 +50,8 @@ class TestResult(pass: Boolean) {
 
   def this(except: Exception) = {
     this(false, except.getMessage)
-    _except = Some(except)
-    except match {
+    _except = Some(XProcException.mapPipelineException(except))
+    _except.get match {
       case model: ModelException =>
         _errQName = Some(model.exceptionQName)
         _errCode = Some(model.code)
@@ -55,11 +62,6 @@ class TestResult(pass: Boolean) {
       case _ =>
         Unit
     }
-  }
-
-  def this(thrown: Throwable) = {
-    this(false, thrown.getMessage)
-    _except = Some(thrown)
   }
 
   override def toString: String = {
