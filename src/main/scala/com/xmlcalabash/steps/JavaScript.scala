@@ -2,6 +2,7 @@ package com.xmlcalabash.steps
 
 import javax.script.ScriptEngineManager
 import com.jafpl.runtime.RuntimeConfiguration
+import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, XProcMetadata, XmlPortSpecification}
@@ -15,7 +16,8 @@ class JavaScript extends DefaultXmlStep {
   private val engine = factory.getEngineByName("nashorn")
   private var script = ""
 
-  override def inputSpec: XmlPortSpecification = new XmlPortSpecification(Map("script" -> "1"),
+  override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
+    Map("script" -> PortCardinality.EXACTLY_ONE),
     Map("script" -> List("text/plain")))
 
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULT

@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.config.Jafpl
 import com.jafpl.graph.Graph
-import com.sun.org.apache.xpath.internal.XPathProcessorException
+import com.jafpl.steps.Manifold
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
@@ -10,6 +10,7 @@ import com.xmlcalabash.model.xml.containers.{Container, WithDocument, WithProper
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.XProcExpression
 import com.xmlcalabash.steps.internal.ContentTypeParams
+import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -27,7 +28,7 @@ class DeclareStep(override val config: XMLCalabash,
   def pipelineGraph(): Graph = {
     val jafpl = Jafpl.newInstance()
     val graph = jafpl.newGraph()
-    val pipeline = graph.addPipeline(name)
+    val pipeline = graph.addPipeline(name, manifold)
 
     for (port <- inputPorts) {
       graph.addInput(pipeline, port)

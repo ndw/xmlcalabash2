@@ -2,6 +2,7 @@ package com.xmlcalabash.steps
 
 import java.net.URI
 
+import com.jafpl.steps.PortCardinality
 import javax.xml.transform.{Result, SourceLocator}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
@@ -31,12 +32,12 @@ class Xslt extends DefaultXmlStep {
   private var version = Option.empty[String]
 
   override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
-    Map("source" -> "1", "stylesheet" -> "1"),
+    Map("source" -> PortCardinality.EXACTLY_ONE, "stylesheet" -> PortCardinality.EXACTLY_ONE),
     Map("source" -> List("application/xml", "text/plain"), "stylesheet" -> List("application/xml"))
   )
 
   override def outputSpec: XmlPortSpecification = new XmlPortSpecification(
-    Map("result" -> "*", "secondary" -> "*"),
+    Map("result" -> PortCardinality.ZERO_OR_MORE, "secondary" -> PortCardinality.ZERO_OR_MORE),
     Map("result" -> List("application/xml", "text/plain"),
       "secondary" -> List("application/xml", "text/plain"))
   )

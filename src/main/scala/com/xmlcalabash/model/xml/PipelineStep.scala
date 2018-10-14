@@ -1,6 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
+import com.jafpl.steps.{Manifold, PortCardinality, PortSpecification}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
@@ -107,5 +108,27 @@ class PipelineStep(override val config: XMLCalabash,
 
   override def makeEdges(graph: Graph, parent: Node) {
     graphEdges(graph, _graphNode.get.asInstanceOf[ContainerStart])
+  }
+
+  def manifold: Manifold = {
+    val inputMap = mutable.HashMap.empty[String,PortCardinality]
+    for (input <- inputs) {
+      if (input.sequence) {
+        inputMap.put(input.port.get, PortCardinality.ZERO_OR_MORE)
+      } else {
+        inputMap.put(input.port.get, PortCardinality.EXACTLY_ONE)
+      }
+    }
+
+    val outputMap = mutable.HashMap.empty[String,PortCardinality]
+    for (output <- outputs) {
+      if (output.sequence) {
+        outputMap.put(output.port.get, PortCardinality.ZERO_OR_MORE)
+      } else {
+        outputMap.put(output.port.get, PortCardinality.EXACTLY_ONE)
+      }
+    }
+
+    new Manifold(new PortSpecification(inputMap.toMap), new PortSpecification(outputMap.toMap))
   }
 }

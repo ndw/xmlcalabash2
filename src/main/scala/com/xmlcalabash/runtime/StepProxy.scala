@@ -3,7 +3,7 @@ package com.xmlcalabash.runtime
 import com.jafpl.graph.Location
 import com.jafpl.messages.{BindingMessage, ExceptionMessage, ItemMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
-import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
+import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality, PortSpecification, Step}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
@@ -54,10 +54,10 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, params: Opt
     step match {
       case xstep: XmlStep => xstep.inputSpec
       case _ =>
-        val portMap = mutable.HashMap.empty[String,String]
+        val portMap = mutable.HashMap.empty[String,PortCardinality]
         val typeMap = mutable.HashMap.empty[String,List[String]]
         for (key <- step.inputSpec.ports) {
-          portMap.put(key, step.inputSpec.cardinality(key).getOrElse("*"))
+          portMap.put(key, step.inputSpec.cardinality(key).getOrElse(PortCardinality.ZERO_OR_MORE))
           typeMap.put(key, List("application/octet-stream"))
         }
         new XmlPortSpecification(portMap.toMap, typeMap.toMap)
@@ -68,10 +68,10 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: XmlStep, params: Opt
     step match {
       case xstep: XmlStep => xstep.outputSpec
       case _ =>
-        val portMap = mutable.HashMap.empty[String,String]
+        val portMap = mutable.HashMap.empty[String,PortCardinality]
         val typeMap = mutable.HashMap.empty[String,List[String]]
         for (key <- step.outputSpec.ports) {
-          portMap.put(key, step.outputSpec.cardinality(key).getOrElse("*"))
+          portMap.put(key, step.outputSpec.cardinality(key).getOrElse(PortCardinality.ZERO_OR_MORE))
           typeMap.put(key, List("application/octet-stream"))
         }
         new XmlPortSpecification(portMap.toMap, typeMap.toMap)

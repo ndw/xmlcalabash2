@@ -1,6 +1,7 @@
 package com.xmlcalabash.model.xml.containers
 
 import com.jafpl.graph.{ContainerStart, Graph, Node, TryCatchStart}
+import com.jafpl.steps.Manifold
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
@@ -87,7 +88,7 @@ class ForEach(override val config: XMLCalabash,
   override def makeGraph(graph: Graph, parent: Node) {
     val node = parent match {
       case cont: ContainerStart =>
-        cont.addForEach(name)
+        cont.addForEach(name, Manifold.ALLOW_ANY)
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "ForEach parent isn't a container???", location)
     }

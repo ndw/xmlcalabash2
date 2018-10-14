@@ -1,7 +1,6 @@
 package com.xmlcalabash.runtime
 
-import com.jafpl.steps.PortSpecification
-import com.sun.org.apache.xpath.internal.XPathProcessorException
+import com.jafpl.steps.{PortCardinality, PortSpecification}
 import com.xmlcalabash.exceptions.XProcException
 
 import scala.collection.immutable
@@ -11,48 +10,60 @@ import scala.collection.immutable
   */
 object XmlPortSpecification {
   /** Allow anything on any ports. */
-  val ANY: XmlPortSpecification = new XmlPortSpecification(Map("*" -> "*"), Map("*" -> List("application/octet-stream")))
+  val ANY: XmlPortSpecification = new XmlPortSpecification(
+    Map(PortSpecification.WILDCARD->PortCardinality.ZERO_OR_MORE),
+    Map(PortSpecification.WILDCARD -> List("application/octet-stream")))
 
   /** Allow XML on any ports. */
-  val ANYXML: XmlPortSpecification = new XmlPortSpecification(Map("*" -> "*"), Map("*" -> List("application/xml")))
+  val ANYXML: XmlPortSpecification = new XmlPortSpecification(
+    Map(PortSpecification.WILDCARD->PortCardinality.ZERO_OR_MORE),
+    Map(PortSpecification.WILDCARD -> List("application/xml")))
 
   /** Allow no ports. */
   val NONE: XmlPortSpecification = new XmlPortSpecification(Map(), Map())
 
   /** Allow a single document of any sort on the `source` port. */
-  val ANYSOURCE: XmlPortSpecification = new XmlPortSpecification(Map("source" -> "1"),
-    Map("source" -> List("application/octet-stream")))
+  val ANYSOURCE: XmlPortSpecification = new XmlPortSpecification(
+    Map("source"->PortCardinality.EXACTLY_ONE),
+    Map("source"->List("application/octet-stream")))
 
   /** Allow a single document of any sort on the `result` port. */
-  val ANYRESULT: XmlPortSpecification = new XmlPortSpecification(Map("result" -> "1"),
-    Map("result" -> List("application/octet-stream")))
+  val ANYRESULT: XmlPortSpecification = new XmlPortSpecification(
+    Map("result"->PortCardinality.EXACTLY_ONE),
+    Map("result"->List("application/octet-stream")))
 
   /** Allow a single XML document on the `source` port. */
-  val XMLSOURCE: XmlPortSpecification = new XmlPortSpecification(Map("source" -> "1"),
-    Map("source" -> List("application/xml")))
+  val XMLSOURCE: XmlPortSpecification = new XmlPortSpecification(
+    Map("source"->PortCardinality.EXACTLY_ONE),
+    Map("source"->List("application/xml")))
 
   /** Allow a single XML document on the `result` port. */
-  val XMLRESULT: XmlPortSpecification = new XmlPortSpecification(Map("result" -> "1"),
+  val XMLRESULT: XmlPortSpecification = new XmlPortSpecification(
+    Map("result"->PortCardinality.EXACTLY_ONE),
     Map("result" -> List("application/xml")))
 
   /** Allow a sequence of zero or more documents of any sort on the `source` port. */
-  val ANYSOURCESEQ: XmlPortSpecification = new XmlPortSpecification(Map("source" -> "*"),
-    Map("source" -> List("application/octet-stream")))
+  val ANYSOURCESEQ: XmlPortSpecification = new XmlPortSpecification(
+    Map("source"->PortCardinality.ZERO_OR_MORE),
+    Map("source"->List("application/octet-stream")))
 
   /** Allow a sequence of zero or more documents of any sort on the `result` port. */
-  val ANYRESULTSEQ: XmlPortSpecification = new XmlPortSpecification(Map("result" -> "*"),
-    Map("result" -> List("application/octet-stream")))
+  val ANYRESULTSEQ: XmlPortSpecification = new XmlPortSpecification(
+    Map("result"->PortCardinality.ZERO_OR_MORE),
+    Map("result"->List("application/octet-stream")))
 
   /** Allow a sequence of zero or more XML documents on the `source` port. */
-  val XMLSOURCESEQ: XmlPortSpecification = new XmlPortSpecification(Map("source" -> "*"),
-    Map("source" -> List("application/xml")))
+  val XMLSOURCESEQ: XmlPortSpecification = new XmlPortSpecification(
+    Map("source"->PortCardinality.ZERO_OR_MORE),
+    Map("source"->List("application/xml")))
 
   /** Allow a sequence of zero or more XML documents on the `result` port. */
-  val XMLRESULTSEQ: XmlPortSpecification = new XmlPortSpecification(Map("result" -> "*"),
-    Map("result" -> List("application/xml")))
+  val XMLRESULTSEQ: XmlPortSpecification = new XmlPortSpecification(
+    Map("result"->PortCardinality.ZERO_OR_MORE),
+    Map("result"->List("application/xml")))
 }
 
-class XmlPortSpecification(spec: immutable.Map[String,String],
+class XmlPortSpecification(spec: immutable.Map[String,PortCardinality],
                            accept: immutable.Map[String, List[String]]) extends PortSpecification(spec) {
   for (port <- accept.keySet) {
     if (!spec.contains(port)) {

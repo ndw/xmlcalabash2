@@ -55,12 +55,6 @@ class ContentTypeChecker() extends XmlStep {
   }
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
-    documentCount += 1
-
-    if (documentCount > 1 && !sequence) {
-      throw XProcException.xdSequenceNotAllowed(portName, location)
-    }
-
     if (allowedTypes.nonEmpty) {
       var allowed = false
       for (ctype <- allowedTypes) {
@@ -94,9 +88,7 @@ class ContentTypeChecker() extends XmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
-    if (documentCount == 0 && !sequence) {
-      throw XProcException.xdSequenceNotAllowed(portName, location)
-    }
+    // nop; checking is done as the inputs arrive
   }
 
   override def reset(): Unit = {

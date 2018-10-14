@@ -1,6 +1,7 @@
 package com.xmlcalabash.model.xml.containers
 
 import com.jafpl.graph.{ChooseStart, Graph, Node}
+import com.jafpl.steps.Manifold
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
@@ -28,7 +29,7 @@ class Otherwise(override val config: XMLCalabash,
     val node = parent match {
       case choose: ChooseStart =>
         val context = new ExpressionContext(baseURI, inScopeNS, location)
-        choose.addWhen(new XProcXPathExpression(context, "true()"), name)
+        choose.addWhen(new XProcXPathExpression(context, "true()"), name, Manifold.ALLOW_ANY)
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "When parent isn't a choose???", location)
     }

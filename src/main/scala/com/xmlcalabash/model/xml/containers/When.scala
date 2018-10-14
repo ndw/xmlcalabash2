@@ -1,6 +1,7 @@
 package com.xmlcalabash.model.xml.containers
 
 import com.jafpl.graph.{Binding, ChooseStart, ContainerStart, Graph, Node}
+import com.jafpl.steps.Manifold
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
@@ -43,7 +44,7 @@ class When(override val config: XMLCalabash,
   override def makeGraph(graph: Graph, parent: Node) {
     val node = parent match {
       case choose: ChooseStart =>
-        choose.addWhen(testExpr, name)
+        choose.addWhen(testExpr, name, Manifold.ALLOW_ANY)
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "When parent isn't a choose???", location)
     }

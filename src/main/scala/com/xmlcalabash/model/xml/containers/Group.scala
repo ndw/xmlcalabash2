@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml.containers
 
-import com.jafpl.graph.{ChooseStart, ContainerStart, Graph, Node, TryCatchStart}
+import com.jafpl.graph.{ContainerStart, Graph, Node, TryCatchStart}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
@@ -29,7 +29,7 @@ class Group(override val config: XMLCalabash,
       case trycatch: TryCatchStart =>
         trycatch.addTry(name)
       case cont: ContainerStart =>
-        cont.addGroup(name)
+        cont.addGroup(name, manifold)
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "Group parent isn't a container???", location)
     }
@@ -42,8 +42,8 @@ class Group(override val config: XMLCalabash,
   }
 
   override def makeEdges(graph: Graph, parentNode: Node) {
-    for (output <- outputPorts) {
-      graph.addEdge(_graphNode.get, output, parentNode, output)
+    for (output <- outputs) {
+      graph.addEdge(_graphNode.get, output.port.get, parentNode, output.port.get)
     }
 
     for (child <- children) {

@@ -1,5 +1,6 @@
 package com.xmlcalabash.steps
 
+import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
@@ -15,7 +16,8 @@ class PropertyMerge extends DefaultXmlStep {
   private var propMeta = Option.empty[XProcMetadata]
   private var prop = Option.empty[Map[QName,XdmValue]]
 
-  override def inputSpec: XmlPortSpecification = new XmlPortSpecification(Map("source" -> "1", "properties" -> "1"),
+  override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
+    Map("source" -> PortCardinality.EXACTLY_ONE, "properties" -> PortCardinality.EXACTLY_ONE),
     Map("source" -> List("*"), "properties" -> List("application/xml")))
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULT
 

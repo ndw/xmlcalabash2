@@ -1,5 +1,6 @@
 package com.xmlcalabash.steps
 
+import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
@@ -11,7 +12,8 @@ class PropertyExtract extends DefaultXmlStep {
   private var meta = Option.empty[XProcMetadata]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCE
-  override def outputSpec: XmlPortSpecification = new XmlPortSpecification(Map("result" -> "1", "properties" -> "1"),
+  override def outputSpec: XmlPortSpecification = new XmlPortSpecification(
+    Map("result" -> PortCardinality.EXACTLY_ONE, "properties" -> PortCardinality.EXACTLY_ONE),
     Map("result" -> List("*"), "properties" -> List("application/xml")))
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
