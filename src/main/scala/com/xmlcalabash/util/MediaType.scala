@@ -8,8 +8,8 @@ import scala.collection.mutable.ListBuffer
 // N.B. This class accepts "*" for type and subtype because it's used for matching
 
 object MediaType {
-  def ANY = new MediaType("*", "*")
   def OCTET_STREAM = new MediaType("application", "octet-stream")
+  //def ANY = new MediaType("*", "*")
   def TEXT = new MediaType("text", "plain")
   def XML = new MediaType("application", "xml")
   def JSON = new MediaType("application", "json")
@@ -105,7 +105,15 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
     xmlContentType || jsonContentType || htmlContentType
   }
 
+  def anyContentType: Boolean = {
+    mediaType == "application" && mediaSubtype == "octet-stream"
+  }
+
   def matches(mtype: MediaType): Boolean = {
+    if (mtype.anyContentType) {
+      return true
+    }
+
     if (xmlContentType && mtype.xmlContentType) {
       return true
     }

@@ -20,6 +20,7 @@ class Output(override val config: XMLCalabash,
   protected var _contentTypes = ListBuffer.empty[MediaType]
 
   def serialization: SerializationOptions = serOpts
+  def contentTypes: List[MediaType] = _contentTypes.toList
 
   protected[xml] def this(config: XMLCalabash, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
     this(config, Some(parent))
@@ -39,7 +40,7 @@ class Output(override val config: XMLCalabash,
     if (ctypes.isDefined) {
       _contentTypes ++= MediaType.parseList(ctypes.get)
     } else {
-      _contentTypes += MediaType.ANY
+      _contentTypes += MediaType.OCTET_STREAM
     }
 
     val ser = attributes.get(XProcConstants._serialization)

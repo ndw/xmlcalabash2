@@ -69,7 +69,7 @@ class Input(override val config: XMLCalabash,
     if (ctypes.isDefined) {
       _contentTypes ++= MediaType.parseList(ctypes.get)
     } else {
-      _contentTypes += MediaType.ANY
+      _contentTypes += MediaType.OCTET_STREAM
     }
 
     for (key <- List(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary,
