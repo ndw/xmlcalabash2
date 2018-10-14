@@ -227,6 +227,48 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     wrapper.startContent()
     wrapper.addEndElement()
 
+    wrapper.addStartElement(_property)
+    wrapper.addAttribute(_name, "jafplVersion")
+    wrapper.addAttribute(_value, runtimeConfig.jafplVersion)
+    wrapper.startContent()
+    wrapper.addEndElement()
+
+    wrapper.addStartElement(_property)
+    wrapper.addAttribute(_name, "saxonVersion")
+    wrapper.addAttribute(_value, runtimeConfig.saxonVersion)
+    wrapper.startContent()
+    wrapper.addEndElement()
+
+    wrapper.addStartElement(_property)
+    wrapper.addAttribute(_name, "vendor")
+    wrapper.addAttribute(_value, runtimeConfig.vendor)
+    wrapper.startContent()
+    wrapper.addEndElement()
+
+    wrapper.addStartElement(_property)
+    wrapper.addAttribute(_name, "vendorURI")
+    wrapper.addAttribute(_value, runtimeConfig.vendorURI)
+    wrapper.startContent()
+    wrapper.addEndElement()
+
+    wrapper.addStartElement(_property)
+    wrapper.addAttribute(_name, "xprocVersion")
+    wrapper.addAttribute(_value, runtimeConfig.xprocVersion)
+    wrapper.startContent()
+    wrapper.addEndElement()
+
+    wrapper.addStartElement(_property)
+    wrapper.addAttribute(_name, "xpathVersion")
+    wrapper.addAttribute(_value, runtimeConfig.xpathVersion)
+    wrapper.startContent()
+    wrapper.addEndElement()
+
+    wrapper.addStartElement(_property)
+    wrapper.addAttribute(_name, "psviSupported")
+    wrapper.addAttribute(_value, runtimeConfig.psviSupported.toString)
+    wrapper.startContent()
+    wrapper.addEndElement()
+
     /*
     val properties = System.getProperties
     val enum = properties.keys()
