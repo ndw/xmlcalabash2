@@ -78,6 +78,7 @@ object XProcException {
   def xdNotValidXML(href: String, message: String): XProcException = dynamicError(23, List(href, message))
   def xdConflictingNamespaceDeclarations(msg: String, location: Option[Location]): XProcException = dynamicError(34, msg, location)
   def xdBadMediaType(ctype: MediaType, allowed: List[MediaType]): XProcException = dynamicError(38, List(ctype, allowed))
+  def xdInvalidJson(expr: String, message: String, location: Option[Location]): XProcException = dynamicError(57, List(expr,message), location)
   def xdMismatchedContentType(declType: MediaType, propType: MediaType, location: Option[Location]): XProcException = dynamicError(62, List(declType,propType), location)
 
   //def xsUnconnectedInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(3, List(step,port), location)

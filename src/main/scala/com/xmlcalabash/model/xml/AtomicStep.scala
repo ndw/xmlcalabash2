@@ -32,7 +32,7 @@ class AtomicStep(override val config: XMLCalabash,
           val context = new ExpressionContext(baseURI, inScopeNS, location)
           seenOptions += key
 
-          if (opt.declaredType.getOrElse("") == "map") {
+          if (opt.declaredType.getOrElse("") == "map(*)") {
             options.put(key, new XProcXPathExpression(context, attributes(key)))
           } else {
             val avt = ValueParser.parseAvt(attributes(key))

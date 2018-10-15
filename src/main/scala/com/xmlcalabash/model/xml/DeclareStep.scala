@@ -23,6 +23,11 @@ class DeclareStep(override val config: XMLCalabash,
   private var _version: Option[String] = None
   private val options = mutable.HashMap.empty[QName, XProcExpression]
 
+  def declaredType: Option[QName] = _type
+  def psviRequired: Boolean = _psviRequired.getOrElse(false)
+  def xpathVersion: Option[String] = _xpathVersion
+  def version: Option[String] = _version
+
   def pipelineGraph(): Graph = {
     val jafpl = Jafpl.newInstance()
     val graph = jafpl.newGraph()
@@ -275,8 +280,7 @@ class DeclareStep(override val config: XMLCalabash,
     _version = attributes.get(XProcConstants._version)
 
     for (key <- List(XProcConstants._type, XProcConstants._psvi_required,
-      XProcConstants._xpath_version, XProcConstants._exclude_inline_prefixes,
-      XProcConstants._version)) {
+      XProcConstants._xpath_version, XProcConstants._exclude_inline_prefixes, XProcConstants._version)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -311,6 +315,30 @@ class DeclareStep(override val config: XMLCalabash,
     }
     if (index < children.length) {
       throw XProcException.xsElementNotAllowed(location, children(index).nodeName)
+    }
+
+    if (valid) {
+      // Clarify primary and sequence
+      val inputs = children.filter(_.isInstanceOf[Input])
+      val outputs = children.filter(_.isInstanceOf[Output])
+
+      for (child <- inputs) {
+        child match {
+          case input: Input =>
+            if (input.primary.isEmpty) {
+              input.primary = inputs.size == 1
+            }
+        }
+      }
+
+      for (child <- outputs) {
+        child match {
+          case output: Output =>
+            if (output.primary.isEmpty) {
+              output.primary = outputs.size == 1
+            }
+        }
+      }
     }
 
     valid

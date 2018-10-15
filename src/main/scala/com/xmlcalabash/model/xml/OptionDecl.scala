@@ -21,6 +21,7 @@ class OptionDecl(override val config: XMLCalabash,
   private var _select = Option.empty[String]
   private var _expression = Option.empty[XProcExpression]
   private var _as = Option.empty[SequenceType]
+  private var _declaredType = Option.empty[String]
   private var _static = false
   private var _staticValueMessage = Option.empty[XPathItemMessage]
 
@@ -29,6 +30,7 @@ class OptionDecl(override val config: XMLCalabash,
   def select: Option[String] = _select
   def expression: XProcExpression = _expression.get
   def as: Option[SequenceType] = _as
+  def declaredType: String = _declaredType.getOrElse("xs:string")
 
   def static: Boolean = _static
   def staticValueMessage: Option[XPathItemMessage] = {
@@ -50,6 +52,7 @@ class OptionDecl(override val config: XMLCalabash,
     _select = attributes.get(XProcConstants._select)
     _static = lexicalBoolean(attributes.get(XProcConstants._static)).getOrElse(false)
 
+    _declaredType = attributes.get(XProcConstants._as)
     _as = sequenceType(attributes.get(XProcConstants._as))
 
     if (_static) {
@@ -78,7 +81,7 @@ class OptionDecl(override val config: XMLCalabash,
       }
     }
 
-    for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._as,
+    for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._as, XProcConstants.cx_as,
       XProcConstants._select, XProcConstants._static)) {
       if (attributes.contains(key)) {
         attributes.remove(key)

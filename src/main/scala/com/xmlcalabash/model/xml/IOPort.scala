@@ -32,6 +32,7 @@ class IOPort(override val config: XMLCalabash,
     }
   }
 
+  // FIXME: can I make this Boolean instead of Option[Boolean]?
   def primary: Option[Boolean] = _primary
   protected[xml] def primary_=(setPrimary: Boolean): Unit = {
     _primary = Some(setPrimary)

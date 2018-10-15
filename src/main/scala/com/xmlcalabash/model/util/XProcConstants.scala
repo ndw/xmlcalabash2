@@ -27,6 +27,7 @@ object XProcConstants {
   val p_empty = new QName("p", ns_p, "empty")
   val p_finally = new QName("p", ns_p, "finally")
   val p_for_each = new QName("p", ns_p, "for-each")
+  val p_function = new QName("p", ns_p, "function")
   val p_group = new QName("p", ns_p, "group")
   val p_if = new QName("p", ns_p, "if")
   val p_import = new QName("p", ns_p, "import")
@@ -129,6 +130,7 @@ object XProcConstants {
   val c_other = new QName("c", ns_c, "other")
 
   // Extensions
+  val cx_as = new QName("cx", ns_cx, "as")
   val cx_document = new QName("cx", ns_cx, "document")
   val cx_property_extract = new QName("cx", ns_cx, "property-extract")
   val cx_property_merge = new QName("cx", ns_cx, "property-merge")

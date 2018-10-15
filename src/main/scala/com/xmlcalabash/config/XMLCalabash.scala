@@ -50,6 +50,8 @@ class XMLCalabash extends RuntimeConfiguration {
   private var closed = false
   private var _processor: Processor = _
   private var _errorListener: ErrorListener = _
+  private var _stepImplClasses = mutable.HashMap.empty[QName,String]
+  private var _funcImplClasses = mutable.HashMap.empty[QName,String]
   private var _signatures: Signatures = _
   private var _traceEventManager: TraceEventManager = _
   private var _uriResolver: URIResolver = _
@@ -230,6 +232,26 @@ class XMLCalabash extends RuntimeConfiguration {
   def setStaticOptionValue(option: QName, value: XdmValue): Unit = {
     staticOptionBindings.put(option, value)
   }
+
+  // ==============================================================================================
+
+  def implementFunction(funcName: QName, className: String): Unit = {
+    if (_funcImplClasses.contains(funcName)) {
+      throw new RuntimeException("You cannot redefine a function implementation class")
+    }
+    _funcImplClasses.put(funcName, className)
+  }
+
+  def functionImplementation(funcName: QName): Option[String] = _funcImplClasses.get(funcName)
+
+  def implementAtomicStep(stepType: QName, className: String): Unit = {
+    if (_stepImplClasses.contains(stepType)) {
+      throw new RuntimeException("You cannot redefine a step implementation class")
+    }
+    _stepImplClasses.put(stepType, className)
+  }
+
+  def atomicStepImplementation(stepType: QName): Option[String] = _stepImplClasses.get(stepType)
 
   // ==============================================================================================
 

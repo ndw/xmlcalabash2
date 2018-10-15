@@ -2,7 +2,6 @@ package com.xmlcalabash.drivers
 
 import java.io.{File, PrintWriter}
 
-import javax.xml.transform.sax.SAXSource
 import com.jafpl.exceptions.JafplException
 import com.jafpl.graph.Graph
 import com.jafpl.messages.Message
@@ -13,8 +12,8 @@ import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.xml.{DeclareStep, Parser}
 import com.xmlcalabash.runtime.{ExpressionContext, PrintingConsumer, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.{ArgBundle, URIUtils, XProcVarValue}
+import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.QName
-import net.sf.saxon.value.UntypedAtomicValue
 import org.xml.sax.InputSource
 
 import scala.collection.mutable
