@@ -1,6 +1,6 @@
 <test xmlns='http://xproc.org/ns/testsuite/3.0'
       xmlns:err='http://www.w3.org/ns/xproc-error'
-      expected="fail" code="err:XD0005">
+      expected="fail" code="err:XD0008">
   <pipeline>
 <p:declare-step xmlns:p="http://www.w3.org/ns/xproc"
                 xmlns:cx="http://xmlcalabash.com/ns/extensions"
