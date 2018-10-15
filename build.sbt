@@ -12,19 +12,6 @@ buildInfoKeys ++= Seq[BuildInfoKey](
   } // re-computed each time at compile
 )
 
-/*
-buildInfoKeys ++= Seq[BuildInfoKey](
-  "jafplVersion" -> jafplVersion
-  resolvers,
-  libraryDependencies in Test,
-  BuildInfoKey.map(name) { case (k, v) => "project" + k.capitalize -> v.capitalize },
-  "custom" -> 1234, // computed at project load time
-  BuildInfoKey.action("buildTime") {
-    System.currentTimeMillis
-  } // re-computed each time at compile
-)
-*/
-
 lazy val meerschaum = (project in file(".")).
   enablePlugins(BuildInfoPlugin).
   settings(
@@ -75,5 +62,8 @@ libraryDependencies ++= Seq(
 //  "-doc-root-content", baseDirectory.value+"/docs/apidocs/root.md"
 //)
 
+scalacOptions := Seq("-unchecked", "-deprecation")
+
+// I'm publishing the informal pre-release builds on my own repo
 publishTo := Some(Resolver.file("file",
-  new File(Path.userHome.absolutePath+"/.m2/repository")))
+  new File("/space/websites/nwalsh.com/build/website/maven/repo")))
