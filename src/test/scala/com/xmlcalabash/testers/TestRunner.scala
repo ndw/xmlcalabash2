@@ -214,60 +214,77 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     wrapper.startContent()
     wrapper.addStartElement(_properties)
     wrapper.startContent()
+    wrapper.addText("\n")
 
     wrapper.addStartElement(_property)
     wrapper.addAttribute(_name, "processor")
     wrapper.addAttribute(_value, runtimeConfig.productName)
     wrapper.startContent()
     wrapper.addEndElement()
+    wrapper.addText("\n")
 
     wrapper.addStartElement(_property)
     wrapper.addAttribute(_name, "version")
+    wrapper.addAttribute(_value, s"${runtimeConfig.productVersion} (with JAFPL ${runtimeConfig.jafplVersion} for Saxon ${runtimeConfig.saxonVersion})")
+    wrapper.startContent()
+    wrapper.addEndElement()
+    wrapper.addText("\n")
+
+    wrapper.addStartElement(_property)
+    wrapper.addAttribute(_name, "productVersion")
     wrapper.addAttribute(_value, runtimeConfig.productVersion)
     wrapper.startContent()
     wrapper.addEndElement()
+    wrapper.addText("\n")
 
     wrapper.addStartElement(_property)
     wrapper.addAttribute(_name, "jafplVersion")
     wrapper.addAttribute(_value, runtimeConfig.jafplVersion)
     wrapper.startContent()
     wrapper.addEndElement()
+    wrapper.addText("\n")
 
     wrapper.addStartElement(_property)
     wrapper.addAttribute(_name, "saxonVersion")
     wrapper.addAttribute(_value, runtimeConfig.saxonVersion)
     wrapper.startContent()
     wrapper.addEndElement()
+    wrapper.addText("\n")
 
     wrapper.addStartElement(_property)
     wrapper.addAttribute(_name, "vendor")
     wrapper.addAttribute(_value, runtimeConfig.vendor)
     wrapper.startContent()
     wrapper.addEndElement()
+    wrapper.addText("\n")
 
     wrapper.addStartElement(_property)
     wrapper.addAttribute(_name, "vendorURI")
     wrapper.addAttribute(_value, runtimeConfig.vendorURI)
     wrapper.startContent()
     wrapper.addEndElement()
+    wrapper.addText("\n")
 
     wrapper.addStartElement(_property)
     wrapper.addAttribute(_name, "xprocVersion")
     wrapper.addAttribute(_value, runtimeConfig.xprocVersion)
     wrapper.startContent()
     wrapper.addEndElement()
+    wrapper.addText("\n")
 
     wrapper.addStartElement(_property)
     wrapper.addAttribute(_name, "xpathVersion")
     wrapper.addAttribute(_value, runtimeConfig.xpathVersion)
     wrapper.startContent()
     wrapper.addEndElement()
+    wrapper.addText("\n")
 
     wrapper.addStartElement(_property)
     wrapper.addAttribute(_name, "psviSupported")
     wrapper.addAttribute(_value, runtimeConfig.psviSupported.toString)
     wrapper.startContent()
     wrapper.addEndElement()
+    wrapper.addText("\n")
 
     /*
     val properties = System.getProperties
@@ -284,6 +301,7 @@ class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
     */
 
     wrapper.addEndElement()
+    wrapper.addText("\n")
 
     wrapper.addSubtree(junit.result)
 

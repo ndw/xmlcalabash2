@@ -7,6 +7,18 @@
 <xsl:output method="xml" encoding="utf-8" indent="yes"
 	    omit-xml-declaration="yes"/>
 
+<xsl:template match="testsuite">
+  <xsl:copy>
+    <xsl:apply-templates select="@*"/>
+    <xsl:apply-templates select="properties">
+      <xsl:sort select="@name"/>
+    </xsl:apply-templates>
+    <xsl:apply-templates select="testcase">
+      <xsl:sort select="@name"/>
+    </xsl:apply-templates>
+  </xsl:copy>
+</xsl:template>
+
 <xsl:template match="testcase">
   <testcase>
     <xsl:copy-of select="@name"/>

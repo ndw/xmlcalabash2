@@ -191,7 +191,8 @@ object XProcException {
       case jex: JafplException =>
         jex.code match {
           case JafplException.DUP_OPTION_NAME => XProcException.xsDupOptionname(jex.location, jex.details.head.asInstanceOf[String])
-          case JafplException.INPUT_PORT_MISSING => XProcException.xsUnconnectedInputPort(jex.details.head.asInstanceOf[String], jex.details(1).asInstanceOf[String], jex.location)
+          // Port missing must be a cardinality error
+          case JafplException.INPUT_PORT_MISSING => XProcException.xdInputSequenceNotAllowed(jex.details.head.asInstanceOf[String], jex.location)
           case JafplException.INPUT_CARDINALITY_ERROR => XProcException.xdInputSequenceNotAllowed(jex.details.head.asInstanceOf[String], jex.location)
           case JafplException.OUTPUT_CARDINALITY_ERROR => XProcException.xdOutputSequenceNotAllowed(jex.details.head.asInstanceOf[String], jex.location)
           case _ => jex

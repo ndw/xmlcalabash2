@@ -129,6 +129,30 @@ class Tester(runtimeConfig: XMLCalabash) {
         new TestResult(true)
       }
     } catch {
+      case xproc: XProcException =>
+        if (runtime != null) {
+          runtime.stop
+        }
+
+        val code = xproc.code
+        val message = if (xproc.message.isDefined) {
+          xproc.message.get
+        } else {
+          code match {
+            case qname: QName =>
+              runtimeConfig.errorExplanation.message(qname, xproc.details)
+            case _ =>
+              s"Configuration error: code ($code) is not a QName"
+          }
+        }
+
+        if (xproc.location.isDefined) {
+          println(s"ERROR ${xproc.location.get} $code $message")
+        } else {
+          println(s"ERROR $code $message")
+        }
+
+        new TestResult(xproc)
       case ex: Exception =>
         if (runtime != null) {
           runtime.stop

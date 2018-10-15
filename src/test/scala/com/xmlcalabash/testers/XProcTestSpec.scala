@@ -35,14 +35,7 @@ class XProcTestSpec extends FunSpec {
 
   protected def test(fn: String) {
     val runner = new TestRunner(runtimeConfig, fn)
-    val results = try {
-      runner.run()
-    } catch {
-      case t: Throwable =>
-        println(t)
-        throw t
-    }
-
+    val results = runner.run()
     for (result <- results) {
       assert(result.passed)
     }
