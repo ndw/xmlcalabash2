@@ -1,9 +1,9 @@
-name         := "meerschaum"
+name         := "XML Calabash"
 organization := "com.xmlcalabash"
-version      := "1.9.2"
+version      := "1.9.3"
 scalaVersion := "2.12.6"
 
-lazy val jafplVersion = "0.0.63"
+lazy val jafplVersion = "0.0.64"
 
 buildInfoKeys ++= Seq[BuildInfoKey](
   "jafplVersion" -> jafplVersion,
