@@ -5,6 +5,7 @@ import java.util
 
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.runtime.ExpressionEvaluator
+import com.sun.org.apache.xpath.internal.XPathProcessorException
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
@@ -370,15 +371,8 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
             throw new StepException(code, xpe.getMessage, xpe, exprContext.location)
           case _ => throw saue
         }
-      case sae: SaxonApiException =>
-        sae.getCause match {
-          case xpe: XPathException =>
-            val code = new QName(xpe.getErrorCodeNamespace, xpe.getErrorCodeLocalPart)
-            throw new StepException(code, xpe.getMessage, xpe, exprContext.location)
-          case _ => throw sae
-        }
-      case other: Throwable =>
-        throw other
+      case ex: Exception =>
+        throw ex
     }
   }
 

@@ -11,7 +11,7 @@ import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcExpression, XProcMetadata, XProcVtExpression, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api}
-import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import org.xml.sax.InputSource
 
 import scala.collection.mutable
@@ -100,9 +100,11 @@ class InlineLoader(private val baseURI: Option[URI],
     }
 
     if (encoding.isDefined) {
+      /* See https://github.com/xproc/3.0-specification/issues/561
       if (expandText) {
         throw XProcException.xsTvtForbidden(location)
       }
+      */
       dealWithEncodedText(contentType, props)
       return
     }
@@ -179,8 +181,19 @@ class InlineLoader(private val baseURI: Option[URI],
         val bindingsMap = mutable.HashMap.empty[String, Message]
         val vmsg = new XPathItemMessage(new XdmAtomicValue(text), XProcMetadata.JSON, ExpressionContext.NONE)
         bindingsMap.put("{}json", vmsg)
-        val smsg = config.get.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
-        consumer.get.receive("result", new ItemMessage(smsg.item, new XProcMetadata(contentType, props.toMap)))
+        try {
+          val smsg = config.get.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+          consumer.get.receive("result", new ItemMessage(smsg.item, new XProcMetadata(contentType, props.toMap)))
+        } catch {
+          case ex: SaxonApiException =>
+            if (ex.getMessage.contains("Invalid JSON")) {
+              throw XProcException.xdInvalidJson(text, ex.getMessage, location)
+            } else {
+              throw ex
+            }
+          case ex: Exception =>
+            throw ex
+        }
       } else if (contentType.htmlContentType) {
         val stream = new ByteArrayInputStream(text.getBytes("UTF-8"))
         // FIXME: it's bogus that I have to makeup a DocumentRequest to call parseHtml
@@ -211,7 +224,7 @@ class InlineLoader(private val baseURI: Option[URI],
 
     // FIXME: There's no support here for any kind of media type!!!
 
-    val decoded = new String(Base64.getDecoder.decode(str))
+    val decoded = Base64.getMimeDecoder.decode(str)
     props.put(XProcConstants._content_length, new XdmAtomicValue(decoded.length))
     consumer.get.receive("result", new ItemMessage(decoded, new XProcMetadata(contentType, props.toMap)))
   }
