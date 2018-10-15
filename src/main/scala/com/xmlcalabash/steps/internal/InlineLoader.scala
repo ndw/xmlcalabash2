@@ -1,15 +1,18 @@
 package com.xmlcalabash.steps.internal
 
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.net.URI
 import java.util.Base64
 
 import com.jafpl.messages.{ItemMessage, Message}
+import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcVtExpression, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
-import com.xmlcalabash.util.MediaType
+import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcExpression, XProcMetadata, XProcVtExpression, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import org.xml.sax.InputSource
 
 import scala.collection.mutable
 
@@ -89,6 +92,21 @@ class InlineLoader(private val baseURI: Option[URI],
       props.put(XProcConstants._base_uri, new XdmAtomicValue(baseURI.get))
     }
 
+    // If it's not an XML content type, make sure it doesn't contain any elements
+    if (!contentType.xmlContentType && !contentType.htmlContentType) {
+      for (node <- nodes.filter(_.getNodeKind != XdmNodeKind.TEXT)) {
+        throw XProcException.xsInvalidNodeType(node.getNodeKind.toString, location)
+      }
+    }
+
+    if (encoding.isDefined) {
+      if (expandText) {
+        throw XProcException.xsTvtForbidden(location)
+      }
+      dealWithEncodedText(contentType, props)
+      return
+    }
+
     if (contentType.xmlContentType) {
       val builder = new SaxonTreeBuilder(config.get)
       builder.startDocument(baseURI)
@@ -103,40 +121,99 @@ class InlineLoader(private val baseURI: Option[URI],
       builder.endDocument()
       val result = builder.result
       consumer.get.receive("result", new ItemMessage(result, new XProcMetadata(contentType, props.toMap)))
-    } else if (contentType.textContentType) {
-      var str = ""
-      for (node <- nodes) {
-        if (node.getNodeKind == XdmNodeKind.TEXT) {
-          str += node.getStringValue
-        } else {
-          throw XProcException.staticError(72, List(node.getNodeKind.toString), location)
-        }
-      }
-      props.put(XProcConstants._content_length, new XdmAtomicValue(str.length))
-
+    } else if (contentType.htmlContentType) {
       val builder = new SaxonTreeBuilder(config.get)
       builder.startDocument(baseURI)
       builder.startContent()
-      builder.addText(str)
-      builder.endDocument()
-      val result = builder.result
-      consumer.get.receive("result", new ItemMessage(result, new XProcMetadata(contentType, props.toMap)))
-    } else {
-      var str = ""
       for (node <- nodes) {
-        if (node.getNodeKind == XdmNodeKind.TEXT) {
-          str += node.getStringValue
+        if (allowExpandText) {
+          expandTVT(node, builder, expandText)
         } else {
-          throw XProcException.staticError(72, List(contentType, node.getNodeKind.toString), location)
+          builder.addSubtree(node)
         }
       }
+      builder.endDocument()
+      val result = builder.result
 
-      val bytes = Base64.getMimeDecoder.decode(str)
+      val baos = new ByteArrayOutputStream()
+      val serializer = config.get.processor.newSerializer(baos)
+      S9Api.serialize(config.get, result, serializer)
+      val stream = new ByteArrayInputStream(baos.toByteArray)
+      // FIXME: it's bogus that I have to makeup a DocumentRequest to call parseHtml
+      val request = new DocumentRequest(baseURI.getOrElse(new URI("")), Some(contentType), false)
+      val response = config.get.documentManager.parseHtml(request, new InputSource(stream))
+      consumer.get.receive("result", new ItemMessage(response.value, new XProcMetadata(response.contentType, response.props.toMap)))
+    } else {
+      val text = if (allowExpandText) {
+        val builder = new SaxonTreeBuilder(config.get)
+        builder.startDocument(baseURI)
+        builder.startContent()
+        for (node <- nodes) {
+          if (allowExpandText) {
+            expandTVT(node, builder, expandText)
+          } else {
+            builder.addSubtree(node)
+          }
+        }
+        builder.endDocument()
+        val result = builder.result
+        // No sneaky poking an element in there!
+        val iter = result.axisIterator(Axis.CHILD)
+        while (iter.hasNext) {
+          val child = iter.next.asInstanceOf[XdmNode]
+          if (child.getNodeKind != XdmNodeKind.TEXT) {
+            throw XProcException.xsInvalidNodeType(child.getNodeKind.toString, location)
+          }
+        }
+        result.getStringValue
+      } else {
+        var str = ""
+        for (node <- nodes) {
+          str += node.getStringValue
+        }
+        str
+      }
 
-      props.put(XProcConstants._content_length, new XdmAtomicValue(bytes.length))
+      if (contentType.jsonContentType) {
+        val expr = new XProcXPathExpression(ExpressionContext.NONE, "parse-json($json)")
+        val bindingsMap = mutable.HashMap.empty[String, Message]
+        val vmsg = new XPathItemMessage(new XdmAtomicValue(text), XProcMetadata.JSON, ExpressionContext.NONE)
+        bindingsMap.put("{}json", vmsg)
+        val smsg = config.get.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+        consumer.get.receive("result", new ItemMessage(smsg.item, new XProcMetadata(contentType, props.toMap)))
+      } else if (contentType.htmlContentType) {
+        val stream = new ByteArrayInputStream(text.getBytes("UTF-8"))
+        // FIXME: it's bogus that I have to makeup a DocumentRequest to call parseHtml
+        val request = new DocumentRequest(baseURI.getOrElse(new URI("")), Some(contentType), false)
+        val response = config.get.documentManager.parseHtml(request, new InputSource(stream))
+        consumer.get.receive("result", new ItemMessage(response.value, new XProcMetadata(response.contentType, response.props.toMap)))
+      } else if (contentType.textContentType) {
+        props.put(XProcConstants._content_length, new XdmAtomicValue(text.length))
 
-      consumer.get.receive("result", new ItemMessage(bytes, new XProcMetadata(contentType, props.toMap)))
+        val builder = new SaxonTreeBuilder(config.get)
+        builder.startDocument(baseURI)
+        builder.startContent()
+        builder.addText(text)
+        builder.endDocument()
+        val result = builder.result
+        consumer.get.receive("result", new ItemMessage(result, new XProcMetadata(contentType, props.toMap)))
+      } else {
+        throw new IllegalArgumentException(s"Unexected content type: $contentType")
+      }
     }
+  }
+
+  private def dealWithEncodedText(contentType: MediaType, props: mutable.HashMap[QName, XdmItem]): Unit = {
+    var str = ""
+    for (node <- nodes) {
+      str += node.getStringValue
+    }
+
+    // FIXME: There's no support here for any kind of media type!!!
+
+    val decoded = new String(Base64.getDecoder.decode(str))
+    props.put(XProcConstants._content_length, new XdmAtomicValue(decoded.length))
+    consumer.get.receive("result", new ItemMessage(decoded, new XProcMetadata(contentType, props.toMap)))
   }
 
   private def expandTVT(node: XdmNode, builder: SaxonTreeBuilder, expandText: Boolean): Unit = {

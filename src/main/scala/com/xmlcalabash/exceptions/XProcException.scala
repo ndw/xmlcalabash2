@@ -96,8 +96,10 @@ object XProcException {
 
   def xsTextNotAllowed(location: Option[Location], text: String): XProcException = staticError(999, text, location)
 
+  def xsInvalidNodeType(nodeKind: String, location: Option[Location]): XProcException = staticError(77, nodeKind, location)
   def xsBadTypeValue(name: String, reqdType: String): XProcException = staticError(77, List(name, reqdType), None)
   def xsDupWithOptionName(optName: QName, location: Option[Location]): XProcException = staticError(80, optName, location)
+  def xsTvtForbidden(location: Option[Location]): XProcException = staticError(88, location)
   def xsNoSiblingsOnEmpty(location: Option[Location]): XProcException = staticError(89, None, location)
   def xsNoSelectOnStaticOption(location: Option[Location]): XProcException = staticError(93, None, location)
   def xsNoSelectOnVariable(location: Option[Location]): XProcException = staticError(94, None, location)
