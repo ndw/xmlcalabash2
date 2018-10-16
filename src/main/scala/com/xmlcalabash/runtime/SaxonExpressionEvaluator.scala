@@ -5,7 +5,6 @@ import java.util
 
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.runtime.ExpressionEvaluator
-import com.sun.org.apache.xpath.internal.XPathProcessorException
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
@@ -14,7 +13,7 @@ import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.lib.{CollectionFinder, Resource, ResourceCollection}
 import net.sf.saxon.om.{Item, SpaceStrippingRule}
-import net.sf.saxon.s9api.{ItemTypeFactory, QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{ItemTypeFactory, QName, SaxonApiException, SaxonApiUncheckedException, XPathExecutable, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.trans.XPathException
 import net.sf.saxon.value.{SequenceType, UntypedAtomicValue}
 import org.slf4j.{Logger, LoggerFactory}
@@ -287,12 +286,6 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
       false
     }
 
-    if (contextItem.size > 1) {
-      if (!useCollection) {
-        throw XProcException.xdContextItemSequence(exprContext.location)
-      }
-    }
-
     val sconfig = xmlCalabash.processor.getUnderlyingConfiguration
     val curfinder = sconfig.getCollectionFinder
     sconfig.setCollectionFinder(new ExprCollectionFinder(curfinder, contextItem))
@@ -341,7 +334,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         selector.setVariable(varname, varvalue)
       }
 
-      if (contextItem.nonEmpty) {
+      if (contextItem.size == 1) {
         contextItem.head match {
           case item: ItemMessage =>
             item.item match {
@@ -353,7 +346,18 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvalu
         }
       }
 
-      val value = selector.evaluate()
+      val value = try {
+        selector.evaluate()
+      } catch {
+        case sae: SaxonApiException =>
+          if (sae.getMessage.contains("context item is absent") && contextItem.size > 1) {
+            throw XProcException.xdContextItemSequence(exprContext.location)
+          } else {
+            throw sae
+          }
+        case ex: Exception =>
+          throw ex
+      }
 
       if (as.isDefined) {
         val matches = as.get.matches(value.getUnderlyingValue, config.getTypeHierarchy)
