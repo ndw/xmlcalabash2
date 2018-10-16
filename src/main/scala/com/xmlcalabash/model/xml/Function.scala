@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import net.sf.saxon.s9api.QName
 
@@ -37,10 +37,13 @@ class Function(override val config: XMLCalabash,
     }
 
     val okChildren = List(classOf[Documentation], classOf[PipeInfo])
-
     valid = true
     for (child <- children) {
-      valid = valid && child.validate()
+      if (okChildren.contains(child.getClass)) {
+        valid = valid && child.validate()
+      } else {
+        throw XProcException.xsElementNotAllowed(location, child.nodeName)
+      }
     }
 
     valid

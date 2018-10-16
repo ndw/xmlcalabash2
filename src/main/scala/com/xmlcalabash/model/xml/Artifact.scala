@@ -3,14 +3,14 @@ package com.xmlcalabash.model.xml
 import java.net.URI
 
 import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.{StepSignature, XMLCalabash}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Choose, Container, ForEach, Group, Try, Viewport, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcExpression, XProcVtExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, NodeLocation, XProcExpression, XProcVtExpression, XmlStep}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.expr.parser.XPathParser
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
@@ -77,6 +77,22 @@ abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
   protected[xml] def stepInjectables: List[XProcStepInjectable] = _stepInjectables.toList
   protected[xml] def addStepInjectable(injectable: XProcStepInjectable): Unit = {
     _stepInjectables += injectable
+  }
+
+  def stepDeclaration(stepType: QName): Option[DeclareStep] = {
+    if (parent.isDefined) {
+      parent.get.stepDeclaration(stepType)
+    } else {
+      None
+    }
+  }
+
+  def stepSignature(stepType: QName): Option[StepSignature] = {
+    if (parent.isDefined) {
+      parent.get.stepSignature(stepType)
+    } else {
+      None
+    }
   }
 
   protected[xml] def setLocation(node: XdmNode): Unit = {

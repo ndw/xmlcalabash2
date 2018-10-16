@@ -12,48 +12,6 @@ import scala.collection.mutable.ListBuffer
 class Container(override val config: XMLCalabash,
                 override val parent: Option[Artifact],
                 override val stepType: QName) extends PipelineStep(config, parent, stepType) {
-  def steps: List[PipelineStep] = {
-    val list = ListBuffer.empty[PipelineStep]
-
-    for (child <- children) {
-      child match {
-        case step: PipelineStep =>
-          list += step
-        case _ => Unit
-      }
-    }
-
-    list.toList
-  }
-
-  def descendantSteps: List[PipelineStep] = {
-    val list = ListBuffer.empty[PipelineStep]
-
-    for (child <- children) {
-      child match {
-        case step: Container =>
-          list += step
-          list ++= step.descendantSteps
-        case step: PipelineStep =>
-          list += step
-        case _ => Unit
-      }
-    }
-
-    list.toList
-  }
-
-  def firstChildStep: Option[PipelineStep] = {
-    for (child <- children) {
-      child match {
-        case step: PipelineStep =>
-          return Some(step)
-        case _ => Unit
-      }
-    }
-    None
-  }
-
   def lastChildStep: Option[PipelineStep] = {
     var last = Option.empty[PipelineStep]
     for (child <- children) {
@@ -214,5 +172,4 @@ class Container(override val config: XMLCalabash,
     }
     new xml.Elem("p", "container", dump_attr.getOrElse(xml.Null), namespaceScope, false, nodes:_*)
   }
-
 }

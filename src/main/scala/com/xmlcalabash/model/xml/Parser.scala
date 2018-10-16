@@ -1,14 +1,14 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.config.{OptionSignature, PortSignature, Signatures, StepSignature, XMLCalabash}
+import com.xmlcalabash.config.{Signatures, XMLCalabash}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, XProcConstants}
-import com.xmlcalabash.model.xml.containers.{Catch, Choose, Finally, ForEach, Group, Otherwise, Try, When, WithDocument, WithProperties}
+import com.xmlcalabash.model.xml.containers.{Catch, Choose, DeclarationContainer, Finally, ForEach, Group, Otherwise, Try, When, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcVtExpression, XProcXPathExpression}
 import com.xmlcalabash.util.S9Api
-import net.sf.saxon.s9api.{Axis, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ListBuffer
@@ -112,10 +112,10 @@ class Parser(config: XMLCalabash) {
             case XProcConstants.p_library => Some(parseLibrary(parent, node))
             case XProcConstants.p_function => Some(parseFunction(parent, node))
             case _ =>
-              if (config.signatures.stepTypes.contains(node.getNodeName)) {
-                Some(parseAtomicStep(parent, node))
-              } else {
-                if (parent.isDefined) {
+              if (parent.isDefined) {
+                if (knownStep(parent.get, node.getNodeName)) {
+                  Some(parseAtomicStep(parent, node))
+                } else {
                   parent.get match {
                     case input: WithInput =>
                       logger.debug("Interpreting naked content of p:with-input as a p:inline")
@@ -126,14 +126,12 @@ class Parser(config: XMLCalabash) {
                     case variable: Variable =>
                       logger.debug("Interpreting naked content of p:input as a p:inline")
                       Some(parseInline(parent, node))
-                    case ds: DeclareStep =>
-                      throw new ModelException(ExceptionCode.NOTASTEP, node.getNodeName.toString, node)
                     case _ =>
                       throw XProcException.xsElementNotAllowed(Some(new NodeLocation(node)), node.getNodeName)
                   }
-                } else {
-                  throw new ModelException(ExceptionCode.NOTASTEP, node.getNodeName.toString, node)
                 }
+              } else {
+                throw new ModelException(ExceptionCode.NOTASTEP, node.getNodeName.toString, node)
               }
           }
 
@@ -180,6 +178,15 @@ class Parser(config: XMLCalabash) {
         }
         None
       case _ => None
+    }
+  }
+
+  private def knownStep(parent: Artifact, stepType: QName): Boolean = {
+    val decl = parent.stepDeclaration(stepType)
+    if (decl.isDefined) {
+      true
+    } else {
+      config.signatures.stepTypes.contains(stepType)
     }
   }
 
@@ -467,38 +474,19 @@ class Parser(config: XMLCalabash) {
   // =====================================================================================
 
   protected[xmlcalabash] def signatures(doc: XdmNode): Signatures = {
-    val library = S9Api.documentElement(doc).get
-    if (library.getNodeName != XProcConstants.p_library) {
+    val xdmLibrary = S9Api.documentElement(doc).get
+    if (xdmLibrary.getNodeName != XProcConstants.p_library) {
       throw new RuntimeException("Signatures can only be loaded from a p:library")
     }
-    val artifact = parse(library)
+    val library = parse(xdmLibrary).get.asInstanceOf[Library]
 
     val signatures = new Signatures()
-    for (child <- artifact.get.children) {
+    for (child <- library.declarations) {
       child match {
         case fdef: Function =>
           signatures.addFunction(fdef.functionName, fdef.functionClass)
         case sdef: DeclareStep =>
-          val stepSig = new StepSignature(sdef.declaredType.get)
-          if (config.atomicStepImplementation(sdef.declaredType.get).isDefined) {
-            stepSig.implementation = config.atomicStepImplementation(sdef.declaredType.get).get
-          }
-          for (child <- sdef.children) {
-            child match {
-              case input: Input =>
-                val portSig = new PortSignature(input.port.get, input.primary.get, input.sequence)
-                stepSig.addInput(portSig, input.location.get)
-              case output: Output =>
-                val portSig = new PortSignature(output.port.get, output.primary.get, output.sequence)
-                stepSig.addOutput(portSig, output.location.get)
-              case option: OptionDecl =>
-                val optSig = new OptionSignature(option.optionName, option.declaredType, option.required)
-                stepSig.addOption(optSig, option.location.get)
-              case _ =>
-                println(child)
-            }
-          }
-          signatures.addStep(stepSig)
+          signatures.addStep(sdef.signature)
         case _ =>
           Unit
       }

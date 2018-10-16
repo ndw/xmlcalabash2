@@ -69,6 +69,9 @@ No connection provided for input port ‘$2’ on step ‘$1’.
 XS0004
 Option names must not be repeated; the “$1” option appears more than once.
 
+XS0006
+Step $1 has an unconnected output port: $2.
+
 XS0008
 Attribute not allowed here: “$1”.
 

@@ -19,10 +19,6 @@
     </p:with-input>
   </p:identity>
 
-  <p:with-document name="withprop">
-    <p:identity/>
-  </p:with-document>
-
   <cx:property-extract name="last"/>
 </p:declare-step>
   </pipeline>

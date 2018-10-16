@@ -1,10 +1,11 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
+import com.jafpl.graph.{Binding, ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.config.XMLCalabash
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.ValueParser
-import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, XProcExpression, XProcVtExpression, XProcXPathExpression}
+import com.xmlcalabash.model.xml.containers.DeclarationContainer
+import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, StepWrapper, XProcExpression, XProcVtExpression, XProcXPathExpression, XmlStep}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -21,7 +22,11 @@ class AtomicStep(override val config: XMLCalabash,
   }
 
   override def validate(): Boolean = {
-    val sig = config.signatures.step(stepType)
+    val sig = if (parent.isDefined) {
+      parent.get.stepSignature(stepType).getOrElse(config.signatures.step(stepType))
+    } else {
+      config.signatures.step(stepType)
+    }
     var valid = super.validate()
 
     val seenOptions = mutable.HashSet.empty[QName]
@@ -92,7 +97,7 @@ class AtomicStep(override val config: XMLCalabash,
   }
 
   override def makeInputPortsExplicit(): Boolean = {
-    val sig = config.signatures.step(stepType)
+    val sig = stepSignature(stepType).get
 
     // Work out which input port is primary
     var primaryInput = Option.empty[String]
@@ -146,7 +151,7 @@ class AtomicStep(override val config: XMLCalabash,
   }
 
   override def makeOutputPortsExplicit(): Boolean = {
-    val sig = config.signatures.step(stepType)
+    val sig = stepSignature(stepType).get
 
     for (port <- sig.outputPorts) {
       val sigoutput = sig.output(port, location.get)
@@ -169,6 +174,30 @@ class AtomicStep(override val config: XMLCalabash,
     true
   }
 
+  def stepImplementation(stepType: QName, location: Location): StepWrapper = {
+    stepImplementation(stepType, location, None)
+  }
+
+  def stepImplementation(stepType: QName, location: Location, implParams: Option[ImplParams]): StepWrapper = {
+    val sig = stepSignature(stepType)
+    if (sig.isEmpty) {
+      config.stepImplementation(stepType, location, implParams)
+    } else {
+      val implClass = sig.get.implementation
+      if (implClass.isEmpty) {
+        throw new ModelException(ExceptionCode.NOIMPL, stepType.toString, location)
+      }
+
+      val klass = Class.forName(implClass.head).newInstance()
+      klass match {
+        case step: XmlStep =>
+          new StepWrapper(step, sig.get)
+        case _ =>
+          throw new ModelException(ExceptionCode.IMPLNOTSTEP, stepType.toString, location)
+      }
+    }
+  }
+
   override def makeGraph(graph: Graph, parent: Node) {
     for (opt <- options.keySet) {
       val withOpt = new WithOption(config, this, opt, options(opt))
@@ -181,7 +210,7 @@ class AtomicStep(override val config: XMLCalabash,
     var proxy: StepProxy = null
     val node = parent match {
       case start: ContainerStart =>
-        val impl = config.stepImplementation(stepType, location.get)
+        val impl = stepImplementation(stepType, location.get)
         proxy = new StepProxy(config, stepType, impl, params, context)
 
         for (port <- inputPorts) {

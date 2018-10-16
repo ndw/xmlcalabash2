@@ -14,7 +14,7 @@ import com.xmlcalabash.functions.{Cwd, DocumentProperties, DocumentPropertiesDoc
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.Artifact
 import com.xmlcalabash.parsers.XPathParser
-import com.xmlcalabash.runtime.{ImplParams, SaxonExpressionEvaluator, XmlStep}
+import com.xmlcalabash.runtime.{ImplParams, SaxonExpressionEvaluator, StepWrapper, XmlStep}
 import com.xmlcalabash.sbt.BuildInfo
 import com.xmlcalabash.util.{URIUtils, XProcURIResolver}
 import net.sf.saxon.lib.{ExtensionFunctionDefinition, ModuleURIResolver, UnparsedTextURIResolver}
@@ -255,16 +255,17 @@ class XMLCalabash extends RuntimeConfiguration {
 
   // ==============================================================================================
 
-  def stepImplementation(stepType: QName, location: Location): XmlStep = {
+  def stepImplementation(stepType: QName, location: Location): StepWrapper = {
     stepImplementation(stepType, location, None)
   }
 
-  def stepImplementation(stepType: QName, location: Location, implParams: Option[ImplParams]): XmlStep = {
+  def stepImplementation(stepType: QName, location: Location, implParams: Option[ImplParams]): StepWrapper = {
     if (!_signatures.stepTypes.contains(stepType)) {
       throw new ModelException(ExceptionCode.NOTYPE, stepType.toString, location)
     }
 
-    val implClass = _signatures.step(stepType).implementation
+    val sig = _signatures.step(stepType)
+    val implClass = sig.implementation
     if (implClass.isEmpty) {
       throw new ModelException(ExceptionCode.NOIMPL, stepType.toString, location)
     }
@@ -272,7 +273,7 @@ class XMLCalabash extends RuntimeConfiguration {
     val klass = Class.forName(implClass.head).newInstance()
     klass match {
       case step: XmlStep =>
-        step
+        new StepWrapper(step, sig)
       case _ =>
         throw new ModelException(ExceptionCode.IMPLNOTSTEP, stepType.toString, location)
     }

@@ -2,26 +2,24 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.config.Jafpl
 import com.jafpl.graph.Graph
-import com.xmlcalabash.config.XMLCalabash
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
+import com.xmlcalabash.config.{OptionSignature, PortSignature, StepSignature, XMLCalabash}
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.containers.{Container, WithDocument, WithProperties}
+import com.xmlcalabash.model.xml.containers.{Container, DeclarationContainer, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
-import com.xmlcalabash.runtime.XProcExpression
 import com.xmlcalabash.steps.internal.ContentTypeParams
-import net.sf.saxon.s9api.QName
+import net.sf.saxon.s9api.{QName, XdmNode}
 
-import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class DeclareStep(override val config: XMLCalabash,
-                  override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_declare_step) {
+                  override val parent: Option[Artifact]) extends DeclarationContainer(config, parent, XProcConstants.p_declare_step) {
   private var _type: Option[QName] = None
   private var _psviRequired: Option[Boolean] = None
   private var _xpathVersion: Option[String] = None
   private var _excludeInlinePrefixes = Map.empty[String,String]
   private var _version: Option[String] = None
-  private val options = mutable.HashMap.empty[QName, XProcExpression]
+  //private val options = mutable.HashMap.empty[QName, XProcExpression]
 
   def declaredType: Option[QName] = _type
   def psviRequired: Boolean = _psviRequired.getOrElse(false)
@@ -270,10 +268,14 @@ class DeclareStep(override val config: XMLCalabash,
     true // Input bindings on a pipeline do not have to be bound
   }
 
+  override protected[xml] def parse(node: XdmNode): Unit = {
+    super.parse(node)
+    _type = lexicalQName(attributes.get(XProcConstants._type))
+  }
+
   override def validate(): Boolean = {
     var valid = super.validate()
 
-    _type = lexicalQName(attributes.get(XProcConstants._type))
     _psviRequired = lexicalBoolean(attributes.get(XProcConstants._psvi_required))
     _xpathVersion = attributes.get(XProcConstants._xpath_version)
     _excludeInlinePrefixes = lexicalPrefixes(attributes.get(XProcConstants._exclude_inline_prefixes))
@@ -286,6 +288,7 @@ class DeclareStep(override val config: XMLCalabash,
       }
     }
 
+    /*
     for (key <- attributes.keySet) {
       if (key.getNamespaceURI == "") {
         throw new ModelException(ExceptionCode.BADCONTAINERATTR, key.getLocalName, location)
@@ -293,7 +296,14 @@ class DeclareStep(override val config: XMLCalabash,
         options.put(key, lexicalAvt(key.toString, attributes(key)))
       }
     }
+    */
 
+    // N.B. The parser strips nested DeclareStep and Import elements out.
+    for (child <- children) {
+      valid = child.validate() && valid
+    }
+
+    /*
     val groupOne = List(classOf[Input], classOf[Output], classOf[OptionDecl],
       classOf[Serialization], classOf[Documentation], classOf[PipeInfo], classOf[Variable])
     val groupTwo = List(classOf[DeclareStep], classOf[Import], classOf[Documentation], classOf[PipeInfo])
@@ -316,6 +326,7 @@ class DeclareStep(override val config: XMLCalabash,
     if (index < children.length) {
       throw XProcException.xsElementNotAllowed(location, children(index).nodeName)
     }
+    */
 
     if (valid) {
       // Clarify primary and sequence
@@ -342,6 +353,30 @@ class DeclareStep(override val config: XMLCalabash,
     }
 
     valid
+  }
+
+  def signature: StepSignature = {
+    val stepSig = new StepSignature(declaredType.get)
+    if (config.atomicStepImplementation(declaredType.get).isDefined) {
+      stepSig.implementation = config.atomicStepImplementation(declaredType.get).get
+    }
+    for (child <- children) {
+      child match {
+        case input: Input =>
+          val portSig = new PortSignature(input.port.get, input.primary.get, input.sequence)
+          stepSig.addInput(portSig, input.location.get)
+        case output: Output =>
+          val portSig = new PortSignature(output.port.get, output.primary.get, output.sequence)
+          stepSig.addOutput(portSig, output.location.get)
+        case option: OptionDecl =>
+          val optSig = new OptionSignature(option.optionName, option.declaredType, option.required)
+          stepSig.addOption(optSig, option.location.get)
+        case _ =>
+          println(child)
+      }
+    }
+
+    stepSig
   }
 
   override def asXML: xml.Elem = {
