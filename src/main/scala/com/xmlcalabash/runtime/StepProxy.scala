@@ -102,7 +102,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: StepWrapper, params:
     bindings += qname
     bindingsMap.put(qname.getClarkName, bindmsg.message)
 
-    val stepsig = config.signatures.step(stepType)
+    val stepsig = step.signature
     if (stepsig.options.contains(qname)) {
       val optsig  = stepsig.option(qname, location.get)
       val opttype: Option[QName] = if (optsig.declaredType.isDefined) {
