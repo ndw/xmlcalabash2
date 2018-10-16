@@ -8,11 +8,13 @@ import com.xmlcalabash.config.{XMLCalabash, XMLCalabashConfigurer}
 import com.xmlcalabash.model.xml.Parser
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{Processor, QName}
+import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.InputSource
 
 import scala.collection.mutable
 
 class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
+  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   val config = new XMLCalabashConfiguration()
   config.load()
 
@@ -64,8 +66,10 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
     val uriEnum = this.getClass.getClassLoader.getResources("com.xmlcalabash.properties")
     while (uriEnum.hasMoreElements) {
       val url = uriEnum.nextElement()
-      val resource = new File(url.toURI)
-      val stream = new FileInputStream(resource)
+      logger.debug(s"Loading properties: $url")
+
+      val conn = url.openConnection()
+      val stream = conn.getInputStream
       val props = new Properties()
       props.load(stream)
 
@@ -101,26 +105,19 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
               val qname = new QName(pfx, nsmap(pfx), local)
               configuration.implementFunction(qname, name)
             } else {
-              println(s"No namespace binding for $pfx, ignoring: $name=$value")
+              logger.debug(s"No namespace binding for $pfx, ignoring: $name=$value")
             }
           case SPattern(pfx,local) =>
             if (nsmap.contains(pfx)) {
               val qname = new QName(pfx, nsmap(pfx), local)
               configuration.implementAtomicStep(qname, name)
             } else {
-              println(s"No namespace binding for $pfx, ignoring: $name=$value")
+              logger.debug(s"No namespace binding for $pfx, ignoring: $name=$value")
             }
           case _ =>
-            println(s"Unparseable line: $name=$value")
+            logger.debug(s"Unparseable property, ignoring: $name=$value")
         }
       }
     }
-
-    /*
-p = namespace http://www.w3.org/ns/xproc
-com.xmlcalabash.functions.SystemProperty            = function p:system-property
-com.xmlcalabash.steps.CastContentType               = step p:cast-content-type
-     */
-
   }
 }
