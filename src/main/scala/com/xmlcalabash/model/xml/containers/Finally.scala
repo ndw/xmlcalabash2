@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml.containers
 
 import com.jafpl.graph.{Graph, Node, TryCatchStart}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, Documentation, PipeInfo}
@@ -9,7 +9,7 @@ import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer
 
-class Finally(override val config: XMLCalabash,
+class Finally(override val config: XMLCalabashConfig,
               override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_finally) {
   override def validate(): Boolean = {
     var valid = super.validate()

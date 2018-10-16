@@ -1,14 +1,14 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer
 
-class Serialization(override val config: XMLCalabash,
+class Serialization(override val config: XMLCalabashConfig,
                     override val parent: Option[Artifact]) extends Artifact(config, parent) {
   var _port: Option[String] = None
   var _byte_order_mark: Option[Boolean] = None

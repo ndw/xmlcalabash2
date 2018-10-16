@@ -4,7 +4,7 @@ import com.jafpl.graph.Location
 import com.jafpl.messages.{BindingMessage, ExceptionMessage, ItemMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality, PortSpecification, Step}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.XProcConstants
@@ -14,7 +14,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 
-class StepProxy(config: XMLCalabash, stepType: QName, step: StepWrapper, params: Option[ImplParams], context: StaticContext) extends Step with XProcDataConsumer {
+class StepProxy(config: XMLCalabashConfig, stepType: QName, step: StepWrapper, params: Option[ImplParams], context: StaticContext) extends Step with XProcDataConsumer {
   private val typeUtils = new TypeUtils(config)
   private var location = Option.empty[Location]
   private var _id: String = _
@@ -149,7 +149,7 @@ class StepProxy(config: XMLCalabash, stepType: QName, step: StepWrapper, params:
 
   override def initialize(config: RuntimeConfiguration): Unit = {
     config match {
-      case saxon: XMLCalabash => Unit
+      case saxon: XMLCalabashConfig => Unit
       case _ => throw XProcException.xiNotXMLCalabash()
     }
     if (this.config != config) {

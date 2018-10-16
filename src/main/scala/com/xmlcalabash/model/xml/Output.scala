@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
@@ -14,7 +14,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Output(override val config: XMLCalabash,
+class Output(override val config: XMLCalabashConfig,
              override val parent: Option[Artifact]) extends IOPort(config, parent) {
   private var serOpts = new SerializationOptions(config)
   protected var _contentTypes = ListBuffer.empty[MediaType]
@@ -22,7 +22,7 @@ class Output(override val config: XMLCalabash,
   def serialization: SerializationOptions = serOpts
   def contentTypes: List[MediaType] = _contentTypes.toList
 
-  protected[xml] def this(config: XMLCalabash, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
+  protected[xml] def this(config: XMLCalabashConfig, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
     this(config, Some(parent))
     _port = Some(port)
     _primary = Some(primary)

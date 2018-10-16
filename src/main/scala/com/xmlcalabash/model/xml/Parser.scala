@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.config.{Signatures, XMLCalabash}
+import com.xmlcalabash.config.{Signatures, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Catch, Choose, DeclarationContainer, Finally, ForEach, Group, Otherwise, Try, When, WithDocument, WithProperties}
@@ -13,7 +13,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ListBuffer
 
-class Parser(config: XMLCalabash) {
+class Parser(config: XMLCalabashConfig) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private var exception: Option[Throwable] = None
   private val injectables = ListBuffer.empty[Injectable]

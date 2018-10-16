@@ -1,11 +1,11 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import net.sf.saxon.s9api.QName
 
-class Function(override val config: XMLCalabash,
+class Function(override val config: XMLCalabashConfig,
                override val parent: Option[Artifact]) extends Artifact(config, parent) {
   private var _fName: Option[QName] = None
   private var _fClass: Option[String] = None

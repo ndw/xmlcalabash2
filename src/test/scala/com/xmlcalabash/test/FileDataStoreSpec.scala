@@ -3,13 +3,13 @@ package com.xmlcalabash.test
 import java.io.{File, InputStream, OutputStream}
 import java.net.URI
 
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.util.stores.{DataInfo, DataReader, DataWriter, FallbackDataStore, FileDataStore}
 import net.sf.saxon.s9api.XdmAtomicValue
 import org.scalatest.{BeforeAndAfter, FlatSpec}
 
 class FileDataStoreSpec extends FlatSpec with BeforeAndAfter {
-  private val config = XMLCalabash.newInstance()
+  private val config = XMLCalabashConfig.newInstance()
   private val fileStore = new FileDataStore(new FallbackDataStore())
   private val testIO = new TestIO()
   private val tempDir: File = File.createTempFile("meerschaum-test-", ".dir")

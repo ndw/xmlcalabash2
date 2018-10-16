@@ -4,7 +4,7 @@ import com.jafpl.graph.Location
 import com.jafpl.messages.{BindingMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.UniqueId
 import com.xmlcalabash.runtime.XmlPortSpecification
@@ -17,7 +17,7 @@ class DefaultStep extends Step {
   private var _location = Option.empty[Location]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
-  protected var config: Option[XMLCalabash] = None
+  protected var config: Option[XMLCalabashConfig] = None
   protected val bindings = mutable.HashMap.empty[String,Message]
 
   def location: Option[Location] = _location
@@ -49,7 +49,7 @@ class DefaultStep extends Step {
 
   override def initialize(config: RuntimeConfiguration): Unit = {
     config match {
-      case saxon: XMLCalabash =>
+      case saxon: XMLCalabashConfig =>
         this.config = Some(saxon)
       case _ => throw XProcException.xiNotXMLCalabash()
     }

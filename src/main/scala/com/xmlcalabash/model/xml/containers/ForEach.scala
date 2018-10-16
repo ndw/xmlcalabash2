@@ -2,13 +2,13 @@ package com.xmlcalabash.model.xml.containers
 
 import com.jafpl.graph.{ContainerStart, Graph, Node, TryCatchStart}
 import com.jafpl.steps.Manifold
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
 import com.xmlcalabash.model.xml.{Artifact, Documentation, Input, PipeInfo}
 
-class ForEach(override val config: XMLCalabash,
+class ForEach(override val config: XMLCalabashConfig,
               override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_for_each) {
 
   override def validate(): Boolean = {

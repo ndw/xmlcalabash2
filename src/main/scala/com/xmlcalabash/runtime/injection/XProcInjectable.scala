@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.jafpl.graph.Location
 import com.jafpl.messages.{ItemMessage, Message}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.model.xml.Injectable
@@ -21,7 +21,7 @@ abstract class XProcInjectable(injectable: Injectable) {
   protected val bindings = mutable.HashMap.empty[String,Message]
   protected val _nodes: ListBuffer[XdmNode] = ListBuffer.empty[XdmNode]
   protected var _matched = false
-  protected var config: XMLCalabash = _
+  protected var config: XMLCalabashConfig = _
   protected var _stepXPath: XProcXPathExpression = _
   protected var _messageXPath: Option[XProcVtExpression] = _
   protected var _messageNodes: Option[List[XdmNode]] = _

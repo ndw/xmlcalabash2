@@ -3,14 +3,14 @@ package com.xmlcalabash.test
 import java.io.{InputStream, OutputStream}
 import java.net.URI
 
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.util.{ArgBundle, URIUtils}
 import com.xmlcalabash.util.stores.{DataInfo, DataReader, DataWriter, FallbackDataStore}
 import net.sf.saxon.s9api.XdmAtomicValue
 import org.scalatest.FlatSpec
 
 class FallbackDataStoreSpec extends FlatSpec {
-  private val config = XMLCalabash.newInstance()
+  private val config = XMLCalabashConfig.newInstance()
   private val fallback = new FallbackDataStore()
   private val base = URIUtils.cwdAsURI
   private val nop = new NopIO()

@@ -1,6 +1,6 @@
 name         := "XML Calabash"
 organization := "com.xmlcalabash"
-version      := "1.9.4"
+version      := "1.9.8"
 scalaVersion := "2.12.6"
 
 lazy val jafplVersion = "0.0.64"

@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Pipe}
@@ -10,14 +10,14 @@ import com.xmlcalabash.util.MediaType
 
 import scala.collection.mutable.ListBuffer
 
-class Input(override val config: XMLCalabash,
+class Input(override val config: XMLCalabashConfig,
             override val parent: Option[Artifact]) extends IOPort(config, parent) {
   protected var _select: Option[String] = None
   protected var _expression = Option.empty[XProcExpression]
   protected var _contentTypes = ListBuffer.empty[MediaType]
   protected var _defaultInputs = ListBuffer.empty[DataSource]
 
-  protected[xml] def this(config: XMLCalabash, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
+  protected[xml] def this(config: XMLCalabashConfig, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
     this(config, Some(parent))
     _port = Some(port)
     _primary = Some(primary)

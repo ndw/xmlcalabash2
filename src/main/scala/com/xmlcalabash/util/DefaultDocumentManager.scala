@@ -9,7 +9,7 @@ import java.util.Date
 import com.jafpl.messages.Message
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
-import com.xmlcalabash.config.{DocumentManager, DocumentRequest, DocumentResponse, XMLCalabash}
+import com.xmlcalabash.config.{DocumentManager, DocumentRequest, DocumentResponse, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
@@ -28,7 +28,7 @@ import org.xml.sax.{InputSource, SAXException}
 import scala.collection.immutable.HashMap
 import scala.collection.mutable
 
-class DefaultDocumentManager(xmlCalabash: XMLCalabash) extends DocumentManager {
+class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentManager {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   override def parse(request: DocumentRequest): DocumentResponse = {

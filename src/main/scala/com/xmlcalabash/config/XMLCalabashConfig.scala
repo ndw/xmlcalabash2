@@ -2,12 +2,8 @@ package com.xmlcalabash.config
 
 import java.net.URI
 
-import javax.xml.transform.URIResolver
-import javax.xml.transform.sax.SAXSource
 import com.jafpl.graph.Location
-import com.jafpl.messages.{ItemMessage, Message}
-import com.jafpl.runtime.{ExpressionEvaluator, RuntimeConfiguration}
-import com.jafpl.steps.{DataConsumer, Step}
+import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException}
 import com.xmlcalabash.functions.{Cwd, DocumentProperties, DocumentPropertiesDocument, DocumentProperty, ForceQNameKeys, InjElapsed, InjId, InjName, InjType, SystemProperty}
@@ -16,8 +12,10 @@ import com.xmlcalabash.model.xml.Artifact
 import com.xmlcalabash.parsers.XPathParser
 import com.xmlcalabash.runtime.{ImplParams, SaxonExpressionEvaluator, StepWrapper, XmlStep}
 import com.xmlcalabash.sbt.BuildInfo
-import com.xmlcalabash.util.{URIUtils, XProcURIResolver}
-import net.sf.saxon.lib.{ExtensionFunctionDefinition, ModuleURIResolver, UnparsedTextURIResolver}
+import com.xmlcalabash.util.URIUtils
+import javax.xml.transform.URIResolver
+import javax.xml.transform.sax.SAXSource
+import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.{Processor, QName, XdmNode, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.helpers.XMLReaderFactory
@@ -25,13 +23,13 @@ import org.xml.sax.{EntityResolver, InputSource}
 
 import scala.collection.mutable
 
-object XMLCalabash {
+object XMLCalabashConfig {
   val _configProperty = "com.xmlcalabash.config.XMLCalabashConfigurer"
   val _configClass = "com.xmlcalabash.util.DefaultXMLCalabashConfigurer"
 
-  def newInstance(): XMLCalabash = {
+  def newInstance(): XMLCalabashConfig = {
     val configurer = Class.forName(configClass).newInstance()
-    val config = new XMLCalabash()
+    val config = new XMLCalabashConfig()
     configurer.asInstanceOf[XMLCalabashConfigurer].configure(config)
     config.close()
     config
@@ -40,7 +38,7 @@ object XMLCalabash {
   private def configClass: String = Option(System.getProperty(_configProperty)).getOrElse(_configClass)
 }
 
-class XMLCalabash extends RuntimeConfiguration {
+class XMLCalabashConfig extends RuntimeConfiguration {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _expressionEvaluator = new SaxonExpressionEvaluator(this)
   private val _collections = mutable.HashMap.empty[String, List[XdmNode]]

@@ -2,7 +2,7 @@ package com.xmlcalabash.util
 
 import java.util
 
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.parsers.SequenceBuilder
@@ -91,7 +91,7 @@ object TypeUtils {
   }
 }
 
-class TypeUtils(val config: XMLCalabash) {
+class TypeUtils(val config: XMLCalabashConfig) {
   val typeFactory = new ItemTypeFactory(config.processor)
 
   def castAtomicAs(value: XdmAtomicValue, xsdtype: Option[QName], context: ExpressionContext): XdmAtomicValue = {

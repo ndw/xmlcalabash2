@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml.datasource
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl}
@@ -13,7 +13,7 @@ import net.sf.saxon.s9api.QName
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Document(override val config: XMLCalabash,
+class Document(override val config: XMLCalabashConfig,
                override val parent: Option[Artifact])
   extends DataSource(config, parent) {
 
@@ -25,7 +25,7 @@ class Document(override val config: XMLCalabash,
   private var paramsExpr = Option.empty[String]
   private val bindingRefs = mutable.HashSet.empty[QName]
 
-  def this(config: XMLCalabash, parent: Artifact, doc: Document) = {
+  def this(config: XMLCalabashConfig, parent: Artifact, doc: Document) = {
     this(config, Some(parent))
     _href = doc._href
     _params = doc._params
@@ -38,7 +38,7 @@ class Document(override val config: XMLCalabash,
     bindingRefs ++= doc.bindingRefs
   }
 
-  def this(config: XMLCalabash, parent: Artifact, href: String) = {
+  def this(config: XMLCalabashConfig, parent: Artifact, href: String) = {
     this(config, Some(parent))
     _href = Some(href)
     hrefAvt = ValueParser.parseAvt(_href.get)

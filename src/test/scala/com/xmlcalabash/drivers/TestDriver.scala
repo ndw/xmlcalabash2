@@ -4,7 +4,7 @@ import java.io.{BufferedInputStream, BufferedReader, ByteArrayOutputStream, File
 import java.util.Base64
 import javax.xml.transform.sax.SAXSource
 
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.TestException
 import com.xmlcalabash.testers.TestRunner
 import com.xmlcalabash.util.S9Api
@@ -12,7 +12,7 @@ import net.sf.saxon.s9api.{QName, Serializer, XdmAtomicValue, XdmDestination}
 import org.xml.sax.InputSource
 
 object TestDriver extends App {
-  private val xmlCalabash = XMLCalabash.newInstance()
+  private val xmlCalabash = XMLCalabashConfig.newInstance()
 
   private val xmlOutput: Option[String] = Some("test-suite-report.xml")
   private val htmlOutput: Option[String] = Some("test-suite-report.html")

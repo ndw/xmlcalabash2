@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.jafpl.graph.Location
 import com.jafpl.messages.Message
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.ValueParser
@@ -15,7 +15,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Injectable(val config: XMLCalabash,
+class Injectable(val config: XMLCalabashConfig,
                  val id: String,
                  val itype: QName,
                  val stepXPath: XProcXPathExpression,

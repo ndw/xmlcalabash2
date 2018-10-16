@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.config.Jafpl
 import com.jafpl.graph.Graph
-import com.xmlcalabash.config.{OptionSignature, PortSignature, StepSignature, XMLCalabash}
+import com.xmlcalabash.config.{OptionSignature, PortSignature, StepSignature, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.{Container, DeclarationContainer, WithDocument, WithProperties}
@@ -12,7 +12,7 @@ import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable.ListBuffer
 
-class DeclareStep(override val config: XMLCalabash,
+class DeclareStep(override val config: XMLCalabashConfig,
                   override val parent: Option[Artifact]) extends DeclarationContainer(config, parent, XProcConstants.p_declare_step) {
   private var _type: Option[QName] = None
   private var _psviRequired: Option[Boolean] = None

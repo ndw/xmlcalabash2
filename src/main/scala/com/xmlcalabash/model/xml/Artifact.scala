@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml
 import java.net.URI
 
 import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
-import com.xmlcalabash.config.{StepSignature, XMLCalabash}
+import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
@@ -22,7 +22,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-abstract class Artifact(val config: XMLCalabash, val parent: Option[Artifact]) {
+abstract class Artifact(val config: XMLCalabashConfig, val parent: Option[Artifact]) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected[xml] var id: Long = UniqueId.nextId
   protected[xml] val attributes = mutable.HashMap.empty[QName, String]

@@ -5,7 +5,7 @@ import java.util
 
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.runtime.ExpressionEvaluator
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
@@ -28,7 +28,7 @@ object SaxonExpressionEvaluator {
   protected val _dynContext = new DynamicVariable[DynamicContext](null)
 }
 
-class SaxonExpressionEvaluator(xmlCalabash: XMLCalabash) extends ExpressionEvaluator {
+class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends ExpressionEvaluator {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   def withContext[T](context: DynamicContext)(thunk: => T): T = SaxonExpressionEvaluator._dynContext.withValue(context)(thunk)

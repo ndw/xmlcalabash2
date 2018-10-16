@@ -1,13 +1,13 @@
 package com.xmlcalabash.parsers
 
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.model.util.{ExpressionParser, ParserConfiguration}
 import com.xmlcalabash.parsers.XPath31.EventHandler
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 
-class XPathParser(config: XMLCalabash) extends ExpressionParser {
+class XPathParser(config: XMLCalabashConfig) extends ExpressionParser {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val handler = new FindRefs()
   private val parser = new XPath31()

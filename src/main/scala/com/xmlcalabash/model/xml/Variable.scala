@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.XProcConstants
@@ -15,7 +15,7 @@ import net.sf.saxon.value.SequenceType
 
 import scala.collection.mutable
 
-class Variable(override val config: XMLCalabash,
+class Variable(override val config: XMLCalabashConfig,
                override val parent: Option[Artifact]) extends Artifact(config, parent) {
   private var _name: QName = new QName("", "UNINITIALIZED")
   private var _collection: Boolean = false

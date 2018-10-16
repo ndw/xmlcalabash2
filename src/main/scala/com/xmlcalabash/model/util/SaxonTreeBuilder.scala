@@ -2,7 +2,7 @@ package com.xmlcalabash.model.util
 
 import java.net.URI
 
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.Controller
@@ -15,7 +15,7 @@ import net.sf.saxon.tree.util.NamespaceIterator
 
 import scala.collection.mutable.ListBuffer
 
-class SaxonTreeBuilder(runtime: XMLCalabash) {
+class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   protected val config = runtime.processor.getUnderlyingConfiguration
   protected val pool = config.getNamePool
   protected val controller = new Controller(config)

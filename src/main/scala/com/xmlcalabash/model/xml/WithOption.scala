@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
@@ -12,14 +12,14 @@ import net.sf.saxon.sxpath.IndependentContext
 import net.sf.saxon.trans.XPathException
 import net.sf.saxon.value.SequenceType
 
-class WithOption(override val config: XMLCalabash,
+class WithOption(override val config: XMLCalabashConfig,
                  override val parent: Option[Artifact]) extends Artifact(config, parent) {
   private var _collection = false
   private var _name: QName = _
   private var _expression = Option.empty[XProcExpression]
   private var _as = Option.empty[SequenceType]
 
-  def this(config: XMLCalabash, parent: Artifact, name: QName, expr: XProcExpression) = {
+  def this(config: XMLCalabashConfig, parent: Artifact, name: QName, expr: XProcExpression) = {
     this(config, Some(parent))
     _name = name
     _expression = Some(expr)

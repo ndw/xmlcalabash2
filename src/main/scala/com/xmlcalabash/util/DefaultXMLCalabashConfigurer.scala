@@ -4,7 +4,7 @@ import java.io.{File, FileInputStream}
 import java.util.Properties
 
 import com.jafpl.util.DefaultTraceEventManager
-import com.xmlcalabash.config.{XMLCalabash, XMLCalabashConfigurer}
+import com.xmlcalabash.config.{XMLCalabashConfig, XMLCalabashConfigurer}
 import com.xmlcalabash.model.xml.Parser
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{Processor, QName}
@@ -18,7 +18,7 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
   val config = new XMLCalabashConfiguration()
   config.load()
 
-  override def configure(configuration: XMLCalabash): Unit = {
+  override def configure(configuration: XMLCalabashConfig): Unit = {
     configuration.processor = new Processor(false)
     configuration.errorListener = new DefaultErrorListener()
 
@@ -62,7 +62,7 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
     configuration.signatures = parser.signatures(node)
   }
 
-  private def loadProperties(configuration: XMLCalabash): Unit = {
+  private def loadProperties(configuration: XMLCalabashConfig): Unit = {
     val uriEnum = this.getClass.getClassLoader.getResources("com.xmlcalabash.properties")
     while (uriEnum.hasMoreElements) {
       val url = uriEnum.nextElement()

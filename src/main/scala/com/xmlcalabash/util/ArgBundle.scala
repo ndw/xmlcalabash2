@@ -1,7 +1,7 @@
 package com.xmlcalabash.util
 
 import com.jafpl.messages.Message
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.ValueParser
@@ -12,7 +12,7 @@ import net.sf.saxon.s9api.{ItemTypeFactory, QName, XdmAtomicValue}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class ArgBundle(xmlCalabash: XMLCalabash) {
+class ArgBundle(xmlCalabash: XMLCalabashConfig) {
   private val itf = new ItemTypeFactory(xmlCalabash.processor)
   private val untypedAtomic = itf.getAtomicType(new QName(NamespaceConstant.SCHEMA, "xs:untypedAtomic"))
 
@@ -31,7 +31,7 @@ class ArgBundle(xmlCalabash: XMLCalabash) {
   private var _norun = false
   private var _debug = false
 
-  def this(config: XMLCalabash, args: List[String]) = {
+  def this(config: XMLCalabashConfig, args: List[String]) = {
     this(config)
     parse(args)
   }

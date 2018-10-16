@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.util
 
 import com.jafpl.graph.Location
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.runtime.{XProcVtExpression, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
@@ -74,7 +74,7 @@ object ValueParser {
     }
   }
 
-  def findVariableRefsInString(config: XMLCalabash, inScopeNS: Map[String,String], text: String, location: Option[Location]): Set[QName] = {
+  def findVariableRefsInString(config: XMLCalabashConfig, inScopeNS: Map[String,String], text: String, location: Option[Location]): Set[QName] = {
     val names = mutable.HashSet.empty[QName]
 
     val parser = config.expressionParser
@@ -221,7 +221,7 @@ object ValueParser {
     params.toMap
   }
 
-  def findVariableRefs(config: XMLCalabash, expression: XProcExpression, location: Option[Location]): Set[QName] = {
+  def findVariableRefs(config: XMLCalabashConfig, expression: XProcExpression, location: Option[Location]): Set[QName] = {
     val variableRefs = mutable.HashSet.empty[QName]
 
     expression match {
@@ -252,7 +252,7 @@ object ValueParser {
     variableRefs.toSet
   }
 
-  def findVariableRefs(config: XMLCalabash, node: XdmNode, expandText: Boolean, location: Option[Location]): Set[QName] = {
+  def findVariableRefs(config: XMLCalabashConfig, node: XdmNode, expandText: Boolean, location: Option[Location]): Set[QName] = {
     val variableRefs = mutable.HashSet.empty[QName]
 
     node.getNodeKind match {
@@ -283,7 +283,7 @@ object ValueParser {
     variableRefs.toSet
   }
 
-  private def findVariableRefsInAvt(config: XMLCalabash, text: String, location: Option[Location]): Set[QName] = {
+  private def findVariableRefsInAvt(config: XMLCalabashConfig, text: String, location: Option[Location]): Set[QName] = {
     val variableRefs = mutable.HashSet.empty[QName]
 
     val list = ValueParser.parseAvt(text)
@@ -302,7 +302,7 @@ object ValueParser {
     variableRefs.toSet
   }
 
-  def findVariableRefsInString(config: XMLCalabash, text: String, location: Option[Location]): Set[QName] = {
+  def findVariableRefsInString(config: XMLCalabashConfig, text: String, location: Option[Location]): Set[QName] = {
     val variableRefs = mutable.HashSet.empty[QName]
 
     val parser = config.expressionParser

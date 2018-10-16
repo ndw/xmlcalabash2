@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml.datasource
 
 import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Catch
@@ -9,35 +9,35 @@ import com.xmlcalabash.model.xml.{Artifact, IOPort, Variable, WithOption}
 
 import scala.collection.mutable.ListBuffer
 
-class Pipe(override val config: XMLCalabash,
+class Pipe(override val config: XMLCalabashConfig,
            override val parent: Option[Artifact]) extends DataSource(config, parent) {
   private var _step = Option.empty[String]
   private var _port = Option.empty[String]
   protected[xml] var priority = false
 
-  def this(config: XMLCalabash, parent: Artifact, step: String) = {
+  def this(config: XMLCalabashConfig, parent: Artifact, step: String) = {
     this(config, Some(parent))
     this.step = step
   }
 
-  def this(config: XMLCalabash, parent: Artifact, step: Option[String]) = {
+  def this(config: XMLCalabashConfig, parent: Artifact, step: Option[String]) = {
     this(config, Some(parent))
     _step = step
   }
 
-  def this(config: XMLCalabash, parent: Artifact, step: String, port: String) = {
+  def this(config: XMLCalabashConfig, parent: Artifact, step: String, port: String) = {
     this(config, Some(parent))
     this.step = step
     this.port = port
   }
 
-  def this(config: XMLCalabash, parent: Artifact, step: Option[String], port: Option[String]) = {
+  def this(config: XMLCalabashConfig, parent: Artifact, step: Option[String], port: Option[String]) = {
     this(config, Some(parent))
     _step = step
     _port = port
   }
 
-  def this(config: XMLCalabash, parent: Artifact, pipe: Pipe) = {
+  def this(config: XMLCalabashConfig, parent: Artifact, pipe: Pipe) = {
     this(config, Some(parent))
     _step = pipe.step
     _port = pipe.port

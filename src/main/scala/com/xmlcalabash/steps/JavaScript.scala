@@ -3,7 +3,7 @@ package com.xmlcalabash.steps
 import javax.script.ScriptEngineManager
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.PortCardinality
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.TypeUtils
@@ -24,7 +24,7 @@ class JavaScript extends DefaultXmlStep {
 
   override def initialize(config: RuntimeConfiguration, params: Option[ImplParams]): Unit = {
     super.initialize(config, params)
-    typeUtils = new TypeUtils(config.asInstanceOf[XMLCalabash])
+    typeUtils = new TypeUtils(config.asInstanceOf[XMLCalabashConfig])
   }
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {

@@ -2,13 +2,13 @@ package com.xmlcalabash.model.xml.containers
 
 import com.jafpl.graph.{Binding, ChooseStart, ContainerStart, Graph, Node}
 import com.jafpl.steps.Manifold
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, Documentation, OptionDecl, PipeInfo, Variable}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
 
-class When(override val config: XMLCalabash,
+class When(override val config: XMLCalabashConfig,
            override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_when) {
   private var testExpr: XProcExpression = _
 

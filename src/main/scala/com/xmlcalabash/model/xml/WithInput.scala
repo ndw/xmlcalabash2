@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Inline, Pipe}
@@ -9,10 +9,10 @@ import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
 
 import scala.collection.mutable.ListBuffer
 
-class WithInput(override val config: XMLCalabash,
+class WithInput(override val config: XMLCalabashConfig,
                 override val parent: Option[Artifact]) extends Input(config, parent) {
 
-  protected[xml] def this(config: XMLCalabash, parent: Artifact, port: String) {
+  protected[xml] def this(config: XMLCalabashConfig, parent: Artifact, port: String) {
     this(config, Some(parent))
     _port = Some(port)
   }

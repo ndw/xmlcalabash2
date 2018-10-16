@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{ParserConfiguration, XProcConstants}
 import com.xmlcalabash.model.xml.datasource.DataSource
@@ -10,13 +10,13 @@ import net.sf.saxon.s9api.{SaxonApiException, XdmAtomicValue}
 
 import scala.collection.mutable.ListBuffer
 
-class IOPort(override val config: XMLCalabash,
+class IOPort(override val config: XMLCalabashConfig,
              override val parent: Option[Artifact]) extends Artifact(config, parent) {
   protected var _port: Option[String] = None
   protected var _sequence: Option[Boolean] = None
   protected var _primary: Option[Boolean] = None
 
-  protected[xml] def this(config: XMLCalabash, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
+  protected[xml] def this(config: XMLCalabashConfig, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
     this(config, Some(parent))
     _port = Some(port)
     _primary = Some(primary)

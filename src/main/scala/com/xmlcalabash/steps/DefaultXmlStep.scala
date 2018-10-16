@@ -3,7 +3,7 @@ package com.xmlcalabash.steps
 import com.jafpl.graph.Location
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.BindingSpecification
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
 import com.xmlcalabash.util.XProcVarValue
@@ -16,7 +16,7 @@ class DefaultXmlStep extends XmlStep {
   private var _location = Option.empty[Location]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[XProcDataConsumer] = None
-  protected var config: XMLCalabash = _
+  protected var config: XMLCalabashConfig = _
   protected val bindings = mutable.HashMap.empty[QName,XProcVarValue]
 
   def location: Option[Location] = _location
@@ -44,7 +44,7 @@ class DefaultXmlStep extends XmlStep {
 
   override def initialize(config: RuntimeConfiguration, params: Option[ImplParams]): Unit = {
     config match {
-      case xmlCalabash: XMLCalabash =>
+      case xmlCalabash: XMLCalabashConfig =>
         this.config = xmlCalabash
       case _ => throw XProcException.xiNotXMLCalabash()
     }

@@ -3,7 +3,7 @@ package com.xmlcalabash.testers
 import com.jafpl.exceptions.JafplException
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.runtime.GraphRuntime
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.drivers.XmlDriver.xmlCalabash
 import com.xmlcalabash.exceptions.{ModelException, StepException, TestException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
@@ -16,7 +16,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Tester(runtimeConfig: XMLCalabash) {
+class Tester(runtimeConfig: XMLCalabashConfig) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private var _pipeline = Option.empty[XdmNode]
   private var _schematron = Option.empty[XdmNode]

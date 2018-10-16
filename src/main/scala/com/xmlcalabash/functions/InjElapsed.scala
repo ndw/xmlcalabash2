@@ -1,6 +1,6 @@
 package com.xmlcalabash.functions
 
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.SaxonExpressionEvaluator
@@ -12,9 +12,9 @@ import net.sf.saxon.value.{DoubleValue, SequenceType}
 class InjElapsed private extends ExtensionFunctionDefinition {
   private val funcname = new StructuredQName("cx", XProcConstants.ns_cx, "step-elapsed")
 
-  private var runtime: XMLCalabash = _
+  private var runtime: XMLCalabashConfig = _
 
-  def this(runtime: XMLCalabash) = {
+  def this(runtime: XMLCalabashConfig) = {
     this()
     this.runtime = runtime
   }

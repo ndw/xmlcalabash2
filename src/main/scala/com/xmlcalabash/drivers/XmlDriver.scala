@@ -6,7 +6,7 @@ import com.jafpl.exceptions.JafplException
 import com.jafpl.graph.Graph
 import com.jafpl.messages.Message
 import com.jafpl.runtime.GraphRuntime
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ModelException, ParseException, StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.xml.{DeclareStep, Parser}
@@ -21,7 +21,7 @@ import scala.collection.mutable
 object XmlDriver extends App {
   type OptionMap = Map[Symbol, Any]
 
-  private val xmlCalabash = XMLCalabash.newInstance()
+  private val xmlCalabash = XMLCalabashConfig.newInstance()
 
   val options = new ArgBundle(xmlCalabash, args.toList)
 

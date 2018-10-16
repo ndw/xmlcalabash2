@@ -2,7 +2,7 @@ package com.xmlcalabash.util
 
 import java.net.URI
 
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.lib.{CollectionFinder, Resource, ResourceCollection}
 import net.sf.saxon.om.{Item, SpaceStrippingRule}
@@ -16,7 +16,7 @@ object XProcCollectionFinder {
   val DEFAULT = "http://xmlcalabash.com/saxon-default-collection"
 }
 
-class XProcCollectionFinder(config: XMLCalabash, docs: List[XdmNode], chainedFinder: CollectionFinder)
+class XProcCollectionFinder(config: XMLCalabashConfig, docs: List[XdmNode], chainedFinder: CollectionFinder)
   extends CollectionFinder {
 
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)

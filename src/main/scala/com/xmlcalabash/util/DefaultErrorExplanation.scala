@@ -1,13 +1,13 @@
 package com.xmlcalabash.util
 
-import com.xmlcalabash.config.{ErrorExplanation, XMLCalabash}
+import com.xmlcalabash.config.{ErrorExplanation, XMLCalabashConfig}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
 import scala.io.Source
 
-class DefaultErrorExplanation(config: XMLCalabash) extends ErrorExplanation {
+class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanation {
   private val messages = mutable.HashMap.empty[QName, String]
   private val explain = mutable.HashMap.empty[QName, String]
 

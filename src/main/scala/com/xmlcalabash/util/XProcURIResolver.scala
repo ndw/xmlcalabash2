@@ -8,7 +8,7 @@ import javax.xml.transform.stream.StreamSource
 import javax.xml.transform.{Source, URIResolver}
 
 import com.sun.org.apache.xml.internal.utils.URI.MalformedURIException
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import net.sf.saxon.Configuration
 import net.sf.saxon.lib.{ModuleURIResolver, StandardModuleURIResolver, StandardUnparsedTextResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.XdmNode
@@ -18,7 +18,7 @@ import org.xmlresolver.CatalogSource
 
 import scala.collection.mutable
 
-class XProcURIResolver(config: XMLCalabash) extends URIResolver with EntityResolver with ModuleURIResolver with UnparsedTextURIResolver {
+class XProcURIResolver(config: XMLCalabashConfig) extends URIResolver with EntityResolver with ModuleURIResolver with UnparsedTextURIResolver {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var _uriResolver = Option.empty[URIResolver]
   protected var _entityResolver = Option.empty[EntityResolver]

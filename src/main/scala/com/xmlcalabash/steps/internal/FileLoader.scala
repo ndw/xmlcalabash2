@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
-import com.xmlcalabash.config.{DocumentRequest, XMLCalabash, XProcTypes}
+import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig, XProcTypes}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}

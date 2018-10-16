@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml.datasource
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, Input, OptionDecl, Output, Variable, WithInput, WithOption}
@@ -13,7 +13,7 @@ import net.sf.saxon.s9api.{QName, XdmNode}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Inline(override val config: XMLCalabash,
+class Inline(override val config: XMLCalabashConfig,
              override val parent: Option[Artifact],
              val isImplicit: Boolean,
              val nodes: List[XdmNode]) extends DataSource(config, parent) {
@@ -25,11 +25,11 @@ class Inline(override val config: XMLCalabash,
   private var _contentType = Option.empty[MediaType]
   protected[xml] val variableRefs = mutable.HashSet.empty[QName]
 
-  def this(config: XMLCalabash, parent: Option[Artifact], nodes: List[XdmNode]) {
+  def this(config: XMLCalabashConfig, parent: Option[Artifact], nodes: List[XdmNode]) {
     this(config, parent, false, nodes)
   }
 
-  def this(config: XMLCalabash, parent: Artifact, inline: Inline) {
+  def this(config: XMLCalabashConfig, parent: Artifact, inline: Inline) {
     this(config, Some(parent), inline.isImplicit, inline.nodes)
     _excludeInlinePrefixes = inline._excludeInlinePrefixes
     _expandText = inline._expandText

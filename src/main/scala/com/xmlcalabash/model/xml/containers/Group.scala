@@ -1,12 +1,12 @@
 package com.xmlcalabash.model.xml.containers
 
 import com.jafpl.graph.{ContainerStart, Graph, Node, TryCatchStart}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.{Artifact, Documentation, PipeInfo}
 
-class Group(override val config: XMLCalabash,
+class Group(override val config: XMLCalabashConfig,
             override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_group) {
 
   override def validate(): Boolean = {

@@ -3,7 +3,7 @@ package com.xmlcalabash.functions
 import java.net.URI
 
 import com.jafpl.messages.ItemMessage
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcMetadata}
@@ -16,9 +16,9 @@ import net.sf.saxon.value.SequenceType
 class DocumentPropertiesDocument private extends ExtensionFunctionDefinition {
   private val funcname = new StructuredQName("p", XProcConstants.ns_p, "document-properties-document")
 
-  private var runtime: XMLCalabash = _
+  private var runtime: XMLCalabashConfig = _
 
-  def this(runtime: XMLCalabash) = {
+  def this(runtime: XMLCalabashConfig) = {
     this()
     this.runtime = runtime
   }

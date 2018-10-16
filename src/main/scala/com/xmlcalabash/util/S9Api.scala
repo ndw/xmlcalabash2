@@ -2,7 +2,7 @@ package com.xmlcalabash.util
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.model.util.XProcConstants
 import net.sf.saxon.s9api.{Axis, Serializer, XdmArray, XdmAtomicValue, XdmEmptySequence, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.value.StringValue
@@ -58,7 +58,7 @@ object S9Api {
   }
 
   // FIXME: THIS METHOD IS A GROTESQUE HACK!
-  def xdmToInputSource(config: XMLCalabash, node: XdmNode): InputSource = {
+  def xdmToInputSource(config: XMLCalabashConfig, node: XdmNode): InputSource = {
     val out = new ByteArrayOutputStream()
     val serializer = config.processor.newSerializer
     serializer.setOutputStream(out)
@@ -80,11 +80,11 @@ object S9Api {
     str
   }
 
-  def serialize(config: XMLCalabash, value: XdmValue, serializer: Serializer): Unit = {
+  def serialize(config: XMLCalabashConfig, value: XdmValue, serializer: Serializer): Unit = {
     serialize(config, List(value), serializer)
   }
 
-  def serialize(xproc: XMLCalabash, values: List[XdmValue], serializer: Serializer): Unit = {
+  def serialize(xproc: XMLCalabashConfig, values: List[XdmValue], serializer: Serializer): Unit = {
     for (value <- values) {
       value match {
         case arr: XdmArray =>
@@ -107,7 +107,7 @@ object S9Api {
     }
   }
 
-  private def serializeMap(xproc: XMLCalabash, value: XdmMap, serializer: Serializer): Unit = {
+  private def serializeMap(xproc: XMLCalabashConfig, value: XdmMap, serializer: Serializer): Unit = {
     serializer.serializeXdmValue(OPEN_BRACE)
     val map = value.asMap()
 
@@ -130,7 +130,7 @@ object S9Api {
     serializer.serializeXdmValue(CLOSE_BRACE)
   }
 
-  private def serializeArr(xproc: XMLCalabash, arr: XdmArray, serializer: Serializer): Unit = {
+  private def serializeArr(xproc: XMLCalabashConfig, arr: XdmArray, serializer: Serializer): Unit = {
     serializer.serializeXdmValue(OPEN_SQUARE)
 
     var idx = 0

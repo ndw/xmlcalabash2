@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml.containers
 
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.xml.datasource.Pipe
 import com.xmlcalabash.model.xml.{Artifact, Input, Output, PipelineStep}
@@ -9,7 +9,7 @@ import net.sf.saxon.s9api.QName
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Container(override val config: XMLCalabash,
+class Container(override val config: XMLCalabashConfig,
                 override val parent: Option[Artifact],
                 override val stepType: QName) extends PipelineStep(config, parent, stepType) {
   def lastChildStep: Option[PipelineStep] = {

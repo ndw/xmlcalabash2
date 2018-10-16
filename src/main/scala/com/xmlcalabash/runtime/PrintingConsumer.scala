@@ -4,21 +4,21 @@ import java.io.{ByteArrayOutputStream, File, FileOutputStream, PrintStream}
 
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.steps.DataConsumer
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{UniqueId, XProcConstants}
 import com.xmlcalabash.util.{MediaType, S9Api, SerializationOptions}
 import net.sf.saxon.s9api.{Serializer, XdmValue}
 
-class PrintingConsumer private(config: XMLCalabash, serialization: SerializationOptions, outputs: Option[List[String]]) extends DataConsumer {
+class PrintingConsumer private(config: XMLCalabashConfig, serialization: SerializationOptions, outputs: Option[List[String]]) extends DataConsumer {
   private val _id = UniqueId.nextId.toString
   private var index = 0
 
-  def this(config: XMLCalabash, serialization: SerializationOptions) = {
+  def this(config: XMLCalabashConfig, serialization: SerializationOptions) = {
     this(config, serialization, None)
   }
 
-  def this(config: XMLCalabash, serialization: SerializationOptions, outputs: List[String]) = {
+  def this(config: XMLCalabashConfig, serialization: SerializationOptions, outputs: List[String]) = {
     this(config, serialization, Some(outputs))
   }
 

@@ -7,7 +7,7 @@ import java.util.Calendar
 
 import javax.xml.transform.sax.SAXSource
 import com.jafpl.messages.{ItemMessage, Message}
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.TestException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, XProcMetadata, XProcXPathExpression}
@@ -19,7 +19,7 @@ import org.xml.sax.InputSource
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class TestRunner(runtimeConfig: XMLCalabash, testloc: String) {
+class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
   private val _testsuite = new QName("", "testsuite")
   private val _properties = new QName("", "properties")
   private val _property = new QName("", "property")

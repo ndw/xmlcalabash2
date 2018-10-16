@@ -2,7 +2,7 @@ package com.xmlcalabash.testers
 
 import java.io.File
 
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import org.scalatest.FunSpec
 
 import scala.collection.mutable.ListBuffer
@@ -10,7 +10,7 @@ import scala.collection.mutable.ListBuffer
 class XProcTestSpec extends FunSpec {
   private val fnregex = "^.*.xml".r
 
-  protected val runtimeConfig: XMLCalabash = XMLCalabash.newInstance()
+  protected val runtimeConfig: XMLCalabashConfig = XMLCalabashConfig.newInstance()
   protected val testFiles: ListBuffer[String] = ListBuffer.empty[String]
 
   protected def runtests(title: String, source: String): Unit = {

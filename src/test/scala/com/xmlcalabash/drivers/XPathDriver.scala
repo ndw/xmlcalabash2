@@ -1,12 +1,12 @@
 package com.xmlcalabash.drivers
 
-import com.xmlcalabash.config.XMLCalabash
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.parsers.XPathParser
 
 import scala.collection.mutable.ListBuffer
 
 object XPathDriver extends App {
-  val config = XMLCalabash.newInstance()
+  val config = XMLCalabashConfig.newInstance()
 
   var expr = ""
   for (arg <- args) {
