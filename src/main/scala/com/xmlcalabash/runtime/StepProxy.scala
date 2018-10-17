@@ -3,8 +3,7 @@ package com.xmlcalabash.runtime
 import com.jafpl.graph.Location
 import com.jafpl.messages.{BindingMessage, ExceptionMessage, ItemMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
-import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality, PortSpecification, Step}
-import com.xmlcalabash.config.XMLCalabashConfig
+import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality, Step}
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.XProcConstants

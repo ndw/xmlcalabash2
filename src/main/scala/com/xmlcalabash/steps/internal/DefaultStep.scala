@@ -4,7 +4,6 @@ import com.jafpl.graph.Location
 import com.jafpl.messages.{BindingMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, Step}
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.UniqueId
 import com.xmlcalabash.runtime.{XMLCalabashRuntime, XmlPortSpecification}

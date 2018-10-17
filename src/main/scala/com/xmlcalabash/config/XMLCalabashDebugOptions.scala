@@ -1,6 +1,6 @@
 package com.xmlcalabash.config
 
-import java.io.{ByteArrayOutputStream, File, FileOutputStream, PrintStream, PrintWriter}
+import java.io.{File, FileOutputStream, PrintStream, PrintWriter}
 
 import com.jafpl.graph.Graph
 import com.xmlcalabash.model.xml.DeclareStep

@@ -1,7 +1,5 @@
 package com.xmlcalabash.steps
 
-import java.net.URI
-
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}

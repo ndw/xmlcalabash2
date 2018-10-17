@@ -4,7 +4,6 @@ import java.net.URI
 import java.util
 
 import com.jafpl.graph.Location
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import net.sf.saxon.om.NamespaceResolver
@@ -12,9 +11,9 @@ import net.sf.saxon.s9api.{Axis, XdmDestination, XdmNode, XdmNodeKind}
 import net.sf.saxon.sxpath.{XPathEvaluator, XPathExpression}
 import net.sf.saxon.trans.XPathException
 
+import scala.collection.JavaConverters._
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.ListBuffer
-import scala.collection.JavaConverters._
 
 class ProcessMatch(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes, location: Option[Location]) extends SaxonTreeBuilder(runtime) {
   private val SAW_ELEMENT = 1

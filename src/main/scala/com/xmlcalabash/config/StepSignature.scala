@@ -1,7 +1,5 @@
 package com.xmlcalabash.config
 
-import javax.xml.crypto.dsig.spec.ExcC14NParameterSpec
-
 import com.jafpl.graph.Location
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import net.sf.saxon.s9api.QName

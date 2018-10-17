@@ -4,7 +4,6 @@ import java.util.Calendar
 
 import com.jafpl.injection.StepInjectable
 import com.jafpl.messages.BindingMessage
-import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.model.xml.Injectable
 import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions}

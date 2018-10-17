@@ -1,8 +1,5 @@
 package com.xmlcalabash.config
 
-import java.net.URI
-
-import net.sf.saxon.s9api.XdmNode
 import org.xml.sax.InputSource
 
 trait DocumentManager {

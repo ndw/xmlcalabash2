@@ -10,9 +10,7 @@ import com.xmlcalabash.exceptions.{ModelException, ParseException, StepException
 import com.xmlcalabash.model.xml.DeclareStep
 import com.xmlcalabash.runtime.{PrintingConsumer, XProcMetadata}
 import com.xmlcalabash.util.{ArgBundle, URIUtils}
-import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.QName
-import org.xml.sax.InputSource
 
 object XmlDriver extends App {
   type OptionMap = Map[Symbol, Any]

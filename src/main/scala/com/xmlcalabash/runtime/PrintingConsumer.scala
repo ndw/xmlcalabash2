@@ -4,9 +4,8 @@ import java.io.{ByteArrayOutputStream, File, FileOutputStream, PrintStream}
 
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.steps.DataConsumer
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util.{UniqueId, XProcConstants}
+import com.xmlcalabash.model.util.UniqueId
 import com.xmlcalabash.util.{MediaType, S9Api, SerializationOptions}
 import net.sf.saxon.s9api.{Serializer, XdmValue}
 

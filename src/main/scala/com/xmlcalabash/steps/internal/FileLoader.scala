@@ -1,22 +1,15 @@
 package com.xmlcalabash.steps.internal
 
-import java.io.File
 import java.net.{URI, URLConnection}
-import java.nio.file.Files
-import java.text.SimpleDateFormat
-import java.util.Date
 
 import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
-import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig, XProcTypes}
+import com.xmlcalabash.config.{DocumentRequest, XProcTypes}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmValue}
-import net.sf.saxon.value.ObjectValue
-
-import scala.collection.mutable
+import net.sf.saxon.s9api.{QName, XdmItem, XdmMap, XdmValue}
 
 class FileLoader(private val context: ExpressionContext,
                  private val declContentType: Option[MediaType],

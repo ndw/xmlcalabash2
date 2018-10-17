@@ -3,9 +3,9 @@ package com.xmlcalabash.steps
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode}
+import net.sf.saxon.s9api.{XdmAtomicValue, XdmNode}
 
 class PropertyExtract extends DefaultXmlStep {
   private var doc = Option.empty[Any]

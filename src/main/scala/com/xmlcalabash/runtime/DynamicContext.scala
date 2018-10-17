@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.jafpl.graph.Location
 import com.jafpl.messages.Message
-import net.sf.saxon.om.{Item, NodeInfo}
+import net.sf.saxon.om.Item
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable

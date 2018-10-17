@@ -1,13 +1,12 @@
 package com.xmlcalabash.util.stores
 
-import java.io.{File, FileFilter, FileInputStream, FileNotFoundException, FileOutputStream, IOException, InputStream}
+import java.io.{File, FileFilter, FileInputStream, FileNotFoundException, FileOutputStream, IOException}
 import java.net.URI
 import java.text.SimpleDateFormat
-import java.util.{Calendar, Date, TimeZone}
+import java.util.{Date, TimeZone}
 
 import com.xmlcalabash.util.{ContentTypes, URIUtils}
 import net.sf.saxon.s9api.XdmAtomicValue
-import net.sf.saxon.value.AtomicValue
 
 import scala.collection.mutable
 

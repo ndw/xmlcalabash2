@@ -7,7 +7,7 @@ import com.xmlcalabash.runtime.SaxonExpressionEvaluator
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
 import net.sf.saxon.om.{Sequence, StructuredQName}
-import net.sf.saxon.value.{DoubleValue, QNameValue, SequenceType}
+import net.sf.saxon.value.{QNameValue, SequenceType}
 
 class InjType private extends ExtensionFunctionDefinition {
   private val funcname = new StructuredQName("cx", XProcConstants.ns_cx, "step-type")

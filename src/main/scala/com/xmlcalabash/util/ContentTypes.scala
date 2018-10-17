@@ -1,7 +1,6 @@
 package com.xmlcalabash.util
 
-import java.io.{BufferedInputStream, File, FileInputStream, IOException, InputStream}
-import java.util
+import java.io.{BufferedInputStream, File, FileInputStream, IOException}
 import java.util.Properties
 
 import org.slf4j.{Logger, LoggerFactory}

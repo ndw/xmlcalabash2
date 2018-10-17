@@ -3,7 +3,7 @@ package com.xmlcalabash.runtime
 import com.jafpl.messages.Metadata
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.util.MediaType
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmValue}
 
 import scala.collection.mutable
 

@@ -7,7 +7,7 @@ import java.util.Base64
 import com.jafpl.messages.Message
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, ValueUtils}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmNode, XdmValue}

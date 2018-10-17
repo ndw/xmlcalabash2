@@ -1,25 +1,13 @@
 package com.xmlcalabash.steps
 
-import java.io.{File, FileInputStream, IOException, InputStream}
-import java.net.{URI, URLConnection}
-import java.time.format.DateTimeFormatter
-import java.time.{ZoneId, ZonedDateTime}
-import java.util.Date
+import java.net.URI
 
-import com.jafpl.messages.Message
-import com.xmlcalabash.config.{DocumentRequest, DocumentResponse}
+import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.messages.XPathItemMessage
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
-import javax.xml.transform.sax.SAXSource
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmValue}
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.client.utils.DateUtils
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.util.ByteArrayBuffer
-import org.xml.sax.InputSource
+import net.sf.saxon.s9api.{QName, XdmMap, XdmValue}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable

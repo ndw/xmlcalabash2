@@ -2,19 +2,19 @@ package com.xmlcalabash.util
 
 import java.io.{File, FileInputStream, IOException, InputStream}
 import java.net.{URI, URLConnection}
-import java.time.{ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
+import java.time.{ZoneId, ZonedDateTime}
 import java.util.Date
 
 import com.jafpl.messages.Message
-import javax.xml.transform.dom.DOMSource
-import javax.xml.transform.sax.SAXSource
 import com.xmlcalabash.config.{DocumentManager, DocumentRequest, DocumentResponse, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XProcXPathExpression}
-import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmMap, XdmNode, XdmValue}
+import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XProcXPathExpression}
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.sax.SAXSource
+import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmValue}
 import nu.validator.htmlparser.common.XmlViolationPolicy
 import nu.validator.htmlparser.dom.HtmlDocumentBuilder
 import org.apache.http.client.methods.HttpGet

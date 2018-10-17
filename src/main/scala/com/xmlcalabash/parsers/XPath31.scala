@@ -3,7 +3,7 @@ package com.xmlcalabash.parsers
 // This file was generated on Wed Aug 30, 2017 07:49 (UTC-05) by REx v5.45 which is Copyright (c) 1979-2017 by Gunther Rademacher <grd@gmx.net>
 // REx command line: xpath-31.ebnf -ll 3 -scala -tree
 
-import collection.mutable.ArrayBuffer
+import scala.collection.mutable.ArrayBuffer
 
 class XPath31() {
   def this(string: String, eh: XPath31.EventHandler) {

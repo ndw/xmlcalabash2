@@ -6,7 +6,7 @@ import com.jafpl.messages.ItemMessage
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcMetadata}
+import com.xmlcalabash.runtime.XProcMetadata
 import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
 import net.sf.saxon.om.{NodeInfo, Sequence, StructuredQName}

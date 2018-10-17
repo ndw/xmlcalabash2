@@ -2,7 +2,6 @@ package com.xmlcalabash.runtime.injection
 
 import com.jafpl.injection.PortInjectable
 import com.jafpl.messages.{BindingMessage, ItemMessage}
-import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.model.xml.Injectable
 import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions}

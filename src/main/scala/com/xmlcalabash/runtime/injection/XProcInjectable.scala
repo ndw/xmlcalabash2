@@ -4,11 +4,10 @@ import java.net.URI
 
 import com.jafpl.graph.Location
 import com.jafpl.messages.{ItemMessage, Message}
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.model.xml.Injectable
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, SaxonExpressionOptions, XMLCalabashRuntime, XProcVtExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionOptions, XMLCalabashRuntime, XProcVtExpression, XProcXPathExpression}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}

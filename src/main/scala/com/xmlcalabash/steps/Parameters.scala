@@ -1,11 +1,9 @@
 package com.xmlcalabash.steps
 
-import java.net.URI
-
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
-import net.sf.saxon.s9api.{QName, XdmItem, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmValue}
 
 class Parameters() extends DefaultXmlStep {
   private var parameters = Map.empty[QName, XdmValue]

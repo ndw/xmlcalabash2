@@ -5,7 +5,7 @@ package com.xmlcalabash.model.tpl
 
 // Hacked slightly by norm to change the method name for the main entry point.
 
-import collection.mutable.ArrayBuffer
+import scala.collection.mutable.ArrayBuffer
 
 class TplParser {
 

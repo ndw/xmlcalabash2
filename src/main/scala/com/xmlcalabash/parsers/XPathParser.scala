@@ -1,7 +1,7 @@
 package com.xmlcalabash.parsers
 
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.model.util.{ExpressionParser, ParserConfiguration}
+import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.parsers.XPath31.EventHandler
 import org.slf4j.{Logger, LoggerFactory}
 

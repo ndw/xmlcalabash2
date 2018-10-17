@@ -3,10 +3,9 @@ package com.xmlcalabash.steps
 import java.net.URI
 
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.parsers.SequenceBuilder
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.stores.{DataInfo, FallbackDataStore, FileDataStore}
-import com.xmlcalabash.util.{MediaType, URIUtils, XProcVarValue}
+import com.xmlcalabash.util.{MediaType, URIUtils}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue}
 
 import scala.collection.mutable.ListBuffer

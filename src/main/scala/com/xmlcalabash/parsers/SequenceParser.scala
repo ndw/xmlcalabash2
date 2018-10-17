@@ -3,7 +3,7 @@ package com.xmlcalabash.parsers
 // This file was generated on Fri Aug 17, 2018 06:58 (UTC+01) by REx v5.47 which is Copyright (c) 1979-2017 by Gunther Rademacher <grd@gmx.net>
 // REx command line: SequenceParser.ebnf -ll 2 -scala -tree
 
-import collection.mutable.ArrayBuffer
+import scala.collection.mutable.ArrayBuffer
 
 class SequenceParser {
 

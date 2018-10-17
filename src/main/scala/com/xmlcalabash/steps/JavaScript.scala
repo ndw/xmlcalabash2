@@ -1,13 +1,12 @@
 package com.xmlcalabash.steps
 
-import javax.script.ScriptEngineManager
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.PortCardinality
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, XMLCalabashRuntime, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.TypeUtils
-import net.sf.saxon.s9api.{QName, XdmItem, XdmNode, XdmValue}
+import javax.script.ScriptEngineManager
+import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 
 class JavaScript extends DefaultXmlStep {
   private var typeUtils: TypeUtils = _
