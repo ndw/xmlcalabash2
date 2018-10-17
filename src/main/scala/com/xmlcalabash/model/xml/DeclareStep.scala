@@ -124,7 +124,7 @@ class DeclareStep(override val config: XMLCalabashRuntime,
     }
 
     for (input <- inputs) {
-      if (input.defaultInputs().nonEmpty || input.contentTypes().nonEmpty) {
+      if (input.defaultInputs.nonEmpty || input.contentTypes.nonEmpty) {
         patchDefaultInputs(input)
       }
     }
@@ -229,7 +229,7 @@ class DeclareStep(override val config: XMLCalabashRuntime,
       }
     }
 
-    val params = new ContentTypeParams(input.port.get, input.contentTypes(), input.sequence)
+    val params = new ContentTypeParams(input.port.get, input.contentTypes, input.sequence)
     val checker = new AtomicStep(config, Some(this), XProcConstants.cx_content_type_checker, Some(params))
     checker.location = input.location.get
 
@@ -249,7 +249,7 @@ class DeclareStep(override val config: XMLCalabashRuntime,
     pipe.priority = true
     idinput.addChild(pipe)
 
-    for (source <- input.defaultInputs()) {
+    for (source <- input.defaultInputs) {
       source match {
         case pipe: Pipe =>
           idinput.addChild(new Pipe(config, idinput, pipe))
