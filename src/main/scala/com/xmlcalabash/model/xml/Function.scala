@@ -3,9 +3,10 @@ package com.xmlcalabash.model.xml
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.s9api.QName
 
-class Function(override val config: XMLCalabashConfig,
+class Function(override val config: XMLCalabashRuntime,
                override val parent: Option[Artifact]) extends Artifact(config, parent) {
   private var _fName: Option[QName] = None
   private var _fClass: Option[String] = None
@@ -21,7 +22,7 @@ class Function(override val config: XMLCalabashConfig,
       throw new RuntimeException("Function name is required")
     }
 
-    _fClass = config.functionImplementation(_fName.get)
+    _fClass = config.config.functionImplementation(_fName.get)
     if (_fClass.isEmpty) {
       throw new RuntimeException("Function implementation is unknown")
     }

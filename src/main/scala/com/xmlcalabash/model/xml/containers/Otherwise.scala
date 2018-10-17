@@ -6,9 +6,9 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.{Artifact, Documentation, PipeInfo}
-import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcXPathExpression}
 
-class Otherwise(override val config: XMLCalabashConfig,
+class Otherwise(override val config: XMLCalabashRuntime,
                 override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_otherwise) {
   override def validate(): Boolean = {
     var valid = super.validate()

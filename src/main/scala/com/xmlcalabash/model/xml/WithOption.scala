@@ -5,21 +5,21 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
-import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XProcExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.expr.parser.XPathParser
 import net.sf.saxon.s9api.QName
 import net.sf.saxon.sxpath.IndependentContext
 import net.sf.saxon.trans.XPathException
 import net.sf.saxon.value.SequenceType
 
-class WithOption(override val config: XMLCalabashConfig,
+class WithOption(override val config: XMLCalabashRuntime,
                  override val parent: Option[Artifact]) extends Artifact(config, parent) {
   private var _collection = false
   private var _name: QName = _
   private var _expression = Option.empty[XProcExpression]
   private var _as = Option.empty[SequenceType]
 
-  def this(config: XMLCalabashConfig, parent: Artifact, name: QName, expr: XProcExpression) = {
+  def this(config: XMLCalabashRuntime, parent: Artifact, name: QName, expr: XProcExpression) = {
     this(config, Some(parent))
     _name = name
     _expression = Some(expr)

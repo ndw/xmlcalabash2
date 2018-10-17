@@ -6,10 +6,11 @@ import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.Pipe
 import com.xmlcalabash.model.xml.{Artifact, AtomicStep, Documentation, Input, Output, PipeInfo, Variable}
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 
 import scala.collection.mutable
 
-class Choose(override val config: XMLCalabashConfig,
+class Choose(override val config: XMLCalabashRuntime,
              override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_choose) {
 
   override def validate(): Boolean = {

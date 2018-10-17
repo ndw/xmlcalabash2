@@ -6,7 +6,7 @@ import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Pipe}
-import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionEvaluator, SaxonExpressionOptions, XProcExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionEvaluator, SaxonExpressionOptions, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.expr.parser.XPathParser
 import net.sf.saxon.s9api.{QName, XdmValue}
 import net.sf.saxon.sxpath.IndependentContext
@@ -15,7 +15,7 @@ import net.sf.saxon.value.SequenceType
 
 import scala.collection.mutable
 
-class Variable(override val config: XMLCalabashConfig,
+class Variable(override val config: XMLCalabashRuntime,
                override val parent: Option[Artifact]) extends Artifact(config, parent) {
   private var _name: QName = new QName("", "UNINITIALIZED")
   private var _collection: Boolean = false

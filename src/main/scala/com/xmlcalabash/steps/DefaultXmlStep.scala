@@ -5,7 +5,7 @@ import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.BindingSpecification
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
+import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, XMLCalabashRuntime, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
 import com.xmlcalabash.util.XProcVarValue
 import net.sf.saxon.s9api.{QName, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
@@ -16,7 +16,7 @@ class DefaultXmlStep extends XmlStep {
   private var _location = Option.empty[Location]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[XProcDataConsumer] = None
-  protected var config: XMLCalabashConfig = _
+  protected var config: XMLCalabashRuntime = _
   protected val bindings = mutable.HashMap.empty[QName,XProcVarValue]
 
   def location: Option[Location] = _location
@@ -44,7 +44,7 @@ class DefaultXmlStep extends XmlStep {
 
   override def initialize(config: RuntimeConfiguration, params: Option[ImplParams]): Unit = {
     config match {
-      case xmlCalabash: XMLCalabashConfig =>
+      case xmlCalabash: XMLCalabashRuntime =>
         this.config = xmlCalabash
       case _ => throw XProcException.xiNotXMLCalabash()
     }

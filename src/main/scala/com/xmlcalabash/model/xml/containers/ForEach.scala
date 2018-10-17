@@ -7,8 +7,9 @@ import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
 import com.xmlcalabash.model.xml.{Artifact, Documentation, Input, PipeInfo}
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 
-class ForEach(override val config: XMLCalabashConfig,
+class ForEach(override val config: XMLCalabashRuntime,
               override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_for_each) {
 
   override def validate(): Boolean = {

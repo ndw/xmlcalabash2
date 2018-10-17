@@ -6,9 +6,9 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, Documentation, OptionDecl, PipeInfo, Variable}
-import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
 
-class When(override val config: XMLCalabashConfig,
+class When(override val config: XMLCalabashRuntime,
            override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_when) {
   private var testExpr: XProcExpression = _
 

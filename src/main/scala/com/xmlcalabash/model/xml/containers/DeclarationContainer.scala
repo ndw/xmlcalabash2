@@ -2,11 +2,12 @@ package com.xmlcalabash.model.xml.containers
 
 import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, Function, Library}
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer
 
-class DeclarationContainer(override val config: XMLCalabashConfig,
+class DeclarationContainer(override val config: XMLCalabashRuntime,
                            override val parent: Option[Artifact],
                            override val stepType: QName) extends Container(config, parent, stepType) {
   // FIXME: what about static variables referenced by declared steps?

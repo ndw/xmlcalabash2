@@ -4,10 +4,11 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.DeclarationContainer
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 
 import scala.collection.mutable.ListBuffer
 
-class Library(override val config: XMLCalabashConfig,
+class Library(override val config: XMLCalabashRuntime,
               override val parent: Option[Artifact]) extends DeclarationContainer(config, parent, XProcConstants.p_library) {
   private var _psviRequired: Option[Boolean] = None
   private var _xpathVersion: Option[String] = None

@@ -2,9 +2,10 @@ package com.xmlcalabash.util
 
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.s9api.{QName, XdmNode}
 
-class StepErrors(config: XMLCalabashConfig) {
+class StepErrors(config: XMLCalabashRuntime) {
   private val err_errors = new QName("", XProcConstants.ns_err, "errors")
   private val err_error = new QName("", XProcConstants.ns_err, "error")
   private val err_message = new QName("", XProcConstants.ns_err, "message")

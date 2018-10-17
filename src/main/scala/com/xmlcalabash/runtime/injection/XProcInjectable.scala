@@ -8,7 +8,7 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.model.xml.Injectable
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, SaxonExpressionOptions, XProcVtExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, SaxonExpressionOptions, XMLCalabashRuntime, XProcVtExpression, XProcXPathExpression}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
@@ -21,7 +21,7 @@ abstract class XProcInjectable(injectable: Injectable) {
   protected val bindings = mutable.HashMap.empty[String,Message]
   protected val _nodes: ListBuffer[XdmNode] = ListBuffer.empty[XdmNode]
   protected var _matched = false
-  protected var config: XMLCalabashConfig = _
+  protected var config: XMLCalabashRuntime = _
   protected var _stepXPath: XProcXPathExpression = _
   protected var _messageXPath: Option[XProcVtExpression] = _
   protected var _messageNodes: Option[List[XdmNode]] = _

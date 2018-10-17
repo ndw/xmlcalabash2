@@ -19,8 +19,8 @@ class DocumentRequest(val href: URI, val contentType: Option[MediaType], val dtd
     this(href, None, false)
   }
 
-  def this(href: URI, contentType: Option[MediaType]) {
-    this(href, contentType, false)
+  def this(href: URI, contentType: MediaType) {
+    this(href, Some(contentType), false)
   }
 
   def baseURI: Option[URI] = _baseURI

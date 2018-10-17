@@ -1,118 +1,73 @@
 package com.xmlcalabash.drivers
 
 import java.io.{File, PrintWriter}
+import java.net.URI
 
 import com.jafpl.exceptions.JafplException
 import com.jafpl.graph.Graph
-import com.jafpl.messages.Message
-import com.jafpl.runtime.GraphRuntime
-import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.config.{XMLCalabashConfig, XMLCalabashDebugOptions}
 import com.xmlcalabash.exceptions.{ModelException, ParseException, StepException, XProcException}
-import com.xmlcalabash.messages.XPathItemMessage
-import com.xmlcalabash.model.xml.{DeclareStep, Parser}
-import com.xmlcalabash.runtime.{ExpressionContext, PrintingConsumer, XProcMetadata, XProcXPathExpression}
-import com.xmlcalabash.util.{ArgBundle, URIUtils, XProcVarValue}
+import com.xmlcalabash.model.xml.DeclareStep
+import com.xmlcalabash.runtime.{PrintingConsumer, XProcMetadata}
+import com.xmlcalabash.util.{ArgBundle, URIUtils}
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.QName
 import org.xml.sax.InputSource
 
-import scala.collection.mutable
-
 object XmlDriver extends App {
   type OptionMap = Map[Symbol, Any]
 
-  private val xmlCalabash = XMLCalabashConfig.newInstance()
+  private val config = XMLCalabashConfig.newInstance()
 
-  val options = new ArgBundle(xmlCalabash, args.toList)
+  val options = new ArgBundle(config, args.toList)
+  val debug = new XMLCalabashDebugOptions()
 
-  val builder = xmlCalabash.processor.newDocumentBuilder()
-  val source = new SAXSource(new InputSource(options.pipeline))
-  builder.setDTDValidation(false)
-  builder.setLineNumbering(true)
-
-  val node = builder.build(source)
-
-  for (bind <- options.params.keySet) {
-    xmlCalabash.setStaticOptionValue(bind, options.params(bind).value)
+  debug.injectables = options.injectables
+  if (options.dumpXML.isDefined) {
+    debug.dumpXmlFilename = options.dumpXML.get
   }
+  if (options.graph.isDefined) {
+    debug.dumpGraphFilename = options.graph.get
+  }
+  if (options.graphBefore.isDefined) {
+    debug.dumpOpenGraphFilename = options.graphBefore.get
+  }
+  // FIXME: raw?
 
   var errored = false
   try {
-    val parser = new Parser(xmlCalabash)
+    val runtime = config.runtime(new URI(options.pipeline), debug)
 
-    for (injectable <- options.injectables) {
-      val doc = builder.build(new SAXSource(new InputSource(injectable)))
-      parser.parseInjectables(doc)
+    if (options.norun) {
+      System.exit(0)
     }
 
-    var pipeline: DeclareStep = null
-    var graph: Graph = null
-    var runtime: GraphRuntime = null
-    try {
-      pipeline = parser.parsePipeline(node)
-      graph = pipeline.pipelineGraph()
-
-      if (options.dumpXML.isDefined) {
-        dumpXML(pipeline, options.dumpXML.get)
+    for (port <- options.inputs.keySet) {
+      for (filename <- options.inputs(port)) {
+        val node = config.parse(filename, URIUtils.cwdAsURI)
+        runtime.input(port, node, XProcMetadata.XML)
       }
-
-      if (options.graphBefore.isDefined) {
-        dumpGraph(graph, options.graphBefore.get)
-      }
-
-      graph.close()
-
-      if (options.raw) {
-        dumpRaw(graph)
-      }
-
-      if (options.graph.isDefined) {
-        dumpGraph(graph, options.graph.get)
-      }
-
-      if (options.norun) {
-        System.exit(0)
-      }
-
-      runtime = new GraphRuntime(graph, xmlCalabash)
-    } catch {
-      case jafpl: JafplException =>
-        throw XProcException.mapPipelineException(jafpl)
     }
 
-    runtime.traceEventManager = xmlCalabash.traceEventManager
-
-    for (input <- pipeline.inputs) {
-      val port = input.port.get
-      if (options.inputs.contains(port)) {
-        for (fn <- options.inputs(port)) {
-          val node = xmlCalabash.parse(fn, URIUtils.cwdAsURI)
-          runtime.inputs(port).send(new XPathItemMessage(node, XProcMetadata.XML, ExpressionContext.NONE))
-        }
+    for (port <- runtime.outputs) {
+      val serOpt = runtime.serializationOptions(port)
+      val pc = if (options.outputs.contains(port)) {
+        new PrintingConsumer(runtime, serOpt, options.outputs(port))
       } else {
-        if (!input.sequence && input.defaultInputs().isEmpty) {
-          throw XProcException.xiNoBindingForPort(port)
-        }
+        new PrintingConsumer(runtime, serOpt)
       }
+      runtime.output(port, pc)
     }
 
-    for (port <- pipeline.outputPorts) {
-      xmlCalabash.trace(s"Binding output port stdout", "ExternalBindings")
-      val outputs = options.outputs.get(port)
-      val serOpt = pipeline.output(port).get.serialization
-      val pc = if (outputs.isDefined) {
-        new PrintingConsumer(xmlCalabash, serOpt, outputs.get)
-      } else {
-        new PrintingConsumer(xmlCalabash, serOpt)
-      }
-      runtime.outputs(port).setConsumer(pc)
+    for (bind <- options.params.keySet) {
+      runtime.option(bind, options.params(bind))
     }
-
-    processOptionBindings(runtime, pipeline)
 
     runtime.run()
   } catch {
     case ex: Exception =>
+      errored = true
+
       if (options.debug) {
         ex.printStackTrace()
       }
@@ -133,7 +88,7 @@ object XmlDriver extends App {
           } else {
             code match {
               case qname: QName =>
-                xmlCalabash.errorExplanation.message(qname, xproc.details)
+                config.errorExplanation.message(qname, xproc.details)
               case _ =>
                 s"Configuration error: code ($code) is not a QName"
             }
@@ -145,7 +100,7 @@ object XmlDriver extends App {
           }
 
           if (options.verbose && code.isInstanceOf[QName]) {
-            val explanation = xmlCalabash.errorExplanation.explanation(code.asInstanceOf[QName])
+            val explanation = config.errorExplanation.explanation(code.asInstanceOf[QName])
             if (explanation != "") {
               println(explanation)
             }
@@ -155,12 +110,12 @@ object XmlDriver extends App {
           val message = if (step.message.isDefined) {
             step.message.get
           } else {
-            xmlCalabash.errorExplanation.message(code)
+            config.errorExplanation.message(code)
           }
           println(s"ERROR $code $message")
 
           if (options.verbose) {
-            val explanation = xmlCalabash.errorExplanation.explanation(code)
+            val explanation = config.errorExplanation.explanation(code)
             if (explanation != "") {
               println(explanation)
             }
@@ -171,64 +126,10 @@ object XmlDriver extends App {
           ex.printStackTrace()
           throw ex
       }
-      errored = true
   }
 
   if (errored) {
     System.exit(1)
-  }
-
-  // ===========================================================================================
-
-  private def processOptionBindings(runtime: GraphRuntime, pipeline: DeclareStep): Unit = {
-    val bindingsMap = mutable.HashMap.empty[String, Message]
-    for (bind <- pipeline.bindings) {
-      val jcbind = bind.getClarkName
-      if (options.params.contains(bind)) {
-        xmlCalabash.trace(s"Binding option $bind to '${options.params(bind)}'", "ExternalBindings")
-        val value = options.params(bind)
-        val msg = new XPathItemMessage(value.value, XProcMetadata.XML, value.context)
-        runtime.setOption(jcbind, value)
-        bindingsMap.put(jcbind, msg)
-      } else {
-        xmlCalabash.trace(s"No binding provided for option $bind; using default", "ExternalBindings")
-        val decl = pipeline.bindingDeclaration(bind)
-        if (decl.isDefined) {
-          if (decl.get.static) {
-            // nop
-          } else {
-            if (decl.get.select.isDefined) {
-              val context = new ExpressionContext(None, options.inScopeNamespaces, None)
-              val expr = new XProcXPathExpression(context, decl.get.select.get)
-              val msg = xmlCalabash.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
-              val eval = msg.asInstanceOf[XPathItemMessage].item
-              runtime.setOption(jcbind, new XProcVarValue(eval, context))
-              bindingsMap.put(jcbind, msg)
-            } else {
-              if (decl.get.required) {
-                throw XProcException.staticError(18, bind.toString, pipeline.location)
-              } else {
-                val context = new ExpressionContext(None, options.inScopeNamespaces, None)
-                val expr = new XProcXPathExpression(context, "()")
-                val msg = xmlCalabash.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
-                val eval = msg.asInstanceOf[XPathItemMessage].item
-                runtime.setOption(jcbind, new XProcVarValue(eval, context))
-                bindingsMap.put(jcbind, msg)
-              }
-            }
-          }
-        } else {
-          println("No decl for " + bind + " ???")
-        }
-      }
-    }
-
-    for (bind <- options.params.keySet) {
-      val jcbind = bind.getClarkName
-      if (!bindingsMap.contains(jcbind)) {
-        println(s"Ignoring unused binding for $bind")
-      }
-    }
   }
 
   // ===========================================================================================

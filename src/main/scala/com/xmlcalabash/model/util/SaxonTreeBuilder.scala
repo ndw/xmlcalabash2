@@ -4,6 +4,7 @@ import java.net.URI
 
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.Controller
 import net.sf.saxon.`type`.{BuiltInType, SchemaType, SimpleType}
@@ -25,6 +26,10 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   protected var receiver: Receiver = _
   private var _inDocument = false
   protected var seenRoot = false
+
+  def this(runtime: XMLCalabashRuntime) {
+    this(runtime.config)
+  }
 
   def result: XdmNode = destination.getXdmNode
 

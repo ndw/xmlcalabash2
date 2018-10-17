@@ -70,7 +70,7 @@ class Xslt extends DefaultXmlStep {
       version = Option(root.get.getAttributeValue(_version))
     }
 
-    val runtime = this.config
+    val runtime = this.config.config
     val processor = runtime.processor
     val config = processor.getUnderlyingConfiguration
     // FIXME: runtime.getConfigurer().getSaxonConfigurer().configXSLT(config);
@@ -139,7 +139,7 @@ class Xslt extends DefaultXmlStep {
 
       secondaryResults.put(baseURI.toASCIIString, xdmResult)
 
-      val receiver = xdmResult.getReceiver(config.processor.getUnderlyingConfiguration)
+      val receiver = xdmResult.getReceiver(config.config.processor.getUnderlyingConfiguration)
       receiver.setSystemId(baseURI.toASCIIString)
       receiver
     }

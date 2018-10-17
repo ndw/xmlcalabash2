@@ -1,16 +1,11 @@
 package com.xmlcalabash.testers
 
-import com.jafpl.exceptions.JafplException
-import com.jafpl.messages.{ItemMessage, Message}
-import com.jafpl.runtime.GraphRuntime
+import com.jafpl.messages.ItemMessage
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.drivers.XmlDriver.xmlCalabash
-import com.xmlcalabash.exceptions.{ModelException, StepException, TestException, XProcException}
-import com.xmlcalabash.messages.XPathItemMessage
-import com.xmlcalabash.model.xml.{DeclareStep, Parser}
-import com.xmlcalabash.runtime.{BufferingConsumer, DevNullConsumer, ExpressionContext, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.exceptions.{TestException, XProcException}
+import com.xmlcalabash.runtime.{BufferingConsumer, ExpressionContext, XProcMetadata}
 import com.xmlcalabash.util.{Schematron, XProcVarValue}
-import net.sf.saxon.s9api.{QName, XdmItem, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -21,7 +16,7 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
   private var _pipeline = Option.empty[XdmNode]
   private var _schematron = Option.empty[XdmNode]
   private var _inputs   = mutable.HashMap.empty[String, ListBuffer[XdmNode]]
-  private var _bindings = mutable.HashMap.empty[String, XdmValue]
+  private var _bindings = mutable.HashMap.empty[QName, XdmValue]
   private var _tests    = Option.empty[String]
   private val _test     = new QName("", "test")
 
@@ -54,7 +49,7 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
   }
 
   def addBinding(optname: QName, item: XdmValue): Unit = {
-    _bindings.put(optname.getClarkName, item)
+    _bindings.put(optname, item)
   }
 
   // Return None if the test passed, otherwise return the failure error code
@@ -63,44 +58,24 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
       throw new TestException("No pipeline specified")
     }
 
-    val processor = runtimeConfig.processor
-    val builder = processor.newDocumentBuilder()
-    var runtime: GraphRuntime = null
-
     try {
-      val parser = new Parser(runtimeConfig)
-      val pipeline = parser.parsePipeline(_pipeline.get)
-      val graph = pipeline.pipelineGraph()
-      graph.close()
-
-      runtime = new GraphRuntime(graph, runtimeConfig)
-
-      for (port <- pipeline.inputPorts) {
-        if (_inputs.contains(port)) {
-          for (item <- _inputs(port)) {
-            runtime.inputs(port).send(new ItemMessage(item, new XProcMetadata()))
-          }
-        } else {
-          //logger.warn(s"No inputs specified for $port")
+      val runtime = runtimeConfig.runtime(_pipeline.get)
+      for (port <- _inputs.keySet) {
+        for (item <- _inputs(port)) {
+          runtime.input(port, new ItemMessage(item, new XProcMetadata()))
         }
       }
 
-      var result = Option.empty[BufferingConsumer]
-      for (port <- pipeline.outputPorts) {
-        if (port == "result") {
-          result = Some(new BufferingConsumer())
-          runtime.outputs(port).setConsumer(result.get)
-        } else {
-          logger.warn(s"Unexpected output ignored: $port")
-          runtime.outputs(port).setConsumer(new DevNullConsumer())
-        }
-      }
+      val result = new BufferingConsumer()
+      runtime.output("result", result)
 
-      processOptionBindings(runtime, pipeline)
+      for (bind <- _bindings.keySet) {
+        runtime.option(bind, new XProcVarValue(_bindings(bind), ExpressionContext.NONE))
+      }
 
       runtime.run()
 
-      val resultDoc = result.get.items.head.asInstanceOf[XdmNode]
+      val resultDoc = result.items.head.asInstanceOf[XdmNode]
 
       //println(resultDoc)
 
@@ -130,10 +105,6 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
       }
     } catch {
       case xproc: XProcException =>
-        if (runtime != null) {
-          runtime.stop
-        }
-
         val code = xproc.code
         val message = if (xproc.message.isDefined) {
           xproc.message.get
@@ -154,50 +125,7 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
 
         new TestResult(xproc)
       case ex: Exception =>
-        if (runtime != null) {
-          runtime.stop
-        }
-        ex.printStackTrace(Console.err)
         new TestResult(ex)
-    }
-  }
-
-  private def processOptionBindings(runtime: GraphRuntime, pipeline: DeclareStep): Unit = {
-    val bindingsMap = mutable.HashMap.empty[String, Message]
-    for (bind <- pipeline.bindings) {
-      val jcbind = bind.getClarkName
-
-      if (_bindings.contains(bind.getClarkName)) {
-        val value = _bindings(jcbind)
-        val msg = new XPathItemMessage(value, XProcMetadata.XML, ExpressionContext.NONE)
-        runtime.setOption(jcbind, value)
-        bindingsMap.put(jcbind, msg)
-      } else {
-        val decl = pipeline.bindingDeclaration(bind)
-        if (decl.isDefined) {
-          if (decl.get.select.isDefined) {
-            val context = ExpressionContext.NONE // new ExpressionContext(None, options.inScopeNamespaces, None)
-            val expr = new XProcXPathExpression(context, decl.get.select.get)
-            val msg = runtimeConfig.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
-            val eval = msg.asInstanceOf[XPathItemMessage].item
-            runtime.setOption(jcbind, new XProcVarValue(eval, context))
-            bindingsMap.put(jcbind, msg)
-          } else {
-            if (decl.get.required) {
-              throw XProcException.staticError(18, bind.toString, pipeline.location)
-            } else {
-              val context = ExpressionContext.NONE
-              val expr = new XProcXPathExpression(context, "()")
-              val msg = runtimeConfig.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
-              val eval = msg.asInstanceOf[XPathItemMessage].item
-              runtime.setOption(jcbind, new XProcVarValue(eval, context))
-              bindingsMap.put(jcbind, msg)
-            }
-          }
-        } else {
-          println("No decl for " + bind + " ???")
-        }
-      }
     }
   }
 }

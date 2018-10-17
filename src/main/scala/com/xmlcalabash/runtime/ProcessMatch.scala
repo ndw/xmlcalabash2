@@ -16,7 +16,7 @@ import scala.collection.immutable.HashMap
 import scala.collection.mutable.ListBuffer
 import scala.collection.JavaConverters._
 
-class ProcessMatch(runtime: XMLCalabashConfig, processor: ProcessMatchingNodes, location: Option[Location]) extends SaxonTreeBuilder(runtime) {
+class ProcessMatch(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes, location: Option[Location]) extends SaxonTreeBuilder(runtime) {
   private val SAW_ELEMENT = 1
   private val SAW_WHITESPACE = 2
   private val SAW_TEXT = 4

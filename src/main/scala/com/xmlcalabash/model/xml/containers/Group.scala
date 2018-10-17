@@ -5,8 +5,9 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.{Artifact, Documentation, PipeInfo}
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 
-class Group(override val config: XMLCalabashConfig,
+class Group(override val config: XMLCalabashRuntime,
             override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_group) {
 
   override def validate(): Boolean = {

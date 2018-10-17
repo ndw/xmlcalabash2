@@ -5,7 +5,7 @@ import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.BindingSpecification
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
+import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, XMLCalabashRuntime, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
 import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import net.sf.saxon.s9api.{QName, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
@@ -27,7 +27,7 @@ class ContentTypeChecker() extends XmlStep {
   private var _location = Option.empty[Location]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[XProcDataConsumer] = None
-  protected var config: XMLCalabashConfig = _
+  protected var config: XMLCalabashRuntime = _
   protected val bindings = mutable.HashMap.empty[QName,XProcVarValue]
   protected var allowedTypes: List[MediaType] = _
   protected var portName: String = _
@@ -70,7 +70,7 @@ class ContentTypeChecker() extends XmlStep {
 
   override def initialize(config: RuntimeConfiguration, params: Option[ImplParams]): Unit = {
     config match {
-      case xmlCalabash: XMLCalabashConfig => this.config = xmlCalabash
+      case xmlCalabash: XMLCalabashRuntime => this.config = xmlCalabash
       case _ => throw XProcException.xiNotXMLCalabash()
     }
 

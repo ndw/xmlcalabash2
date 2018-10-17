@@ -2,17 +2,16 @@ package com.xmlcalabash.config
 
 import java.net.URI
 
-import com.jafpl.graph.Location
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.util.{ErrorListener, TraceEventManager}
-import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode}
 import com.xmlcalabash.functions.{Cwd, DocumentProperties, DocumentPropertiesDocument, DocumentProperty, ForceQNameKeys, InjElapsed, InjId, InjName, InjType, SystemProperty}
 import com.xmlcalabash.model.util.ExpressionParser
-import com.xmlcalabash.model.xml.Artifact
+import com.xmlcalabash.model.xml.{DeclareStep, Parser}
 import com.xmlcalabash.parsers.XPathParser
-import com.xmlcalabash.runtime.{ImplParams, SaxonExpressionEvaluator, StepWrapper, XmlStep}
+import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XMLCalabashRuntime}
 import com.xmlcalabash.sbt.BuildInfo
-import com.xmlcalabash.util.URIUtils
+import com.xmlcalabash.util.{MediaType, URIUtils}
 import javax.xml.transform.URIResolver
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
@@ -42,7 +41,6 @@ class XMLCalabashConfig extends RuntimeConfiguration {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _expressionEvaluator = new SaxonExpressionEvaluator(this)
   private val _collections = mutable.HashMap.empty[String, List[XdmNode]]
-  private val idMap = mutable.HashMap.empty[String,Artifact]
   private val staticOptionBindings = mutable.HashMap.empty[QName, XdmValue]
 
   private var closed = false
@@ -50,7 +48,6 @@ class XMLCalabashConfig extends RuntimeConfiguration {
   private var _errorListener: ErrorListener = _
   private var _stepImplClasses = mutable.HashMap.empty[QName,String]
   private var _funcImplClasses = mutable.HashMap.empty[QName,String]
-  private var _signatures: Signatures = _
   private var _traceEventManager: TraceEventManager = _
   private var _uriResolver: URIResolver = _
   private var _entityResolver: EntityResolver = _
@@ -92,6 +89,51 @@ class XMLCalabashConfig extends RuntimeConfiguration {
     _processor = proc
   }
 
+  def runtime(uri: URI): XMLCalabashRuntime = {
+    runtime(uri, new XMLCalabashDebugOptions())
+  }
+
+  def runtime(uri: URI, debug: XMLCalabashDebugOptions): XMLCalabashRuntime = {
+    val request = new DocumentRequest(uri, MediaType.XML)
+    val response = documentManager.parse(request)
+    runtime(response.value.asInstanceOf[XdmNode])
+  }
+
+  def runtime(node: XdmNode): XMLCalabashRuntime = {
+    runtime(node, new XMLCalabashDebugOptions())
+  }
+
+  def runtime(node: XdmNode, debug: XMLCalabashDebugOptions): XMLCalabashRuntime = {
+    // There's an ugly dance here to initialize two co-dependent structures.
+    // It's all hidden inside but it's still ugly.
+    val runtime = new XMLCalabashRuntime(this, debug)
+    val parser = new Parser(runtime)
+
+    val xmlbuilder = processor.newDocumentBuilder()
+    val stream = getClass.getResourceAsStream("/standard-steps.xpl")
+    val source = new SAXSource(new InputSource(stream))
+    xmlbuilder.setDTDValidation(false)
+    xmlbuilder.setLineNumbering(true)
+    val standardSteps = xmlbuilder.build(source)
+
+    runtime.signatures = parser.signatures(standardSteps)
+
+    if (debug.injectables.nonEmpty) {
+      val builder = processor.newDocumentBuilder()
+      builder.setDTDValidation(false)
+      builder.setLineNumbering(true)
+      for (injectable <- debug.injectables) {
+        val doc = builder.build(new SAXSource(new InputSource(injectable)))
+        parser.parseInjectables(doc)
+      }
+    }
+
+    val pipeline: DeclareStep = parser.parsePipeline(node)
+    runtime.init(pipeline)
+
+    runtime
+  }
+
   def errorListener: ErrorListener = {
     if (_errorListener == null) {
       throw new ConfigurationException(ExceptionCode.CFGINCOMPLETE, "errorListener")
@@ -101,17 +143,6 @@ class XMLCalabashConfig extends RuntimeConfiguration {
   def errorListener_=(listener: ErrorListener): Unit = {
     checkClosed()
     _errorListener = listener
-  }
-
-  def signatures: Signatures = {
-    if (_signatures == null) {
-      throw new ConfigurationException(ExceptionCode.CFGINCOMPLETE, "signatures")
-    }
-    _signatures
-  }
-  def signatures_=(signatures: Signatures): Unit = {
-    checkClosed()
-    _signatures = signatures
   }
 
   def traceEventManager: TraceEventManager = {
@@ -251,32 +282,6 @@ class XMLCalabashConfig extends RuntimeConfiguration {
 
   def atomicStepImplementation(stepType: QName): Option[String] = _stepImplClasses.get(stepType)
 
-  // ==============================================================================================
-
-  def stepImplementation(stepType: QName, location: Location): StepWrapper = {
-    stepImplementation(stepType, location, None)
-  }
-
-  def stepImplementation(stepType: QName, location: Location, implParams: Option[ImplParams]): StepWrapper = {
-    if (!_signatures.stepTypes.contains(stepType)) {
-      throw new ModelException(ExceptionCode.NOTYPE, stepType.toString, location)
-    }
-
-    val sig = _signatures.step(stepType)
-    val implClass = sig.implementation
-    if (implClass.isEmpty) {
-      throw new ModelException(ExceptionCode.NOIMPL, stepType.toString, location)
-    }
-
-    val klass = Class.forName(implClass.head).newInstance()
-    klass match {
-      case step: XmlStep =>
-        new StepWrapper(step, sig)
-      case _ =>
-        throw new ModelException(ExceptionCode.IMPLNOTSTEP, stepType.toString, location)
-    }
-  }
-
   // FIXME: Should this be a factory, or should XPathParser be reusable?
   def expressionParser: ExpressionParser = {
     new XPathParser(this)
@@ -402,13 +407,4 @@ class XMLCalabashConfig extends RuntimeConfiguration {
 
     builder.build(source)
   }
-
-  // ==============================================================================================
-
-  def addNode(id: String, artifact: Artifact): Unit = {
-    idMap.put(id, artifact)
-  }
-
-  def node(id: String): Option[Artifact] = idMap.get(id)
-
 }

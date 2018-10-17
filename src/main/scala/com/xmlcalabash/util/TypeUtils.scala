@@ -6,7 +6,7 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.parsers.SequenceBuilder
-import com.xmlcalabash.runtime.ExpressionContext
+import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime}
 import jdk.nashorn.api.scripting.ScriptObjectMirror
 import net.sf.saxon.s9api._
 
@@ -91,7 +91,7 @@ object TypeUtils {
   }
 }
 
-class TypeUtils(val config: XMLCalabashConfig) {
+class TypeUtils(val config: XMLCalabashRuntime) {
   val typeFactory = new ItemTypeFactory(config.processor)
 
   def castAtomicAs(value: XdmAtomicValue, xsdtype: Option[QName], context: ExpressionContext): XdmAtomicValue = {

@@ -10,7 +10,7 @@ import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Choose, Container, ForEach, Group, Try, Viewport, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
-import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, NodeLocation, XProcExpression, XProcVtExpression, XmlStep}
+import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, NodeLocation, XMLCalabashRuntime, XProcExpression, XProcVtExpression, XmlStep}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.expr.parser.XPathParser
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
@@ -22,7 +22,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-abstract class Artifact(val config: XMLCalabashConfig, val parent: Option[Artifact]) {
+abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artifact]) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected[xml] var id: Long = UniqueId.nextId
   protected[xml] val attributes = mutable.HashMap.empty[QName, String]

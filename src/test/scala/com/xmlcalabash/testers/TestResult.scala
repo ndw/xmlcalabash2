@@ -8,7 +8,7 @@ import net.sf.saxon.s9api.QName
 
 class TestResult(pass: Boolean) {
   private var _passed = pass
-  private var _skipped = false
+  private var _skipped: Option[String] = None
   private var _message = ""
   private var _baseURI = Option.empty[URI]
   private var _errQName = Option.empty[QName]
@@ -23,10 +23,10 @@ class TestResult(pass: Boolean) {
     _passed = pass
   }
 
-  def skipped: Boolean = _skipped
+  def skipped: Option[String] = _skipped
 
-  def skipped_=(skip: Boolean): Unit = {
-    _skipped = skip
+  def skipped_=(reason: String): Unit = {
+    _skipped = Some(reason)
   }
 
   def baseURI: Option[URI] = _baseURI

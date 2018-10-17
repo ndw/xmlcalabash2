@@ -50,16 +50,6 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
     configuration.documentManager = new DefaultDocumentManager(configuration)
 
     loadProperties(configuration)
-
-    val xmlbuilder = configuration.processor.newDocumentBuilder()
-    val stream = getClass.getResourceAsStream("/standard-steps.xpl")
-    val source = new SAXSource(new InputSource(stream))
-    xmlbuilder.setDTDValidation(false)
-    xmlbuilder.setLineNumbering(true)
-    val node = xmlbuilder.build(source)
-
-    val parser = new Parser(configuration)
-    configuration.signatures = parser.signatures(node)
   }
 
   private def loadProperties(configuration: XMLCalabashConfig): Unit = {

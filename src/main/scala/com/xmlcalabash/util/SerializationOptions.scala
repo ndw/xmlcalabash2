@@ -2,9 +2,10 @@ package com.xmlcalabash.util
 
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.s9api.{QName, Serializer, XdmAtomicValue}
 
-class SerializationOptions(config: XMLCalabashConfig, opts: Map[QName, XdmAtomicValue]) {
+class SerializationOptions(config: XMLCalabashRuntime, opts: Map[QName, XdmAtomicValue]) {
   private val propertyMap: Map[QName, Serializer.Property] = Map(
     XProcConstants._byte_order_mark -> Serializer.Property.BYTE_ORDER_MARK,
     XProcConstants._cdata_section_elements -> Serializer.Property.CDATA_SECTION_ELEMENTS,
@@ -67,8 +68,8 @@ class SerializationOptions(config: XMLCalabashConfig, opts: Map[QName, XdmAtomic
     XProcConstants._version -> version,
   )
 
-  def this(config: XMLCalabashConfig) = {
-    this(config, Map())
+  def this(config: XMLCalabashRuntime) = {
+    this(config, Map.empty[QName,XdmAtomicValue])
   }
 
   def setOutputProperties(serializer: Serializer): Unit = {

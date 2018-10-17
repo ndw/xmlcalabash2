@@ -6,14 +6,14 @@ import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Catch, Choose, DeclarationContainer, Finally, ForEach, Group, Otherwise, Try, When, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XProcVtExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XMLCalabashRuntime, XProcVtExpression, XProcXPathExpression}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ListBuffer
 
-class Parser(config: XMLCalabashConfig) {
+class Parser(val config: XMLCalabashRuntime) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private var exception: Option[Throwable] = None
   private val injectables = ListBuffer.empty[Injectable]

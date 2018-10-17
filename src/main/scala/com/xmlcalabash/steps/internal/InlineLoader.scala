@@ -138,8 +138,8 @@ class InlineLoader(private val baseURI: Option[URI],
       val result = builder.result
 
       val baos = new ByteArrayOutputStream()
-      val serializer = config.get.processor.newSerializer(baos)
-      S9Api.serialize(config.get, result, serializer)
+      val serializer = config.get.config.processor.newSerializer(baos)
+      S9Api.serialize(config.get.config, result, serializer)
       val stream = new ByteArrayInputStream(baos.toByteArray)
       // FIXME: it's bogus that I have to makeup a DocumentRequest to call parseHtml
       val request = new DocumentRequest(baseURI.getOrElse(new URI("")), Some(contentType), false)

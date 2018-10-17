@@ -10,15 +10,15 @@ import com.xmlcalabash.model.util.{UniqueId, XProcConstants}
 import com.xmlcalabash.util.{MediaType, S9Api, SerializationOptions}
 import net.sf.saxon.s9api.{Serializer, XdmValue}
 
-class PrintingConsumer private(config: XMLCalabashConfig, serialization: SerializationOptions, outputs: Option[List[String]]) extends DataConsumer {
+class PrintingConsumer private(config: XMLCalabashRuntime, serialization: SerializationOptions, outputs: Option[List[String]]) extends DataConsumer {
   private val _id = UniqueId.nextId.toString
   private var index = 0
 
-  def this(config: XMLCalabashConfig, serialization: SerializationOptions) = {
+  def this(config: XMLCalabashRuntime, serialization: SerializationOptions) = {
     this(config, serialization, None)
   }
 
-  def this(config: XMLCalabashConfig, serialization: SerializationOptions, outputs: List[String]) = {
+  def this(config: XMLCalabashRuntime, serialization: SerializationOptions, outputs: List[String]) = {
     this(config, serialization, Some(outputs))
   }
 
@@ -44,7 +44,7 @@ class PrintingConsumer private(config: XMLCalabashConfig, serialization: Seriali
             }
 
             item.item match {
-              case value: XdmValue => S9Api.serialize(config, value, serializer)
+              case value: XdmValue => S9Api.serialize(config.config, value, serializer)
             }
             println(stream.toString("UTF-8"))
           } else if (ctype.textContentType) {

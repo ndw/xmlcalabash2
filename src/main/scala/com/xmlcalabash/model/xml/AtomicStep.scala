@@ -5,19 +5,19 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.model.xml.containers.DeclarationContainer
-import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, StepWrapper, XProcExpression, XProcVtExpression, XProcXPathExpression, XmlStep}
+import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, StepWrapper, XMLCalabashRuntime, XProcExpression, XProcVtExpression, XProcXPathExpression, XmlStep}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class AtomicStep(override val config: XMLCalabashConfig,
+class AtomicStep(override val config: XMLCalabashRuntime,
                  override val parent: Option[Artifact],
                  override val stepType: QName,
                  params: Option[ImplParams]) extends PipelineStep(config, parent, stepType) {
   protected[xml] val options = mutable.HashMap.empty[QName, XProcExpression]
 
-  def this(config: XMLCalabashConfig, parent: Option[Artifact], stepType: QName) = {
+  def this(config: XMLCalabashRuntime, parent: Option[Artifact], stepType: QName) = {
     this(config, parent, stepType, None)
   }
 

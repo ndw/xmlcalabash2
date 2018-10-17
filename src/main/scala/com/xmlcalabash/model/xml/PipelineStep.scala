@@ -6,11 +6,12 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.Pipe
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
 
-class PipelineStep(override val config: XMLCalabashConfig,
+class PipelineStep(override val config: XMLCalabashRuntime,
                    override val parent: Option[Artifact],
                    val stepType: QName) extends Artifact(config, parent) {
   protected var _name: Option[String] = None

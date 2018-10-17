@@ -81,6 +81,7 @@ object XProcException {
   def xdInvalidJson(expr: String, message: String, location: Option[Location]): XProcException = dynamicError(57, List(expr,message), location)
   def xdMismatchedContentType(declType: MediaType, propType: MediaType, location: Option[Location]): XProcException = dynamicError(62, List(declType,propType), location)
 
+  def xsLoop(step: String, port: String, location: Option[Location]): XProcException = staticError(1, List(step, port), location)
   //def xsUnconnectedInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(3, List(step,port), location)
   def xsUnconnectedInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(3, List(step,port), location)
   def xsDupOptionname(location: Option[Location], name: String): XProcException = staticError(4, name, location)
@@ -96,6 +97,7 @@ object XProcException {
   def xsElementNotAllowed(location: Option[Location], element: QName): XProcException = staticError(44, List(element, "element is not allowed here"), location)
 
   def xsTextNotAllowed(location: Option[Location], text: String): XProcException = staticError(999, text, location)
+  def xsMissingRequiredInput(port: String, location: Option[Location]): XProcException = staticError(998, port, location)
 
   def xsInvalidNodeType(nodeKind: String, location: Option[Location]): XProcException = staticError(77, nodeKind, location)
   def xsBadTypeValue(name: String, reqdType: String): XProcException = staticError(77, List(name, reqdType), None)

@@ -5,12 +5,12 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, Documentation, PipeInfo}
-import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer
 
-class Catch(override val config: XMLCalabashConfig,
+class Catch(override val config: XMLCalabashRuntime,
             override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_catch) {
   private val _code = new QName("","code")
   private var codes = ListBuffer.empty[QName]

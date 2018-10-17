@@ -5,19 +5,19 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Pipe}
-import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
 import com.xmlcalabash.util.MediaType
 
 import scala.collection.mutable.ListBuffer
 
-class Input(override val config: XMLCalabashConfig,
+class Input(override val config: XMLCalabashRuntime,
             override val parent: Option[Artifact]) extends IOPort(config, parent) {
   protected var _select: Option[String] = None
   protected var _expression = Option.empty[XProcExpression]
   protected var _contentTypes = ListBuffer.empty[MediaType]
   protected var _defaultInputs = ListBuffer.empty[DataSource]
 
-  protected[xml] def this(config: XMLCalabashConfig, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
+  protected[xml] def this(config: XMLCalabashRuntime, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
     this(config, Some(parent))
     _port = Some(port)
     _primary = Some(primary)
@@ -42,11 +42,11 @@ class Input(override val config: XMLCalabashConfig,
     }
   }
 
-  def contentTypes(): List[MediaType] = {
+  def contentTypes: List[MediaType] = {
     _contentTypes.toList
   }
 
-  def defaultInputs(): List[DataSource] = {
+  def defaultInputs: List[DataSource] = {
     _defaultInputs.toList
   }
 
@@ -88,7 +88,7 @@ class Input(override val config: XMLCalabashConfig,
     // actually in the _defaultInputs list, not the children!
 
     var hasDataSources = false
-    for (ds <- defaultInputs()) {
+    for (ds <- defaultInputs) {
       hasDataSources = true
       if (ds.isInstanceOf[Pipe]) {
         throw XProcException.xsElementNotAllowed(ds.location, XProcConstants.p_pipe)

@@ -7,12 +7,13 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.{Container, DeclarationContainer, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 import com.xmlcalabash.steps.internal.ContentTypeParams
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable.ListBuffer
 
-class DeclareStep(override val config: XMLCalabashConfig,
+class DeclareStep(override val config: XMLCalabashRuntime,
                   override val parent: Option[Artifact]) extends DeclarationContainer(config, parent, XProcConstants.p_declare_step) {
   private var _type: Option[QName] = None
   private var _psviRequired: Option[Boolean] = None
@@ -357,8 +358,8 @@ class DeclareStep(override val config: XMLCalabashConfig,
 
   def signature: StepSignature = {
     val stepSig = new StepSignature(declaredType.get)
-    if (config.atomicStepImplementation(declaredType.get).isDefined) {
-      stepSig.implementation = config.atomicStepImplementation(declaredType.get).get
+    if (config.config.atomicStepImplementation(declaredType.get).isDefined) {
+      stepSig.implementation = config.config.atomicStepImplementation(declaredType.get).get
     }
     for (child <- children) {
       child match {

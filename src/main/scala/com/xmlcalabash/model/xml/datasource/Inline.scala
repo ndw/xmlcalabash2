@@ -5,7 +5,7 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, Input, OptionDecl, Output, Variable, WithInput, WithOption}
-import com.xmlcalabash.runtime.ExpressionContext
+import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime}
 import com.xmlcalabash.steps.internal.InlineLoader
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmNode}
@@ -13,7 +13,7 @@ import net.sf.saxon.s9api.{QName, XdmNode}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Inline(override val config: XMLCalabashConfig,
+class Inline(override val config: XMLCalabashRuntime,
              override val parent: Option[Artifact],
              val isImplicit: Boolean,
              val nodes: List[XdmNode]) extends DataSource(config, parent) {
@@ -25,11 +25,11 @@ class Inline(override val config: XMLCalabashConfig,
   private var _contentType = Option.empty[MediaType]
   protected[xml] val variableRefs = mutable.HashSet.empty[QName]
 
-  def this(config: XMLCalabashConfig, parent: Option[Artifact], nodes: List[XdmNode]) {
+  def this(config: XMLCalabashRuntime, parent: Option[Artifact], nodes: List[XdmNode]) {
     this(config, parent, false, nodes)
   }
 
-  def this(config: XMLCalabashConfig, parent: Artifact, inline: Inline) {
+  def this(config: XMLCalabashRuntime, parent: Artifact, inline: Inline) {
     this(config, Some(parent), inline.isImplicit, inline.nodes)
     _excludeInlinePrefixes = inline._excludeInlinePrefixes
     _expandText = inline._expandText

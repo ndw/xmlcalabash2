@@ -6,7 +6,7 @@ import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.Container
-import com.xmlcalabash.runtime.{ExpressionContext, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcXPathExpression}
 import com.xmlcalabash.util.{MediaType, SerializationOptions, TypeUtils}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap}
 
@@ -14,7 +14,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Output(override val config: XMLCalabashConfig,
+class Output(override val config: XMLCalabashRuntime,
              override val parent: Option[Artifact]) extends IOPort(config, parent) {
   private var serOpts = new SerializationOptions(config)
   protected var _contentTypes = ListBuffer.empty[MediaType]
@@ -22,7 +22,7 @@ class Output(override val config: XMLCalabashConfig,
   def serialization: SerializationOptions = serOpts
   def contentTypes: List[MediaType] = _contentTypes.toList
 
-  protected[xml] def this(config: XMLCalabashConfig, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
+  protected[xml] def this(config: XMLCalabashRuntime, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
     this(config, Some(parent))
     _port = Some(port)
     _primary = Some(primary)

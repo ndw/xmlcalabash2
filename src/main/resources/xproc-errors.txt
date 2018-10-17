@@ -63,6 +63,9 @@ Invalid JSON: “$1” ($2).
 XD0062
 Mismatched content types: “$1” is not the same as “$2”.
 
+XS0001
+Pipeline contains a loop from “$2” on “$1”.
+
 XS0003
 No connection provided for input port ‘$2’ on step ‘$1’.
 

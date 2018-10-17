@@ -35,6 +35,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
   private val _tests = new QName("", "tests")
   private val _error = new QName("", "error")
   private val _failure = new QName("", "failure")
+  private val _skipped = new QName("", "skipped")
   private val _failures = new QName("", "failures")
   private val _message = new QName("", "message")
   private val _type = new QName("", "type")
@@ -61,6 +62,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
   private val _expected = new QName("", "expected")
   private val _code = new QName("", "code")
   private val _when = new QName("", "when")
+  private val _features = new QName("", "features")
 
   private val processor = runtimeConfig.processor
   private val builder = processor.newDocumentBuilder()
@@ -99,6 +101,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
 
     var count = 0
     var failures = 0
+    var skip = 0
     for (fn <- testFiles) {
       count += 1
       logger.info(s"Running $count of ${testFiles.length}: $fn")
@@ -139,7 +142,15 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
           junit.startContent()
 
           for (result <- results) {
-            if (result.failed) {
+            if (result.passed) {
+              if (result.skipped.isDefined) {
+                skip += 1
+                junit.addStartElement(_skipped)
+                junit.startContent()
+                junit.addText(result.skipped.get)
+                junit.addEndElement()
+              }
+            } else {
               failures += 1
               logger.info(s"**** FAIL **** $failures **** ")
               if (result.baseURI.isDefined) {
@@ -209,6 +220,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
     wrapper.addAttribute(_hostname, InetAddress.getLocalHost.getHostName)
     wrapper.addAttribute(_tests, count.toString)
     wrapper.addAttribute(_failures, "0")
+    wrapper.addAttribute(_skipped, skip.toString)
     wrapper.addAttribute(_errors, failures.toString)
 
     wrapper.startContent()
@@ -354,7 +366,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
       val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message], None)
       if (!run) {
         val result = new TestResult(true, "Skipped test suite")
-        result.skipped = true
+        result.skipped = s"When '$when' evaluated to false"
         resultList += result
         return resultList
       }
@@ -410,7 +422,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
       if (!run) {
         logger.info("Skipping test-div")
         val result = new TestResult(true, "Skipped test-div")
-        result.skipped = true
+        result.skipped = s"When '$when' evaluated to false"
         resultList += result
         return resultList
       }
@@ -462,7 +474,17 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
       if (!run) {
         val result = new TestResult(true) // skipped counts as a pass...
         result.baseURI = node.getBaseURI
-        result.skipped = true
+        result.skipped = s"When '$when' evaluated to false"
+        return result
+      }
+    }
+
+    val features = node.getAttributeValue(_features)
+    if (features != null) {
+      if (features.contains("lazy-eval")) {
+        val result = new TestResult(true) // skipped counts as a pass...
+        result.baseURI = node.getBaseURI
+        result.skipped = "The 'lazy-eval' feature is not supported"
         return result
       }
     }

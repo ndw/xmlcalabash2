@@ -115,8 +115,8 @@ class CastContentType() extends DefaultXmlStep {
 
     if (contentType.xmlContentType) {
       val baos = new ByteArrayOutputStream()
-      val serializer = config.processor.newSerializer(baos)
-      S9Api.serialize(config, item.get.asInstanceOf[XdmNode], serializer)
+      val serializer = config.config.processor.newSerializer(baos)
+      S9Api.serialize(config.config, item.get.asInstanceOf[XdmNode], serializer)
 
       val builder = new SaxonTreeBuilder(config)
 

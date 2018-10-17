@@ -8,14 +8,14 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.ValueParser
-import com.xmlcalabash.runtime.{ExpressionContext, XProcVtExpression, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcMetadata, XProcVtExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.{QName, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class Injectable(val config: XMLCalabashConfig,
+class Injectable(val config: XMLCalabashRuntime,
                  val id: String,
                  val itype: QName,
                  val stepXPath: XProcXPathExpression,
