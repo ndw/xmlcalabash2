@@ -1,3 +1,5 @@
+import java.io.{BufferedReader, InputStreamReader}
+
 name         := "XML Calabash"
 organization := "com.xmlcalabash"
 version      := "1.9.9"
@@ -9,7 +11,19 @@ buildInfoKeys ++= Seq[BuildInfoKey](
   "jafplVersion" -> jafplVersion,
   BuildInfoKey.action("buildTime") {
     System.currentTimeMillis
-  } // re-computed each time at compile
+  },
+  // Hat tip to: https://stackoverflow.com/questions/24191469/how-to-add-commit-hash-to-play-templates
+  "gitHash" -> new java.lang.Object() {
+    override def toString: String = {
+      try {
+        val extracted = new InputStreamReader(
+          java.lang.Runtime.getRuntime.exec("git rev-parse HEAD").getInputStream
+        )
+        new BufferedReader(extracted).readLine
+      } catch {
+        case ex: Exception => "FAILED"
+      }
+    }}.toString()
 )
 
 lazy val meerschaum = (project in file(".")).
