@@ -7,7 +7,7 @@ import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
-import com.xmlcalabash.model.xml.containers.{Choose, Container, ForEach, Group, Try, Viewport, WithDocument, WithProperties}
+import com.xmlcalabash.model.xml.containers.{Catch, Choose, Container, ForEach, Group, Try, Viewport, When, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
 import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, NodeLocation, XMLCalabashRuntime, XProcExpression, XProcVtExpression, XmlStep}
@@ -553,9 +553,12 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
 
   def defaultReadablePort: Option[IOPort] = {
     if (parent.isDefined) {
+
       val drpIsPrecedingSibling =
         this match {
-          case step: PipelineStep => true
+          case container: When => false
+          case container: Catch => false
+          case container: PipelineStep => true
           case variable: Variable => true
           case _ => false
         }
@@ -570,6 +573,10 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
             }
           }
         }
+      }
+
+      if (parent.get.inputPorts.isEmpty) {
+        return parent.get.defaultReadablePort
       }
 
       for (port <- parent.get.inputPorts) {
