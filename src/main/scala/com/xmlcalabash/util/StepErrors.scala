@@ -1,6 +1,5 @@
 package com.xmlcalabash.util
 
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.s9api.{QName, XdmNode}

@@ -1,15 +1,11 @@
 package com.xmlcalabash.util
 
-import java.io.{File, FileInputStream}
 import java.util.Properties
 
 import com.jafpl.util.DefaultTraceEventManager
 import com.xmlcalabash.config.{XMLCalabashConfig, XMLCalabashConfigurer}
-import com.xmlcalabash.model.xml.Parser
-import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{Processor, QName}
 import org.slf4j.{Logger, LoggerFactory}
-import org.xml.sax.InputSource
 
 import scala.collection.mutable
 

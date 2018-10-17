@@ -2,13 +2,13 @@ package com.xmlcalabash.util
 
 import java.io.{IOException, Reader}
 import java.net.{MalformedURLException, URI, URISyntaxException, URL}
+
+import com.sun.org.apache.xml.internal.utils.URI.MalformedURIException
+import com.xmlcalabash.config.XMLCalabashConfig
 import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.sax.SAXSource
 import javax.xml.transform.stream.StreamSource
 import javax.xml.transform.{Source, URIResolver}
-
-import com.sun.org.apache.xml.internal.utils.URI.MalformedURIException
-import com.xmlcalabash.config.XMLCalabashConfig
 import net.sf.saxon.Configuration
 import net.sf.saxon.lib.{ModuleURIResolver, StandardModuleURIResolver, StandardUnparsedTextResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.XdmNode

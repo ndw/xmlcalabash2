@@ -17,8 +17,8 @@ import net.sf.saxon.s9api.{Processor, QName, XdmValue}
 
 import scala.collection.mutable
 
-protected[xmlcalabash] class XMLCalabashRuntime(val config: XMLCalabashConfig,
-                                                private val debug: XMLCalabashDebugOptions) extends RuntimeConfiguration {
+class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
+                                                 private val debug: XMLCalabashDebugOptions) extends RuntimeConfiguration {
   private var _traceEventManager = config.traceEventManager
   private var _errorListener = config.errorListener
   private var _documentManager = config.documentManager

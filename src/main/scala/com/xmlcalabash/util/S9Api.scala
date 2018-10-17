@@ -5,7 +5,6 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.model.util.XProcConstants
 import net.sf.saxon.s9api.{Axis, Serializer, XdmArray, XdmAtomicValue, XdmEmptySequence, XdmMap, XdmNode, XdmNodeKind, XdmValue}
-import net.sf.saxon.value.StringValue
 import org.xml.sax.InputSource
 
 import scala.collection.JavaConverters._
