@@ -13,7 +13,7 @@ XD0007
 A sequence of documents is not allowed on the “$1” output port.
 
 XD0008
-A sequence of documents is not allowed as the context item.
+A sequence is not allowed as the context item in expression: “$1” (Saxon: $2)
 
 XD0015
 There is no in-scope namespace for the QName “$1”.
@@ -32,6 +32,9 @@ Access denied: $1
 
 XD0023
 XML document is not valid: $1
+
+XD0026
+The context item is empty in expression: “$1” (Saxon: $2)
 
 XD0034
 $1

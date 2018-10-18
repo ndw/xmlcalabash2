@@ -14,7 +14,7 @@ import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XProcXPathExpression}
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
-import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmValue}
+import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmNode, XdmValue}
 import nu.validator.htmlparser.common.XmlViolationPolicy
 import nu.validator.htmlparser.dom.HtmlDocumentBuilder
 import org.apache.http.client.methods.HttpGet
@@ -25,11 +25,13 @@ import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.helpers.XMLReaderFactory
 import org.xml.sax.{InputSource, SAXException}
 
-import scala.collection.immutable.HashMap
 import scala.collection.mutable
 
 class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentManager {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
+  private val shadowValues = mutable.HashMap.empty[XdmNode, ShadowValue]
+
+  override def shadow(node: XdmNode): Option[ShadowValue] = shadowValues.get(node)
 
   override def parse(request: DocumentRequest): DocumentResponse = {
     val baseURI = if (request.baseURI.isDefined) {
@@ -169,10 +171,10 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
   }
 
   private def loadStream(request: DocumentRequest, contentType: MediaType, stream: InputStream, props: Map[QName,XdmValue]): DocumentResponse = {
-    val value = if (contentType.htmlContentType) {
-      parseHtml(request, new InputSource(stream)).value
+    if (contentType.htmlContentType) {
+      val value = parseHtml(request, new InputSource(stream)).value
+      new DocumentResponse(value, contentType, props)
     } else if (contentType.xmlContentType) {
-
       val source = new SAXSource(new InputSource(stream))
       source.setSystemId(request.href.toASCIIString)
       var reader = source.asInstanceOf[SAXSource].getXMLReader
@@ -205,7 +207,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
           }
       }
 
-      node
+      new DocumentResponse(node, contentType, props)
     } else if (contentType.jsonContentType) {
       val encoding = contentType.charset.getOrElse("UTF-8") // FIXME: What should the default be?
       val bytes = streamToByteArray(stream)
@@ -215,7 +217,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       val vmsg = new XPathItemMessage(new XdmAtomicValue(new String(bytes, encoding)), XProcMetadata.JSON, ExpressionContext.NONE)
       bindingsMap.put("{}json", vmsg)
       val smsg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
-      smsg.item
+      new DocumentResponse(smsg.item, contentType, props)
     } else if (contentType.textContentType) {
       val encoding = contentType.charset.getOrElse("UTF-8") // FIXME: What should the default be?
       val bytes = streamToByteArray(stream)
@@ -224,17 +226,16 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       builder.startDocument(request.href)
       builder.addText(new String(bytes, encoding))
       builder.endDocument()
-      builder.result
+      new DocumentResponse(builder.result, contentType, props)
     } else {
-      val bytes = streamToByteArray(stream)
-
+      val shadow = new ShadowValue(streamToByteArray(stream), contentType)
       val builder = new SaxonTreeBuilder(xmlCalabash)
       builder.startDocument(request.href)
       builder.endDocument()
-      builder.result
+      val result = builder.result
+      shadowValues.put(result, shadow)
+      new DocumentResponse(result, contentType, props)
     }
-
-    new DocumentResponse(value, contentType, props)
   }
 
   private def streamToByteArray(stream: InputStream): Array[Byte] = {
@@ -304,7 +305,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
         }
     }
 
-    new DocumentResponse(node, MediaType.XML, HashMap.empty[QName,XdmValue])
+    new DocumentResponse(node, MediaType.XML, Map.empty[QName,XdmValue])
   }
 
   override def parseHtml(request: DocumentRequest): DocumentResponse = {
@@ -323,6 +324,6 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
     htmlBuilder.setEntityResolver(xmlCalabash.entityResolver)
     val html = htmlBuilder.parse(isource)
     val builder = xmlCalabash.processor.newDocumentBuilder()
-    new DocumentResponse(builder.build(new DOMSource(html)), MediaType.HTML, HashMap.empty[QName,XdmValue])
+    new DocumentResponse(builder.build(new DOMSource(html)), MediaType.HTML, Map.empty[QName,XdmValue])
   }
 }

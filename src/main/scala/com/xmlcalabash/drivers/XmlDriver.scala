@@ -121,8 +121,6 @@ object XmlDriver extends App {
 
         case _ =>
           println("Caught unexpected error: " + ex)
-          ex.printStackTrace()
-          throw ex
       }
   }
 

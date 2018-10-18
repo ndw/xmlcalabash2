@@ -350,8 +350,12 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         selector.evaluate()
       } catch {
         case sae: SaxonApiException =>
-          if (sae.getMessage.contains("context item is absent") && contextItem.size > 1) {
-            throw XProcException.xdContextItemSequence(exprContext.location)
+          if (sae.getMessage.contains("context item") && sae.getMessage.contains("absent")) {
+            if (contextItem.size > 1) {
+              throw XProcException.xdContextItemSequence(xpath, sae.getMessage, exprContext.location)
+            } else {
+              throw XProcException.xdContextItemAbsent(xpath, sae.getMessage, exprContext.location)
+            }
           } else {
             throw sae
           }

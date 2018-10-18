@@ -13,7 +13,7 @@ import com.xmlcalabash.messages.XPathItemMessage
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep}
 import com.xmlcalabash.util.{SerializationOptions, XProcVarValue}
-import net.sf.saxon.s9api.{Processor, QName, XdmValue}
+import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmValue}
 
 import scala.collection.mutable
 
@@ -70,6 +70,22 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
 
   def serializationOptions(port: String): SerializationOptions = {
     decl.output(port).get.serialization
+  }
+
+  def option(name: QName, value: String): Unit = {
+    option(name, new XProcVarValue(new XdmAtomicValue(value), ExpressionContext.NONE))
+  }
+
+  def option(name: QName, value: Integer): Unit = {
+    option(name, new XProcVarValue(new XdmAtomicValue(value), ExpressionContext.NONE))
+  }
+
+  def option(name: QName, value: Float): Unit = {
+    option(name, new XProcVarValue(new XdmAtomicValue(value), ExpressionContext.NONE))
+  }
+
+  def option(name: QName, value: URI): Unit = {
+    option(name, new XProcVarValue(new XdmAtomicValue(value), ExpressionContext.NONE))
   }
 
   def option(name: QName, value: XProcVarValue): Unit = {

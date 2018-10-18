@@ -1,5 +1,7 @@
 package com.xmlcalabash.runtime
 
+import java.io.{IOException, InputStream}
+
 import com.jafpl.graph.Location
 import com.jafpl.messages.{BindingMessage, ExceptionMessage, ItemMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
@@ -12,11 +14,13 @@ import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, params: Option[ImplParams], context: StaticContext) extends Step with XProcDataConsumer {
   private val typeUtils = new TypeUtils(config)
   private var location = Option.empty[Location]
   private var _id: String = _
+  private val openStreams = ListBuffer.empty[InputStream]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
   protected val bindings = mutable.HashSet.empty[QName]
@@ -156,6 +160,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
     }
     step.initialize(config, params)
   }
+
   override def run(): Unit = {
     for (qname <- step.signature.options) {
       if (!bindings.contains(qname)) {
@@ -172,19 +177,39 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
       }
     }
 
-    DynamicContext.withContext(dynamicContext) { step.run(context) }
+    try {
+      DynamicContext.withContext(dynamicContext) { step.run(context) }
+    } finally {
+      var thrown = Option.empty[Exception]
+      for (stream <- openStreams) {
+        try {
+          stream.close()
+        } catch {
+          case ex: IOException => Unit
+          case ex: Exception =>
+            thrown = Some(ex)
+        }
+      }
+      if (thrown.isDefined) {
+        throw thrown.get
+      }
+    }
   }
+
   override def reset(): Unit = {
     step.reset()
     bindings.clear()
     bindingsMap.clear()
   }
+
   override def abort(): Unit = {
     step.abort()
   }
+
   override def stop(): Unit = {
     step.stop()
   }
+
   override def receive(port: String, message: Message): Unit = {
     message match {
       case item: ExceptionMessage =>
@@ -220,7 +245,20 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
                 step.receive(port, item, selected.metadata)
               }
             } else {
-              step.receive(port, item.item, xmlmeta)
+              item.item match {
+                case node: XdmNode =>
+                  if (config.documentManager.shadow(node).isDefined) {
+                    val shadow = config.documentManager.shadow(node).get
+                    val meta = new XProcMetadata(shadow.contentType, xmlmeta.properties)
+                    val stream = shadow.getStream
+                    openStreams += stream
+                    step.receive(port, stream, meta)
+                  } else {
+                    step.receive(port, item.item, xmlmeta)
+                  }
+                case _ =>
+                  step.receive(port, item.item, xmlmeta)
+              }
             }
           case _ => throw XProcException.xiInvalidMetadata(location, item.metadata)
         }
