@@ -6,7 +6,7 @@ import java.util.Base64
 
 import com.jafpl.messages.Message
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, ValueUtils}
@@ -71,14 +71,14 @@ class CastContentType() extends DefaultXmlStep {
       // Step 1, convert the map into a JSON text string
       var expr = new XProcXPathExpression(ExpressionContext.NONE, "serialize($map, map {\"method\": \"json\"})")
       val bindingsMap = mutable.HashMap.empty[String, Message]
-      var vmsg = new XPathItemMessage(item.get.asInstanceOf[XdmItem], XProcMetadata.XML, ExpressionContext.NONE)
+      var vmsg = new XdmValueItemMessage(item.get.asInstanceOf[XdmItem], XProcMetadata.XML, ExpressionContext.NONE)
       bindingsMap.put("{}map", vmsg)
       var smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
 
       // Step 2, convert the JSON to XML
       expr = new XProcXPathExpression(ExpressionContext.NONE, "json-to-xml($json)")
       bindingsMap.clear()
-      vmsg = new XPathItemMessage(smsg.item, XProcMetadata.XML, ExpressionContext.NONE)
+      vmsg = new XdmValueItemMessage(smsg.item, XProcMetadata.XML, ExpressionContext.NONE)
       bindingsMap.put("{}json", vmsg)
       smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
 

@@ -4,7 +4,7 @@ import java.io.{InputStream, OutputStream}
 import java.net.URI
 
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.util.{ArgBundle, URIUtils}
+import com.xmlcalabash.util.URIUtils
 import com.xmlcalabash.util.stores.{DataInfo, DataReader, DataWriter, FallbackDataStore}
 import net.sf.saxon.s9api.XdmAtomicValue
 import org.scalatest.FlatSpec

@@ -3,11 +3,11 @@ package com.xmlcalabash.runtime
 import java.net.URI
 import java.util
 
-import com.jafpl.messages.{ItemMessage, Message}
+import com.jafpl.messages.Message
 import com.jafpl.runtime.ExpressionEvaluator
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{StepException, XProcException}
-import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import net.sf.saxon.expr.XPathContext
@@ -38,11 +38,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
     new SaxonExpressionEvaluator(xmlCalabash)
   }
 
-  override def singletonValue(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XPathItemMessage = {
+  override def singletonValue(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XdmValueItemMessage = {
     val xdmval = value(xpath, context, bindings, options).item.asInstanceOf[XdmValue]
 
     if (xdmval.size() == 1) {
-      new XPathItemMessage(xdmval, XProcMetadata.XML, xpath.asInstanceOf[XProcExpression].context)
+      new XdmValueItemMessage(xdmval, XProcMetadata.XML, xpath.asInstanceOf[XProcExpression].context)
     } else {
       xpath match {
         case xpath: XProcXPathExpression =>
@@ -57,21 +57,28 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
             }
             s += viter.next().getStringValue
           }
-          new XPathItemMessage(xdmval, XProcMetadata.XML, xpath.context)
+          new XdmValueItemMessage(xdmval, XProcMetadata.XML, xpath.context)
         // We should never fall off the end of this match because we got past the value() call above
       }
     }
   }
 
-  override def value(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XPathItemMessage = {
+  override def value(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XdmValueItemMessage = {
     val proxies = mutable.HashMap.empty[Any, XdmItem]
     val newContext = new DynamicContext()
-    for (msg <- context) {
-      msg match {
-        case item: ItemMessage =>
-          val node = proxy(item)
-          proxies.put(item.item, node)
-          checkDocument(newContext, node, context.head)
+    for (message <- context) {
+      message match {
+        case msg: XdmValueItemMessage =>
+          msg.item match {
+            case item: XdmItem =>
+              val node = proxy(msg)
+              proxies.put(item, node)
+              checkDocument(newContext, node, context.head)
+            case _ =>
+              println(s"Warning: don't know how to proxy ${msg.item}")
+          }
+        case msg: AnyItemMessage =>
+          checkDocument(newContext, msg.item, context.head)
         case _ => Unit
       }
     }
@@ -109,11 +116,12 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
 
     for ((str, value) <- bindings) {
       value match {
-        case item: ItemMessage =>
-          item.item match {
-            case xitem: XdmItem =>
-              checkDocument(newContext, xitem, value)
-            case _ => Unit
+        case msg: XdmValueItemMessage =>
+          msg.item match {
+            case item: XdmItem =>
+              checkDocument(newContext, item, value)
+            case _ =>
+              println(s"Warning: don't know how to proxy ${msg.item}")
           }
         case _ =>
           throw XProcException.xiInvalidMessage(newContext.location, value)
@@ -133,7 +141,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         XProcMetadata.XML
     }
 
-    new XPathItemMessage(xdmvalue, metadata, xpath.asInstanceOf[XProcExpression].context)
+    new XdmValueItemMessage(xdmvalue, metadata, xpath.asInstanceOf[XProcExpression].context)
   }
 
   override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): Boolean = {
@@ -150,7 +158,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
     }
   }
 
-  override def precomputedValue(xpath: Any, value: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XPathItemMessage = {
+  override def precomputedValue(xpath: Any, value: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XdmValueItemMessage = {
     val config = xmlCalabash.processor.getUnderlyingConfiguration
 
     var xdmval = value match {
@@ -193,7 +201,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
       }
     }
 
-    new XPathItemMessage(xdmval, XProcMetadata.XML, expr.context)
+    new XdmValueItemMessage(xdmval, XProcMetadata.XML, expr.context)
   }
 
   def compute(xpath: XProcExpression, context: List[Message], bindings: Map[String, Message],
@@ -202,15 +210,8 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
 
     for ((str, value) <- bindings) {
       value match {
-        case item: ItemMessage =>
-          item.item match {
-            case xitem: XdmValue =>
-              patchBindings.put(ValueParser.parseClarkName(str), xitem)
-            case value: XProcVarValue =>
-              patchBindings.put(ValueParser.parseClarkName(str), value.value)
-            case _ =>
-              throw XProcException.xiBadBoundValue(xpath.context.location, item.item)
-          }
+        case msg: XdmValueItemMessage =>
+          patchBindings.put(ValueParser.parseClarkName(str), msg.item)
         case _ =>
           throw XProcException.xiInvalidMessage(None, value)
       }
@@ -336,13 +337,12 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
 
       if (contextItem.size == 1) {
         contextItem.head match {
-          case item: ItemMessage =>
-            item.item match {
-              case node: XdmNode =>
-                selector.setContextItem(proxies(node))
-              case _ =>
-                selector.setContextItem(proxies(item.item))
-            }
+          case msg: XdmNodeItemMessage =>
+            selector.setContextItem(proxies(msg.item))
+          case msg: XdmValueItemMessage =>
+            selector.setContextItem(proxies(msg.item))
+          case _ =>
+            throw new RuntimeException(s"Impossible to set context item to ${contextItem.head}")
         }
       }
 
@@ -405,14 +405,13 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
 
   private def proxy(message: Message): XdmItem = {
     message match {
-      case item: ItemMessage =>
-        item.item match {
-          case node: XdmNode => return node
+      case msg: XdmValueItemMessage =>
+        msg.item match {
           case item: XdmItem => return item
           case _ => Unit
         }
 
-        item.metadata match {
+        msg.metadata match {
           case xproc: XProcMetadata =>
             val props = xproc.properties
             val builder = new SaxonTreeBuilder(xmlCalabash)
@@ -457,14 +456,10 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         items += new ExprNodeResource(node.get)
       } else {
         msg match {
-          case item: XPathItemMessage =>
+          case item: XdmValueItemMessage =>
             items += new ExprNodeResource(item.item.asInstanceOf[XdmNode])
-          case item: ItemMessage =>
-            item.item match {
-              case node: XdmNode => items += new ExprNodeResource(node)
-              case _ => Unit
-            }
-          case _ => throw XProcException.xiBadMessage(msg, None)
+          case _ =>
+            throw XProcException.xiBadMessage(msg, None)
         }
       }
     }

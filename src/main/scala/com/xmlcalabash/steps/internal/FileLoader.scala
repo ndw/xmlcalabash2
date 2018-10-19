@@ -2,14 +2,14 @@ package com.xmlcalabash.steps.internal
 
 import java.net.{URI, URLConnection}
 
-import com.jafpl.messages.{BindingMessage, ItemMessage, Message}
+import com.jafpl.messages.{BindingMessage, Message}
 import com.xmlcalabash.config.{DocumentRequest, XProcTypes}
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
-import com.xmlcalabash.util.MediaType
-import net.sf.saxon.s9api.{QName, XdmItem, XdmMap, XdmValue}
+import com.xmlcalabash.util.{MediaType, S9Api}
+import net.sf.saxon.s9api.{QName, XdmItem, XdmMap, XdmNode, XdmValue}
 
 class FileLoader(private val context: ExpressionContext,
                  private val declContentType: Option[MediaType],
@@ -26,8 +26,8 @@ class FileLoader(private val context: ExpressionContext,
 
     var valueitem = Option.empty[XdmItem]
     bindmsg.message match {
-      case itemmsg: ItemMessage =>
-        itemmsg.item match {
+      case msg: XdmValueItemMessage =>
+        msg.item match {
           case item: XdmItem =>
             valueitem = Some(item)
           case _ => Unit
@@ -120,13 +120,24 @@ class FileLoader(private val context: ExpressionContext,
     request.docprops = props
 
     val result = config.get.documentManager.parse(request)
-    consumer.get.receive("result", new ItemMessage(result.value, new XProcMetadata(result.contentType, result.props)))
+    val metadata = new XProcMetadata(result.contentType, result.props)
+
+    if (result.shadow.isDefined) {
+      consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), result.shadow, metadata))
+    } else {
+      result.value match {
+        case node: XdmNode =>
+          consumer.get.receive("result", new XdmNodeItemMessage(node, metadata))
+        case _ =>
+          consumer.get.receive("result", new XdmValueItemMessage(result.value, metadata))
+      }
+    }
   }
 
   def xpathValue(expr: XProcExpression): XdmValue = {
     val eval = config.get.expressionEvaluator
     val dynContext = new DynamicContext()
     val msg = eval.withContext(dynContext) { eval.singletonValue(expr, List.empty[Message], bindings.toMap, None) }
-    msg.asInstanceOf[XPathItemMessage].item
+    msg.asInstanceOf[XdmValueItemMessage].item
   }
 }

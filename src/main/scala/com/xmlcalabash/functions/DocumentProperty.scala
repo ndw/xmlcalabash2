@@ -2,11 +2,11 @@ package com.xmlcalabash.functions
 
 import java.net.URI
 
-import com.jafpl.messages.ItemMessage
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.messages.XProcItemMessage
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XProcMetadata}
+import com.xmlcalabash.runtime.SaxonExpressionEvaluator
 import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
 import net.sf.saxon.functions.AccessorFn.Component
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
@@ -64,13 +64,8 @@ class DocumentProperty private extends ExtensionFunctionDefinition {
       }
 
       val props: Map[QName,XdmValue] = msg.get match {
-        case item: ItemMessage =>
-          item.metadata match {
-            case xml: XProcMetadata =>
-              xml.properties
-            case _ =>
-              Map.empty[QName,XdmItem]
-          }
+        case item: XProcItemMessage =>
+          item.metadata.properties
         case _ =>
           Map.empty[QName,XdmItem]
       }

@@ -1,7 +1,6 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.s9api.XdmNode
 

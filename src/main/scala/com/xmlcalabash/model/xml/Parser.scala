@@ -1,9 +1,9 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.config.{Signatures, XMLCalabashConfig}
+import com.xmlcalabash.config.Signatures
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, XProcConstants}
-import com.xmlcalabash.model.xml.containers.{Catch, Choose, DeclarationContainer, Finally, ForEach, Group, Otherwise, Try, When, WithDocument, WithProperties}
+import com.xmlcalabash.model.xml.containers.{Catch, Choose, Finally, ForEach, Group, Otherwise, Try, When, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XMLCalabashRuntime, XProcVtExpression, XProcXPathExpression}

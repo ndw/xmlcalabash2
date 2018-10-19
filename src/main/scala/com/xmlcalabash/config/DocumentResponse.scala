@@ -25,4 +25,6 @@ class DocumentResponse(val value: XdmValue, val contentType: MediaType, val prop
     this(value, contentType, HashMap.empty[QName,XdmValue])
     _shadow = Some(shadow)
   }
+
+  def shadow: Option[Array[Byte]] = _shadow
 }

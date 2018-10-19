@@ -1,16 +1,12 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
-import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Pipe}
-import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionEvaluator, SaxonExpressionOptions, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
-import net.sf.saxon.expr.parser.XPathParser
-import net.sf.saxon.s9api.{QName, XdmValue}
-import net.sf.saxon.sxpath.IndependentContext
-import net.sf.saxon.trans.XPathException
+import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty}
+import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
+import net.sf.saxon.s9api.QName
 import net.sf.saxon.value.SequenceType
 
 import scala.collection.mutable
@@ -23,7 +19,7 @@ class Variable(override val config: XMLCalabashRuntime,
   private var _expression = Option.empty[XProcExpression]
   private var _as = Option.empty[SequenceType]
   private var _static = false
-  private var _staticValueMessage = Option.empty[XPathItemMessage]
+  private var _staticValueMessage = Option.empty[XdmValueItemMessage]
 
   def variableName: QName = _name
   def select: Option[String] = _select
@@ -31,7 +27,7 @@ class Variable(override val config: XMLCalabashRuntime,
   def as: Option[SequenceType] = _as
 
   def static: Boolean = _static
-  def staticValueMessage: Option[XPathItemMessage] = {
+  def staticValueMessage: Option[XdmValueItemMessage] = {
     if (_static && _staticValueMessage.isDefined) {
       _staticValueMessage
     } else {
@@ -64,7 +60,7 @@ class Variable(override val config: XMLCalabashRuntime,
       val context = new ExpressionContext(baseURI, inScopeNS, location)
       val varExpr = new XProcXPathExpression(context, _select.get, _as)
       val bindingRefs = lexicalVariables(_select.get)
-      val staticVariableMap = mutable.HashMap.empty[String, XPathItemMessage]
+      val staticVariableMap = mutable.HashMap.empty[String, XdmValueItemMessage]
       for (vref <- bindingRefs) {
         val msg = staticValue(vref)
         if (msg.isDefined) {

@@ -1,7 +1,6 @@
 package com.xmlcalabash.model.xml.datasource
 
 import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Catch

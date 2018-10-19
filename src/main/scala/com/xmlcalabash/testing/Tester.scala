@@ -1,8 +1,8 @@
 package com.xmlcalabash.testing
 
-import com.jafpl.messages.ItemMessage
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{TestException, XProcException}
+import com.xmlcalabash.messages.XdmNodeItemMessage
 import com.xmlcalabash.runtime.{BufferingConsumer, ExpressionContext, XMLCalabashRuntime, XProcMetadata}
 import com.xmlcalabash.util.XProcVarValue
 import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
@@ -64,7 +64,7 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
 
       for (port <- _inputs.keySet) {
         for (item <- _inputs(port)) {
-          runtime.input(port, new ItemMessage(item, new XProcMetadata()))
+          runtime.input(port, new XdmNodeItemMessage(item, new XProcMetadata()))
         }
       }
 
@@ -76,7 +76,7 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
 
       runtime.run()
 
-      val resultDoc = result.items.head.asInstanceOf[XdmNode]
+      val resultDoc = result.messages.head.item.asInstanceOf[XdmNode]
 
       //println(resultDoc)
 

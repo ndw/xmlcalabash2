@@ -3,7 +3,7 @@ package com.xmlcalabash.util
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XProcXPathExpression}
 import net.sf.saxon.lib.NamespaceConstant
@@ -102,13 +102,13 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
               val paramBind = mutable.HashMap.empty[String, Message]
               for ((qname, value) <- _params) {
                 val clark = qname.getClarkName
-                val msg = new XPathItemMessage(value.value, XProcMetadata.ANY, value.context)
+                val msg = new XdmValueItemMessage(value.value, XProcMetadata.ANY, value.context)
                 paramBind.put(clark, msg)
               }
 
               val expr = new XProcXPathExpression(context, value)
               val msg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), paramBind.toMap, None)
-              val eval = msg.asInstanceOf[XPathItemMessage].item
+              val eval = msg.asInstanceOf[XdmValueItemMessage].item
 
               _params.put(qname, new XProcVarValue(eval, context))
             case null =>

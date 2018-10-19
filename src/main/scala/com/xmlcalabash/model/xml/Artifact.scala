@@ -3,14 +3,14 @@ package com.xmlcalabash.model.xml
 import java.net.URI
 
 import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
-import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
+import com.xmlcalabash.config.StepSignature
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
-import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Catch, Choose, Container, ForEach, Group, Try, Viewport, When, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
-import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, NodeLocation, XMLCalabashRuntime, XProcExpression, XProcVtExpression, XmlStep}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XMLCalabashRuntime, XProcExpression, XProcVtExpression}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.expr.parser.XPathParser
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
@@ -278,8 +278,8 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
     ValueParser.findVariableRefsInString(config, inScopeNS, expr, location)
   }
 
-  def staticValue(vref: QName): Option[XPathItemMessage] = {
-    var msg: Option[XPathItemMessage] = None
+  def staticValue(vref: QName): Option[XdmValueItemMessage] = {
+    var msg: Option[XdmValueItemMessage] = None
     if (parent.isDefined) {
       var found = false
       for (child <- parent.get.relevantChildren) {

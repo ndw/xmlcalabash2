@@ -4,9 +4,8 @@ import java.net.URI
 
 import com.jafpl.graph.Location
 import com.jafpl.messages.Message
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcMetadata, XProcVtExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.{QName, XdmNode}
@@ -58,7 +57,7 @@ class Injectable(val config: XMLCalabashRuntime,
 
   def findSteps(root: XdmNode): Unit = {
     val exprEval = config.expressionEvaluator
-    val findContext = new XPathItemMessage(root, XProcMetadata.XML, ExpressionContext.NONE)
+    val findContext = new XdmValueItemMessage(root, XProcMetadata.XML, ExpressionContext.NONE)
     val found = exprEval.value(stepXPath, List(findContext), Map.empty[String,Message], None)
 
     if (found.item.size() == 0) {

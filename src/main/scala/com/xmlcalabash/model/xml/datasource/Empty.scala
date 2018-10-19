@@ -1,7 +1,6 @@
 package com.xmlcalabash.model.xml.datasource
 
 import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.model.xml.Artifact
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 

@@ -1,14 +1,13 @@
 package com.xmlcalabash.runtime
 
 import java.io.{ByteArrayOutputStream, File, FileOutputStream, InputStream, PrintStream}
-import java.util.Base64
 
-import com.jafpl.messages.{ItemMessage, Message}
+import com.jafpl.messages.Message
 import com.jafpl.steps.DataConsumer
-import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.messages.{AnyItemMessage, XProcItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.UniqueId
-import com.xmlcalabash.util.{MediaType, S9Api, SerializationOptions}
-import net.sf.saxon.s9api.{Serializer, XdmValue}
+import com.xmlcalabash.util.{S9Api, SerializationOptions}
+import net.sf.saxon.s9api.Serializer
 
 class PrintingConsumer private(config: XMLCalabashRuntime, serialization: SerializationOptions, outputs: Option[List[String]]) extends DataConsumer {
   private val _id = UniqueId.nextId.toString
@@ -26,11 +25,8 @@ class PrintingConsumer private(config: XMLCalabashRuntime, serialization: Serial
 
   override def receive(port: String, message: Message): Unit = {
     message match {
-      case item: ItemMessage =>
-        val ctype = item.metadata match {
-          case meta: XProcMetadata => meta.contentType
-          case _ => MediaType.OCTET_STREAM
-        }
+      case msg: XProcItemMessage =>
+        val ctype = msg.metadata.contentType
 
         val pos = if (outputs.isEmpty || (index >= outputs.get.length)) {
           System.out
@@ -42,17 +38,24 @@ class PrintingConsumer private(config: XMLCalabashRuntime, serialization: Serial
           new PrintStream(fos)
         }
 
-        item.item match {
-          case is: InputStream =>
-            val stream = new ByteArrayOutputStream()
-            val buf = Array.fill[Byte](4096)(0)
-            var len = is.read(buf, 0, buf.length)
-            while (len >= 0) {
-              stream.write(buf, 0, len)
-              len = is.read(buf, 0, buf.length)
+        message match {
+          case msg: AnyItemMessage =>
+            msg.shadow match {
+              case is: InputStream =>
+                val stream = new ByteArrayOutputStream()
+                val buf = Array.fill[Byte](4096)(0)
+                var len = is.read(buf, 0, buf.length)
+                while (len >= 0) {
+                  stream.write(buf, 0, len)
+                  len = is.read(buf, 0, buf.length)
+                }
+                pos.write(stream.toByteArray)
+              case bytes: Array[Byte] =>
+                pos.write(bytes)
+              case _ =>
+                throw new RuntimeException(s"Don't know how to serialize item: ${msg.shadow}")
             }
-            pos.write(stream.toByteArray)
-          case value: XdmValue =>
+          case msg: XdmValueItemMessage =>
             val stream = new ByteArrayOutputStream()
             val serializer = config.processor.newSerializer(stream)
 
@@ -62,10 +65,10 @@ class PrintingConsumer private(config: XMLCalabashRuntime, serialization: Serial
               serialization.setOutputProperties(serializer)
             }
 
-            S9Api.serialize(config.config, value, serializer)
+            S9Api.serialize(config.config, msg.item, serializer)
             pos.print(stream.toString("UTF-8"))
           case _ =>
-            throw new RuntimeException(s"Don't know how to print ${item.item}")
+            throw new RuntimeException(s"Don't know how to print ${msg.item}")
         }
     }
   }

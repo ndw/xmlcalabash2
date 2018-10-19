@@ -1,11 +1,9 @@
 package com.xmlcalabash.model.xml.containers
 
 import com.jafpl.graph.{ContainerStart, Graph, Node}
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.datasource.Pipe
-import com.xmlcalabash.model.xml.{Artifact, AtomicStep, Documentation, Input, Output, PipeInfo, Variable}
+import com.xmlcalabash.model.xml.{Artifact, Documentation, Output, PipeInfo, Variable}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 
 import scala.collection.mutable

@@ -1,12 +1,12 @@
 package com.xmlcalabash.steps
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
+import java.io.{ByteArrayInputStream, InputStream}
 import java.net.URI
 import java.util.Base64
 
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.{MediaType, S9Api}
+import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 
 class B64Decode extends DefaultXmlStep {

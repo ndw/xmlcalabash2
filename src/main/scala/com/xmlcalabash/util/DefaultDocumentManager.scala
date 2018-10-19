@@ -9,12 +9,12 @@ import java.util.Date
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.{DocumentManager, DocumentRequest, DocumentResponse, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XProcXPathExpression}
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
-import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmValue}
 import nu.validator.htmlparser.common.XmlViolationPolicy
 import nu.validator.htmlparser.dom.HtmlDocumentBuilder
 import org.apache.http.client.methods.HttpGet
@@ -211,7 +211,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
 
       val expr = new XProcXPathExpression(ExpressionContext.NONE, "parse-json($json)")
       val bindingsMap = mutable.HashMap.empty[String, Message]
-      val vmsg = new XPathItemMessage(new XdmAtomicValue(new String(bytes, encoding)), XProcMetadata.JSON, ExpressionContext.NONE)
+      val vmsg = new XdmValueItemMessage(new XdmAtomicValue(new String(bytes, encoding)), XProcMetadata.JSON, ExpressionContext.NONE)
       bindingsMap.put("{}json", vmsg)
       val smsg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
       new DocumentResponse(smsg.item, contentType, props)
@@ -304,7 +304,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
     new DocumentResponse(node, MediaType.XML, Map.empty[QName,XdmValue])
   }
 
-  override def parseHtml(request: DocumentRequest): DocumentResponse = {
+  private def parseHtml(request: DocumentRequest): DocumentResponse = {
     val baseURI = if (request.baseURI.isDefined) {
       request.baseURI.get
     } else {
@@ -315,7 +315,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
     parseHtml(request, src)
   }
 
-  override def parseHtml(request: DocumentRequest, isource: InputSource): DocumentResponse = {
+  private def parseHtml(request: DocumentRequest, isource: InputSource): DocumentResponse = {
     val htmlBuilder = new HtmlDocumentBuilder(XmlViolationPolicy.ALTER_INFOSET)
     htmlBuilder.setEntityResolver(xmlCalabash.entityResolver)
     val html = htmlBuilder.parse(isource)

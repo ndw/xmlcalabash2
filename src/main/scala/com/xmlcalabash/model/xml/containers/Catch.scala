@@ -1,11 +1,10 @@
 package com.xmlcalabash.model.xml.containers
 
 import com.jafpl.graph.{Graph, Node, TryCatchStart}
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, Documentation, PipeInfo}
-import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcXPathExpression}
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer

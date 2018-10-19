@@ -9,7 +9,7 @@ import com.jafpl.steps.DataConsumer
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.config.{DocumentManager, Signatures, XMLCalabashConfig, XMLCalabashDebugOptions}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException, XProcException}
-import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep}
 import com.xmlcalabash.util.{SerializationOptions, XProcVarValue}
@@ -41,6 +41,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
     graph = decl.pipelineGraph()
     debug.dumpOpenGraph(graph)
     graph.close()
+    debug.dumpGraph(graph)
     runtime = new GraphRuntime(graph, this)
     runtime.traceEventManager = _traceEventManager
   }
@@ -53,7 +54,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   def input(port: String, item: XdmValue, metadata: XProcMetadata): Unit = {
     if (runtime.inputs.contains(port)) {
       inputSet += port
-      runtime.inputs(port).send(new XPathItemMessage(item, metadata, ExpressionContext.NONE))
+      runtime.inputs(port).send(new XdmValueItemMessage(item, metadata, ExpressionContext.NONE))
     }
   }
 
@@ -91,7 +92,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   def option(name: QName, value: XProcVarValue): Unit = {
     if (decl.bindings.contains(name)) {
       config.trace(s"Binding option $name to '$value'", "ExternalBindings")
-      val msg = new XPathItemMessage(value.value, XProcMetadata.XML, value.context)
+      val msg = new XdmValueItemMessage(value.value, XProcMetadata.XML, value.context)
       runtime.setOption(name.getClarkName, value)
       bindingsMap.put(name.getClarkName, msg)
     }
@@ -120,7 +121,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
             val context = new ExpressionContext(None, Map.empty[String,String], None) // FIXME: what about namespaces!?
             val expr = new XProcXPathExpression(context, bdecl.get.select.get)
             val msg = config.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
-            val eval = msg.asInstanceOf[XPathItemMessage].item
+            val eval = msg.asInstanceOf[XdmValueItemMessage].item
             runtime.setOption(jcbind, new XProcVarValue(eval, context))
             bindingsMap.put(jcbind, msg)
           } else {
@@ -130,7 +131,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
               val context = new ExpressionContext(None, Map.empty[String,String], None) // FIXME: what about namespaces!?
               val expr = new XProcXPathExpression(context, "()")
               val msg = config.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
-              val eval = msg.asInstanceOf[XPathItemMessage].item
+              val eval = msg.asInstanceOf[XdmValueItemMessage].item
               runtime.setOption(jcbind, new XProcVarValue(eval, context))
               bindingsMap.put(jcbind, msg)
             }

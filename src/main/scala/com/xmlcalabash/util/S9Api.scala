@@ -1,9 +1,11 @@
 package com.xmlcalabash.util
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+import java.net.URI
 
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.s9api.{Axis, Serializer, XdmArray, XdmAtomicValue, XdmEmptySequence, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import org.xml.sax.InputSource
 
@@ -143,6 +145,17 @@ object S9Api {
       serialize(xproc, value, serializer)
     }
     serializer.serializeXdmValue(CLOSE_SQUARE)
+  }
+
+  def emptyDocument(config: XMLCalabashRuntime): XdmNode = {
+    emptyDocument(config, None)
+  }
+
+  def emptyDocument(config: XMLCalabashRuntime, baseURI: Option[URI]): XdmNode = {
+    val tree = new SaxonTreeBuilder(config)
+    tree.startDocument(baseURI)
+    tree.endDocument()
+    tree.result
   }
 
   /*

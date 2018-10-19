@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.jafpl.graph.Location
 import com.jafpl.messages.{ItemMessage, Message}
-import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.model.xml.Injectable
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionOptions, XMLCalabashRuntime, XProcVtExpression, XProcXPathExpression}
@@ -125,7 +125,7 @@ abstract class XProcInjectable(injectable: Injectable) {
     s
   }
 
-  private def expandNodes(text: String, contextNode: List[ItemMessage], context: ExpressionContext, opts: Option[SaxonExpressionOptions]): XPathItemMessage = {
+  private def expandNodes(text: String, contextNode: List[ItemMessage], context: ExpressionContext, opts: Option[SaxonExpressionOptions]): XdmValueItemMessage = {
     val evaluator = config.expressionEvaluator
     val expr = new XProcVtExpression(context, text)
     evaluator.value(expr, contextNode, bindings.toMap, opts)

@@ -1,10 +1,8 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Location, Node}
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.ValueParser
-import com.xmlcalabash.model.xml.containers.DeclarationContainer
 import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, StepWrapper, XMLCalabashRuntime, XProcExpression, XProcVtExpression, XProcXPathExpression, XmlStep}
 import net.sf.saxon.s9api.QName
 

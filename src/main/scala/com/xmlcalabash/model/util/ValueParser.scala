@@ -1,10 +1,9 @@
 package com.xmlcalabash.model.util
 
 import com.jafpl.graph.Location
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.runtime.{XMLCalabashRuntime, XProcExpression, XProcVtExpression, XProcXPathExpression}
-import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer

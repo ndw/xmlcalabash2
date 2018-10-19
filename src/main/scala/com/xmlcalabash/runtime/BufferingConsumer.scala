@@ -1,23 +1,26 @@
 package com.xmlcalabash.runtime
 
-import com.jafpl.messages.{ItemMessage, Message}
+import com.jafpl.messages.Message
 import com.jafpl.steps.DataConsumer
+import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.messages.XProcItemMessage
 import com.xmlcalabash.model.util.UniqueId
 
 import scala.collection.mutable.ListBuffer
 
 class BufferingConsumer extends DataConsumer {
   private val _id = UniqueId.nextId.toString
-  private val _items = ListBuffer.empty[Any]
+  private val _items = ListBuffer.empty[XProcItemMessage]
 
-  def items: List[Any] = _items.toList
+  def messages: List[XProcItemMessage] = _items.toList
 
   override def id: String = _id
   override def receive(port: String, message: Message): Unit = {
     message match {
-      case item: ItemMessage =>
-        _items += item.item
-      case _ => Unit
+      case msg: XProcItemMessage =>
+        _items += msg
+      case _ =>
+        throw XProcException.xiInvalidMessage(None, message)
     }
   }
 }

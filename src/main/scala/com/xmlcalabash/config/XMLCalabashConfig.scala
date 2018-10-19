@@ -96,7 +96,7 @@ class XMLCalabashConfig extends RuntimeConfiguration {
   def runtime(uri: URI, debug: XMLCalabashDebugOptions): XMLCalabashRuntime = {
     val request = new DocumentRequest(uri, MediaType.XML)
     val response = documentManager.parse(request)
-    runtime(response.value.asInstanceOf[XdmNode])
+    runtime(response.value.asInstanceOf[XdmNode], debug)
   }
 
   def runtime(node: XdmNode): XMLCalabashRuntime = {

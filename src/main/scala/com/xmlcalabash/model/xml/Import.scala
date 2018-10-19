@@ -1,6 +1,5 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 
 class Import(override val config: XMLCalabashRuntime,

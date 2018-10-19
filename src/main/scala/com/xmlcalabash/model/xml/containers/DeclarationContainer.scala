@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml.containers
 
-import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
+import com.xmlcalabash.config.StepSignature
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, Function, Library}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.s9api.QName

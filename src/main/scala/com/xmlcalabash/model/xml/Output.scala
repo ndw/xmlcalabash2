@@ -1,10 +1,9 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
-import com.xmlcalabash.messages.XPathItemMessage
-import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
+import com.xmlcalabash.messages.XdmValueItemMessage
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcXPathExpression}
 import com.xmlcalabash.util.{MediaType, SerializationOptions, TypeUtils}
@@ -49,7 +48,7 @@ class Output(override val config: XMLCalabashRuntime,
       val context = new ExpressionContext(baseURI, inScopeNS, location)
       val serAvt = new XProcXPathExpression(context, ser.get)
       val bindingRefs = lexicalVariables(ser.get)
-      val staticVariableMap = mutable.HashMap.empty[String, XPathItemMessage]
+      val staticVariableMap = mutable.HashMap.empty[String, XdmValueItemMessage]
       for (vref <- bindingRefs) {
         val msg = staticValue(vref)
         if (msg.isDefined) {
@@ -61,7 +60,7 @@ class Output(override val config: XMLCalabashRuntime,
       val eval = config.expressionEvaluator
       val message = eval.singletonValue(serAvt, List(), staticVariableMap.toMap, None)
       message match {
-        case item: XPathItemMessage =>
+        case item: XdmValueItemMessage =>
           item.item match {
             case xdmMap: XdmMap =>
               val map = xdmMap.asMap()

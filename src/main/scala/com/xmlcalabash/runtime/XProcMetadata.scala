@@ -1,5 +1,7 @@
 package com.xmlcalabash.runtime
 
+import java.net.URI
+
 import com.jafpl.messages.Metadata
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.util.MediaType
@@ -24,6 +26,7 @@ class XProcMetadata(private val initialContentType: Option[MediaType],
                     private val initialProperties: Map[QName,XdmValue]) extends Metadata {
   private val _properties = mutable.HashMap.empty[QName,XdmValue]
   private var _contentType: Option[MediaType] = None
+  private var _baseURI: Option[URI] = None
 
   for ((key,value) <- initialProperties) {
     _properties.put(key, value)
@@ -65,5 +68,16 @@ class XProcMetadata(private val initialContentType: Option[MediaType],
     }
 
     _contentType.get
+  }
+
+  def baseURI: Option[URI] = {
+    if (_baseURI.isEmpty) {
+      if (_properties.contains(XProcConstants._base_uri)) {
+        val value = _properties(XProcConstants._base_uri)
+        _baseURI = Some(new URI(value.itemAt(0).getStringValue)) // FIXME: what about a sequence?
+      }
+    }
+
+    _baseURI
   }
 }

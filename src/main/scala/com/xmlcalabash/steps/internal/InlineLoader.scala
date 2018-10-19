@@ -4,10 +4,10 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.net.URI
 import java.util.Base64
 
-import com.jafpl.messages.{ItemMessage, Message}
+import com.jafpl.messages.Message
 import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.messages.XPathItemMessage
+import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcExpression, XProcMetadata, XProcVtExpression, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api}
@@ -122,7 +122,7 @@ class InlineLoader(private val baseURI: Option[URI],
       }
       builder.endDocument()
       val result = builder.result
-      consumer.get.receive("result", new ItemMessage(result, new XProcMetadata(contentType, props.toMap)))
+      consumer.get.receive("result", new XdmNodeItemMessage(result, new XProcMetadata(contentType, props.toMap)))
     } else if (contentType.htmlContentType) {
       val builder = new SaxonTreeBuilder(config.get)
       builder.startDocument(baseURI)
@@ -141,10 +141,17 @@ class InlineLoader(private val baseURI: Option[URI],
       val serializer = config.get.config.processor.newSerializer(baos)
       S9Api.serialize(config.get.config, result, serializer)
       val stream = new ByteArrayInputStream(baos.toByteArray)
-      // FIXME: it's bogus that I have to makeup a DocumentRequest to call parseHtml
+
       val request = new DocumentRequest(baseURI.getOrElse(new URI("")), Some(contentType), false)
-      val response = config.get.documentManager.parseHtml(request, new InputSource(stream))
-      consumer.get.receive("result", new ItemMessage(response.value, new XProcMetadata(response.contentType, response.props.toMap)))
+      val response = config.get.documentManager.parse(request, new InputSource(stream))
+      val metadata = new XProcMetadata(response.contentType, response.props)
+
+      response.value match {
+        case node: XdmNode =>
+          consumer.get.receive("result", new XdmNodeItemMessage(node, metadata))
+        case _ =>
+          throw new RuntimeException("Unexpected node type from parseHtml")
+      }
     } else {
       val text = if (allowExpandText) {
         val builder = new SaxonTreeBuilder(config.get)
@@ -179,11 +186,11 @@ class InlineLoader(private val baseURI: Option[URI],
       if (contentType.jsonContentType) {
         val expr = new XProcXPathExpression(ExpressionContext.NONE, "parse-json($json)")
         val bindingsMap = mutable.HashMap.empty[String, Message]
-        val vmsg = new XPathItemMessage(new XdmAtomicValue(text), XProcMetadata.JSON, ExpressionContext.NONE)
+        val vmsg = new XdmValueItemMessage(new XdmAtomicValue(text), XProcMetadata.JSON, ExpressionContext.NONE)
         bindingsMap.put("{}json", vmsg)
         try {
           val smsg = config.get.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
-          consumer.get.receive("result", new ItemMessage(smsg.item, new XProcMetadata(contentType, props.toMap)))
+          consumer.get.receive("result", new XdmValueItemMessage(smsg.item, new XProcMetadata(contentType, props.toMap)))
         } catch {
           case ex: SaxonApiException =>
             if (ex.getMessage.contains("Invalid JSON")) {
@@ -198,8 +205,9 @@ class InlineLoader(private val baseURI: Option[URI],
         val stream = new ByteArrayInputStream(text.getBytes("UTF-8"))
         // FIXME: it's bogus that I have to makeup a DocumentRequest to call parseHtml
         val request = new DocumentRequest(baseURI.getOrElse(new URI("")), Some(contentType), false)
-        val response = config.get.documentManager.parseHtml(request, new InputSource(stream))
-        consumer.get.receive("result", new ItemMessage(response.value, new XProcMetadata(response.contentType, response.props.toMap)))
+        val response = config.get.documentManager.parse(request, new InputSource(stream))
+        val metadata = new XProcMetadata(response.contentType, response.props)
+        consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), response.value, metadata))
       } else if (contentType.textContentType) {
         props.put(XProcConstants._content_length, new XdmAtomicValue(text.length))
 
@@ -209,7 +217,7 @@ class InlineLoader(private val baseURI: Option[URI],
         builder.addText(text)
         builder.endDocument()
         val result = builder.result
-        consumer.get.receive("result", new ItemMessage(result, new XProcMetadata(contentType, props.toMap)))
+        consumer.get.receive("result", new XdmNodeItemMessage(result, new XProcMetadata(contentType, props.toMap)))
       } else {
         throw new IllegalArgumentException(s"Unexected content type: $contentType")
       }
@@ -221,12 +229,29 @@ class InlineLoader(private val baseURI: Option[URI],
     for (node <- nodes) {
       str += node.getStringValue
     }
-
-    // FIXME: There's no support here for any kind of media type!!!
-
     val decoded = Base64.getMimeDecoder.decode(str)
-    props.put(XProcConstants._content_length, new XdmAtomicValue(decoded.length))
-    consumer.get.receive("result", new ItemMessage(decoded, new XProcMetadata(contentType, props.toMap)))
+
+    val metadata = new XProcMetadata(contentType, props.toMap)
+
+    if (contentType.xmlContentType || contentType.htmlContentType || contentType.textContentType || contentType.jsonContentType) {
+      val source = new InputSource(new ByteArrayInputStream(decoded))
+      val req = new DocumentRequest(metadata.baseURI.getOrElse(new URI("")), contentType)
+      val result = config.get.documentManager.parse(req, source)
+      if (result.shadow.isDefined) {
+        consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), result.shadow, metadata))
+      } else {
+        result.value match {
+          case node: XdmNode =>
+            consumer.get.receive("result", new XdmNodeItemMessage(node, metadata))
+          case _ =>
+            consumer.get.receive("result", new XdmValueItemMessage(result.value, metadata))
+        }
+      }
+    } else {
+      // Octet stream, I guess
+      props.put(XProcConstants._content_length, new XdmAtomicValue(decoded.length))
+      consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), decoded, new XProcMetadata(contentType, props.toMap)))
+    }
   }
 
   private def expandTVT(node: XdmNode, builder: SaxonTreeBuilder, expandText: Boolean): Unit = {
@@ -313,6 +338,6 @@ class InlineLoader(private val baseURI: Option[URI],
     val eval = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
     val dynContext = new DynamicContext()
     val msg = eval.withContext(dynContext) { eval.singletonValue(expr, List.empty[Message], bindings.toMap, None) }
-    msg.asInstanceOf[XPathItemMessage].item
+    msg.asInstanceOf[XdmValueItemMessage].item
   }
 }

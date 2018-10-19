@@ -1,11 +1,10 @@
 package com.xmlcalabash.model.xml.containers
 
-import com.jafpl.graph.{Binding, ChooseStart, ContainerStart, Graph, Node}
+import com.jafpl.graph.{Binding, ChooseStart, Graph, Node}
 import com.jafpl.steps.Manifold
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.{Artifact, DeclareStep, Documentation, OptionDecl, PipeInfo, Variable}
+import com.xmlcalabash.model.xml.{Artifact, Documentation, OptionDecl, PipeInfo, Variable}
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
 
 class When(override val config: XMLCalabashRuntime,

@@ -5,9 +5,10 @@ import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-import com.jafpl.messages.{ItemMessage, Message}
+import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.TestException
+import com.xmlcalabash.messages.XdmNodeItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.{MediaType, S9Api, URIUtils}
@@ -664,7 +665,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
       val value = node.getAttributeValue(_select)
       val eval = runtimeConfig.expressionEvaluator
       val context = inlineDocument(node)
-      val message = new ItemMessage(context.get, new XProcMetadata(MediaType.XML))
+      val message = new XdmNodeItemMessage(context.get, new XProcMetadata(MediaType.XML))
       val result = eval.singletonValue(new XProcXPathExpression(exprContext, value), List(message), Map.empty[String,Message], None)
       Some(result.item)
     } else {

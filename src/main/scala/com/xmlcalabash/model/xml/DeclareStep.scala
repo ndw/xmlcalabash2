@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.config.Jafpl
 import com.jafpl.graph.Graph
-import com.xmlcalabash.config.{OptionSignature, PortSignature, StepSignature, XMLCalabashConfig}
+import com.xmlcalabash.config.{OptionSignature, PortSignature, StepSignature}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.{Container, DeclarationContainer, WithDocument, WithProperties}

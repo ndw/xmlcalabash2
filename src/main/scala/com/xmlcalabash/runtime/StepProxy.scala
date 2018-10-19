@@ -3,14 +3,14 @@ package com.xmlcalabash.runtime
 import java.io.{IOException, InputStream}
 
 import com.jafpl.graph.Location
-import com.jafpl.messages.{BindingMessage, ExceptionMessage, ItemMessage, Message}
+import com.jafpl.messages.{BindingMessage, ExceptionMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality, Step}
 import com.xmlcalabash.exceptions.{StepException, XProcException}
-import com.xmlcalabash.messages.XPathItemMessage
-import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.util.{TypeUtils, XProcVarValue}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
+import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
+import com.xmlcalabash.util.TypeUtils
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode, XdmNodeKind, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -116,7 +116,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
       val occurrence = optsig.occurrence
 
       bindmsg.message match {
-        case item: XPathItemMessage =>
+        case item: XdmValueItemMessage =>
           item.item match {
             case atomic: XdmAtomicValue =>
               if (false && occurrence.isDefined) {
@@ -128,21 +128,6 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
               }
             case _ => Unit
               step.receiveBinding(qname, item.item, item.context)
-          }
-        case item: ItemMessage =>
-          item.item match {
-            case atomic: XdmAtomicValue =>
-              if (false && occurrence.isDefined) {
-                val seq = typeUtils.castSequenceAs(atomic, opttype, occurrence.get, ExpressionContext.NONE)
-                step.receiveBinding(qname, seq, ExpressionContext.NONE)
-              } else {
-                val value = typeUtils.castAtomicAs(atomic, opttype, ExpressionContext.NONE)
-                step.receiveBinding(qname, value, ExpressionContext.NONE)
-              }
-            case opt: XProcVarValue =>
-              step.receiveBinding(qname, opt.value, ExpressionContext.NONE)
-            case _ => Unit
-              step.receiveBinding(qname, item.item.asInstanceOf[XdmItem], ExpressionContext.NONE)
           }
         case _ =>
           throw XProcException.xiInvalidMessage(location, bindmsg.message)
@@ -212,59 +197,42 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
 
   override def receive(port: String, message: Message): Unit = {
     message match {
-      case item: ExceptionMessage =>
-        item.item match {
+      case msg: ExceptionMessage =>
+        msg.item match {
           case ex: StepException =>
             if (ex.errors.isDefined) {
               step.receive(port, ex.errors.get, XProcMetadata.XML)
             } else {
-              step.receive(port, item.item, XProcMetadata.EXCEPTION)
+              step.receive(port, msg.item, XProcMetadata.EXCEPTION)
             }
           case _ =>
-            step.receive(port, item.item, XProcMetadata.EXCEPTION)
+            step.receive(port, msg.item, XProcMetadata.EXCEPTION)
         }
 
-      case item: ItemMessage =>
-        item.metadata match {
-          case xmlmeta: XProcMetadata =>
-            if (defaultSelect.contains(port)) {
-              val expr = config.expressionEvaluator.newInstance()
-              val selectExpr = defaultSelect(port)
-              val selected = expr.value(selectExpr, List(item), bindingsMap.toMap, None)
-              val iter = selected.item.iterator()
-              while (iter.hasNext) {
-                val item = iter.next()
-                item match {
-                  case node: XdmNode =>
-                    if (node.getNodeKind == XdmNodeKind.ATTRIBUTE) {
-                      throw XProcException.xdInvalidSelection(selectExpr.toString, "an attribute", location)
-                    }
-                    dynamicContext.addDocument(node, message)
-                  case _ => Unit
+      case msg: XdmValueItemMessage =>
+        if (defaultSelect.contains(port)) {
+          // If the input has a select, this is the context for that expression
+          val expr = config.expressionEvaluator.newInstance()
+          val selectExpr = defaultSelect(port)
+          val selected = expr.value(selectExpr, List(msg), bindingsMap.toMap, None)
+          val iter = selected.item.iterator()
+          while (iter.hasNext) {
+            val item = iter.next()
+            item match {
+              case node: XdmNode =>
+                if (node.getNodeKind == XdmNodeKind.ATTRIBUTE) {
+                  throw XProcException.xdInvalidSelection(selectExpr.toString, "an attribute", location)
                 }
-                step.receive(port, item, selected.metadata)
-              }
-            } else {
-              item.item match {
-                case node: XdmNode =>
-                  /*
-                  if (config.documentManager.shadow(node).isDefined) {
-                    val shadow = config.documentManager.shadow(node).get
-                    val meta = new XProcMetadata(shadow.contentType, xmlmeta.properties)
-                    val stream = shadow.getStream
-                    openStreams += stream
-                    step.receive(port, stream, meta)
-                  } else {
-                    step.receive(port, item.item, xmlmeta)
-                  }
-                  */
-                  step.receive(port, item.item, xmlmeta)
-                case _ =>
-                  step.receive(port, item.item, xmlmeta)
-              }
+                dynamicContext.addDocument(node, message)
+              case _ => Unit
             }
-          case _ => throw XProcException.xiInvalidMetadata(location, item.metadata)
+            step.receive(port, item, selected.metadata)
+          }
+        } else {
+          step.receive(port, msg.item, msg.metadata)
         }
+      case msg: AnyItemMessage =>
+        step.receive(port, msg.shadow, msg.metadata)
       case _ => throw XProcException.xiInvalidMessage(location, message)
     }
   }
@@ -272,6 +240,16 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
   // =======================================================================================
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
-    consumer.get.receive(port, new ItemMessage(item, metadata))
+    item match {
+      case value: XdmNode =>
+        consumer.get.receive(port, new XdmNodeItemMessage(value, metadata))
+      case value: XdmValue =>
+        consumer.get.receive(port, new XdmValueItemMessage(value, metadata))
+      case _ =>
+        val tree = new SaxonTreeBuilder(config)
+        tree.startDocument(metadata.baseURI)
+        tree.endDocument()
+        consumer.get.receive(port, new AnyItemMessage(tree.result, item, metadata))
+    }
   }
 }

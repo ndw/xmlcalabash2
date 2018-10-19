@@ -1,15 +1,11 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
-import net.sf.saxon.expr.parser.XPathParser
 import net.sf.saxon.s9api.QName
-import net.sf.saxon.sxpath.IndependentContext
-import net.sf.saxon.trans.XPathException
 import net.sf.saxon.value.SequenceType
 
 class WithOption(override val config: XMLCalabashRuntime,

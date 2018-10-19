@@ -1,8 +1,7 @@
 package com.xmlcalabash.model.xml.containers
 
-import com.jafpl.graph.{ContainerStart, Graph, Node, TryCatchStart}
+import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.jafpl.steps.Manifold
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.datasource.{DataSource, Pipe}
