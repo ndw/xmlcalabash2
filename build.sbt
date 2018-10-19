@@ -26,15 +26,86 @@ buildInfoKeys ++= Seq[BuildInfoKey](
     }}.toString()
 )
 
-lazy val meerschaum = (project in file(".")).
+lazy val root = (project in file(".")).
   enablePlugins(BuildInfoPlugin).
   settings(
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion),
     buildInfoPackage := "com.xmlcalabash.sbt"
   )
 
-//.dependsOn(Jafpl)
-//lazy val Jafpl = RootProject(uri("https://github.com/ndw/jafpl.git"))
+lazy val failTask = taskKey[Unit]("Force the build to fail")
+failTask := {
+  throw new sbt.MessageOnlyException("No build for you.")
+}
+
+// Redefine publish so that it will fail if the repo is dirty
+publish := Def.taskDyn {
+  val default = publish.taskValue
+
+  val shortstat = {
+    try {
+      val extracted = new InputStreamReader(
+        java.lang.Runtime.getRuntime.exec("git diff --shortstat").getInputStream
+      )
+      var diff = ""
+      val reader = new BufferedReader(extracted)
+      var line = reader.readLine
+      while (line != null) {
+        diff = line
+        line = reader.readLine
+      }
+      reader.close()
+      diff
+    } catch {
+      case ex: Exception => "FAILED"
+    }
+  }
+
+  val status = {
+    try {
+      val extracted = new InputStreamReader(
+        java.lang.Runtime.getRuntime.exec("git status --porcelain").getInputStream
+      )
+      var newFile = ""
+      val reader = new BufferedReader(extracted)
+      var line = reader.readLine
+      while (line != null) {
+        if (line.startsWith("??")) {
+          newFile = line
+        }
+        line = reader.readLine
+      }
+      reader.close()
+      newFile
+    } catch {
+      case ex: Exception => "FAILED"
+    }
+  }
+
+  val message = if (shortstat != "") {
+    if (status != "") {
+      Some("Repository has changed and untracked files.")
+    } else {
+      Some("Repository has changed files.")
+    }
+  } else if (status != "") {
+    Some("Repository has untracked files.")
+  } else {
+    None
+  }
+
+  if (message.isDefined) {
+    println(message.get)
+  }
+
+  if (message.isDefined) {
+    Def.taskDyn {
+      failTask
+    }
+  } else {
+    Def.task(default.value)
+  }
+}.value
 
 resolvers += DefaultMavenRepository
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
