@@ -1,8 +1,14 @@
-package com.xmlcalabash.testers
+package com.xmlcalabash.util
+
+/* I'm going to copy this file around from project to project for a bit, then I'm going to get
+   frustrated at some point and make a separate project to hold it.
+   /me takes an "I told you so" token, 18 Oct 2018.
+ */
 
 import java.io.File
 
 import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.testing.TestRunner
 import org.scalatest.FunSpec
 
 import scala.collection.mutable.ListBuffer
@@ -34,7 +40,7 @@ class XProcTestSpec extends FunSpec {
   }
 
   protected def test(fn: String) {
-    val runner = new TestRunner(runtimeConfig, fn)
+    val runner = new TestRunner(runtimeConfig, List(fn))
     val results = runner.run()
     for (result <- results) {
       assert(result.passed)

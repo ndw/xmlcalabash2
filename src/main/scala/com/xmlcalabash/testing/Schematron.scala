@@ -1,11 +1,12 @@
-package com.xmlcalabash.util
+package com.xmlcalabash.testing
 
 import java.net.URI
-import javax.xml.transform.sax.SAXSource
-import javax.xml.transform.{Source, URIResolver}
 
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.TestException
+import com.xmlcalabash.util.S9Api
+import javax.xml.transform.sax.SAXSource
+import javax.xml.transform.{Source, URIResolver}
 import net.sf.saxon.om.StructuredQName
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmDestination, XdmNode}
 import org.xml.sax.InputSource

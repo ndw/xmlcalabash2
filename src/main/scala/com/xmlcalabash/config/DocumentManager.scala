@@ -10,6 +10,4 @@ trait DocumentManager {
 
   def parseHtml(request: DocumentRequest): DocumentResponse
   def parseHtml(request: DocumentRequest, isource: InputSource): DocumentResponse
-
-  def shadow(node: XdmNode): Option[ShadowValue]
 }

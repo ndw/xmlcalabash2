@@ -2,10 +2,10 @@ import java.io.{BufferedReader, InputStreamReader}
 
 name         := "XML Calabash"
 organization := "com.xmlcalabash"
-version      := "1.9.9"
+version      := "1.9.15"
 scalaVersion := "2.12.6"
 
-lazy val jafplVersion = "0.0.64"
+lazy val jafplVersion = "0.0.66"
 
 buildInfoKeys ++= Seq[BuildInfoKey](
   "jafplVersion" -> jafplVersion,

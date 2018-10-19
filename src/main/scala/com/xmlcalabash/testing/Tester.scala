@@ -1,10 +1,10 @@
-package com.xmlcalabash.testers
+package com.xmlcalabash.testing
 
 import com.jafpl.messages.ItemMessage
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{TestException, XProcException}
-import com.xmlcalabash.runtime.{BufferingConsumer, ExpressionContext, XProcMetadata}
-import com.xmlcalabash.util.{Schematron, XProcVarValue}
+import com.xmlcalabash.runtime.{BufferingConsumer, ExpressionContext, XMLCalabashRuntime, XProcMetadata}
+import com.xmlcalabash.util.XProcVarValue
 import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -52,21 +52,22 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
     _bindings.put(optname, item)
   }
 
-  // Return None if the test passed, otherwise return the failure error code
   def run(): TestResult = {
     if (_pipeline.isEmpty) {
       throw new TestException("No pipeline specified")
     }
 
+    var runtime: XMLCalabashRuntime = null
     try {
-      val runtime = runtimeConfig.runtime(_pipeline.get)
+      runtime = runtimeConfig.runtime(_pipeline.get)
+      val result = new BufferingConsumer()
+
       for (port <- _inputs.keySet) {
         for (item <- _inputs(port)) {
           runtime.input(port, new ItemMessage(item, new XProcMetadata()))
         }
       }
 
-      val result = new BufferingConsumer()
       runtime.output("result", result)
 
       for (bind <- _bindings.keySet) {
@@ -105,6 +106,10 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
       }
     } catch {
       case xproc: XProcException =>
+        if (runtime != null) {
+          runtime.stop()
+        }
+
         val code = xproc.code
         val message = if (xproc.message.isDefined) {
           xproc.message.get
@@ -125,6 +130,9 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
 
         new TestResult(xproc)
       case ex: Exception =>
+        if (runtime != null) {
+          runtime.stop()
+        }
         new TestResult(ex)
     }
   }

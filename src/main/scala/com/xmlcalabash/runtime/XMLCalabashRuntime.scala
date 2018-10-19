@@ -143,10 +143,8 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
 
     try {
       runtime.run()
-    } catch {
-      case ex: Exception =>
-        runtime.stop()
-        throw ex
+    } finally {
+      runtime.stop()
     }
   }
 
@@ -164,9 +162,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   }
 
   def stop(): Unit = {
-    if (!ran) {
-      runtime.stop()
-    }
+    runtime.stop()
   }
 
   // ===================================================================================

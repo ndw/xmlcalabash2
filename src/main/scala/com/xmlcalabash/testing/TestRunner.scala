@@ -1,25 +1,25 @@
-package com.xmlcalabash.testers
+package com.xmlcalabash.testing
 
 import java.io.{ByteArrayOutputStream, File, PrintStream}
 import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-import javax.xml.transform.sax.SAXSource
 import com.jafpl.messages.{ItemMessage, Message}
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.TestException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.{MediaType, S9Api, URIUtils}
-import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
+import javax.xml.transform.sax.SAXSource
+import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.InputSource
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
+class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
   private val _testsuite = new QName("", "testsuite")
   private val _properties = new QName("", "properties")
   private val _property = new QName("", "property")
@@ -41,9 +41,6 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
   private val _type = new QName("", "type")
 
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  private val testFiles = ListBuffer.empty[String]
-  private val dir = new File(testloc)
-  private val fnregex = "^.*.xml".r
   private val tsns = "http://xproc.org/ns/testsuite/3.0"
   private val t_test_suite = new QName(tsns, "test-suite")
   private val t_div = new QName(tsns, "div")
@@ -64,16 +61,24 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
   private val _when = new QName("", "when")
   private val _features = new QName("", "features")
 
+  private val testFiles = ListBuffer.empty[String]
+  private val fnregex = "^.*.xml".r
+
   private val processor = runtimeConfig.processor
   private val builder = processor.newDocumentBuilder()
   builder.setDTDValidation(false)
   builder.setLineNumbering(true)
 
-  if (dir.exists) {
-    if (dir.isDirectory) {
-      recurse(dir)
+  for (path <- testloc) {
+    val dir = new File(path)
+    if (dir.exists) {
+      if (dir.isDirectory) {
+        recurse(dir)
+      } else {
+        testFiles += path
+      }
     } else {
-      testFiles += testloc
+      throw new RuntimeException(s"Test location does not exist: $path")
     }
   }
 
@@ -84,7 +89,10 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
   def run(): ListBuffer[TestResult] = {
     val resultList = ListBuffer.empty[TestResult]
 
+    var count = 0
     for (fn <- testFiles) {
+      count += 1
+      logger.info(s"Running $count of ${testFiles.length}: $fn")
       val source = new SAXSource(new InputSource(fn))
       val node = builder.build(source)
       resultList ++= runTestDocument(node)
@@ -609,7 +617,9 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: String) {
           var passed = false
           for (ecode <- code.split("\\s+")) {
             val qcode = ValueParser.parseQName(ecode, S9Api.inScopeNamespaces(node), Some(new NodeLocation(node)))
-            passed = passed || qcode == result.errQName.get
+            if (result.errQName.isDefined) {
+              passed = passed || qcode == result.errQName.get
+            }
           }
           result.passed = passed
         }

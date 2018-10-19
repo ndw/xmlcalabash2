@@ -1,4 +1,4 @@
-package com.xmlcalabash.testers
+package com.xmlcalabash.testing
 
 import java.net.URI
 

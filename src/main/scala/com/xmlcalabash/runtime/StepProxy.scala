@@ -247,6 +247,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
             } else {
               item.item match {
                 case node: XdmNode =>
+                  /*
                   if (config.documentManager.shadow(node).isDefined) {
                     val shadow = config.documentManager.shadow(node).get
                     val meta = new XProcMetadata(shadow.contentType, xmlmeta.properties)
@@ -256,6 +257,8 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
                   } else {
                     step.receive(port, item.item, xmlmeta)
                   }
+                  */
+                  step.receive(port, item.item, xmlmeta)
                 case _ =>
                   step.receive(port, item.item, xmlmeta)
               }

@@ -1,8 +1,7 @@
 package com.xmlcalabash.test
 
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.testers.XProcTestSpec
-import com.xmlcalabash.util.{ArgBundle, ValueUtils}
+import com.xmlcalabash.util.{ArgBundle, ValueUtils, XProcTestSpec}
 import net.sf.saxon.s9api.QName
 import org.scalatest.FlatSpec
 

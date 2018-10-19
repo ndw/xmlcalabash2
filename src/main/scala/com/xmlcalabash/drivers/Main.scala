@@ -12,7 +12,7 @@ import com.xmlcalabash.runtime.{PrintingConsumer, XProcMetadata}
 import com.xmlcalabash.util.{ArgBundle, URIUtils}
 import net.sf.saxon.s9api.QName
 
-object XmlDriver extends App {
+object Main extends App {
   type OptionMap = Map[Symbol, Any]
 
   private val config = XMLCalabashConfig.newInstance()

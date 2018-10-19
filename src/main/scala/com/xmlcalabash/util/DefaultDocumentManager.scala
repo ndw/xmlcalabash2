@@ -29,9 +29,6 @@ import scala.collection.mutable
 
 class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentManager {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  private val shadowValues = mutable.HashMap.empty[XdmNode, ShadowValue]
-
-  override def shadow(node: XdmNode): Option[ShadowValue] = shadowValues.get(node)
 
   override def parse(request: DocumentRequest): DocumentResponse = {
     val baseURI = if (request.baseURI.isDefined) {
@@ -233,7 +230,6 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       builder.startDocument(request.href)
       builder.endDocument()
       val result = builder.result
-      shadowValues.put(result, shadow)
       new DocumentResponse(result, contentType, props)
     }
   }

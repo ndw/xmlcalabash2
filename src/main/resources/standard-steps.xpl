@@ -96,6 +96,19 @@
 
 <!--============================================================ -->
 
+<p:declare-step type="cx:base64-encode">
+  <p:input port="source" content-types="*/*"/>
+  <p:output port="result" content-types="text/plain"/>
+  <p:option name="serialization" as="map(*)"/>
+  <p:option name="parameters" as="map(*)"/>
+</p:declare-step>
+
+<p:declare-step type="cx:base64-decode">
+  <p:input port="source" content-types="*/*"/>
+  <p:output port="result" content-types="*/*"/>
+  <p:option name="parameters" as="map(*)"/>
+</p:declare-step>
+
 <p:declare-step type="cx:javascript">
   <p:input port="source"/>
   <p:output port="result"/>

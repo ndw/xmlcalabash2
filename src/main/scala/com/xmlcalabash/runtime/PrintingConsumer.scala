@@ -1,6 +1,7 @@
 package com.xmlcalabash.runtime
 
-import java.io.{ByteArrayOutputStream, File, FileOutputStream, PrintStream}
+import java.io.{ByteArrayOutputStream, File, FileOutputStream, InputStream, PrintStream}
+import java.util.Base64
 
 import com.jafpl.messages.{ItemMessage, Message}
 import com.jafpl.steps.DataConsumer
@@ -31,8 +32,27 @@ class PrintingConsumer private(config: XMLCalabashRuntime, serialization: Serial
           case _ => MediaType.OCTET_STREAM
         }
 
-        if (outputs.isEmpty || (index >= outputs.get.length)) {
-          if (ctype.markupContentType) {
+        val pos = if (outputs.isEmpty || (index >= outputs.get.length)) {
+          System.out
+        } else {
+          val file = new File(outputs.get(index))
+          index += 1
+
+          val fos = new FileOutputStream(file)
+          new PrintStream(fos)
+        }
+
+        item.item match {
+          case is: InputStream =>
+            val stream = new ByteArrayOutputStream()
+            val buf = Array.fill[Byte](4096)(0)
+            var len = is.read(buf, 0, buf.length)
+            while (len >= 0) {
+              stream.write(buf, 0, len)
+              len = is.read(buf, 0, buf.length)
+            }
+            pos.write(stream.toByteArray)
+          case value: XdmValue =>
             val stream = new ByteArrayOutputStream()
             val serializer = config.processor.newSerializer(stream)
 
@@ -42,35 +62,11 @@ class PrintingConsumer private(config: XMLCalabashRuntime, serialization: Serial
               serialization.setOutputProperties(serializer)
             }
 
-            item.item match {
-              case value: XdmValue => S9Api.serialize(config.config, value, serializer)
-            }
-            println(stream.toString("UTF-8"))
-          } else if (ctype.textContentType) {
-            println(item.item)
-          } else {
-            println(s"Eliding $ctype content")
-          }
-        } else {
-          val file = new File(outputs.get(index))
-          index += 1
-
-          val fos = new FileOutputStream(file)
-          val pos = new PrintStream(fos)
-          if (ctype.textContentType) {
-            pos.print(item.item)
-          } else if (ctype.xmlContentType) {
-            pos.print(item.item)
-          } else {
-            val bytes: Array[Byte] = item.item.asInstanceOf[Array[Byte]]
-            pos.write(bytes)
-          }
-
-          pos.close()
-          fos.close()
+            S9Api.serialize(config.config, value, serializer)
+            pos.print(stream.toString("UTF-8"))
+          case _ =>
+            throw new RuntimeException(s"Don't know how to print ${item.item}")
         }
-      case _ =>
-        throw XProcException.xiBadMessage(message, None)
     }
   }
 }
