@@ -12,13 +12,13 @@ class FileDataStoreSpec extends FlatSpec with BeforeAndAfter {
   private val config = XMLCalabashConfig.newInstance()
   private val fileStore = new FileDataStore(new FallbackDataStore())
   private val testIO = new TestIO()
-  private val tempDir: File = File.createTempFile("meerschaum-test-", ".dir")
+  private val tempDir: File = File.createTempFile("xml-calabash-test-", ".dir")
   private var tempFile: File = null
 
   before {
     tempDir.delete()
     tempDir.mkdir()
-    tempFile = File.createTempFile("meerschaum-test-", ".bin", tempDir)
+    tempFile = File.createTempFile("xml-calabash-test-", ".bin", tempDir)
   }
 
   after {
@@ -100,7 +100,7 @@ class FileDataStoreSpec extends FlatSpec with BeforeAndAfter {
     }
 
     override def list(id: URI, props: Map[String, XdmAtomicValue]): Unit = {
-      sawFile = id.toASCIIString.endsWith("/foo.txt")
+      sawFile = sawFile || id.toASCIIString.endsWith("/foo.txt")
     }
   }
 
