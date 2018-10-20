@@ -225,12 +225,11 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       builder.endDocument()
       new DocumentResponse(builder.result, contentType, props)
     } else {
-      val shadow = new ShadowValue(streamToByteArray(stream), contentType)
       val builder = new SaxonTreeBuilder(xmlCalabash)
       builder.startDocument(request.href)
       builder.endDocument()
       val result = builder.result
-      new DocumentResponse(result, contentType, props)
+      new DocumentResponse(result, streamToByteArray(stream), contentType, props)
     }
   }
 

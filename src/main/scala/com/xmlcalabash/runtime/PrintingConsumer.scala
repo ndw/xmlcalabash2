@@ -59,7 +59,7 @@ class PrintingConsumer private(config: XMLCalabashRuntime, serialization: Serial
             val stream = new ByteArrayOutputStream()
             val serializer = config.processor.newSerializer(stream)
 
-            if (ctype.jsonContentType) {
+            if (!ctype.xmlContentType) {
               serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
             } else {
               serialization.setOutputProperties(serializer)

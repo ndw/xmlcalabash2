@@ -1,0 +1,63 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+
+<t:info>
+  <t:title>Base64 encode a document</t:title>
+  <t:revision-history>
+    <t:revision>
+      <t:date>2018-10-19</t:date>
+      <t:author initials="ndw">
+        <t:name>Norman Walsh</t:name>
+      </t:author>
+      <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Initial checkin.</p>
+      </t:description>
+    </t:revision>
+  </t:revision-history>
+</t:info>
+
+<t:description xmlns="http://www.w3.org/1999/xhtml">
+  <p>Test that the <code>cx:base64-encode</code> step works.</p>
+</t:description>
+
+<t:pipeline>
+  <p:declare-step xmlns:p="http://www.w3.org/ns/xproc"
+                  xmlns:cx="http://xmlcalabash.com/ns/extensions"
+                  version="3.0">
+    <p:output port="result"
+              serialization="map { 'omit-xml-declaration': true(),
+                                   'indent': true() }"/>
+
+    <p:declare-step type="cx:base64-encode">
+      <p:input port="source" content-types="*/*"/>
+      <p:output port="result" content-types="text/plain"/>
+      <p:option name="serialization" as="map(*)"/>
+      <p:option name="parameters" as="map(*)"/>
+    </p:declare-step>
+
+    <cx:metadata-extractor>
+      <p:with-input port="source">
+        <p:document href="../image.jpg"/>
+      </p:with-input>
+    </cx:metadata-extractor>
+  </p:declare-step>
+</t:pipeline>
+
+<t:schematron>
+  <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron"
+            xmlns:p="http://www.w3.org/ns/xproc"
+            xmlns:rng="http://relaxng.org/ns/structure/1.0">
+     <s:ns prefix="p" uri="http://www.w3.org/ns/xproc"/>
+     <s:ns prefix="cx" uri="http://xmlcalabash.com/ns/extensions"/>
+     <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step"/>
+
+     <s:pattern>
+       <s:rule context="/*">
+         <s:assert test="self::c:metadata">The output should be a c:metadata document</s:assert>
+         <s:assert test="@content-type='image/jpeg'">Content type should be image/jpeg</s:assert>
+         <s:assert test="c:tag[@name='Image Height']='336 pixels'">Image height should be 336px</s:assert>
+         <s:assert test="c:tag[@name='Image Width']='500 pixels'">Image width should be 500px</s:assert>
+       </s:rule>
+     </s:pattern>
+  </s:schema>
+</t:schematron>
+</t:test>

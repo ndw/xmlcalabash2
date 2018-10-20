@@ -6,7 +6,7 @@ import java.util.Base64
 
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.MediaType
+import com.xmlcalabash.util.{MediaType, TypeUtils}
 import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 
 class B64Decode extends DefaultXmlStep {
@@ -17,6 +17,7 @@ class B64Decode extends DefaultXmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULT
 
   override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
+    val map = TypeUtils.castAsJava(value)
     println(s"Received binding for $variable")
   }
 

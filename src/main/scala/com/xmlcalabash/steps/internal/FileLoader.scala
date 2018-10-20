@@ -123,7 +123,7 @@ class FileLoader(private val context: ExpressionContext,
     val metadata = new XProcMetadata(result.contentType, result.props)
 
     if (result.shadow.isDefined) {
-      consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), result.shadow, metadata))
+      consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), result.shadow.get, metadata))
     } else {
       result.value match {
         case node: XdmNode =>

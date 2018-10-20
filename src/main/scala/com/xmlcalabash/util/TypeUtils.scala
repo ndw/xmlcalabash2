@@ -77,6 +77,36 @@ object TypeUtils {
     }
   }
 
+  def castAsScala(value: Any): Any = {
+    if (value == null) {
+      return value
+    }
+    value match {
+      case node: XdmNode =>
+        throw XProcException.xiNodesNotAllowed(node)
+      case atomic: XdmAtomicValue =>
+        atomic.getValue
+      case xarr: XdmArray =>
+        val list = ListBuffer.empty[Any]
+        var idx = 0
+        for (idx <- 0  until xarr.arrayLength()) {
+          val value = xarr.get(idx)
+          list += castAsScala(value)
+        }
+        list.toArray
+      case xmap: XdmMap =>
+        val map = xmap.asMap()
+        val jmap = mutable.HashMap.empty[Any,Any]
+        for (key <- map.asScala.keySet) {
+          val value = map.asScala(key)
+          jmap.put(castAsScala(key), castAsScala(value))
+        }
+        jmap.toMap
+      case _ =>
+        value
+    }
+  }
+
   def mediaType(value: Any): MediaType = {
     value match {
       case v: XdmMap => vnd("map")
