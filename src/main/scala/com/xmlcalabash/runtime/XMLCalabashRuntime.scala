@@ -24,6 +24,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   private var _documentManager = config.documentManager
   private var _watchdogTimeout = config.watchdogTimeout
   private val _staticOptionBindings = mutable.HashMap.empty[QName, XdmValue]
+  private var _defaultSerializationOptions: Map[String,Map[QName,String]] = Map.empty[String,Map[QName,String]]
   private val inputSet = mutable.HashSet.empty[String]
   private val outputSet = mutable.HashSet.empty[String]
   private val bindingsMap = mutable.HashMap.empty[String,Message]
@@ -228,6 +229,14 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
 
   def signatures_=(signatures: Signatures): Unit = {
     _signatures = signatures
+  }
+
+  def defaultSerializationOptions(contentType: String): Map[QName,String] = {
+    _defaultSerializationOptions.getOrElse(contentType, Map.empty[QName,String])
+  }
+
+  protected[xmlcalabash] def setDefaultSerializationOptions(opts: Map[String,Map[QName,String]]): Unit = {
+    _defaultSerializationOptions = opts
   }
 
   // ==============================================================================================

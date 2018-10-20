@@ -4,8 +4,12 @@ import java.util.Properties
 
 import com.jafpl.util.DefaultTraceEventManager
 import com.xmlcalabash.config.{XMLCalabashConfig, XMLCalabashConfigurer}
+import javax.xml.transform.URIResolver
+import javax.xml.transform.sax.SAXSource
+import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.{Processor, QName}
 import org.slf4j.{Logger, LoggerFactory}
+import org.xml.sax.{EntityResolver, InputSource}
 
 import scala.collection.mutable
 
@@ -15,8 +19,15 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
   config.load()
 
   override def configure(configuration: XMLCalabashConfig): Unit = {
-    configuration.processor = new Processor(false)
-    configuration.errorListener = new DefaultErrorListener()
+    configuration.processor = if (config.saxon_configuration_file.isDefined) {
+      new Processor(new SAXSource(new InputSource(config.saxon_configuration_file.get)))
+    } else {
+      new Processor(config.schema_aware)
+    }
+
+    for (key <- config.saxon_configuration_properties.keySet) {
+      configuration.processor.setConfigurationProperty(key, config.saxon_configuration_properties(key))
+    }
 
     configuration.traceEventManager = new DefaultTraceEventManager()
     val traces = Option(System.getProperty("com.xmlcalabash.trace")).getOrElse("")
@@ -36,16 +47,28 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
     configuration.watchdogTimeout = timeout.toLong
 
     val resolver = new XProcURIResolver(configuration)
-    configuration.uriResolver = resolver
-    configuration.entityResolver = resolver
-    configuration.unparsedTextURIResolver = resolver
-    configuration.moduleURIResolver = resolver
+    configuration.uriResolver = loadResolver(config.uri_resolver, resolver).asInstanceOf[URIResolver]
+    configuration.entityResolver = loadResolver(config.entity_resolver, resolver).asInstanceOf[EntityResolver]
+    configuration.unparsedTextURIResolver = loadResolver(config.unparsed_text_uri_resolver, resolver).asInstanceOf[UnparsedTextURIResolver]
+    configuration.moduleURIResolver = loadResolver(config.module_uri_resolver, resolver).asInstanceOf[ModuleURIResolver]
+    // FIXME: support an alternate error listener (maybe)
+    configuration.errorListener = new DefaultErrorListener()
 
     configuration.errorExplanation = new DefaultErrorExplanation(configuration)
-
     configuration.documentManager = new DefaultDocumentManager(configuration)
+    configuration.defaultSerializationOptions = config.serialization
 
     loadProperties(configuration)
+  }
+
+  private def loadResolver(klass: Option[String], default: XProcURIResolver): Object = {
+    if (klass.isDefined) {
+      // FIXME: implement instantiation of resolvers
+      logger.error(s"Alternate resolvers not yet implmeented: $klass.get")
+      default
+    } else {
+      default
+    }
   }
 
   private def loadProperties(configuration: XMLCalabashConfig): Unit = {

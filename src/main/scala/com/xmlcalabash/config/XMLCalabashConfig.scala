@@ -60,6 +60,7 @@ class XMLCalabashConfig extends RuntimeConfiguration {
   private var _staticBaseURI = URIUtils.cwdAsURI
   private var _language = defaultLocale
   private var _episode = defaultEpisode
+  private var _defaultSerializationOptions = Map.empty[String,Map[QName,String]]
 
   def productName: String = BuildInfo.name
   def productVersion: String = BuildInfo.version
@@ -117,6 +118,7 @@ class XMLCalabashConfig extends RuntimeConfiguration {
     val standardSteps = xmlbuilder.build(source)
 
     runtime.signatures = parser.signatures(standardSteps)
+    runtime.setDefaultSerializationOptions(_defaultSerializationOptions)
 
     if (debug.injectables.nonEmpty) {
       val builder = processor.newDocumentBuilder()
@@ -234,11 +236,17 @@ class XMLCalabashConfig extends RuntimeConfiguration {
     _watchdogTimeout = timeout
   }
 
-  def language: String = _episode
+  def language: String = _language
   def language_=(language: String): Unit = {
     checkClosed()
     // FIXME: Check for valid format
     _language = language
+  }
+
+  def defaultSerializationOptions: Map[String,Map[QName,String]] = _defaultSerializationOptions
+  def defaultSerializationOptions_=(opts: Map[String,Map[QName,String]]): Unit = {
+    checkClosed()
+    _defaultSerializationOptions = opts
   }
 
   def staticBaseURI: URI = _staticBaseURI
