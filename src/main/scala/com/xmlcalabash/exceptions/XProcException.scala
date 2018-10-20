@@ -65,6 +65,7 @@ object XProcException {
   def xiWrongImplParams(): XProcException = internalError(51, None)
   def xiNoSuchPortOnAccept(port: String): XProcException = internalError(52, None, List(port))
   def xiBadValueOnFileLoader(variable: String): XProcException = internalError(53, None, List(variable))
+  def xiNoSaxon(): XProcException = internalError(54, None, None)
 
   def xdSequenceNotAllowedOnIf(location: Option[Location]): XProcException = dynamicError(5, location)
   def xdInputSequenceNotAllowed(port: String, location: Option[Location]): XProcException = dynamicError(6, port, location)

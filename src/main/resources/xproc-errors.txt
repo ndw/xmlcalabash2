@@ -242,5 +242,6 @@ Internal error: configuration object differs from runtime configuration object.
 {http://xmlcalabash.com/ns/extensions}XI0052
 
 {http://xmlcalabash.com/ns/extensions}XI0053
+Could not initialize requested Saxon version.
 
 {http://xmlcalabash.com/ns/extensions}XI0055

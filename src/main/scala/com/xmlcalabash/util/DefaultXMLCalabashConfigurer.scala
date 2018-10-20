@@ -4,6 +4,7 @@ import java.util.Properties
 
 import com.jafpl.util.DefaultTraceEventManager
 import com.xmlcalabash.config.{XMLCalabashConfig, XMLCalabashConfigurer}
+import com.xmlcalabash.exceptions.XProcException
 import javax.xml.transform.URIResolver
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
@@ -19,10 +20,15 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
   config.load()
 
   override def configure(configuration: XMLCalabashConfig): Unit = {
-    configuration.processor = if (config.saxon_configuration_file.isDefined) {
-      new Processor(new SAXSource(new InputSource(config.saxon_configuration_file.get)))
-    } else {
-      new Processor(config.schema_aware)
+    try {
+      configuration.processor = if (config.saxon_configuration_file.isDefined) {
+        new Processor(new SAXSource(new InputSource(config.saxon_configuration_file.get)))
+      } else {
+        new Processor(config.schema_aware)
+      }
+    } catch {
+      case ex: RuntimeException =>
+        throw XProcException.xiNoSaxon()
     }
 
     for (key <- config.saxon_configuration_properties.keySet) {
@@ -57,6 +63,7 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
     configuration.errorExplanation = new DefaultErrorExplanation(configuration)
     configuration.documentManager = new DefaultDocumentManager(configuration)
     configuration.defaultSerializationOptions = config.serialization
+    configuration.trimInlineWhitespace = config.trim_inline_whitespace
 
     loadProperties(configuration)
   }

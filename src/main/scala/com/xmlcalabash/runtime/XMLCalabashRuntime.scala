@@ -12,7 +12,7 @@ import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelE
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep}
-import com.xmlcalabash.util.{SerializationOptions, XProcVarValue}
+import com.xmlcalabash.util.XProcVarValue
 import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmValue}
 
 import scala.collection.mutable
@@ -25,6 +25,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   private var _watchdogTimeout = config.watchdogTimeout
   private val _staticOptionBindings = mutable.HashMap.empty[QName, XdmValue]
   private var _defaultSerializationOptions: Map[String,Map[QName,String]] = Map.empty[String,Map[QName,String]]
+  private var _trim_inline_whitespace = config.trimInlineWhitespace
   private val inputSet = mutable.HashSet.empty[String]
   private val outputSet = mutable.HashSet.empty[String]
   private val bindingsMap = mutable.HashMap.empty[String,Message]
@@ -70,7 +71,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
     runtime.outputs(port).setConsumer(consumer)
   }
 
-  def serializationOptions(port: String): SerializationOptions = {
+  def serializationOptions(port: String): Map[QName,String] = {
     decl.output(port).get.serialization
   }
 
@@ -237,6 +238,11 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
 
   protected[xmlcalabash] def setDefaultSerializationOptions(opts: Map[String,Map[QName,String]]): Unit = {
     _defaultSerializationOptions = opts
+  }
+
+  def trimInlineWhitespace: Boolean = _trim_inline_whitespace
+  def trimInlineWhitespace_=(trim: Boolean): Unit = {
+    _trim_inline_whitespace = trim
   }
 
   // ==============================================================================================

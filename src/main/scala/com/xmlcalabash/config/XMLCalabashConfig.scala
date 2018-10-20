@@ -56,6 +56,7 @@ class XMLCalabashConfig extends RuntimeConfiguration {
   private var _errorExplanation: ErrorExplanation = _
   private var _documentManager: DocumentManager = _
   private var _htmlSerializer = false
+  private var _trim_inline_whitespace = false
   private var _watchdogTimeout = 1000L
   private var _staticBaseURI = URIUtils.cwdAsURI
   private var _language = defaultLocale
@@ -228,6 +229,12 @@ class XMLCalabashConfig extends RuntimeConfiguration {
   def htmlSerializer_=(html: Boolean): Unit = {
     checkClosed()
     _htmlSerializer = html
+  }
+
+  def trimInlineWhitespace: Boolean = _trim_inline_whitespace
+  def trimInlineWhitespace_=(trim: Boolean): Unit = {
+    checkClosed()
+    _trim_inline_whitespace = trim
   }
 
   def watchdogTimeout: Long = _watchdogTimeout

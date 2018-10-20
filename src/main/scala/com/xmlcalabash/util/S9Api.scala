@@ -6,7 +6,7 @@ import java.net.URI
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
-import net.sf.saxon.s9api.{Axis, Serializer, XdmArray, XdmAtomicValue, XdmEmptySequence, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, Serializer, XdmArray, XdmAtomicValue, XdmEmptySequence, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import org.xml.sax.InputSource
 
 import scala.collection.JavaConverters._
@@ -79,6 +79,12 @@ object S9Api {
       sep = " "
     }
     str
+  }
+
+  def configureSerializer(serializer: Serializer, options: Map[QName,String]): Unit = {
+    for (opt <- options.keySet) {
+      serializer.setOutputProperty(opt, options(opt))
+    }
   }
 
   def serialize(config: XMLCalabashConfig, value: XdmValue, serializer: Serializer): Unit = {

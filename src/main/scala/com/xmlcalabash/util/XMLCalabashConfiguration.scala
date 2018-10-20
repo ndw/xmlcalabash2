@@ -13,6 +13,7 @@ class XMLCalabashConfiguration {
   private val ns_cc = "http://xmlcalabash.com/ns/configuration"
   private val cc_xmlcalabash = new QName("cc", ns_cc, "xmlcalabash")
   private val cc_show_messages = new QName("cc", ns_cc, "show-messages")
+  private val cc_trim_inline_whitespace = new QName("cc", ns_cc, "trim-inline-whitespace")
   private val cc_schema_aware = new QName("cc", ns_cc, "schema-aware")
   private val cc_saxon_configuration = new QName("cc", ns_cc, "saxon-configuration")
   private val cc_saxon_configuration_property = new QName("cc", ns_cc, "saxon-configuration-property")
@@ -27,6 +28,7 @@ class XMLCalabashConfiguration {
 
   private var _show_messages = Option.empty[Boolean]
   private var _schema_aware = Option.empty[Boolean]
+  private var _trim_inline_whitespace = Option.empty[Boolean]
   private var _saxon_configuration_file = Option.empty[String]
   private var _saxon_configuration_property = mutable.HashMap.empty[String,Any]
   private var _serialization = mutable.HashMap.empty[String,mutable.HashMap[QName,String]]
@@ -37,6 +39,7 @@ class XMLCalabashConfiguration {
 
   def show_messages: Boolean = _show_messages.getOrElse(false)
   def schema_aware: Boolean = _schema_aware.getOrElse(false)
+  def trim_inline_whitespace: Boolean = _trim_inline_whitespace.getOrElse(false)
   def saxon_configuration_file: Option[String] = _saxon_configuration_file
   def saxon_configuration_properties: Map[String,Any] = _saxon_configuration_property.toMap
 
@@ -54,14 +57,15 @@ class XMLCalabashConfiguration {
   }
 
   def load(): Unit = {
-    var fn = URIUtils.homeAsURI.toASCIIString + ".xmlcalabash"
-    var cfg = new File(fn)
+    var fn = URIUtils.homeAsURI.resolve(".xmlcalabash")
+    var cfg = new File(fn.getPath)
+
     if (cfg.exists()) {
       load(cfg)
     }
 
-    fn = URIUtils.cwdAsURI.toASCIIString + ".xmlcalabash"
-    cfg = new File(fn)
+    fn = URIUtils.cwdAsURI.resolve(".xmlcalabash")
+    cfg = new File(fn.getPath)
     if (cfg.exists()) {
       load(cfg)
     }
@@ -109,6 +113,8 @@ class XMLCalabashConfiguration {
         _show_messages = setBoolean(node, option)
       case `cc_schema_aware`  =>
         _schema_aware = setBoolean(node, option)
+      case `cc_trim_inline_whitespace`  =>
+        _trim_inline_whitespace = setBoolean(node, option)
       case `cc_saxon_configuration` =>
         _saxon_configuration_file = Some(setString(node, option))
       case `cc_saxon_configuration_property` =>
@@ -179,7 +185,9 @@ class XMLCalabashConfiguration {
       val iter = node.axisIterator(Axis.ATTRIBUTE)
       while (iter.hasNext) {
         val attr = iter.next().asInstanceOf[XdmNode]
-        map.put(attr.getNodeName, attr.getStringValue)
+        if (attr.getNodeName != XProcConstants._content_type) {
+          map.put(attr.getNodeName, attr.getStringValue)
+        }
       }
       _serialization.put(ctype, map)
     }

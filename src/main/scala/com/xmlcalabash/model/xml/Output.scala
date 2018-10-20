@@ -6,7 +6,7 @@ import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Container
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcXPathExpression}
-import com.xmlcalabash.util.{MediaType, SerializationOptions, TypeUtils}
+import com.xmlcalabash.util.{MediaType, TypeUtils}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap}
 
 import scala.collection.JavaConverters._
@@ -15,10 +15,10 @@ import scala.collection.mutable.ListBuffer
 
 class Output(override val config: XMLCalabashRuntime,
              override val parent: Option[Artifact]) extends IOPort(config, parent) {
-  private var serOpts = new SerializationOptions(config)
+  private var serOpts = Map.empty[QName,String]
   protected var _contentTypes = ListBuffer.empty[MediaType]
 
-  def serialization: SerializationOptions = serOpts
+  def serialization: Map[QName,String] = serOpts
   def contentTypes: List[MediaType] = _contentTypes.toList
 
   protected[xml] def this(config: XMLCalabashRuntime, parent: Artifact, port: String, primary: Boolean, sequence: Boolean) {
@@ -44,7 +44,7 @@ class Output(override val config: XMLCalabashRuntime,
 
     val ser = attributes.get(XProcConstants._serialization)
     if (ser.isDefined) {
-      val opts = mutable.HashMap.empty[QName, XdmAtomicValue]
+      val opts = mutable.HashMap.empty[QName, String]
       val context = new ExpressionContext(baseURI, inScopeNS, location)
       val serAvt = new XProcXPathExpression(context, ser.get)
       val bindingRefs = lexicalVariables(ser.get)
@@ -74,9 +74,9 @@ class Output(override val config: XMLCalabashRuntime,
                 }
                 optkey match {
                   case str: String =>
-                    opts.put(new QName("", str), value)
+                    opts.put(new QName("", str), value.getStringValue)
                   case qname: QName =>
-                    opts.put(qname, value)
+                    opts.put(qname, value.getStringValue)
                   case _ => throw XProcException.dynamicError(46, optkey, location)
                 }
               }
@@ -84,7 +84,7 @@ class Output(override val config: XMLCalabashRuntime,
           }
         case _ => throw XProcException.xiBadMessage(message, location)
       }
-      serOpts = new SerializationOptions(config, opts.toMap)
+      serOpts = opts.toMap
     }
 
     for (key <- List(XProcConstants._port, XProcConstants._sequence, XProcConstants._primary,

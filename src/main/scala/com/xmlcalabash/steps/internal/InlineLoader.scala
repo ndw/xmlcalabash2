@@ -15,6 +15,7 @@ import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmIt
 import org.xml.sax.InputSource
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class InlineLoader(private val baseURI: Option[URI],
                    private val nodes: List[XdmNode],
@@ -113,7 +114,7 @@ class InlineLoader(private val baseURI: Option[URI],
       val builder = new SaxonTreeBuilder(config.get)
       builder.startDocument(baseURI)
       builder.startContent()
-      for (node <- nodes) {
+      for (node <- trim(nodes)) {
         if (allowExpandText) {
           expandTVT(node, builder, expandText)
         } else {
@@ -127,7 +128,7 @@ class InlineLoader(private val baseURI: Option[URI],
       val builder = new SaxonTreeBuilder(config.get)
       builder.startDocument(baseURI)
       builder.startContent()
-      for (node <- nodes) {
+      for (node <- trim(nodes)) {
         if (allowExpandText) {
           expandTVT(node, builder, expandText)
         } else {
@@ -201,13 +202,6 @@ class InlineLoader(private val baseURI: Option[URI],
           case ex: Exception =>
             throw ex
         }
-      } else if (contentType.htmlContentType) {
-        val stream = new ByteArrayInputStream(text.getBytes("UTF-8"))
-        // FIXME: it's bogus that I have to makeup a DocumentRequest to call parseHtml
-        val request = new DocumentRequest(baseURI.getOrElse(new URI("")), Some(contentType), false)
-        val response = config.get.documentManager.parse(request, new InputSource(stream))
-        val metadata = new XProcMetadata(response.contentType, response.props)
-        consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), response.value, metadata))
       } else if (contentType.textContentType) {
         props.put(XProcConstants._content_length, new XdmAtomicValue(text.length))
 
@@ -221,6 +215,27 @@ class InlineLoader(private val baseURI: Option[URI],
       } else {
         throw new IllegalArgumentException(s"Unexected content type: $contentType")
       }
+    }
+  }
+
+  private def trim(nodes: List[XdmNode]): List[XdmNode] = {
+    if (config.get.trimInlineWhitespace) {
+      var count = 1
+      var trimmed = ListBuffer.empty[XdmNode]
+      trimmed ++= nodes
+      if (nodes.nonEmpty) {
+        if (nodes.head.getStringValue.trim == "") {
+          trimmed = trimmed.drop(1)
+        }
+        if (nodes.length >= 2) {
+          if (nodes.last.getStringValue.trim == "") {
+            trimmed = trimmed.dropRight(1)
+          }
+        }
+      }
+      trimmed.toList
+    } else {
+      nodes
     }
   }
 
