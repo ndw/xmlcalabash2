@@ -9,17 +9,26 @@ import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata,
 import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils}
 import net.sf.saxon.s9api.{QName, Serializer, XdmNode, XdmValue}
 
+import scala.collection.mutable
+
 class B64Encode extends DefaultXmlStep {
   private var source: Option[Any] = None
   private var smeta: Option[XProcMetadata] = None
-  private var seropt = Map.empty[Any,Any]
+  private var serialOpts = mutable.HashMap.empty[QName,String]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
   override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
     if (variable == XProcConstants._serialization) {
-      seropt ++= TypeUtils.castAsScala(value).asInstanceOf[Map[Any,Any]]
+      val opts = TypeUtils.castAsScala(value).asInstanceOf[Map[Any,Any]]
+      for (opt <- opts.keySet) {
+        val value = opts(opt)
+        opt match {
+          case name: QName =>
+            serialOpts.put(name, opt.toString)
+        }
+      }
     }
   }
 
@@ -56,11 +65,13 @@ class B64Encode extends DefaultXmlStep {
         // FIXME: get serialization parameters from serialization option
         val serializer = config.processor.newSerializer(stream)
 
-        /*
-        if (!smeta.get.contentType.xmlContentType) {
+        val contentType = smeta.get.contentType
+        if (!contentType.xmlContentType && !contentType.htmlContentType) {
           serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
         }
-        */
+
+        S9Api.configureSerializer(serializer, config.defaultSerializationOptions(contentType))
+        S9Api.configureSerializer(serializer, serialOpts.toMap)
 
         S9Api.serialize(config.config, node, serializer)
         Base64.getMimeEncoder.encodeToString(stream.toByteArray)
