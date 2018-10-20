@@ -12,7 +12,7 @@ import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelE
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep}
-import com.xmlcalabash.util.XProcVarValue
+import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmValue}
 
 import scala.collection.mutable
@@ -230,6 +230,10 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
 
   def signatures_=(signatures: Signatures): Unit = {
     _signatures = signatures
+  }
+
+  def defaultSerializationOptions(contentType: MediaType): Map[QName,String] = {
+    _defaultSerializationOptions.getOrElse(contentType.toString, Map.empty[QName,String])
   }
 
   def defaultSerializationOptions(contentType: String): Map[QName,String] = {
