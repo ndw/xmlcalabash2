@@ -34,11 +34,11 @@
       <p:option name="parameters" as="map(*)"/>
     </p:declare-step>
 
-    <cx:metadata-extractor>
+    <cx:base64-encode>
       <p:with-input port="source">
-        <p:document href="../image.jpg"/>
+        <p:inline content-type="text/plain">Hello, world.</p:inline>
       </p:with-input>
-    </cx:metadata-extractor>
+    </cx:base64-encode>
   </p:declare-step>
 </t:pipeline>
 
@@ -51,11 +51,9 @@
      <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step"/>
 
      <s:pattern>
-       <s:rule context="/*">
-         <s:assert test="self::c:metadata">The output should be a c:metadata document</s:assert>
-         <s:assert test="@content-type='image/jpeg'">Content type should be image/jpeg</s:assert>
-         <s:assert test="c:tag[@name='Image Height']='336 pixels'">Image height should be 336px</s:assert>
-         <s:assert test="c:tag[@name='Image Width']='500 pixels'">Image width should be 500px</s:assert>
+       <s:rule context="/">
+         <s:assert test="count(.) = 1">Result should be a single text node.</s:assert>
+         <s:assert test="starts-with(., 'SGVsbG8sIHdvcmxkLg')">Value should be ‘Hello, world.’ base64 encoded.</s:assert>
        </s:rule>
      </s:pattern>
   </s:schema>
