@@ -1,0 +1,33 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        expected="fail" code="err:XS0001">
+<t:info>
+  <t:title>Test err:XS0001 001</t:title>
+  <t:revision-history>
+    <t:revision>
+      <t:date>2018-10-16</t:date>
+      <t:author>
+        <t:name>Norman Walsh</t:name>
+      </t:author>
+      <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Initial commit</p>
+      </t:description>
+    </t:revision>
+  </t:revision-history>
+</t:info>
+<t:description xmlns="http://www.w3.org/1999/xhtml">
+  <p>Tests that <code>err:XS0001</code> is raised if a pipeline contains
+  a loop.</p>
+</t:description>
+
+<t:pipeline>
+  <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+    <p:identity>
+      <p:with-input port="source">
+        <p:pipe port="result" step="following"/>
+      </p:with-input>
+    </p:identity>
+    <p:identity name="following"/>
+  </p:declare-step>
+</t:pipeline>
+</t:test>

@@ -1,0 +1,47 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>Variable declaration 041</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-04-03T16:57:32+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Some new tests.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests a p:variable counts as connecting an output port.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" name="pipeline" version="3.0">
+            <p:output port="result"/>
+            
+            <p:identity name="producer">
+                <p:with-input>
+                    <doc/>
+                </p:with-input>
+            </p:identity>
+            
+            <p:variable name="prop" select="5"/>
+            <p:identity>
+                <p:with-input>
+                    <result>{$prop}</result>
+                </p:with-input>
+            </p:identity>
+        </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="result">The pipeline root is not result.</s:assert>
+               <s:assert test="result/text()='5'">Element content-type is not '5'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

@@ -1,0 +1,44 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>Variable declaration 021a</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-03-18T07:41:36+01:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>New tests. Some tests changed to new order in p:pipe</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Checks XD0008 is NOT raised if more than one document appears as connection of p:variable and @connection is missing and the variable is not used.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>
+            <p:variable name="var" select="5">
+                <doc/>
+                <doc/>
+            </p:variable>
+            
+            <p:identity>
+                <p:with-input>
+                    <doc/>
+                </p:with-input>
+            </p:identity>
+        </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="doc">The pipeline root is not doc.</s:assert>
+               <s:assert test="count(doc/node())=0">The root element does not have exactly no children.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

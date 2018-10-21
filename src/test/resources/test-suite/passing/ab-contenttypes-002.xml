@@ -1,0 +1,40 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0077">
+   <t:info>
+      <t:title>Contenttypes 002</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-06-02T17:53:51-05:00</t:date>
+            <t:author>
+               <t:name>Norman Walsh</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Fix namespace declarations</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2018-04-25T18:11:02+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>More tests.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests XS0077 is raised for defective content-types on p:output</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:input port="source" select="/doc/element">
+                <doc>
+               <element>text</element>
+            </doc>
+            </p:input>
+            
+            <p:output port="result" content-types="invalid"/>        
+            <p:identity/>
+        </p:declare-step>
+   </t:pipeline>
+</t:test>

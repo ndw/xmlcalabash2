@@ -1,0 +1,42 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>Option declaration 034</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-08-10T18:12:26+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Some new and some changed tests</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Checks option can be declared with @static (true|false).</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>
+            <p:option name="option" select="5" static="true"/>
+            <p:option name="option1" select="4" static="false"/>
+            
+            <p:identity>
+                <p:with-input>
+                    <doc/>
+                </p:with-input>
+            </p:identity>
+        </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="doc">The pipeline root is not doc.</s:assert>
+               <s:assert test="count(doc/node())=0">The root element should not have any children.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

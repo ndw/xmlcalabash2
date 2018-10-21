@@ -1,0 +1,64 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>p:document 007</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-10-05T17:08:35+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Fixed wrong condition in schematron test</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2018-05-02T18:16:03+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Change test with document-properties to map{xs:QName, item()}</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2018-04-03T16:57:32+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Some new tests.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:document with relative @href and 'base-uri' in document-properties: Makes sure that document-property "base-uri" is set correctly.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>        
+
+            <p:identity>
+                <p:with-input>
+                    <p:document href="../documents/ab-doc.xml" document-properties="map{xs:QName('base-uri'):'http://www.w3.org'}"/>
+                </p:with-input>
+            </p:identity>
+            
+            <p:identity>
+                <p:with-input select="p:document-properties-document(.)"/>
+            </p:identity>
+        </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:ns uri="http://www.w3.org/ns/xproc" prefix="p"/>
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="p:document-properties">The document root is not p:document-properties.</s:assert>
+               <s:assert test="string-length(p:document-properties/base-uri) != 0">Base-uri is not set.</s:assert>
+               <s:assert test="starts-with(p:document-properties/base-uri,'http://www.w3.org')">Base-uri is not set correctly</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

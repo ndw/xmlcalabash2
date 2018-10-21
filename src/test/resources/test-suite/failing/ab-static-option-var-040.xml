@@ -1,0 +1,40 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0091">
+    <t:info>
+        <t:title>Static variables/option 040</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2018-10-13</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>Initial test</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Tests that a static variable can not be shadowed by another static option on a child
+            step.</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:dummy="http://dummy" name="main" version="3.0">
+            <p:output port="result"/>
+            <p:variable static="true" name="static" select="14"/>
+
+            <p:declare-step type="dummy:test">
+                <p:output port="result"/>
+                <p:option static="true" name="static" select="15"/>
+
+                <p:identity>
+                    <p:with-input>
+                        <doc/>
+                    </p:with-input>
+                </p:identity>
+            </p:declare-step>
+
+            <dummy:test/>
+        </p:declare-step>
+    </t:pipeline>
+
+</t:test>

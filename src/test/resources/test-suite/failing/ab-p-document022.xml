@@ -1,0 +1,61 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>p:document 022</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-07-14T14:22:16+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>adding @content-type on p:document</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2018-05-02T18:16:03+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Change test with document-properties to map{xs:QName, item()}</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2018-04-25T18:11:02+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>More tests.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:document with a JSON-document (content-type set to application/json). Tests document-properties are set right.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>        
+
+            <p:identity>
+                <p:with-input select="p:document-properties-document(.)">
+                    <p:document href="../documents/JSon-doc1.json" content-type="application/json"/>
+                </p:with-input>
+            </p:identity>
+
+        </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:ns uri="http://www.w3.org/ns/xproc" prefix="p"/>
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="p:document-properties">The document root is not p:document-properties.</s:assert>
+               <s:assert test="p:document-properties/content-type = 'application/json'">Content-type is not 'application/json'.</s:assert>
+               <s:assert test="ends-with(p:document-properties/base-uri,'JSon-doc1.json')">Base-uri does not end with 'JSon-doc1.json'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

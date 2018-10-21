@@ -1,0 +1,43 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>p:document 036</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-10-05T16:54:40+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Fix #46</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:document @content-type overwrites system known content-type.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>
+            
+            <p:identity>
+                <p:with-input select="p:document-properties-document(.)">
+                    <p:document href="../documents/ab-doc.zip" content-type="some/type"/>
+                </p:with-input> 
+            </p:identity>
+            
+        </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:ns uri="http://www.w3.org/ns/xproc" prefix="p"/>
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="p:document-properties">There is no root element p:document-properties.</s:assert>
+               <s:assert test="p:document-properties/content-type = 'some/type'">Content-type is not 'some/type'.</s:assert>
+               <s:assert test="ends-with(/p:document-properties/base-uri,'/documents/ab-doc.zip')">Base-uri does not end with '/documents/ab-doc.zip'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

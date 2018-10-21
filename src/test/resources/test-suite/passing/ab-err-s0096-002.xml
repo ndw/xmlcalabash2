@@ -1,0 +1,31 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0096">
+   <t:info>
+      <t:title>Error test XS0096 002</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-08-10T18:12:26+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Some new and some changed tests</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests that XS0096 is raised when sequence type in @as on p:option is not valid: Wrong quantifier</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>
+            <p:option name="var" select="5" as="xs:integer-"/>
+            
+            <p:identity>
+                <p:with-input port="source">
+                    <doc>{$var}</doc>
+                </p:with-input>
+            </p:identity>
+        </p:declare-step>
+   </t:pipeline>
+</t:test>

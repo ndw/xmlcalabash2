@@ -1,0 +1,65 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0082">
+   <t:info>
+      <t:title>Pipe attributes 002</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2017-12-29T19:20:51+01:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Creating new tests, extending rng and corrected xproc's test</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2017-10-15T19:56:07-05:00</t:date>
+            <t:author>
+               <t:name>Norman Walsh</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Fix error code</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2017-09-24T17:47:42+01:00</t:date>
+            <t:author>
+               <t:name>Norman Walsh</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Port my test suite; add documentation and schemas</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" name="main" version="3.0">
+         <p:output port="result"/>
+
+         <p:identity name="one">
+            <p:with-input port="source">
+               <t:doc>One</t:doc>
+            </p:with-input>
+         </p:identity>
+
+         <p:identity name="two">
+            <p:with-input port="source">
+               <t:doc>Two</t:doc>
+            </p:with-input>
+         </p:identity>
+
+         <p:identity name="three">
+            <p:with-input port="source">
+               <t:doc>Three</t:doc>
+            </p:with-input>
+         </p:identity>
+
+         <p:identity name="combined">
+            <p:with-input port="source" pipe="three two one">
+               <p:document href="pipe.xpl"/>
+            </p:with-input>
+         </p:identity>
+
+         <p:wrap-sequence wrapper="docs"/>
+      </p:declare-step>
+   </t:pipeline>
+</t:test>

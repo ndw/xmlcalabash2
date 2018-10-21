@@ -1,0 +1,46 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0037">
+   <t:info>
+      <t:title>Error test XS0037 003</t:title>
+      <t:revision-history>
+         <t:revision initials="nw">
+            <t:date>2018-10-12</t:date>
+            <t:author>
+               <t:name>Norman Walsh</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Corrected the error code.</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2018-06-02T17:53:51-05:00</t:date>
+            <t:author initials="nw">
+               <t:name>Norman Walsh</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Fix namespace declarations</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2018-04-25T18:11:02+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>More tests.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests that <code>err:XS0037</code> is raised when <code>p:input</code>
+      contains non whitespace text nodes.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>
+            <p:input port="source">This is non whitespace text</p:input>
+            
+            <p:identity/>
+        </p:declare-step>
+   </t:pipeline>
+</t:test>

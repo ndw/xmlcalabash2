@@ -1,0 +1,12 @@
+# ATTENTION
+
+This is a *copy* of the
+[XProc 3.0 Test Suite](https://github.com/xproc/3.0-test-suite).
+
+These files are included so that the tests can be run as part of
+the build on [Travis](https://travis-ci.org/).
+
+These tests may be different, out-of-date, changed, or otherwise
+incorrect.
+
+Please go to the real test suite to get a copy of the test suite.

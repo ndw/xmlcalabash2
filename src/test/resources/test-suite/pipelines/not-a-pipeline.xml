@@ -1,0 +1,6 @@
+<test xmlns='http://xproc.org/ns/testsuite/3.0'
+      expected="fail" code="NOTASTEP">
+  <pipeline>
+    <doc/>
+  </pipeline>
+</test>

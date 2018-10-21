@@ -1,0 +1,46 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0085">
+   <t:info>
+      <t:title>with-input-006</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-07-09T18:16:30+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Corrected tests and adapt to changes in the spec</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2018-06-02T17:53:51-05:00</t:date>
+            <t:author>
+               <t:name>Norman Walsh</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Fix namespace declarations</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2017-12-29T19:20:51+01:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Creating new tests, extending rng and corrected xproc's test</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:with-input with @href and @pipe: XS0085 to be raised</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:output port="result"/>
+      
+         <p:identity>
+            <p:with-input href="../documents/ab-doc.xml" pipe="step@port"/>
+         </p:identity>
+      </p:declare-step>
+   </t:pipeline>
+</t:test>

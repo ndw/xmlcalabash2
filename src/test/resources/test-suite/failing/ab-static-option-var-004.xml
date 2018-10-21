@@ -1,0 +1,46 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+    <t:info>
+        <t:title>Static variables/option 004</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2018-10-11T18:16:00+02:00</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>Initial test</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Tests that a static option can be used in @select of static options.</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" name="main" version="3.0">
+            <p:output port="result"/>
+            <p:option static="true" name="static-option" select="18"/>
+            <p:option static="true" name="another-static" select="$static-option"/>
+            
+            <p:input port="source">
+                <doc>{$another-static}</doc>
+            </p:input>            
+            
+            <p:identity/>
+        
+        </p:declare-step>
+    </t:pipeline>
+    
+    <t:schematron>
+        <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+            <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step"/>
+            
+            <s:pattern>
+                <s:rule context="/">
+                    <s:assert test="doc">The pipeline root is not “doc”.</s:assert>
+                    <s:assert test="doc/text()='18'">Text node of doc is not '18'.</s:assert>
+                </s:rule>
+            </s:pattern>
+        </s:schema>
+    </t:schematron>
+</t:test>

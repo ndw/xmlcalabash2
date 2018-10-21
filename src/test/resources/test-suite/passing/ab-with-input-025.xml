@@ -1,0 +1,37 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>with-input-025</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2017-12-29T19:20:51+01:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Creating new tests, extending rng and corrected xproc's test</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:with-input with p:pipe (just port).</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:output port="result"/>
+      
+         <p:identity name="one">
+            <p:with-input>
+               <doc/>
+            </p:with-input>
+         </p:identity>
+      
+         <p:identity>
+            <p:with-input>
+               <p:pipe port="result"/>
+            </p:with-input>
+         </p:identity>
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron src="../schematron/ab-doc-result.sch"/>
+</t:test>

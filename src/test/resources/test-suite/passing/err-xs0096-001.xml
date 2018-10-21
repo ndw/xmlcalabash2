@@ -1,0 +1,36 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0096">
+   <t:info>
+     <t:title>Invalid sequence type</t:title>
+     <t:revision-history>
+       <t:revision>
+         <t:date>2018-10-08T09:52:13-05:00</t:date>
+         <t:author>
+           <t:name>Norman Walsh</t:name>
+         </t:author>
+         <t:description xmlns="http://www.w3.org/1999/xhtml">
+           <p>Updated to correct error code; renamed test file.</p>
+         </t:description>
+       </t:revision>
+     </t:revision-history>
+     <t:specref linkend="err.inline.S0096"/>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Error <code>err:XS0096</code> is raised for an invalid sequence type.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" name="main" version="3.0">
+         <p:output port="result" sequence="true"/>
+
+         <p:variable name="error" as="foo bar baz" select="'hello world'"/>
+
+         <p:identity name="inline">
+            <p:with-input port="source">
+               <p:inline>
+                  <t:doc>{$error}</t:doc>
+               </p:inline>
+            </p:with-input>
+         </p:identity>
+
+      </p:declare-step>
+   </t:pipeline>
+</t:test>

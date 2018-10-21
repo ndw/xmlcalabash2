@@ -1,0 +1,49 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XD0006">
+   <t:info>
+      <t:title>Connection 011</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-10-12</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Fixing broken test (namespace removed)</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2018-09-15T11:06:16+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Some tests changed and new tests</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests that an explicit empty binding to a non-sequence port raises an error.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:test="http://test" version="3.0">
+            <p:output port="result"/>
+            
+            <p:declare-step type="test:step">
+                <p:output port="result" sequence="true"/>
+                <p:input port="source">
+                   <doc/>
+                </p:input>
+                <p:identity/>
+            </p:declare-step>
+            
+            <test:step>
+               <p:with-input>
+                  <p:empty/>
+               </p:with-input>
+         </test:step>
+            
+            <p:wrap-sequence wrapper="result"/>
+        </p:declare-step>
+   </t:pipeline>
+</t:test>

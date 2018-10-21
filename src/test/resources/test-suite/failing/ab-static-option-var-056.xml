@@ -1,0 +1,36 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XD0050">
+    <t:info>
+        <t:title>Static variables/option 056</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2018-10-14</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>Initial test</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Tests that it is an error to have a dynamic option in explicit inline binding of a static variable</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" name="main" version="3.0">
+            <p:output port="result"/>
+            
+            <p:option name="dynamic" select="13"/>
+            <p:variable name="static" static="true" select=".">
+                <p:inline><doc xmlns="http://www.w3.org/1999/xhtml">{$dynamic}</doc></p:inline>
+            </p:variable>
+            
+            <p:identity>
+                <p:with-input>
+                    <doc/>
+                </p:with-input>
+            </p:identity>
+        </p:declare-step>
+    </t:pipeline>
+
+</t:test>

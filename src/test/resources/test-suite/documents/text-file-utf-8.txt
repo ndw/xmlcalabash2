@@ -1,0 +1,1 @@
+This is a simple text file in UTF-8: ä ö ü

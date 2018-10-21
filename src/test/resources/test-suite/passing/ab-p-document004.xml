@@ -1,0 +1,46 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>p:document 004</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-04-03T16:57:32+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Some new tests.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:document set document-property 'base-uri' correct: Relative uri in @href: Base uri of p:document to be used.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>        
+
+            <p:identity>
+                <p:with-input>
+                    <p:document href="langspec.xml" xml:base="https://www.w3.org/TR/2010/REC-xproc-20100511/"/>
+                </p:with-input>
+            </p:identity>
+            
+            <p:identity>
+                <p:with-input select="p:document-properties-document(.)"/>
+            </p:identity>
+        </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:ns uri="http://www.w3.org/ns/xproc" prefix="p"/>
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="p:document-properties">The document root is not p:document-properties.</s:assert>
+               <s:assert test="starts-with(p:document-properties/content-type, 'application/xml')">Content type is not application/xml</s:assert>
+               <s:assert test="p:document-properties/base-uri = 'https://www.w3.org/TR/2010/REC-xproc-20100511/langspec.xml'">The base-uri property is not correct.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

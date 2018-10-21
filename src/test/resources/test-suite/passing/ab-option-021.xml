@@ -1,0 +1,41 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XD0036">
+   <t:info>
+      <t:title>Option declaration 021</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-07-11T17:06:11+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Changed two tests.</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2018-02-02T17:42:37+01:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>added new tests</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Checks not required option with default value is type checked.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>
+            <p:option name="option" required="false" select="'this is not a boolean'" as="xs:boolean"/>
+            
+            <p:identity>
+                <p:with-input>
+                    <doc>{$option}</doc>
+                </p:with-input>
+            </p:identity>
+        </p:declare-step>
+   </t:pipeline>
+   <t:option name="option" select="'neither is this'"/>
+</t:test>

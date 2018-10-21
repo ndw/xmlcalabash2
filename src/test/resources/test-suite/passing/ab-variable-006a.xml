@@ -1,0 +1,40 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0096">
+   <t:info>
+      <t:title>Variable declaration 006a</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-08-22T16:48:12+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>New tests and some previous texts adapted to recent development</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2018-03-18T07:41:36+01:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>New tests. Some tests changed to new order in p:pipe</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests XS0096 is raised if a variable has an incorrect sequence type, even if it is not used.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>
+            <p:variable name="var" select="4" as="dummy"/>
+            
+            <p:identity>
+                <p:with-input>
+                    <doc/>
+                </p:with-input>
+            </p:identity>
+        </p:declare-step>
+   </t:pipeline>
+</t:test>

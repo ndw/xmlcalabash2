@@ -1,0 +1,66 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>Connection 007</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-09-15T11:06:16+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Some tests changed and new tests</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2018-06-02T17:53:51-05:00</t:date>
+            <t:author>
+               <t:name>Norman Walsh</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Fix namespace declarations</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2017-12-29T19:20:51+01:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Creating new tests, extending rng and corrected xproc's test</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests that the primary output port of the last step of a subpipeline is not connected to the pipelines primary output port, if the later has an explicit connection.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:output port="result" primary="true">
+            <p:pipe step="one" port="result"/>
+         </p:output>
+      
+         <p:identity name="one">
+            <p:with-input port="source">
+               <one/>
+            </p:with-input>
+         </p:identity>
+      
+         <p:identity name="two">
+            <p:with-input>
+               <two/>
+            </p:with-input>
+         </p:identity>
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="one">The root is not one.</s:assert>
+               <s:assert test="count(one/node())=0">The root element does not have children.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

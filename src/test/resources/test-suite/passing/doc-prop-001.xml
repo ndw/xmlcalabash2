@@ -1,0 +1,18 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>Document properties 001</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2017-09-24T17:47:42+01:00</t:date>
+            <t:author>
+               <t:name>Norman Walsh</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Port my test suite; add documentation and schemas</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:pipeline src="../pipelines/doc-prop-001.xpl"/>
+   <t:schematron src="../schematron/doc-prop.sch"/>
+</t:test>

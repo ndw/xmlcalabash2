@@ -1,0 +1,61 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>with-input-select-002</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-10-12</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Fixing broken test (namespace removed)</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2018-02-02T17:42:37+01:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>added new tests</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Test select on p:with-input select="comment()"</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="3.0">
+            <p:output port="result"/>
+            <p:identity>
+                <p:with-input select="*/comment()">
+                    <doc><!-- A comment -->
+                  <element1 att="att"/>
+                  <?target pi?>
+                        A text node
+                        <element2/>
+               </doc>
+                </p:with-input>
+            </p:identity>
+            
+            <p:wrap-sequence wrapper="c:result"/>
+        </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step"/>
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="count(*) = 1">Document does not have exactly one child element.</s:assert>
+               <s:assert test="*[1]/name()='c:result'">Root element is not named 'c:result'.</s:assert>
+            </s:rule>
+            <s:rule context="/c:result">
+               <s:assert test="count(node())=1">c:result does not have exactly one child node.</s:assert>
+               <s:assert test="count(comment()) = 1">c:result does not have exactly one comment as child.</s:assert>
+               <s:assert test="comment()= ' A comment '">Text of comment is not ' A comment '.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

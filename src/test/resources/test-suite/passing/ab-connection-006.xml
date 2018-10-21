@@ -1,0 +1,42 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>Connection 006</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-02-02T17:42:37+01:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>added new tests</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
+            <t:date>2017-12-29T19:20:51+01:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Creating new tests, extending rng and corrected xproc's test</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests explicit connection between an explicit non primary output port and step in subpipeline.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:output port="result" primary="false">
+            <p:pipe step="producer" port="result"/>
+         </p:output>
+      
+         <p:identity name="producer">
+            <p:with-input port="source">
+               <doc/>
+            </p:with-input>
+         </p:identity>
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron src="../schematron/ab-doc-result.sch"/>
+</t:test>

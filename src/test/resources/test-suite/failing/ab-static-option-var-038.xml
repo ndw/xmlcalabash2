@@ -1,0 +1,69 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+    <t:info>
+        <t:title>Static variables/option 038</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2018-10-13</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>Initial test</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Tests that two sibling steps can declare a static variable with the same name.</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:dummy="http://dummy" name="main" version="3.0">
+            <p:output port="result"/>
+
+            <p:declare-step type="dummy:test1">
+                <p:output port="result"/>
+                <p:variable static="true" name="static-variable" select="13"/>
+
+                <p:identity>
+                    <p:with-input>
+                        <doc1>{$static-variable}</doc1>
+                    </p:with-input>
+                </p:identity>
+            </p:declare-step>
+
+            <p:declare-step type="dummy:test2">
+                <p:output port="result"/>
+                <p:variable static="true" name="static-variable" select="14"/>
+
+                <p:identity>
+                    <p:with-input>
+                        <doc2>{$static-variable}</doc2>
+                    </p:with-input>
+                </p:identity>
+            </p:declare-step>
+
+            <dummy:test1 name="one"/>
+            <dummy:test2 name="two"/>
+
+            <p:wrap-sequence wrapper="result">
+                <p:with-input pipe="@one @two"/>
+            </p:wrap-sequence>
+        </p:declare-step>
+    </t:pipeline>
+
+    <t:schematron>
+        <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+            <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step"/>
+
+            <s:pattern>
+                <s:rule context="/">
+                    <s:assert test="result">The pipeline root is not “result”.</s:assert>
+                    <s:assert test="result/doc1/text()='13'">Text child of doc1 is not
+                        '13'.</s:assert>
+                    <s:assert test="result/doc2/text()='14'">Text child of doc1 is not
+                        '14'.</s:assert>
+                </s:rule>
+            </s:pattern>
+        </s:schema>
+    </t:schematron>
+</t:test>
