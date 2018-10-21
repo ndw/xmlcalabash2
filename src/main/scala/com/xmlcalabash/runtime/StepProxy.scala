@@ -9,8 +9,8 @@ import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality, Ste
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.util.TypeUtils
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode, XdmNodeKind, XdmValue}
+import com.xmlcalabash.util.{MediaType, TypeUtils}
+import net.sf.saxon.s9api.{QName, XdmArray, XdmAtomicValue, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -26,6 +26,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
   protected val bindings = mutable.HashSet.empty[QName]
   protected val bindingsMap = mutable.HashMap.empty[String, Message]
   protected var dynamicContext = new DynamicContext()
+  protected var received = mutable.HashSet.empty[String]
 
   protected var defaultSelect = mutable.HashMap.empty[String, XProcExpression]
 
@@ -147,6 +148,29 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
   }
 
   override def run(): Unit = {
+    for (port <- defaultSelect.keySet) {
+      if (!received.contains(port)) {
+        // If the input has a select, this is the context for that expression
+        val expr = config.expressionEvaluator.newInstance()
+        val selectExpr = defaultSelect(port)
+        val selected = expr.value(selectExpr, List(), bindingsMap.toMap, None)
+        val iter = selected.item.iterator()
+        while (iter.hasNext) {
+          val item = iter.next()
+          item match {
+            case node: XdmNode =>
+              if (node.getNodeKind == XdmNodeKind.ATTRIBUTE) {
+                throw XProcException.xdInvalidSelection(selectExpr.toString, "an attribute", location)
+              }
+              // There's no message, so??? dynamicContext.addDocument(node, message)
+            case _ => Unit
+          }
+          step.receive(port, item, selected.metadata)
+        }
+      }
+    }
+
+
     for (qname <- step.signature.options) {
       if (!bindings.contains(qname)) {
         val optsig  = step.signature.option(qname, location.get)
@@ -185,6 +209,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
     step.reset()
     bindings.clear()
     bindingsMap.clear()
+    received.clear()
   }
 
   override def abort(): Unit = {
@@ -196,6 +221,8 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
   }
 
   override def receive(port: String, message: Message): Unit = {
+    received += port
+
     message match {
       case msg: ExceptionMessage =>
         msg.item match {
@@ -244,7 +271,18 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
       case value: XdmNode =>
         consumer.get.receive(port, new XdmNodeItemMessage(value, metadata))
       case value: XdmValue =>
-        consumer.get.receive(port, new XdmValueItemMessage(value, metadata))
+        value match {
+          case _: XdmMap =>
+            val msg = new XdmValueItemMessage(value, new XProcMetadata(MediaType.JSON, metadata))
+            consumer.get.receive(port, msg)
+          case _: XdmArray =>
+            val msg = new XdmValueItemMessage(value, new XProcMetadata(MediaType.JSON, metadata))
+            consumer.get.receive(port, msg)
+          case _ =>
+            // FIXME: Really?
+            val msg = new XdmValueItemMessage(value, new XProcMetadata(MediaType.JSON, metadata))
+            consumer.get.receive(port, msg)
+        }
       case _ =>
         val tree = new SaxonTreeBuilder(config)
         tree.startDocument(metadata.baseURI)
