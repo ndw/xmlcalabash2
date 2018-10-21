@@ -634,9 +634,18 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
         } else {
           var passed = false
           for (ecode <- code.split("\\s+")) {
-            val qcode = ValueParser.parseQName(ecode, S9Api.inScopeNamespaces(node), Some(new NodeLocation(node)))
-            if (result.errQName.isDefined) {
-              passed = passed || qcode == result.errQName.get
+            try {
+              val ns = mutable.HashMap.empty[String,String]
+              ns.put("xqterr", "http://www.w3.org/2005/xqt-errors")
+              ns ++= S9Api.inScopeNamespaces(node)
+
+              val qcode = ValueParser.parseQName(ecode, ns.toMap, Some(new NodeLocation(node)))
+              if (result.errQName.isDefined) {
+                passed = passed || qcode == result.errQName.get
+              }
+            } catch {
+              case ex: Exception =>
+                throw new RuntimeException(s"Test runner error: cannot parse QName: $ecode")
             }
           }
           result.passed = passed
