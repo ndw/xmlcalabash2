@@ -7,7 +7,7 @@ import com.jafpl.messages.Message
 import com.jafpl.runtime.ExpressionEvaluator
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{StepException, XProcException}
-import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
+import com.xmlcalabash.messages.{AnyItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import net.sf.saxon.expr.XPathContext
@@ -337,8 +337,6 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
 
       if (contextItem.size == 1) {
         contextItem.head match {
-          case msg: XdmNodeItemMessage =>
-            selector.setContextItem(proxies(msg.item))
           case msg: XdmValueItemMessage =>
             selector.setContextItem(proxies(msg.item))
           case _ =>

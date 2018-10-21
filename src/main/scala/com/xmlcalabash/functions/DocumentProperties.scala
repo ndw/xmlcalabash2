@@ -11,8 +11,11 @@ import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
 import net.sf.saxon.om.{NodeInfo, Sequence, StructuredQName}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
 import net.sf.saxon.value.SequenceType
+import org.slf4j.{Logger, LoggerFactory}
 
 class DocumentProperties private extends ExtensionFunctionDefinition {
+  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
+
   private val funcname = new StructuredQName("p", XProcConstants.ns_p, "document-properties")
 
   private var runtime: XMLCalabashConfig = _
@@ -45,34 +48,59 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
         throw XProcException.xiExtFunctionNotAllowed()
       }
 
-      val doc = arguments(0).head
-      val msg = exprEval.dynContext.get.message(doc)
-      if (msg.isEmpty) {
-        val baseURI = doc match {
-          case ni: NodeInfo => ni.getBaseURI
-          case _ => ""
-        }
-        throw XProcException.xiDocPropsUnavail(exprEval.dynContext.get.location, new URI(baseURI))
-      }
+      // Walk up the tree if we get passed some descendant
+      var arg = arguments(0).head
+      var doc: NodeInfo = null
+      var done = false
 
-      val props: Map[QName,XdmValue] = msg.get match {
-        case item: XProcItemMessage =>
-          item.metadata.properties
-        case _ =>
-          Map.empty[QName,XdmItem]
+      while (!done) {
+        arg match {
+          case node: NodeInfo =>
+            if (node.getParent == null) {
+              doc = node
+              done = true
+            } else {
+              arg = node.getParent
+            }
+          case _ =>
+            done = true
+        }
       }
 
       var map = new XdmMap()
-      for (key <- props.keySet) {
-        val value = props(key)
-        if (key.getNamespaceURI == "") {
-          map = map.put(new XdmAtomicValue(key.getLocalName), value)
+
+      if (doc == null) {
+        logger.debug("p:document-properties called with an argument that isn't part of a document")
+        map.getUnderlyingValue
+      } else {
+        val msg = exprEval.dynContext.get.message(doc)
+        if (msg.isEmpty) {
+          val baseURI = doc match {
+            case ni: NodeInfo => ni.getBaseURI
+            case _ => ""
+          }
+          logger.debug(s"p:document-properties-document called with an unknown document: $baseURI")
+          map.getUnderlyingValue
         } else {
-          map = map.put(new XdmAtomicValue(key), value)
+          val props: Map[QName,XdmValue] = msg.get match {
+            case item: XProcItemMessage =>
+              item.metadata.properties
+            case _ =>
+              Map.empty[QName,XdmItem]
+          }
+
+          for (key <- props.keySet) {
+            val value = props(key)
+            if (key.getNamespaceURI == "") {
+              map = map.put(new XdmAtomicValue(key.getLocalName), value)
+            } else {
+              map = map.put(new XdmAtomicValue(key), value)
+            }
+          }
+
+          map.getUnderlyingValue
         }
       }
-
-      map.getUnderlyingValue
     }
   }
 }

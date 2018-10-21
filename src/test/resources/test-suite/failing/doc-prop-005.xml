@@ -1,4 +1,6 @@
-<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="xqterr:XPTY0004">
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        expected="pass">
    <t:info>
       <t:title>Document properties 005</t:title>
       <t:revision-history>
@@ -14,4 +16,17 @@
       </t:revision-history>
    </t:info>
    <t:pipeline src="../pipelines/doc-prop-005.xpl"/>
+
+   <t:schematron>
+     <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+       <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step"/>
+       <s:pattern>
+         <s:rule context="/*">
+           <s:assert test="self::c:document-properties">The pipeline root is not “c:document-properties”.</s:assert>
+           <s:assert test="empty(*)">The properties are not empty.</s:assert>
+         </s:rule>
+       </s:pattern>
+     </s:schema>
+   </t:schematron>
+
 </t:test>
