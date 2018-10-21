@@ -93,10 +93,24 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
     var count = 0
     for (fn <- testFiles) {
       count += 1
-      logger.info(s"Running $count of ${testFiles.length}: $fn")
-      val source = new SAXSource(new InputSource(fn))
-      val node = builder.build(source)
-      resultList ++= runTestDocument(node)
+      println(s"Running $count of ${testFiles.length}: $fn")
+
+      val stdout = new ByteArrayOutputStream()
+      val psout = new PrintStream(stdout)
+
+      val stderr = new ByteArrayOutputStream()
+      val pserr = new PrintStream(stderr)
+
+      Console.withOut(psout) {
+        Console.withErr(pserr) {
+          val source = new SAXSource(new InputSource(fn))
+          val node = builder.build(source)
+          resultList ++= runTestDocument(node)
+        }
+      }
+
+      psout.close()
+      pserr.close()
     }
 
     resultList
@@ -192,6 +206,9 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
             }
           }
         }
+
+        psout.close()
+        pserr.close()
       }
 
       junit.addStartElement(_system_out)

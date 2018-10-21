@@ -40,10 +40,13 @@ object Test extends App {
       for (result <- runner.run()) {
         total += 1
         if (result.skipped.isDefined) {
+          println(s"SKIP: ${result.baseURI}")
           skip += 1
         } else if (result.passed) {
+          println(s"PASS: ${result.baseURI}")
           pass += 1
         } else if (result.failed) {
+          println(s"FAIL: ${result.baseURI}")
           fail += 1
         }
       }
