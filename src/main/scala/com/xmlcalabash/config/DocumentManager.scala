@@ -1,8 +1,8 @@
 package com.xmlcalabash.config
 
-import org.xml.sax.InputSource
+import java.io.InputStream
 
 trait DocumentManager {
   def parse(request: DocumentRequest): DocumentResponse
-  def parse(request: DocumentRequest, isource: InputSource): DocumentResponse
+  def parse(request: DocumentRequest, stream: InputStream): DocumentResponse
 }

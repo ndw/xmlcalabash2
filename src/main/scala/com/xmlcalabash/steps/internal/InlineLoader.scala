@@ -144,7 +144,7 @@ class InlineLoader(private val baseURI: Option[URI],
       val stream = new ByteArrayInputStream(baos.toByteArray)
 
       val request = new DocumentRequest(baseURI.getOrElse(new URI("")), Some(contentType), false)
-      val response = config.get.documentManager.parse(request, new InputSource(stream))
+      val response = config.get.documentManager.parse(request, stream)
       val metadata = new XProcMetadata(response.contentType, response.props)
 
       response.value match {
@@ -249,9 +249,8 @@ class InlineLoader(private val baseURI: Option[URI],
     val metadata = new XProcMetadata(contentType, props.toMap)
 
     if (contentType.xmlContentType || contentType.htmlContentType || contentType.textContentType || contentType.jsonContentType) {
-      val source = new InputSource(new ByteArrayInputStream(decoded))
       val req = new DocumentRequest(metadata.baseURI.getOrElse(new URI("")), contentType)
-      val result = config.get.documentManager.parse(req, source)
+      val result = config.get.documentManager.parse(req, new ByteArrayInputStream(decoded))
       if (result.shadow.isDefined) {
         consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), result.shadow, metadata))
       } else {

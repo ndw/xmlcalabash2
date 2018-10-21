@@ -67,6 +67,11 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
     load(href.get, request)
   }
 
+  override def parse(request: DocumentRequest, stream: InputStream): DocumentResponse = {
+    loadStream(request, request.contentType.getOrElse(MediaType.OCTET_STREAM), stream, Map.empty[QName,XdmValue])
+  }
+
+
   private def load(href: URI, request: DocumentRequest): DocumentResponse = {
     href.getScheme match {
       case "file" => loadFile(href, request)
@@ -276,31 +281,6 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
     }
 
     contentType
-  }
-
-  override def parse(request: DocumentRequest, isource: InputSource): DocumentResponse = {
-    val node = try {
-      // Make sure the builder uses our entity resolver
-      val reader = XMLReaderFactory.createXMLReader
-      reader.setEntityResolver(xmlCalabash.entityResolver)
-      val source = new SAXSource(reader, isource)
-      val builder = xmlCalabash.processor.newDocumentBuilder
-      builder.setLineNumbering(true)
-      builder.setDTDValidation(false)
-      builder.build(source)
-    } catch {
-      case sae: SaxonApiException =>
-        val msg = sae.getMessage
-        if (msg.contains("validation")) {
-          throw XProcException.xdNotValidXML(isource.getSystemId, msg)
-        } else if (msg.contains("HTTP response code: 403 ")) {
-          throw XProcException.xdNotAuthorized(isource.getSystemId, msg)
-        } else {
-          throw XProcException.xdNotWFXML(isource.getSystemId, msg)
-        }
-    }
-
-    new DocumentResponse(node, MediaType.XML, Map.empty[QName,XdmValue])
   }
 
   private def parseHtml(request: DocumentRequest): DocumentResponse = {
