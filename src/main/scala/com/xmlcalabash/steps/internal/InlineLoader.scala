@@ -224,11 +224,11 @@ class InlineLoader(private val baseURI: Option[URI],
       var trimmed = ListBuffer.empty[XdmNode]
       trimmed ++= nodes
       if (nodes.nonEmpty) {
-        if (nodes.head.getStringValue.trim == "") {
+        if (nodes.head.getNodeKind == XdmNodeKind.TEXT && nodes.head.getStringValue.trim == "") {
           trimmed = trimmed.drop(1)
         }
         if (nodes.length >= 2) {
-          if (nodes.last.getStringValue.trim == "") {
+          if (nodes.last.getNodeKind == XdmNodeKind.TEXT && nodes.last.getStringValue.trim == "") {
             trimmed = trimmed.dropRight(1)
           }
         }
