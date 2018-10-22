@@ -24,6 +24,14 @@ class Input(override val config: XMLCalabashRuntime,
   }
 
   def select: Option[String] = _select
+
+  // This is a bit of a hack for the special case of rewriting DeclareStep inputs
+  protected[xml] def select_=(sel: String): Unit = {
+    _select = Some(sel)
+    val context = new ExpressionContext(baseURI, inScopeNS, location)
+    _expression = Some(new XProcXPathExpression(context, _select.get))
+  }
+
   def selectExpression: XProcExpression = _expression.get
 
   protected[xml] def manageDefaultInputs(): Unit = {

@@ -234,6 +234,9 @@ class DeclareStep(override val config: XMLCalabashRuntime,
     checker.location = input.location.get
 
     val idinput = new WithInput(config, checker, "source")
+    if (input.select.isDefined) {
+      idinput.select = input.select.get
+    }
     checker.addChild(idinput)
 
     insertChildBefore(firstChild.get, checker)
