@@ -685,19 +685,6 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
     false
   }
 
-  private[xml] def findPatchable(): List[Artifact] = {
-    val list = ListBuffer.empty[Artifact]
-    for (child <- children) {
-      child match {
-        case art: WithProperties =>
-          list += art
-        case _ => Unit
-      }
-      list ++= child.findPatchable()
-    }
-    list.toList
-  }
-
   private[xml] def findInjectables(): List[Artifact] = {
     val list = ListBuffer.empty[Artifact]
     if (inputInjectables.nonEmpty || outputInjectables.nonEmpty || stepInjectables.nonEmpty) {

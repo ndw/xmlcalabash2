@@ -105,8 +105,6 @@ class Parser(val config: XMLCalabashRuntime) {
             case XProcConstants.p_catch => Some(parseCatch(parent, node))
             case XProcConstants.p_finally => Some(parseFinally(parent, node))
             case XProcConstants.p_for_each => Some(parseForEach(parent, node))
-            case XProcConstants.p_with_properties => Some(parseWithProperties(parent, node))
-            case XProcConstants.p_with_document => Some(parseWithDocument(parent, node))
             case XProcConstants.p_documentation => Some(parseDocumentation(parent, node))
             case XProcConstants.p_pipeinfo => Some(parsePipeInfo(parent, node))
             case XProcConstants.p_library => Some(parseLibrary(parent, node))
@@ -414,20 +412,6 @@ class Parser(val config: XMLCalabashRuntime) {
 
   private def parseForEach(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new ForEach(config, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parseWithProperties(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new WithProperties(config, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parseWithDocument(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new WithDocument(config, parent)
     art.parse(node)
     parseChildren(art, node)
     art
