@@ -26,7 +26,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
   protected val bindings = mutable.HashSet.empty[QName]
   protected val bindingsMap = mutable.HashMap.empty[String, Message]
   protected var dynamicContext = new DynamicContext()
-  protected var received = mutable.HashSet.empty[String]
+  protected var received = mutable.HashMap.empty[String,Long]
 
   protected var defaultSelect = mutable.HashMap.empty[String, XProcExpression]
 
@@ -148,6 +148,12 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
   }
 
   override def run(): Unit = {
+    for (port <- inputSpec.ports) {
+      if (!received.contains(port)) {
+        inputSpec.checkInputCardinality(port, 0)
+      }
+    }
+
     for (port <- defaultSelect.keySet) {
       if (!received.contains(port)) {
         // If the input has a select, this is the context for that expression
@@ -221,7 +227,9 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
   }
 
   override def receive(port: String, message: Message): Unit = {
-    received += port
+    received.put(port, received.getOrElse(port, 0))
+
+    inputSpec.checkInputCardinality(port, received(port))
 
     message match {
       case msg: ExceptionMessage =>
