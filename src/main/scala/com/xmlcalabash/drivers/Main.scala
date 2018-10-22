@@ -18,25 +18,14 @@ object Main extends App {
   private val config = XMLCalabashConfig.newInstance()
 
   val options = new ArgBundle(config, args.toList)
-  val debug = new XMLCalabashDebugOptions()
 
-  debug.injectables = options.injectables
-  if (options.dumpXML.isDefined) {
-    debug.dumpXmlFilename = options.dumpXML.get
-  }
-  if (options.graph.isDefined) {
-    debug.dumpGraphFilename = options.graph.get
-  }
-  if (options.graphBefore.isDefined) {
-    debug.dumpOpenGraphFilename = options.graphBefore.get
-  }
-  // FIXME: raw?
+  options.debugOptions.injectables = options.injectables
 
   var errored = false
   try {
-    val runtime = config.runtime(new URI(options.pipeline), debug)
+    val runtime = config.runtime(new URI(options.pipeline), options.debugOptions)
 
-    if (options.norun) {
+    if (options.debugOptions.norun) {
       System.exit(0)
     }
 
@@ -66,7 +55,7 @@ object Main extends App {
     case ex: Exception =>
       errored = true
 
-      if (options.debug) {
+      if (options.debugOptions.debug) {
         ex.printStackTrace()
       }
 

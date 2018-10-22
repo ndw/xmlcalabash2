@@ -1,7 +1,7 @@
 package com.xmlcalabash.util
 
 import com.jafpl.messages.Message
-import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.config.{XMLCalabashConfig, XMLCalabashDebugOptions}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.ValueParser
@@ -23,13 +23,8 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
   private val _nsbindings = mutable.HashMap.empty[String,String]
   private val _params = mutable.HashMap.empty[QName, XProcVarValue]
   private var _pipeline = Option.empty[String]
-  private var _graph = Option.empty[String]
-  private var _graphBefore = Option.empty[String]
-  private var _dumpXml = Option.empty[String]
-  private var _raw = false
   private var _verbose = false
-  private var _norun = false
-  private var _debug = false
+  private var _debugOptions = new XMLCalabashDebugOptions()
 
   def this(config: XMLCalabashConfig, args: List[String]) = {
     this(config)
@@ -51,12 +46,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
     }
   }
 
-  def graph: Option[String] = _graph
-  def graphBefore: Option[String] = _graphBefore
-  def raw: Boolean = _raw
-  def dumpXML: Option[String] = _dumpXml
-  def norun: Boolean = _norun
-  def debug: Boolean = _debug
+  def debugOptions: XMLCalabashDebugOptions = _debugOptions
 
   def parse(args: List[String]): Unit = {
     // -iport=input | --input port=input
@@ -124,17 +114,16 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
           try {
             optname match {
               case "verbose" => _verbose = true
-              case "raw" => _raw = true
-              case "norun" => _norun = true
-              case "debug" => _debug = true
+              case "norun" => _debugOptions.norun = true
+              case "debug" => _debugOptions.debug = true
               case "graph" =>
-                _graph = Some(args(pos + 1))
+                _debugOptions.dumpGraphFilename = args(pos + 1)
                 pos += 1
               case "graph-before" =>
-                _graphBefore = Some(args(pos + 1))
+                _debugOptions.dumpOpenGraphFilename = args(pos + 1)
                 pos += 1
               case "dump-xml" =>
-                _dumpXml = Some(args(pos + 1))
+                _debugOptions.dumpXmlFilename = args(pos + 1)
                 pos += 1
               case "inject" =>
                 _injectables += args(pos+1)
@@ -193,7 +182,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
               if (!skip) {
                 ch match {
                   case 'v' => _verbose = true
-                  case 'D' => _debug = true
+                  case 'D' => _debugOptions.debug = true
                   case 'i' =>
                     val rest = chars.substring(chpos + 1)
                     val eqpos = rest.indexOf("=")
@@ -245,10 +234,10 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
                     }
                   case 'G' =>
                     if (chpos + 1 == chars.length) {
-                      _graph = Some(args(pos + 1))
+                      _debugOptions.dumpGraphFilename = args(pos + 1)
                       pos += 1
                     } else {
-                      _graph = Some(chars.substring(chpos + 1))
+                      _debugOptions.dumpGraphFilename = chars.substring(chpos + 1)
                       skip = true
                     }
                   case _ =>

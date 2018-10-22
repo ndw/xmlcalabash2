@@ -241,22 +241,13 @@ class ArgBundleSpec extends FlatSpec {
     assert(pass)
   }
 
-  // --raw
-
-  "Parsing --raw" should "succeed" in {
-    val bundle = new ArgBundle(config)
-    val args = "--raw".split("\\s+")
-    bundle.parse(args.toList)
-    assert(bundle.raw)
-  }
-
   // --norun
 
   "Parsing --norun" should "succeed" in {
     val bundle = new ArgBundle(config)
     val args = "--norun".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.norun)
+    assert(bundle.debugOptions.norun)
   }
 
   // -G | --graph
@@ -289,7 +280,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "-Gpipe.xml pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.graph.isDefined && (bundle.graph.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpGraphFilename.isDefined && (bundle.debugOptions.dumpGraphFilename.get == "pipe.xml"))
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -297,7 +288,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "-vGpipe.xml pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.graph.isDefined && (bundle.graph.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpGraphFilename.isDefined && (bundle.debugOptions.dumpGraphFilename.get == "pipe.xml"))
     assert(bundle.verbose)
     assert(bundle.pipeline == "pipe.xpl")
   }
@@ -306,7 +297,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "-G pipe.xml pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.graph.isDefined && (bundle.graph.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpGraphFilename.isDefined && (bundle.debugOptions.dumpGraphFilename.get == "pipe.xml"))
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -314,7 +305,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "--graph pipe.xml pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.graph.isDefined && (bundle.graph.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpGraphFilename.isDefined && (bundle.debugOptions.dumpGraphFilename.get == "pipe.xml"))
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -322,7 +313,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "-v --graph pipe.xml pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.graph.isDefined && (bundle.graph.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpGraphFilename.isDefined && (bundle.debugOptions.dumpGraphFilename.get == "pipe.xml"))
     assert(bundle.verbose)
     assert(bundle.pipeline == "pipe.xpl")
   }
@@ -345,7 +336,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "--graph-before pipe.xml pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.graphBefore.isDefined && (bundle.graphBefore.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpOpenGraphFilename.isDefined && (bundle.debugOptions.dumpOpenGraphFilename.get == "pipe.xml"))
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -353,7 +344,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "-v --graph-before pipe.xml pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.graphBefore.isDefined && (bundle.graphBefore.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpOpenGraphFilename.isDefined && (bundle.debugOptions.dumpOpenGraphFilename.get == "pipe.xml"))
     assert(bundle.verbose)
     assert(bundle.pipeline == "pipe.xpl")
   }
@@ -376,7 +367,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "--dump-xml pipe.xml pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.dumpXML.isDefined && (bundle.dumpXML.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpXmlFilename.isDefined && (bundle.debugOptions.dumpXmlFilename.get == "pipe.xml"))
     assert(bundle.pipeline == "pipe.xpl")
   }
 

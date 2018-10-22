@@ -13,6 +13,8 @@ class XMLCalabashDebugOptions {
   private var _dumpOpenGraphFilename: Option[String] = None
   private var _dumpGraphFilename: Option[String] = None
   private var _dumpRawFilename: Option[String] = None
+  private var _norun: Boolean = false
+  private var _debug: Boolean = false
 
   def injectables: List[String] = _injectables.toList
   def injectables_=(list: List[String]): Unit = {
@@ -38,6 +40,16 @@ class XMLCalabashDebugOptions {
   def dumpRawFilename: Option[String] = _dumpRawFilename
   def dumpRawFilename_=(filename: String): Unit = {
     _dumpRawFilename = Some(filename)
+  }
+
+  def norun: Boolean = _norun
+  def norun_=(opt: Boolean): Unit = {
+    _norun = opt
+  }
+
+  def debug: Boolean = _debug
+  def debug_=(opt: Boolean): Unit = {
+    _debug = opt
   }
 
   // ===========================================================================================
