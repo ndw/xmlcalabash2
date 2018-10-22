@@ -75,7 +75,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
               proxies.put(item, node)
               checkDocument(newContext, node, context.head)
             case _ =>
-              println(s"Warning: don't know how to proxy ${msg.item}")
+              Unit // Whatever it is, it isn't a document
           }
         case msg: AnyItemMessage =>
           checkDocument(newContext, msg.item, context.head)
@@ -121,7 +121,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
             case item: XdmItem =>
               checkDocument(newContext, item, value)
             case _ =>
-              println(s"Warning: don't know how to proxy ${msg.item}")
+              Unit // Whatever this is, it isn't a document
           }
         case _ =>
           throw XProcException.xiInvalidMessage(newContext.location, value)
