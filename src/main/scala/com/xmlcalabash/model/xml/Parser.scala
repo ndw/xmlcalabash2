@@ -116,13 +116,10 @@ class Parser(val config: XMLCalabashRuntime) {
                 } else {
                   parent.get match {
                     case input: WithInput =>
-                      logger.debug("Interpreting naked content of p:with-input as a p:inline")
                       Some(parseInline(parent, node))
                     case input: Input =>
-                      logger.debug("Interpreting naked content of p:input as a p:inline")
                       Some(parseInline(parent, node))
                     case variable: Variable =>
-                      logger.debug("Interpreting naked content of p:input as a p:inline")
                       Some(parseInline(parent, node))
                     case _ =>
                       throw XProcException.xsElementNotAllowed(Some(new NodeLocation(node)), node.getNodeName)

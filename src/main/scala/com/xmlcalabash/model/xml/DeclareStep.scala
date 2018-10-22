@@ -20,7 +20,6 @@ class DeclareStep(override val config: XMLCalabashRuntime,
   private var _xpathVersion: Option[String] = None
   private var _excludeInlinePrefixes = Map.empty[String,String]
   private var _version: Option[String] = None
-  //private val options = mutable.HashMap.empty[QName, XProcExpression]
 
   def declaredType: Option[QName] = _type
   def psviRequired: Boolean = _psviRequired.getOrElse(false)

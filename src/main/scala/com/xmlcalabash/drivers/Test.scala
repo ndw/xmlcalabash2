@@ -43,7 +43,7 @@ object Test extends App {
           println(s"SKIP: ${result.baseURI}")
           skip += 1
         } else if (result.passed) {
-          println(s"PASS: ${result.baseURI}")
+          //println(s"PASS: ${result.baseURI}")
           pass += 1
         } else if (result.failed) {
           println(s"FAIL: ${result.baseURI}")
