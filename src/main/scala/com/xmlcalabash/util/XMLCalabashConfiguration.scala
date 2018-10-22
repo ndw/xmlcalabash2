@@ -22,6 +22,8 @@ class XMLCalabashConfiguration {
   private val cc_uri_resolver = new QName("cc", ns_cc, "uri-resolver")
   private val cc_module_uri_resolver = new QName("cc", ns_cc, "module-uri-resolver")
   private val cc_unparsed_text_uri_resolver = new QName("cc", ns_cc, "unparsed-text-uri-resolver")
+  private val cc_system_property = new QName("cc", ns_cc, "system-property")
+  private val cc_watchdog_timeout = new QName("cc", ns_cc, "watchdog-timeout")
   private val _key = new QName("key")
   private val _value = new QName("value")
   private val _type = new QName("type")
@@ -113,6 +115,10 @@ class XMLCalabashConfiguration {
         _show_messages = setBoolean(node, option)
       case `cc_schema_aware`  =>
         _schema_aware = setBoolean(node, option)
+      case `cc_system_property` =>
+        setSystemProperty(node)
+      case `cc_watchdog_timeout` =>
+        setWatchdogTimeout(node)
       case `cc_trim_inline_whitespace`  =>
         _trim_inline_whitespace = setBoolean(node, option)
       case `cc_saxon_configuration` =>
@@ -208,4 +214,32 @@ class XMLCalabashConfiguration {
     node.getStringValue.trim
   }
 
+  def setSystemProperty(node: XdmNode): Unit = {
+    val key = node.getAttributeValue(_key)
+    val value = node.getAttributeValue(_value)
+
+    if (key == null || value == null) {
+      logger.error(s"Invalid system property configuration: $node")
+    } else {
+      setSystemProperty(key, value)
+    }
+  }
+
+  def setSystemProperty(key: String, value: String): Unit = {
+    val props = System.getProperties
+    // Only use the configuration file values if overrides haven't been specified on the command line
+    if (props.getProperty(key) == null) {
+      props.setProperty(key, value)
+    }
+  }
+
+  def setWatchdogTimeout(node: XdmNode): Unit = {
+    try {
+      val ms = node.getStringValue.toInt
+      setSystemProperty("com.xmlcalabash.watchdogTimeout", node.getStringValue)
+    } catch {
+      case ex: Exception =>
+        logger.error(s"Invalid watchdog-timeout configuration: ${node.getStringValue}")
+    }
+  }
 }
