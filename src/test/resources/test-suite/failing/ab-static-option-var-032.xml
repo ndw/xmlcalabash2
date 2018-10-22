@@ -2,6 +2,16 @@
     <t:info>
         <t:title>Static variables/option 032</t:title>
         <t:revision-history>
+        <t:revision>
+          <t:date>2018-10-22</t:date>
+          <t:author initials="ndw">
+            <t:name>Norman Walsh</t:name>
+          </t:author>
+          <t:description xmlns="http://www.w3.org/1999/xhtml">
+            <p>Fixed result document
+            (<code>c:document-properties</code>, not <code>p:document-properties</code>)</p>
+          </t:description>
+        </t:revision>
             <t:revision>
                 <t:date>2018-10-13</t:date>
                 <t:author>
@@ -17,27 +27,29 @@
         <p>Tests that a static variable can be used in avt of static inline.</p>
     </t:description>
     <t:pipeline>
-        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" name="main" version="3.0">
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc"
+                        xmlns:c="http://www.w3.org/ns/xproc-step"
+                        name="main" version="3.0">
             <p:output port="result"/>
             <p:variable static="true" name="static-variable" select="18"/>
-                       
+
             <p:input port="source">
                 <p:inline document-properties="map{'a': $static-variable}">
                     <doc/>
                 </p:inline>
-            </p:input>            
-            
+            </p:input>
+
             <p:identity>
-                <p:with-input select="p:document-properties-document(.)/p:document-properties/a"/>
+                <p:with-input select="p:document-properties-document(.)/c:document-properties/a"/>
             </p:identity>
-        
+
         </p:declare-step>
     </t:pipeline>
-    
+
     <t:schematron>
         <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
             <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step"/>
-            
+
             <s:pattern>
                 <s:rule context="/">
                     <s:assert test="a">The pipeline root is not “doc”.</s:assert>

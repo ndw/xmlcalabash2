@@ -2,6 +2,16 @@
    <t:info>
       <t:title>p:document 027</t:title>
       <t:revision-history>
+        <t:revision>
+          <t:date>2018-10-22</t:date>
+          <t:author initials="ndw">
+            <t:name>Norman Walsh</t:name>
+          </t:author>
+          <t:description xmlns="http://www.w3.org/1999/xhtml">
+            <p>Fixed result document
+            (<code>c:document-properties</code>, not <code>p:document-properties</code>)</p>
+          </t:description>
+        </t:revision>
          <t:revision>
             <t:date>2018-04-25T18:11:02+02:00</t:date>
             <t:author>
@@ -43,9 +53,9 @@
          <s:pattern>
             <s:rule context="/">
                <s:assert test="result">Root element is not result.</s:assert>
-               <s:assert test="/result/p:document-properties">There is no element p:document-properties.</s:assert>
-               <s:assert test="/result/p:document-properties/content-type = 'application/octet-stream'">Content-type is not 'application/octet-stream'.</s:assert>
-               <s:assert test="ends-with(/result/p:document-properties/base-uri,'/documents/ab-binary.bin')">Base-uri does not end with '/documents/ab-binary.bin'.</s:assert>
+               <s:assert test="/result/c:document-properties">There is no element c:document-properties.</s:assert>
+               <s:assert test="/result/c:document-properties/content-type = 'application/octet-stream'">Content-type is not 'application/octet-stream'.</s:assert>
+               <s:assert test="ends-with(/result/c:document-properties/base-uri,'/documents/ab-binary.bin')">Base-uri does not end with '/documents/ab-binary.bin'.</s:assert>
             </s:rule>
             <s:rule context="/result/c:data">
                <s:assert test="@content-type='application/octet-stream'">@content-type is not 'application/octet-stream'.</s:assert>

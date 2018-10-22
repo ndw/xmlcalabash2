@@ -2,6 +2,16 @@
    <t:info>
       <t:title>p:inline 003</t:title>
       <t:revision-history>
+        <t:revision>
+          <t:date>2018-10-22</t:date>
+          <t:author initials="ndw">
+            <t:name>Norman Walsh</t:name>
+          </t:author>
+          <t:description xmlns="http://www.w3.org/1999/xhtml">
+            <p>Fixed result document
+            (<code>c:document-properties</code>, not <code>p:document-properties</code>)</p>
+          </t:description>
+        </t:revision>
          <t:revision>
             <t:date>2018-10-12</t:date>
             <t:author>
@@ -164,14 +174,14 @@ YII=
          <s:pattern>
             <s:rule context="/*">
                <s:assert test="self::c:result">The pipeline root is not c:result</s:assert>
-               <s:assert test="p:document-properties">
-            The result does not include p:document-properties
+               <s:assert test="c:document-properties">
+            The result does not include c:document-properties
           </s:assert>
                <s:assert test="c:data">
             The result does not include c:data
           </s:assert>
             </s:rule>
-            <s:rule context="/c:result/p:document-properties">
+            <s:rule context="/c:result/c:document-properties">
                <s:assert test="empty(*:content-length) or (*:content-length = 3764)">
             The wrong content-length is reported
           </s:assert>

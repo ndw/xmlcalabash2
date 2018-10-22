@@ -2,6 +2,16 @@
    <t:info>
       <t:title>p:document 024</t:title>
       <t:revision-history>
+        <t:revision>
+          <t:date>2018-10-22</t:date>
+          <t:author initials="ndw">
+            <t:name>Norman Walsh</t:name>
+          </t:author>
+          <t:description xmlns="http://www.w3.org/1999/xhtml">
+            <p>Fixed result document
+            (<code>c:document-properties</code>, not <code>p:document-properties</code>)</p>
+          </t:description>
+        </t:revision>
          <t:revision>
             <t:date>2018-08-29T15:54:35+02:00</t:date>
             <t:author>
@@ -40,11 +50,12 @@
    <t:schematron>
       <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
          <s:ns uri="http://www.w3.org/ns/xproc" prefix="p"/>
+         <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step"/>
          <s:pattern>
             <s:rule context="/">
-               <s:assert test="p:document-properties">The document root is not p:document-properties.</s:assert>
-               <s:assert test="p:document-properties/content-type = 'application/json'">Content-type is not 'application/json'.</s:assert>
-               <s:assert test="ends-with(p:document-properties/base-uri,'JSon-doc1.json')">Base-uri does not end with 'JSon-doc1.json'.</s:assert>
+               <s:assert test="c:document-properties">The document root is not c:document-properties.</s:assert>
+               <s:assert test="c:document-properties/content-type = 'application/json'">Content-type is not 'application/json'.</s:assert>
+               <s:assert test="ends-with(c:document-properties/base-uri,'JSon-doc1.json')">Base-uri does not end with 'JSon-doc1.json'.</s:assert>
             </s:rule>
          </s:pattern>
       </s:schema>

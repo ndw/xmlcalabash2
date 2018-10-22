@@ -2,6 +2,16 @@
    <t:info>
       <t:title>p:inline 002</t:title>
       <t:revision-history>
+        <t:revision>
+          <t:date>2018-10-22</t:date>
+          <t:author initials="ndw">
+            <t:name>Norman Walsh</t:name>
+          </t:author>
+          <t:description xmlns="http://www.w3.org/1999/xhtml">
+            <p>Fixed result document
+            (<code>c:document-properties</code>, not <code>p:document-properties</code>)</p>
+          </t:description>
+        </t:revision>
          <t:revision>
             <t:date>2018-10-12</t:date>
             <t:author>
@@ -94,13 +104,13 @@
          <s:pattern>
             <s:rule context="/*">
                <s:assert test="self::c:result">The pipeline root is not c:result</s:assert>
-               <s:assert test="p:document-properties">
-            The result does not include p:document-properties
+               <s:assert test="c:document-properties">
+            The result does not include c:document-properties
           </s:assert>
                <s:assert test="(text())[1] = 'Hello, world.'">
             The result does not have the required text
           </s:assert>
-               <s:assert test="p:document-properties/content-type = 'text/plain'">
+               <s:assert test="c:document-properties/content-type = 'text/plain'">
             The content type of the result is not text/plain
           </s:assert>
             </s:rule>

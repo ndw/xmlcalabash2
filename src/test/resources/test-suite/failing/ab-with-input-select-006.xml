@@ -2,6 +2,16 @@
    <t:info>
       <t:title>with-input-select-006</t:title>
       <t:revision-history>
+        <t:revision>
+          <t:date>2018-10-22</t:date>
+          <t:author initials="ndw">
+            <t:name>Norman Walsh</t:name>
+          </t:author>
+          <t:description xmlns="http://www.w3.org/1999/xhtml">
+            <p>Fixed result document
+            (<code>c:document-properties</code>, not <code>p:document-properties</code>)</p>
+          </t:description>
+        </t:revision>
          <t:revision>
             <t:date>2018-10-12</t:date>
             <t:author>
@@ -66,7 +76,7 @@
                     </p:inline>
                 </p:with-input>
             </p:identity>
-            
+
            <p:identity>
                <p:with-input select="p:document-properties-document(.)"/>
            </p:identity>
@@ -75,12 +85,13 @@
    <t:schematron>
       <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
          <s:ns prefix="p" uri="http://www.w3.org/ns/xproc"/>
+         <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step"/>
          <s:pattern>
             <s:rule context="/">
                <s:assert test="count(*) = 1">Document does not have exactly one child element.</s:assert>
-               <s:assert test="*[1]/name()='p:document-properties'">Root element is not named 'p:document-properties'.</s:assert>
+               <s:assert test="*[1]/name()='c:document-properties'">Root element is not named 'c:document-properties'.</s:assert>
             </s:rule>
-            <s:rule context="/p:document-properties">
+            <s:rule context="/c:document-properties">
                <s:assert test="content-type ='application/xml'">Content type is not 'application/xml'.</s:assert>
             </s:rule>
          </s:pattern>

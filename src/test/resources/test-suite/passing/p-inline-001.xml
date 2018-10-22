@@ -2,6 +2,13 @@
    <t:info>
       <t:title>p:inline 001</t:title>
       <t:revision-history>
+        <t:revision initials="ndw">
+          <t:date>2018-10-22</t:date>
+          <t:description xmlns="http://www.w3.org/1999/xhtml">
+            <p>Fixed result document
+            (<code>c:document-properties</code>, not <code>p:document-properties</code>)</p>
+          </t:description>
+        </t:revision>
          <t:revision>
             <t:date>2018-10-12</t:date>
             <t:author>
@@ -22,7 +29,7 @@
          </t:revision>
          <t:revision>
             <t:date>2017-10-09T08:08:13-07:00</t:date>
-            <t:author>
+            <t:author initials="ndw">
                <t:name>Norman Walsh</t:name>
             </t:author>
             <t:description xmlns="http://www.w3.org/1999/xhtml">
@@ -53,17 +60,6 @@
 
       </p:declare-step>
    </t:pipeline>
-   <!--
-<c:result xmlns:c="http://www.w3.org/ns/xproc-step">
-        <hello-world/>
-      <p:document-properties xmlns:p="http://www.w3.org/ns/xproc"
-                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                          xmlns:xs="http://www.w3.org/2001/XMLSchema">
-      <base-uri xsi:type="xs:anyURI">...</base-uri>
-      <content-type>application/xml</content-type>
-   </p:document-properties>
-</c:result>
--->
    <t:schematron>
       <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
          <s:ns prefix="p" uri="http://www.w3.org/ns/xproc"/>
@@ -71,12 +67,12 @@
          <s:pattern>
             <s:rule context="/*">
                <s:assert test="self::c:result">The pipeline root is not c:result</s:assert>
-               <s:assert test="p:document-properties">
-            The result does not include p:document-properties
+               <s:assert test="c:document-properties">
+            The result does not include c:document-properties
           </s:assert>
                <!-- FIXME: this shouldn't need *: -->
                <s:assert test="*:hello-world">The result does not include hello-world</s:assert>
-               <s:assert test="p:document-properties/content-type = 'application/xml'">
+               <s:assert test="c:document-properties/content-type = 'application/xml'">
             The content type of the result is not application/xml
           </s:assert>
             </s:rule>

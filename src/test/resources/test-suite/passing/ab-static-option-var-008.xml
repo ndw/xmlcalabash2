@@ -2,27 +2,39 @@
     <t:info>
         <t:title>Static variables/option 008</t:title>
         <t:revision-history>
-            <t:revision>
-                <t:date>2018-10-11T18:16:00+02:00</t:date>
-                <t:author>
-                    <t:name>Achim Berndzen</t:name>
-                </t:author>
-                <t:description xmlns="http://www.w3.org/1999/xhtml">
-                    <p>Initial test</p>
-                </t:description>
-            </t:revision>
+          <t:revision>
+            <t:date>2018-10-22</t:date>
+            <t:author initials="ndw">
+              <t:name>Norman Walsh</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+              <p>Fixed result document
+              (<code>c:document-properties</code>, not <code>p:document-properties</code>)</p>
+            </t:description>
+          </t:revision>
+          <t:revision>
+            <t:date>2018-10-11T18:16:00+02:00</t:date>
+            <t:author>
+              <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+              <p>Initial test</p>
+            </t:description>
+          </t:revision>
         </t:revision-history>
     </t:info>
     <t:description xmlns="http://www.w3.org/1999/xhtml">
         <p>Tests that a static option can be used in avt of dynamic inline.</p>
     </t:description>
     <t:pipeline>
-        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" name="main" version="3.0">
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc"
+                        xmlns:c="http://www.w3.org/ns/xproc-step"
+                        name="main" version="3.0">
             <p:output port="result"/>
             <p:option static="true" name="static-option" select="18"/>
 
             <p:identity>
-                <p:with-input select="p:document-properties-document(.)/p:document-properties/a">
+                <p:with-input select="p:document-properties-document(.)/c:document-properties/a">
                     <p:inline document-properties="map{'a': $static-option}">
                         <doc xmlns="http://www.w3.org/1999/xhtml"/>
                     </p:inline>
