@@ -87,6 +87,10 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
     throw new TestException(s"Test runner cannot find tests at: $testloc")
   }
 
+  private val sortedList = testFiles.sorted
+  testFiles.clear()
+  testFiles ++= sortedList
+
   def run(): ListBuffer[TestResult] = {
     val resultList = ListBuffer.empty[TestResult]
 
