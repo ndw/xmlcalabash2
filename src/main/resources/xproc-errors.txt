@@ -60,6 +60,12 @@ The values of the serialization options must be atomic. Invalid: “$1”
 XD0048
 The serialization options must be a map. Invalid: “$1”
 
+XD0054
+Cannot specify an encoding (“$1”) with an XML content type (“$2”).
+
+XD0056
+When an encoding is specified for a p:inline, markup is not allowed.
+
 XD0057
 Invalid JSON: “$1” ($2).
 

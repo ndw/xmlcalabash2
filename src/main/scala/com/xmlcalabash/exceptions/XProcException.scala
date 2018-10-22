@@ -80,6 +80,8 @@ object XProcException {
   def xdContextItemAbsent(expr: String, msg: String, location: Option[Location]): XProcException = dynamicError(26, List(expr, msg), location)
   def xdConflictingNamespaceDeclarations(msg: String, location: Option[Location]): XProcException = dynamicError(34, msg, location)
   def xdBadMediaType(ctype: MediaType, allowed: List[MediaType]): XProcException = dynamicError(38, List(ctype, allowed))
+  def xdCannotEncodeXml(encoding: String, contentType: MediaType, location: Option[Location]): XProcException = dynamicError(54, List(encoding,contentType), location)
+  def xdNoMarkupAllowed(location: Option[Location]): XProcException = dynamicError(56, location)
   def xdInvalidJson(expr: String, message: String, location: Option[Location]): XProcException = dynamicError(57, List(expr,message), location)
   def xdMismatchedContentType(declType: MediaType, propType: MediaType, location: Option[Location]): XProcException = dynamicError(62, List(declType,propType), location)
 
@@ -101,6 +103,7 @@ object XProcException {
   def xsTextNotAllowed(location: Option[Location], text: String): XProcException = staticError(999, text, location)
   def xsMissingRequiredInput(port: String, location: Option[Location]): XProcException = staticError(998, port, location)
 
+  def xsUnsupportedEncoding(encoding: String, location: Option[Location]): XProcException = staticError(69, encoding, location)
   def xsInvalidNodeType(nodeKind: String, location: Option[Location]): XProcException = staticError(77, nodeKind, location)
   def xsBadTypeValue(name: String, reqdType: String): XProcException = staticError(77, List(name, reqdType), None)
   def xsDupWithOptionName(optName: QName, location: Option[Location]): XProcException = staticError(80, optName, location)

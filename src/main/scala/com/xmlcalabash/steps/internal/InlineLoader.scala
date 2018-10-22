@@ -79,10 +79,10 @@ class InlineLoader(private val baseURI: Option[URI],
 
     if (encoding.isDefined) {
       if (contentType.xmlContentType) {
-        throw XProcException.staticError(70, List(encoding.get, contentType), location)
+        throw XProcException.xdCannotEncodeXml(encoding.get, contentType, location)
       }
       if (encoding.get != "base64") {
-        throw XProcException.staticError(69, List(encoding.get), location)
+        throw XProcException.xsUnsupportedEncoding(encoding.get, location)
       }
     }
 
@@ -96,7 +96,7 @@ class InlineLoader(private val baseURI: Option[URI],
     // If it's not an XML content type, make sure it doesn't contain any elements
     if (!contentType.xmlContentType && !contentType.htmlContentType) {
       for (node <- nodes.filter(_.getNodeKind != XdmNodeKind.TEXT)) {
-        throw XProcException.xsInvalidNodeType(node.getNodeKind.toString, location)
+        throw XProcException.xdNoMarkupAllowed(location)
       }
     }
 
@@ -327,12 +327,14 @@ class InlineLoader(private val baseURI: Option[URI],
     val evaluator = config.get.expressionEvaluator
     val expr = new XProcVtExpression(context, text)
     var s = ""
+    var string = ""
     val iter = evaluator.value(expr, List.empty[Message], bindings.toMap, None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
-      s += next.getStringValue
+      string = string + s + next.getStringValue
+      s = " "
     }
-    s
+    string
   }
 
   private def expandNodes(text: String, builder: SaxonTreeBuilder): Unit = {
