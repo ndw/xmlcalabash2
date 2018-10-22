@@ -532,7 +532,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
 
     var pipeline = Option.empty[XdmNode]
     var schematron = Option.empty[XdmNode]
-    var inputs = mutable.HashMap.empty[String, XdmNode]
+    var inputs = mutable.HashMap.empty[String, ListBuffer[XdmNode]]
     var bindings = mutable.HashMap.empty[QName, XdmValue]
 
     val iter = node.axisIterator(Axis.CHILD)
@@ -555,14 +555,14 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
             if (port == null) {
               throw new TestException("Input has no port")
             }
-            if (inputs.contains(port)) {
-              throw new TestException(s"Input $port is already defined")
-            }
+
+            val list = inputs.getOrElse(port, ListBuffer.empty[XdmNode])
             val doc = loadResource(child)
             if (doc.isEmpty) {
               throw new TestException(s"Failed to load input for $port")
             }
-            inputs.put(port, doc.get)
+            list += doc.get
+            inputs.put(port, list)
           } else if (child.getNodeName == t_option) {
             val name = child.getAttributeValue(_name)
             if (name == null) {
@@ -608,8 +608,10 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
       tester.schematron = schematron.get
     }
 
-    for ((port,doc) <- inputs) {
-      tester.addInput(port,doc)
+    for ((port,list) <- inputs) {
+      for (doc <- list) {
+        tester.addInput(port,doc)
+      }
     }
 
     for ((name,bind) <- bindings) {

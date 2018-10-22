@@ -133,7 +133,8 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
         if (runtime != null) {
           runtime.stop()
         }
-        new TestResult(ex)
+        val mappedex = XProcException.mapPipelineException(ex)
+        new TestResult(mappedex)
     }
   }
 }
