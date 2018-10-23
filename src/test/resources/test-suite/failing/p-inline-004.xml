@@ -2,6 +2,12 @@
    <t:info>
       <t:title>p:inline 004</t:title>
       <t:revision-history>
+         <t:revision initials="ndw">
+            <t:date>2018-10-22</t:date>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Fixed syntax of <code>pipe</code> attribute.</p>
+            </t:description>
+         </t:revision>
          <t:revision>
             <t:date>2018-10-12</t:date>
             <t:author>
@@ -38,18 +44,15 @@
                <p>added new tests</p>
             </t:description>
          </t:revision>
-         <t:revision>
+         <t:revision initials="ndw">
             <t:date>2017-10-09T21:11:56-07:00</t:date>
-            <t:author>
-               <t:name>Norman Walsh</t:name>
-            </t:author>
             <t:description xmlns="http://www.w3.org/1999/xhtml">
                <p>New p:inline tests</p>
             </t:description>
          </t:revision>
          <t:revision>
             <t:date>2017-10-09T21:10:34-07:00</t:date>
-            <t:author>
+            <t:author initials="ndw">
                <t:name>Norman Walsh</t:name>
             </t:author>
             <t:description xmlns="http://www.w3.org/1999/xhtml">
@@ -71,7 +74,7 @@ iVBORw0KGgoAAAANSUhEUgAAAIAAAAAdCAYAAABixmRWAAAABGdBTUEAALGPC/xhBQAAACBjSFJN
          </p:identity>
 
          <p:cast-content-type name="cast" content-type="application/xml">
-            <p:with-input port="source" pipe="inline"/>
+            <p:with-input port="source" pipe="@inline"/>
          </p:cast-content-type>
 
          <p:wrap-sequence wrapper="c:result"/>
