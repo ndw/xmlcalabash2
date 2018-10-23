@@ -110,7 +110,7 @@
 </p:declare-step>
 
 <p:declare-step type="cx:javascript">
-  <p:input port="source"/>
+  <p:input port="script"/>
   <p:output port="result"/>
   <p:option name="parameters" as="map(*)"/>
 </p:declare-step>
