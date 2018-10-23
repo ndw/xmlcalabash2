@@ -1,17 +1,22 @@
 package com.xmlcalabash.runtime
 
-import java.io.{IOException, InputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, FileOutputStream, IOException, InputStream}
+import java.net.URI
 
 import com.jafpl.graph.Location
 import com.jafpl.messages.{BindingMessage, ExceptionMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality, Step}
+import com.sun.org.apache.xpath.internal.XPathProcessorException
+import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.util.{MediaType, TypeUtils}
-import net.sf.saxon.s9api.{QName, XdmArray, XdmAtomicValue, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmNode, XdmNodeKind, XdmValue}
+import org.apache.http.util.ByteArrayBuffer
 import org.slf4j.{Logger, LoggerFactory}
+import sun.tools.jconsole.Plotter
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -283,33 +288,190 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
   // =======================================================================================
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
+    // Let's try to validate and normalize what just got sent out of the step.
+    // If it claims to be XML, HTML, JSON, or text, we need to get it into an XDM.
+
+    val contentType = metadata.contentType
+    val sendMessage = contentType.classification match {
+      case MediaType.XML => makeXmlMessage(item, metadata)
+      case MediaType.HTML => makeHtmlMessage(item, metadata)
+      case MediaType.JSON => makeJsonMessage(item, metadata)
+      case MediaType.TEXT => makeTextMessage(item, metadata)
+      case _ => makeBinaryMessage(item,metadata)
+    }
+
+    consumer.get.receive(port, sendMessage)
+  }
+
+  private def makeXmlMessage(item: Any, metadata: XProcMetadata): Message = {
     item match {
       case value: XdmNode =>
-        consumer.get.receive(port, new XdmNodeItemMessage(value, metadata))
+        assertXmlDocument(value)
+        new XdmNodeItemMessage(value, metadata)
+      case value: String =>
+        val req = new DocumentRequest(metadata.baseURI.getOrElse(new URI("")), metadata.contentType)
+        val result = config.documentManager.parse(req, new ByteArrayInputStream(value.getBytes("UTF-8")))
+        makeXmlMessage(result.value, metadata)
+      case bytes: Array[Byte] =>
+        makeXmlMessage(new ByteArrayInputStream(bytes), metadata)
+      case value: InputStream =>
+        val req = new DocumentRequest(metadata.baseURI.getOrElse(new URI("")), metadata.contentType)
+        val result = config.documentManager.parse(req, value)
+        makeXmlMessage(result.value, metadata)
+      case value: XdmValue =>
+        throw XProcException.xiNotAnXmlDocument(None)
+      case _ =>
+        throw new RuntimeException(s"Cannot interpret $item as ${metadata.contentType}")
+    }
+  }
+
+  private def makeHtmlMessage(item: Any, metadata: XProcMetadata): Message = {
+    item match {
+      case value: XdmNode =>
+        assertXmlDocument(value)
+        new XdmNodeItemMessage(value, metadata)
+      case value: String =>
+        val req = new DocumentRequest(metadata.baseURI.getOrElse(new URI("")), metadata.contentType)
+        val result = config.documentManager.parse(req, new ByteArrayInputStream(value.getBytes("UTF-8")))
+        makeHtmlMessage(result.value, metadata)
+      case value: Array[Byte] =>
+        makeHtmlMessage(new ByteArrayInputStream(value), metadata)
+      case value: InputStream =>
+        val req = new DocumentRequest(metadata.baseURI.getOrElse(new URI("")), metadata.contentType)
+        val result = config.documentManager.parse(req, value)
+        makeHtmlMessage(result.value, metadata)
+      case value: XdmValue =>
+        throw XProcException.xiNotAnXmlDocument(None)
+      case _ =>
+        throw new RuntimeException(s"Cannot interpret $item as ${metadata.contentType}")
+    }
+  }
+
+  private def makeJsonMessage(item: Any, metadata: XProcMetadata): Message = {
+    item match {
+      case value: XdmNode =>
+        throw XProcException.xiNotJSON(None)
+      case value: XdmValue =>
+        new XdmValueItemMessage(value, metadata)
+      case value: String =>
+        val req = new DocumentRequest(metadata.baseURI.getOrElse(new URI("")), metadata.contentType)
+        val result = config.documentManager.parse(req, new ByteArrayInputStream(value.getBytes("UTF-8")))
+        makeJsonMessage(result.value, metadata)
+      case value: Array[Byte] =>
+        makeJsonMessage(new ByteArrayInputStream(value), metadata)
+      case value: InputStream =>
+        val req = new DocumentRequest(metadata.baseURI.getOrElse(new URI("")), metadata.contentType)
+        val result = config.documentManager.parse(req, value)
+        makeJsonMessage(result.value, metadata)
+      case _ =>
+        throw new RuntimeException(s"Cannot interpret $item as ${metadata.contentType}")
+    }
+  }
+  private def makeTextMessage(item: Any, metadata: XProcMetadata): Message = {
+    item match {
+      case value: XdmNode =>
+        assertTextDocument(value)
+        new XdmNodeItemMessage(value, metadata)
       case value: XdmValue =>
         value match {
-          case _: XdmMap =>
-            val msg = new XdmValueItemMessage(value, new XProcMetadata(MediaType.JSON, metadata))
-            consumer.get.receive(port, msg)
-          case _: XdmArray =>
-            val msg = new XdmValueItemMessage(value, new XProcMetadata(MediaType.JSON, metadata))
-            consumer.get.receive(port, msg)
+          case atomic: XdmAtomicValue =>
+            val t = atomic.getPrimitiveTypeName
+            if (t == XProcConstants.xs_string || t == XProcConstants.xs_NCName || t == XProcConstants.xs_untypedAtomic
+              || t == XProcConstants.xs_anyURI || t == XProcConstants.xs_NMTOKEN) {
+              makeTextMessage(atomic.getStringValue, metadata)
+            } else {
+              throw XProcException.xiNotATextDocument(None)
+            }
           case _ =>
-            // FIXME: Really?
-            val msg = new XdmValueItemMessage(value, new XProcMetadata(MediaType.JSON, metadata))
-            consumer.get.receive(port, msg)
+            throw XProcException.xiNotATextDocument(None)
         }
-      case value: BinaryNode =>
+      case value: String =>
         val tree = new SaxonTreeBuilder(config)
         tree.startDocument(metadata.baseURI)
+        tree.addText(value)
         tree.endDocument()
-        consumer.get.receive(port, new AnyItemMessage(tree.result, value, metadata))
+        new XdmNodeItemMessage(tree.result, metadata)
+      case value: Array[Byte] =>
+        makeTextMessage(new ByteArrayInputStream(value), metadata)
+      case stream: InputStream =>
+        val bos = new ByteArrayOutputStream()
+        var totBytes = 0L
+        val pagesize = 4096
+        val buffer = new ByteArrayBuffer(pagesize)
+        val tmp = new Array[Byte](4096)
+        var length = 0
+        length = stream.read(tmp)
+        while (length >= 0) {
+          bos.write(tmp, 0, length)
+          totBytes += length
+          length = stream.read(tmp)
+        }
+        bos.close()
+        stream.close()
+        makeTextMessage(bos.toString("UTF-8"), metadata)
       case _ =>
-        val tree = new SaxonTreeBuilder(config)
-        tree.startDocument(metadata.baseURI)
-        tree.endDocument()
-        val binary = new BinaryNode(config, item)
-        consumer.get.receive(port, new AnyItemMessage(tree.result, binary, metadata))
+        throw new RuntimeException(s"Cannot interpret $item as ${metadata.contentType}")
+    }
+  }
+
+  private def makeBinaryMessage(item: Any, metadata: XProcMetadata): Message = {
+    val tree = new SaxonTreeBuilder(config)
+    tree.startDocument(metadata.baseURI)
+    tree.endDocument()
+
+    item match {
+      case value: String =>
+        val binary = new BinaryNode(config, value.getBytes("UTF-8"))
+        new AnyItemMessage(tree.result, binary, metadata)
+      case value: Array[Byte] =>
+        makeBinaryMessage(new ByteArrayInputStream(value), metadata)
+      case value: InputStream =>
+        val binary = new BinaryNode(config, value)
+        new AnyItemMessage(tree.result, binary, metadata)
+      case _ =>
+        throw XProcException.xiNotBinary(None)
+    }
+  }
+
+  private def assertDocument(node: XdmNode): Unit = {
+    if (node.getNodeKind != XdmNodeKind.DOCUMENT) {
+      throw XProcException.xiNotADocument(None)
+    }
+  }
+
+  private def assertTextDocument(node: XdmNode): Unit = {
+    assertDocument(node)
+    var count = 0
+    val iter = node.axisIterator(Axis.CHILD)
+    while (iter.hasNext) {
+      val child = iter.next().asInstanceOf[XdmNode]
+      if (count > 0 || child.getNodeKind != XdmNodeKind.TEXT) {
+        throw XProcException.xiNotATextDocument(None)
+      }
+      count += 1
+    }
+  }
+
+  private def assertXmlDocument(node: XdmNode): Unit = {
+    assertDocument(node)
+    var count = 0
+    val iter = node.axisIterator(Axis.CHILD)
+    while (iter.hasNext) {
+      val child = iter.next().asInstanceOf[XdmNode]
+      child.getNodeKind match {
+        case XdmNodeKind.ELEMENT => count += 1
+        case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
+        case XdmNodeKind.COMMENT => Unit
+        case XdmNodeKind.TEXT =>
+          if (child.getStringValue.trim != "") {
+            throw XProcException.xiNotAnXmlDocument(None)
+          }
+        case _ =>
+          throw XProcException.xiNotAnXmlDocument(None)
+      }
+    }
+    if (count != 1) {
+      throw XProcException.xiNotAnXmlDocument(None)
     }
   }
 }

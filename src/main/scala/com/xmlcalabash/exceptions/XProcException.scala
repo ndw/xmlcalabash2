@@ -66,6 +66,11 @@ object XProcException {
   def xiNoSuchPortOnAccept(port: String): XProcException = internalError(52, None, List(port))
   def xiBadValueOnFileLoader(variable: String): XProcException = internalError(53, None, List(variable))
   def xiNoSaxon(): XProcException = internalError(54, None, None)
+  def xiNotADocument(location: Option[Location]): XProcException = internalError(55, location, None)
+  def xiNotATextDocument(location: Option[Location]): XProcException = internalError(56, location, None)
+  def xiNotAnXmlDocument(location: Option[Location]): XProcException = internalError(57, location, None)
+  def xiNotJSON(location: Option[Location]): XProcException = internalError(58, location, None)
+  def xiNotBinary(location: Option[Location]): XProcException = internalError(59, location, None)
 
   def xdSequenceNotAllowedOnIf(location: Option[Location]): XProcException = dynamicError(5, location)
   def xdInputSequenceNotAllowed(port: String, location: Option[Location]): XProcException = dynamicError(6, port, location)
