@@ -120,7 +120,7 @@ class FileLoader(private val context: ExpressionContext,
     request.docprops = props
 
     val result = config.get.documentManager.parse(request)
-    val metadata = new XProcMetadata(result.contentType, result.props)
+    val metadata = new XProcMetadata(result.contentType, props ++ result.props)
 
     if (result.shadow.isDefined) {
       val binary = new BinaryNode(config.get, result.shadow.get)
