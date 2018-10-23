@@ -8,12 +8,12 @@ import scala.collection.mutable.ListBuffer
 // N.B. This class accepts "*" for type and subtype because it's used for matching
 
 object MediaType {
-  def OCTET_STREAM = new MediaType("application", "octet-stream")
+  val OCTET_STREAM = new MediaType("application", "octet-stream")
   //def ANY = new MediaType("*", "*")
-  def TEXT = new MediaType("text", "plain")
-  def XML = new MediaType("application", "xml")
-  def JSON = new MediaType("application", "json")
-  def HTML = new MediaType("text", "html")
+  val TEXT = new MediaType("text", "plain")
+  val XML = new MediaType("application", "xml")
+  val JSON = new MediaType("application", "json")
+  val HTML = new MediaType("text", "html")
 
   def parse(mtype: Option[String]): Option[MediaType] = {
     if (mtype.isDefined) {
@@ -80,6 +80,20 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
 
   def this(mediaType: String, mediaSubtype: String, suffix: String) {
     this(mediaType, mediaSubtype, Some(suffix), None)
+  }
+
+  def classification: MediaType = {
+    if (xmlContentType) {
+      MediaType.XML
+    } else if (htmlContentType) {
+      MediaType.HTML
+    } else if (textContentType) {
+      MediaType.TEXT
+    } else if (jsonContentType) {
+      MediaType.JSON
+    } else {
+      MediaType.OCTET_STREAM
+    }
   }
 
   def textContentType: Boolean = {
