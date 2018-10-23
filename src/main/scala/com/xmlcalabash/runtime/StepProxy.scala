@@ -1,13 +1,12 @@
 package com.xmlcalabash.runtime
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, FileOutputStream, IOException, InputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, IOException, InputStream}
 import java.net.URI
 
 import com.jafpl.graph.Location
 import com.jafpl.messages.{BindingMessage, ExceptionMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality, Step}
-import com.sun.org.apache.xpath.internal.XPathProcessorException
 import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
@@ -16,7 +15,6 @@ import com.xmlcalabash.util.{MediaType, TypeUtils}
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmNode, XdmNodeKind, XdmValue}
 import org.apache.http.util.ByteArrayBuffer
 import org.slf4j.{Logger, LoggerFactory}
-import sun.tools.jconsole.Plotter
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
