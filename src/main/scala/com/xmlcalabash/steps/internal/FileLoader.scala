@@ -7,7 +7,7 @@ import com.xmlcalabash.config.{DocumentRequest, XProcTypes}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.runtime.{BinaryNode, DynamicContext, ExpressionContext, XProcExpression, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmMap, XdmNode, XdmValue}
 
@@ -123,7 +123,8 @@ class FileLoader(private val context: ExpressionContext,
     val metadata = new XProcMetadata(result.contentType, result.props)
 
     if (result.shadow.isDefined) {
-      consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), result.shadow.get, metadata))
+      val binary = new BinaryNode(config.get, result.shadow.get)
+      consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), binary, metadata))
     } else {
       result.value match {
         case node: XdmNode =>

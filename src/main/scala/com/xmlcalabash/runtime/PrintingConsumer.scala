@@ -40,21 +40,15 @@ class PrintingConsumer private(config: XMLCalabashRuntime, serialOpts: Map[QName
 
         message match {
           case msg: AnyItemMessage =>
-            msg.shadow match {
-              case is: InputStream =>
-                val stream = new ByteArrayOutputStream()
-                val buf = Array.fill[Byte](4096)(0)
-                var len = is.read(buf, 0, buf.length)
-                while (len >= 0) {
-                  stream.write(buf, 0, len)
-                  len = is.read(buf, 0, buf.length)
-                }
-                pos.write(stream.toByteArray)
-              case bytes: Array[Byte] =>
-                pos.write(bytes)
-              case _ =>
-                throw new RuntimeException(s"Don't know how to serialize item: ${msg.shadow}")
+            val instream = msg.shadow.stream
+            val outstream = new ByteArrayOutputStream()
+            val buf = Array.fill[Byte](4096)(0)
+            var len = instream.read(buf, 0, buf.length)
+            while (len >= 0) {
+              outstream.write(buf, 0, len)
+              len = instream.read(buf, 0, buf.length)
             }
+            pos.write(outstream.toByteArray)
           case msg: XdmValueItemMessage =>
             val stream = new ByteArrayOutputStream()
             val serializer = config.processor.newSerializer(stream)

@@ -227,10 +227,11 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
   }
 
   override def receive(port: String, message: Message): Unit = {
-    received.put(port, received.getOrElse(port, 0))
+    received.put(port, received.getOrElse(port, 1))
 
     inputSpec.checkInputCardinality(port, received(port))
 
+    // Get exceptions out of the way
     message match {
       case msg: ExceptionMessage =>
         msg.item match {
@@ -243,32 +244,39 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
           case _ =>
             step.receive(port, msg.item, XProcMetadata.EXCEPTION)
         }
+        return
+      case _ => Unit
+    }
 
-      case msg: XdmValueItemMessage =>
-        if (defaultSelect.contains(port)) {
-          // If the input has a select, this is the context for that expression
-          val expr = config.expressionEvaluator.newInstance()
-          val selectExpr = defaultSelect(port)
-          val selected = expr.value(selectExpr, List(msg), bindingsMap.toMap, None)
-          val iter = selected.item.iterator()
-          while (iter.hasNext) {
-            val item = iter.next()
-            item match {
-              case node: XdmNode =>
-                if (node.getNodeKind == XdmNodeKind.ATTRIBUTE) {
-                  throw XProcException.xdInvalidSelection(selectExpr.toString, "an attribute", location)
-                }
-                dynamicContext.addDocument(node, message)
-              case _ => Unit
-            }
-            step.receive(port, item, selected.metadata)
-          }
-        } else {
+    if (defaultSelect.contains(port)) {
+      evalSelect(port, defaultSelect(port), message)
+    } else {
+      message match {
+        case msg: XdmValueItemMessage =>
           step.receive(port, msg.item, msg.metadata)
-        }
-      case msg: AnyItemMessage =>
-        step.receive(port, msg.shadow, msg.metadata)
-      case _ => throw XProcException.xiInvalidMessage(location, message)
+        case msg: AnyItemMessage =>
+          step.receive(port, msg.shadow, msg.metadata)
+        case _ =>
+          throw XProcException.xiInvalidMessage(location, message)
+      }
+    }
+  }
+
+  private def evalSelect(port: String, selectExpr: XProcExpression, message: Message): Unit = {
+    val expr = config.expressionEvaluator.newInstance()
+    val selected = expr.value(selectExpr, List(message), bindingsMap.toMap, None)
+    val iter = selected.item.iterator()
+    while (iter.hasNext) {
+      val item = iter.next()
+      item match {
+        case node: XdmNode =>
+          if (node.getNodeKind == XdmNodeKind.ATTRIBUTE) {
+            throw XProcException.xdInvalidSelection(selectExpr.toString, "an attribute", location)
+          }
+          dynamicContext.addDocument(node, message)
+        case _ => Unit
+      }
+      step.receive(port, item, selected.metadata)
     }
   }
 
@@ -291,11 +299,17 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
             val msg = new XdmValueItemMessage(value, new XProcMetadata(MediaType.JSON, metadata))
             consumer.get.receive(port, msg)
         }
+      case value: BinaryNode =>
+        val tree = new SaxonTreeBuilder(config)
+        tree.startDocument(metadata.baseURI)
+        tree.endDocument()
+        consumer.get.receive(port, new AnyItemMessage(tree.result, value, metadata))
       case _ =>
         val tree = new SaxonTreeBuilder(config)
         tree.startDocument(metadata.baseURI)
         tree.endDocument()
-        consumer.get.receive(port, new AnyItemMessage(tree.result, item, metadata))
+        val binary = new BinaryNode(config, item)
+        consumer.get.receive(port, new AnyItemMessage(tree.result, binary, metadata))
     }
   }
 }

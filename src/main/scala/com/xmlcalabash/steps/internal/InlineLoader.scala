@@ -9,7 +9,7 @@ import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcExpression, XProcMetadata, XProcVtExpression, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.runtime.{BinaryNode, DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcExpression, XProcMetadata, XProcVtExpression, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import org.xml.sax.InputSource
@@ -252,7 +252,8 @@ class InlineLoader(private val baseURI: Option[URI],
       val req = new DocumentRequest(metadata.baseURI.getOrElse(new URI("")), contentType)
       val result = config.get.documentManager.parse(req, new ByteArrayInputStream(decoded))
       if (result.shadow.isDefined) {
-        consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), result.shadow, metadata))
+        val binary = new BinaryNode(config.get, result.shadow)
+        consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), binary, metadata))
       } else {
         result.value match {
           case node: XdmNode =>
@@ -264,7 +265,8 @@ class InlineLoader(private val baseURI: Option[URI],
     } else {
       // Octet stream, I guess
       props.put(XProcConstants._content_length, new XdmAtomicValue(decoded.length))
-      consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), decoded, new XProcMetadata(contentType, props.toMap)))
+      val binary = new BinaryNode(config.get, decoded)
+      consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), binary, new XProcMetadata(contentType, props.toMap)))
     }
   }
 

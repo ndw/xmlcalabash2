@@ -1,6 +1,6 @@
 package com.xmlcalabash.steps
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, FileOutputStream, InputStream}
 import java.net.URI
 import java.util.Base64
 
@@ -9,9 +9,10 @@ import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.runtime.{BinaryNode, ExpressionContext, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils, ValueUtils}
 import net.sf.saxon.s9api.{QName, Serializer, XdmItem, XdmNode, XdmValue}
+import org.apache.http.util.ByteArrayBuffer
 
 import scala.collection.mutable
 
@@ -98,9 +99,28 @@ class CastContentType() extends DefaultXmlStep {
       builder.addAttribute(XProcConstants._encoding, "base64")
       builder.startContent()
 
-      // The string may contain CRLF line endings, remove the CRs
-      val base64str = Base64.getMimeEncoder.encodeToString(item.get.asInstanceOf[Array[Byte]]).replace("\r", "")
-      builder.addText(base64str)
+      // A binary should be an input stream...
+      item.get match {
+        case binary: BinaryNode =>
+          val is = binary.stream
+          val bos = new ByteArrayOutputStream()
+          var totBytes = 0L
+          val pagesize = 4096
+          val buffer = new ByteArrayBuffer(pagesize)
+          val tmp = new Array[Byte](4096)
+          var length = 0
+          length = is.read(tmp)
+          while (length >= 0) {
+            bos.write(tmp, 0, length)
+            totBytes += length
+            length = is.read(tmp)
+          }
+          // The string may contain CRLF line endings, remove the CRs
+          val base64str = Base64.getMimeEncoder.encodeToString(bos.toByteArray).replace("\r", "")
+          builder.addText(base64str)
+        case _ =>
+          throw new RuntimeException(s"Don't know how to base64 encode ${item.get}")
+      }
 
       builder.addEndElement()
       builder.endDocument()
