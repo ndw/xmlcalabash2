@@ -12,7 +12,6 @@ import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants
 import com.xmlcalabash.runtime.{BinaryNode, DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcExpression, XProcMetadata, XProcVtExpression, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
-import org.xml.sax.InputSource
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
