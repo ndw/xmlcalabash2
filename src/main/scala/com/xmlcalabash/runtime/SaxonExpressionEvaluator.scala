@@ -78,6 +78,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
               Unit // Whatever it is, it isn't a document
           }
         case msg: AnyItemMessage =>
+          proxies.put(msg.shadow, msg.item)
           checkDocument(newContext, msg.item, context.head)
         case _ => Unit
       }
@@ -339,6 +340,8 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         contextItem.head match {
           case msg: XdmValueItemMessage =>
             selector.setContextItem(proxies(msg.item))
+          case msg: AnyItemMessage =>
+            selector.setContextItem(proxies(msg.shadow))
           case _ =>
             throw new RuntimeException(s"Impossible to set context item to ${contextItem.head}")
         }
