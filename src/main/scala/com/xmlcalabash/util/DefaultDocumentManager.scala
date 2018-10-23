@@ -210,6 +210,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       }
 
       new DocumentResponse(node, contentType, props)
+
     } else if (contentType.jsonContentType) {
       val encoding = contentType.charset.getOrElse("UTF-8") // FIXME: What should the default be?
       val bytes = streamToByteArray(stream)
@@ -220,6 +221,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       bindingsMap.put("{}json", vmsg)
       val smsg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
       new DocumentResponse(smsg.item, contentType, props)
+
     } else if (contentType.textContentType) {
       val encoding = contentType.charset.getOrElse("UTF-8") // FIXME: What should the default be?
       val bytes = streamToByteArray(stream)
@@ -229,6 +231,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       builder.addText(new String(bytes, encoding))
       builder.endDocument()
       new DocumentResponse(builder.result, contentType, props)
+
     } else {
       val builder = new SaxonTreeBuilder(xmlCalabash)
       builder.startDocument(request.href)
