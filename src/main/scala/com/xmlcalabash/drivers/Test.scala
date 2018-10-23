@@ -13,10 +13,15 @@ object Test extends App {
   private val xmlCalabash = XMLCalabashConfig.newInstance()
 
   private var debug = false
+  private var showPassing = false
+  private var showFailing = false
+  private var showSkipping = false
   private var xmlOutput: Option[String] = None
   private var testLocations = ListBuffer.empty[String]
 
   crudeArgParse()
+
+  private val showAll = !showPassing && !showFailing && !showSkipping
 
   if (testLocations.isEmpty) {
     println("Usage: com.xmlcalabash.drivers.Test [-h htmloutput] [-j junitoutput] testlocation [testlocation+]")
@@ -40,13 +45,19 @@ object Test extends App {
       for (result <- runner.run()) {
         total += 1
         if (result.skipped.isDefined) {
-          println(s"SKIP: ${result.baseURI}")
+          if (showAll || showSkipping) {
+            println(s"SKIP: ${result.baseURI}")
+          }
           skip += 1
         } else if (result.passed) {
-          //println(s"PASS: ${result.baseURI}")
+          if (showAll || showPassing) {
+            println(s"PASS: ${result.baseURI}")
+          }
           pass += 1
         } else if (result.failed) {
-          println(s"FAIL: ${result.baseURI}")
+          if (showAll || showFailing) {
+            println(s"FAIL: ${result.baseURI}")
+          }
           fail += 1
         }
       }
@@ -70,6 +81,9 @@ object Test extends App {
 
     val optd = "-(d)".r
     val optj = "-[jx](.*)".r
+    val optp = "-(p)".r
+    val optf = "-(f)".r
+    val opts = "-(s)".r
     val optx = "-(.*)".r
 
     var pos = 0
@@ -78,6 +92,12 @@ object Test extends App {
       arg match {
         case optd(opt) =>
           debug = true
+        case optp(opt) =>
+          showPassing = true
+        case optf(opt) =>
+          showFailing = true
+        case opts(opt) =>
+          showSkipping = true
         case optj(opt) =>
           xmlOutput = Some(opt)
           if (opt == "") {
