@@ -99,22 +99,28 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
       count += 1
       println(s"Running $count of ${testFiles.length}: $fn")
 
-      val stdout = new ByteArrayOutputStream()
-      val psout = new PrintStream(stdout)
+      if (Option(System.getProperty("com.xmlcalabash.suppressTestOutput")).getOrElse("false") == "true") {
+        val stdout = new ByteArrayOutputStream()
+        val psout = new PrintStream(stdout)
 
-      val stderr = new ByteArrayOutputStream()
-      val pserr = new PrintStream(stderr)
+        val stderr = new ByteArrayOutputStream()
+        val pserr = new PrintStream(stderr)
 
-      Console.withOut(psout) {
-        Console.withErr(pserr) {
-          val source = new SAXSource(new InputSource(fn))
-          val node = builder.build(source)
-          resultList ++= runTestDocument(node)
+        Console.withOut(psout) {
+          Console.withErr(pserr) {
+            val source = new SAXSource(new InputSource(fn))
+            val node = builder.build(source)
+            resultList ++= runTestDocument(node)
+          }
         }
-      }
 
-      psout.close()
-      pserr.close()
+        psout.close()
+        pserr.close()
+      } else {
+        val source = new SAXSource(new InputSource(fn))
+        val node = builder.build(source)
+        resultList ++= runTestDocument(node)
+      }
     }
 
     resultList
