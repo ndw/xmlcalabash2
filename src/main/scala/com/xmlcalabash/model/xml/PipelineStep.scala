@@ -38,6 +38,8 @@ class PipelineStep(override val config: XMLCalabashRuntime,
   }
 
   override def validate(): Boolean = {
+    var valid = super.validate()
+
     _name = attributes.get(XProcConstants._name)
     if (_name.isDefined) {
       val regex = """([\p{L}_][-\p{L}_\p{N}]*)""".r
@@ -55,7 +57,7 @@ class PipelineStep(override val config: XMLCalabashRuntime,
       }
     }
 
-    true
+    valid
   }
 
   def makeInputPortsExplicit(): Boolean = {

@@ -28,6 +28,8 @@ class Serialization(override val config: XMLCalabashRuntime,
   var _version: Option[String] = None
 
   override def validate(): Boolean = {
+    var valid = super.validate()
+
     _port = attributes.get(XProcConstants._port)
     _byte_order_mark = lexicalBoolean(attributes.get(XProcConstants._byte_order_mark))
     _cdata_section_elements = if (attributes.contains(XProcConstants._cdata_section_elements)) {
@@ -83,7 +85,7 @@ class Serialization(override val config: XMLCalabashRuntime,
       }
     }
 
-    true
+    valid
   }
 
   override def asXML: xml.Elem = {

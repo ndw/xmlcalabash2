@@ -20,12 +20,13 @@ class AtomicStep(override val config: XMLCalabashRuntime,
   }
 
   override def validate(): Boolean = {
+    var valid = super.validate()
+
     val sig = if (parent.isDefined) {
       parent.get.stepSignature(stepType).getOrElse(config.signatures.step(stepType))
     } else {
       config.signatures.step(stepType)
     }
-    var valid = super.validate()
 
     val seenOptions = mutable.HashSet.empty[QName]
     for (key <- attributes.keySet) {

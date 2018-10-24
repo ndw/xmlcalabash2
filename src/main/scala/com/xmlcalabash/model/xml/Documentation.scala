@@ -9,7 +9,9 @@ import scala.collection.mutable.ListBuffer
 class Documentation(override val config: XMLCalabashRuntime,
                     override val parent: Option[Artifact],
                     val content: List[XdmNode]) extends Artifact(config, parent) {
-  override def validate(): Boolean = true
+  override def validate(): Boolean = {
+    super.validate()
+  }
 
   override def makeGraph(graph: Graph, parent: Node) {
     // no direct contribution

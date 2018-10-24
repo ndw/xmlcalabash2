@@ -38,6 +38,8 @@ class OptionDecl(override val config: XMLCalabashRuntime,
   }
 
   override def validate(): Boolean = {
+    var valid = super.validate()
+
     val qname = lexicalQName(attributes.get(XProcConstants._name))
     if (qname.isEmpty) {
       throw new ModelException(ExceptionCode.NAMEATTRREQ, this.toString, location)
@@ -93,7 +95,7 @@ class OptionDecl(override val config: XMLCalabashRuntime,
       throw XProcException.xsElementNotAllowed(location, children.head.nodeName)
     }
 
-    true
+    valid
   }
 
   override def makeGraph(graph: Graph, parent: Node) {

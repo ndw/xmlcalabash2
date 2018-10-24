@@ -148,6 +148,7 @@ object XProcConstants {
   val _html_version = new QName("", "html-version")
   val _include_content_type = new QName("", "include-content-type")
   val _indent = new QName("", "indent")
+  val _inline_expand_text = new QName("", "inline-expand-text")
   val _item_separator = new QName("", "item-separator")
   val _match = new QName("", "match")
   val _media_type = new QName("", "media-type")
@@ -200,4 +201,5 @@ object XProcConstants {
 
   // For non-XProc namespaced places
   val p_expand_text = new QName("p", ns_p, "expand-text")
+  val p_inline_expand_text = new QName("p", ns_p, "inline-expand-text")
 }

@@ -68,6 +68,8 @@ class Pipe(override val config: XMLCalabashRuntime,
   }
 
   override def validate(): Boolean = {
+    var valid = super.validate()
+
     _step = attributes.get(XProcConstants._step)
     _port = attributes.get(XProcConstants._port)
 
@@ -97,7 +99,7 @@ class Pipe(override val config: XMLCalabashRuntime,
       throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
-    true
+    valid
   }
 
   override def makeEdges(graph: Graph, parNode: Node): Unit = {

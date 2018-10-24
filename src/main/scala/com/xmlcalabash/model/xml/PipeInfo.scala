@@ -10,7 +10,7 @@ class PipeInfo(override val config: XMLCalabashRuntime,
                override val parent: Option[Artifact],
                val content: List[XdmNode]) extends Artifact(config, parent) {
   override def validate(): Boolean = {
-    true
+    super.validate()
   }
 
   override def makeGraph(graph: Graph, parent: Node) {

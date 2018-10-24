@@ -27,7 +27,6 @@ class InlineLoader(private val baseURI: Option[URI],
   private var include_expand_text_attribute = false
   private var docProps = Map.empty[QName, XdmItem]
   private val excludeURIs = mutable.HashSet.empty[String]
-  private var _allowExpandText = true
 
   excludeURIs += XProcConstants.ns_p
   for (uri <- excludeInlinePrefixes.values) {
@@ -36,12 +35,6 @@ class InlineLoader(private val baseURI: Option[URI],
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
-
-  protected[xmlcalabash] def allowExpandText: Boolean = _allowExpandText
-  protected[xmlcalabash] def allowExpandText_=(allow: Boolean): Unit = {
-    _allowExpandText = allow
-    include_expand_text_attribute = !allow
-  }
 
   override def run(): Unit = {
     if (docPropsExpr.isDefined) {
@@ -114,7 +107,7 @@ class InlineLoader(private val baseURI: Option[URI],
       builder.startDocument(baseURI)
       builder.startContent()
       for (node <- trim(nodes)) {
-        if (allowExpandText) {
+        if (expandText) {
           expandTVT(node, builder, expandText)
         } else {
           builder.addSubtree(node)
@@ -122,13 +115,15 @@ class InlineLoader(private val baseURI: Option[URI],
       }
       builder.endDocument()
       val result = builder.result
-      consumer.get.receive("result", new XdmNodeItemMessage(result, new XProcMetadata(contentType, props.toMap)))
+      val metadata = new XProcMetadata(contentType, props.toMap)
+      val message = new XdmNodeItemMessage(result, metadata)
+      consumer.get.receive("result", message)
     } else if (contentType.htmlContentType) {
       val builder = new SaxonTreeBuilder(config.get)
       builder.startDocument(baseURI)
       builder.startContent()
       for (node <- trim(nodes)) {
-        if (allowExpandText) {
+        if (expandText) {
           expandTVT(node, builder, expandText)
         } else {
           builder.addSubtree(node)
@@ -153,16 +148,12 @@ class InlineLoader(private val baseURI: Option[URI],
           throw new RuntimeException("Unexpected node type from parseHtml")
       }
     } else {
-      val text = if (allowExpandText) {
+      val text = if (expandText) {
         val builder = new SaxonTreeBuilder(config.get)
         builder.startDocument(baseURI)
         builder.startContent()
         for (node <- nodes) {
-          if (allowExpandText) {
-            expandTVT(node, builder, expandText)
-          } else {
-            builder.addSubtree(node)
-          }
+          expandTVT(node, builder, expandText)
         }
         builder.endDocument()
         val result = builder.result
@@ -309,7 +300,7 @@ class InlineLoader(private val baseURI: Option[URI],
         iter = node.axisIterator(Axis.CHILD)
         while (iter.hasNext) {
           val child = iter.next().asInstanceOf[XdmNode]
-          expandTVT(child, builder, newExpand && _allowExpandText)
+          expandTVT(child, builder, newExpand)
         }
         builder.addEndElement()
       case XdmNodeKind.TEXT =>

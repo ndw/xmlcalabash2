@@ -26,7 +26,7 @@ class WithOption(override val config: XMLCalabashRuntime,
   def as: Option[SequenceType] = _as
 
   override def validate(): Boolean = {
-    var valid = true
+    var valid = super.validate()
 
     val qname = lexicalQName(attributes.get(XProcConstants._name))
     if (qname.isEmpty) {

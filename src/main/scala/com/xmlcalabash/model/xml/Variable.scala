@@ -36,7 +36,7 @@ class Variable(override val config: XMLCalabashRuntime,
   }
 
   override def validate(): Boolean = {
-    var valid = true
+    var valid = super.validate()
 
     val qname = lexicalQName(attributes.get(XProcConstants._name))
     if (qname.isEmpty) {

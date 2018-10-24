@@ -43,6 +43,7 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
   protected[xml] val _inputInjectables: ListBuffer[XProcPortInjectable] = ListBuffer.empty[XProcPortInjectable]
   protected[xml] val _outputInjectables: ListBuffer[XProcPortInjectable] = ListBuffer.empty[XProcPortInjectable]
   protected[xml] val _stepInjectables: ListBuffer[XProcStepInjectable] = ListBuffer.empty[XProcStepInjectable]
+  private var _expandText = true
 
   def label: Option[String] = _label
   protected[xml] def label_=(label: String): Unit = {
@@ -59,6 +60,11 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
   def baseURI: Option[URI] = _baseURI
   def xmlId: Option[String] = _xmlId
   def nodeName: QName = _nodeName
+
+  def expandText: Boolean = _expandText
+  def expandText_=(expand: Boolean): Unit = {
+    _expandText = expand
+  }
 
   override def toString: String = {
     "{step " + name + " " + super.toString + "}"
@@ -630,8 +636,25 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
   }
 
   def validate(): Boolean = {
-    println(s"ERROR: $this doesn't override validate")
-    false
+    // See also WithInput.validate()
+
+    if (attributes.contains(XProcConstants._expand_text)) {
+      expandText = lexicalBoolean(attributes.get(XProcConstants._expand_text)).get
+    } else {
+      if (parent.isDefined) {
+        expandText = parent.get.expandText
+      } else {
+        expandText = true
+      }
+    }
+
+    // The contents of p:inline are never parsed as Artifacts, so we can check this here
+    if ((nodeName.getNamespaceURI == XProcConstants.ns_p && attributes.contains(XProcConstants._inline_expand_text))
+      || (nodeName.getNamespaceURI != XProcConstants.ns_p && attributes.contains(XProcConstants.p_inline_expand_text))) {
+      throw XProcException.xsInlineExpandTextNotAllowed(location)
+    }
+
+    true
   }
 
   def makePortsExplicit(): Boolean = {

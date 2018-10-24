@@ -13,8 +13,7 @@ class Empty(override val config: XMLCalabashRuntime,
   }
 
   override def validate(): Boolean = {
-    // nop?
-    true
+    super.validate()
   }
 
   override def makeGraph(graph: Graph, parent: Node) {

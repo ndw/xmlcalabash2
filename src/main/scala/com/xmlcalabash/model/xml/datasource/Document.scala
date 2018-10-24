@@ -45,6 +45,8 @@ class Document(override val config: XMLCalabashRuntime,
   }
 
   override def validate(): Boolean = {
+    var valid = super.validate()
+
     _href = attributes.get(XProcConstants._href)
     _params = attributes.get(XProcConstants._parameters)
     _docProps = attributes.get(XProcConstants._document_properties)
@@ -82,7 +84,7 @@ class Document(override val config: XMLCalabashRuntime,
       bindingRefs ++= lexicalVariables(_docProps.get)
     }
 
-    true
+    valid
   }
 
   override def makeGraph(graph: Graph, parent: Node) {

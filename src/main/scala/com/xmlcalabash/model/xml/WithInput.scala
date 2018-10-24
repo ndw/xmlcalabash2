@@ -20,6 +20,23 @@ class WithInput(override val config: XMLCalabashRuntime,
     // Not super.validate() because Input has more attributes than WithInput
     var valid = true
 
+    // Repeat what Artifact.validate() does.
+    if (attributes.contains(XProcConstants._expand_text)) {
+      expandText = lexicalBoolean(attributes.get(XProcConstants._expand_text)).get
+    } else {
+      if (parent.isDefined) {
+        expandText = parent.get.expandText
+      } else {
+        expandText = true
+      }
+    }
+
+    // The contents of p:inline are never parsed as Artifacts, so we can check this here
+    if ((nodeName.getNamespaceURI == XProcConstants.ns_p && attributes.contains(XProcConstants._inline_expand_text))
+      || (nodeName.getNamespaceURI != XProcConstants.ns_p && attributes.contains(XProcConstants.p_inline_expand_text))) {
+      throw XProcException.xsInlineExpandTextNotAllowed(location)
+    }
+
     _sequence = None
     _primary = None
 

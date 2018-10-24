@@ -17,8 +17,6 @@ class Inline(override val config: XMLCalabashRuntime,
              val isImplicit: Boolean,
              val nodes: List[XdmNode]) extends DataSource(config, parent) {
   private var _excludeInlinePrefixes = Map.empty[String,String]
-  private var _expandText = true
-  private var _allowExpandText = true
   private var _documentProperties = Option.empty[String]
   private var _encoding = Option.empty[String]
   private var _contentType = Option.empty[MediaType]
@@ -31,17 +29,12 @@ class Inline(override val config: XMLCalabashRuntime,
   def this(config: XMLCalabashRuntime, parent: Artifact, inline: Inline) {
     this(config, Some(parent), inline.isImplicit, inline.nodes)
     _excludeInlinePrefixes = inline._excludeInlinePrefixes
-    _expandText = inline._expandText
+    expandText = inline.expandText
     _documentProperties = inline._documentProperties
     _encoding = inline._encoding
     _contentType = inline._contentType
     variableRefs.clear()
     variableRefs ++= inline.variableRefs
-  }
-
-  protected[xmlcalabash] def allowExpandText: Boolean = _allowExpandText
-  protected[xmlcalabash] def allowExpandText_=(allow: Boolean): Unit = {
-    _allowExpandText = allow
   }
 
   override protected[xml] def parse(node: XdmNode): Unit = {
@@ -53,8 +46,9 @@ class Inline(override val config: XMLCalabashRuntime,
   }
 
   override def validate(): Boolean = {
+    var valid = super.validate()
+
     _excludeInlinePrefixes = lexicalPrefixes(attributes.get(XProcConstants._exclude_inline_prefixes))
-    _expandText = lexicalBoolean(attributes.get(XProcConstants._expand_text)).getOrElse(true)
     _documentProperties = attributes.get(XProcConstants._document_properties)
     _encoding = attributes.get(XProcConstants._encoding)
     _contentType = MediaType.parse(attributes.get(XProcConstants._content_type))
@@ -72,12 +66,12 @@ class Inline(override val config: XMLCalabashRuntime,
 
     checkForBindings()
 
-    true
+    valid
   }
 
   protected[xml] def checkForBindings(): Unit = {
     for (node <- nodes) {
-      variableRefs ++= ValueParser.findVariableRefs(config, node, _expandText, location)
+      variableRefs ++= ValueParser.findVariableRefs(config, node, expandText, location)
       //findVariableRefs(node, _expandText)
       if (_documentProperties.isDefined) {
         variableRefs ++= ValueParser.findVariableRefsInString(config, _documentProperties.get, location)
@@ -97,9 +91,8 @@ class Inline(override val config: XMLCalabashRuntime,
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
 
     val context = new ExpressionContext(baseURI, inScopeNS, location)
-    val produceInline = new InlineLoader(baseURI, nodes, context, _expandText, _excludeInlinePrefixes, _contentType, _documentProperties, _encoding)
+    val produceInline = new InlineLoader(baseURI, nodes, context, expandText, _excludeInlinePrefixes, _contentType, _documentProperties, _encoding)
 
-    produceInline.allowExpandText = allowExpandText
     produceInline.location = location
     val inlineProducer = cnode.addAtomic(produceInline)
 

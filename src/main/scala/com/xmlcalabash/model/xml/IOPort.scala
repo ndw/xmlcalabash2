@@ -69,6 +69,8 @@ class IOPort(override val config: XMLCalabashRuntime,
   }
 
   override def validate(): Boolean = {
+    var valid = super.validate()
+
     _port = attributes.get(XProcConstants._port)
     _sequence = lexicalBoolean(attributes.get(XProcConstants._sequence))
     _primary = lexicalBoolean(attributes.get(XProcConstants._primary))
@@ -80,7 +82,7 @@ class IOPort(override val config: XMLCalabashRuntime,
     try {
       val typeUtils = new TypeUtils(config)
       val ncname = typeUtils.castAtomicAs(XdmAtomicValue.makeAtomicValue(_port.get), Some(XProcConstants.xs_NCName), null)
-      true
+      valid
     } catch {
       case sae: SaxonApiException =>
         throw XProcException.xsBadTypeValue(_port.get, "NCName")

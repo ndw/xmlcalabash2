@@ -14,7 +14,7 @@ class Function(override val config: XMLCalabashRuntime,
   def functionClass: String = _fClass.get
 
   override def validate(): Boolean = {
-    var valid = true
+    var valid = super.validate()
 
     _fName = lexicalQName(attributes.get(XProcConstants._name))
     if (_fName.isEmpty) {
