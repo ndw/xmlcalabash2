@@ -49,7 +49,7 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
       }
     }
 
-    val timeout = Option(System.getProperty("com.xmlcalabash.watchdogTimeout")).getOrElse("1000")
+    val timeout = Option(System.getProperty("com.xmlcalabash.watchdogTimeout")).getOrElse("30000")
     configuration.watchdogTimeout = timeout.toLong
 
     val resolver = new XProcURIResolver(configuration)
