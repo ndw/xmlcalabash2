@@ -14,8 +14,6 @@ import org.scalatest.FunSpec
 import scala.collection.mutable.ListBuffer
 
 class XProcTestSpec extends FunSpec {
-  private val fnregex = "^.*.xml".r
-
   protected val runtimeConfig: XMLCalabashConfig = XMLCalabashConfig.newInstance()
   protected val testFiles: ListBuffer[String] = ListBuffer.empty[String]
 
@@ -48,6 +46,8 @@ class XProcTestSpec extends FunSpec {
   }
 
   protected def recurse(dir: File): Unit = {
+    val fnregex = "^.*.xml".r
+
     if (dir.isDirectory) {
       for (file <- dir.listFiles()) {
         if (file.isDirectory) {
