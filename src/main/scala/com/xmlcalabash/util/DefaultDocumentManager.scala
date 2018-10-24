@@ -161,6 +161,10 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       } finally {
         response.close()
       }
+    } catch {
+      case ex: Exception =>
+        println(ex.getMessage)
+        throw ex
     } finally {
       httpclient.close()
     }
