@@ -160,25 +160,9 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
     for (port <- defaultSelect.keySet) {
       if (!received.contains(port)) {
         // If the input has a select, this is the context for that expression
-        val expr = config.expressionEvaluator.newInstance()
-        val selectExpr = defaultSelect(port)
-        val selected = expr.value(selectExpr, List(), bindingsMap.toMap, None)
-        val iter = selected.item.iterator()
-        while (iter.hasNext) {
-          val item = iter.next()
-          item match {
-            case node: XdmNode =>
-              if (node.getNodeKind == XdmNodeKind.ATTRIBUTE) {
-                throw XProcException.xdInvalidSelection(selectExpr.toString, "an attribute", location)
-              }
-              // There's no message, so??? dynamicContext.addDocument(node, message)
-            case _ => Unit
-          }
-          step.receive(port, item, selected.metadata)
-        }
+        evalSelect(port, defaultSelect(port), None)
       }
     }
-
 
     for (qname <- step.signature.options) {
       if (!bindings.contains(qname)) {
@@ -252,7 +236,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
     }
 
     if (defaultSelect.contains(port)) {
-      evalSelect(port, defaultSelect(port), message)
+      evalSelect(port, defaultSelect(port), Some(message))
     } else {
       message match {
         case msg: XdmValueItemMessage =>
@@ -265,9 +249,13 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
     }
   }
 
-  private def evalSelect(port: String, selectExpr: XProcExpression, message: Message): Unit = {
+  private def evalSelect(port: String, selectExpr: XProcExpression, message: Option[Message]): Unit = {
     val expr = config.expressionEvaluator.newInstance()
-    val selected = expr.value(selectExpr, List(message), bindingsMap.toMap, None)
+    val selected = if (message.isDefined) {
+      expr.value(selectExpr, List(message.get), bindingsMap.toMap, None)
+    } else {
+      expr.value(selectExpr, List(), bindingsMap.toMap, None)
+    }
     val iter = selected.item.iterator()
     while (iter.hasNext) {
       val item = iter.next()
@@ -276,10 +264,26 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
           if (node.getNodeKind == XdmNodeKind.ATTRIBUTE) {
             throw XProcException.xdInvalidSelection(selectExpr.toString, "an attribute", location)
           }
-          dynamicContext.addDocument(node, message)
+          if (message.isDefined) {
+            dynamicContext.addDocument(node, message.get)
+          } else {
+            // There's no message, so???
+            // This only happens in the case of applying the default input to p:input
+          }
+
         case _ => Unit
       }
-      step.receive(port, item, selected.metadata)
+
+      item match {
+        case node: XdmNode =>
+          val tree = new SaxonTreeBuilder(config)
+          tree.startDocument(node.getBaseURI)
+          tree.addSubtree(node)
+          tree.endDocument()
+          step.receive(port, tree.result, selected.metadata)
+        case _ =>
+          step.receive(port, item, selected.metadata)
+      }
     }
   }
 
@@ -418,6 +422,8 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
     tree.endDocument()
 
     item match {
+      case value: BinaryNode =>
+        new AnyItemMessage(tree.result, value, metadata)
       case value: String =>
         val binary = new BinaryNode(config, value.getBytes("UTF-8"))
         new AnyItemMessage(tree.result, binary, metadata)
@@ -452,6 +458,10 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
 
   private def assertXmlDocument(node: XdmNode): Unit = {
     assertDocument(node)
+
+    // N.B. We don't assert that documents actually be well-formed XML.
+    // This is on purpose; steps can produce any XdmNode tree.
+    /*
     var count = 0
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
@@ -471,5 +481,6 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
     if (count != 1) {
       throw XProcException.xiNotAnXmlDocument(None)
     }
+    */
   }
 }
