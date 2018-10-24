@@ -4,7 +4,7 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{TestException, XProcException}
 import com.xmlcalabash.messages.XdmNodeItemMessage
 import com.xmlcalabash.runtime.{BufferingConsumer, ExpressionContext, XMLCalabashRuntime, XProcMetadata}
-import com.xmlcalabash.util.XProcVarValue
+import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -64,7 +64,7 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
 
       for (port <- _inputs.keySet) {
         for (item <- _inputs(port)) {
-          runtime.input(port, new XdmNodeItemMessage(item, new XProcMetadata()))
+          runtime.input(port, new XdmNodeItemMessage(item, new XProcMetadata(MediaType.XML)))
         }
       }
 
@@ -77,7 +77,6 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
       runtime.run()
 
       val resultDoc = result.messages.head.item.asInstanceOf[XdmNode]
-
       //println(resultDoc)
 
       if (_schematron.isDefined) {
@@ -106,6 +105,7 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
       }
     } catch {
       case xproc: XProcException =>
+        println(s"Exception: ${xproc.getMessage}")
         if (runtime != null) {
           runtime.stop()
         }
@@ -130,6 +130,7 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
 
         new TestResult(xproc)
       case ex: Exception =>
+        println(s"Exception: ${ex.getMessage}")
         if (runtime != null) {
           runtime.stop()
         }
