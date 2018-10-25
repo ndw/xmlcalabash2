@@ -33,7 +33,7 @@ class DocumentPropertiesDocument private extends ExtensionFunctionDefinition {
     new DocPropsCall(this)
   }
 
-  class DocPropsCall(val xdef: ExtensionFunctionDefinition) extends ExtensionFunctionCall {
+  class DocPropsCall(val xdef: ExtensionFunctionDefinition) extends MessageAwareExtensionFunctionCall {
     var staticContext: StaticContext = _
 
     override def supplyStaticContext(context: StaticContext, locationId: Int, arguments: Array[Expression]): Unit = {
@@ -46,24 +46,7 @@ class DocumentPropertiesDocument private extends ExtensionFunctionDefinition {
         throw XProcException.xiExtFunctionNotAllowed()
       }
 
-      // Walk up the tree if we get passed some descendant
-      var arg = arguments(0).head
-      var doc: NodeInfo = null
-      var done = false
-
-      while (!done) {
-        arg match {
-          case node: NodeInfo =>
-            if (node.getParent == null) {
-              doc = node
-              done = true
-            } else {
-              arg = node.getParent
-            }
-          case _ =>
-            done = true
-        }
-      }
+      val msg = getMessage(arguments(0).head, exprEval)
 
       val builder = new SaxonTreeBuilder(runtime)
       builder.startDocument(None)
@@ -72,54 +55,43 @@ class DocumentPropertiesDocument private extends ExtensionFunctionDefinition {
       builder.addNamespace("xs", XProcConstants.ns_xs)
       builder.startContent()
 
-      if (doc == null) {
+      if (msg.isEmpty) {
         logger.debug("p:document-properties-document called with an argument that isn't part of a document")
         builder.endDocument()
         builder.result.getUnderlyingNode
       } else {
-        val msg = exprEval.dynContext.get.message(doc)
-        if (msg.isEmpty) {
-          val baseURI = doc match {
-            case ni: NodeInfo => ni.getBaseURI
-            case _ => ""
-          }
-          logger.debug(s"p:document-properties-document called with an unknown document: $baseURI")
-          builder.endDocument()
-          builder.result.getUnderlyingNode
-        } else {
-          val props: Map[QName,XdmValue] = msg.get match {
-            case item: XProcItemMessage =>
-              item.metadata.properties
-            case _ =>
-              Map.empty[QName,XdmItem]
-          }
-
-          for (key <- props.keySet) {
-            builder.addText("\n  ")
-            builder.addStartElement(key)
-            props(key) match {
-              case node: XdmNode =>
-                builder.startContent()
-                builder.addSubtree(node)
-              case atomic: XdmAtomicValue =>
-                val xtype = atomic.getTypeName
-                if (xtype.getNamespaceURI == XProcConstants.ns_xs && (xtype != XProcConstants.xs_string)) {
-                  builder.addAttribute(XProcConstants.xsi_type, xtype.toString)
-                }
-                builder.startContent()
-                builder.addText(atomic.getStringValue)
-              case value: XdmValue =>
-                builder.startContent()
-                builder.addValues(value)
-            }
-            builder.addEndElement()
-          }
-          builder.addText("\n")
-          builder.addEndElement()
-          builder.endDocument()
-
-          builder.result.getUnderlyingNode
+        val props: Map[QName,XdmValue] = msg.get match {
+          case item: XProcItemMessage =>
+            item.metadata.properties
+          case _ =>
+            Map.empty[QName,XdmItem]
         }
+
+        for (key <- props.keySet) {
+          builder.addText("\n  ")
+          builder.addStartElement(key)
+          props(key) match {
+            case node: XdmNode =>
+              builder.startContent()
+              builder.addSubtree(node)
+            case atomic: XdmAtomicValue =>
+              val xtype = atomic.getTypeName
+              if (xtype.getNamespaceURI == XProcConstants.ns_xs && (xtype != XProcConstants.xs_string)) {
+                builder.addAttribute(XProcConstants.xsi_type, xtype.toString)
+              }
+              builder.startContent()
+              builder.addText(atomic.getStringValue)
+            case value: XdmValue =>
+              builder.startContent()
+              builder.addValues(value)
+          }
+          builder.addEndElement()
+        }
+        builder.addText("\n")
+        builder.addEndElement()
+        builder.endDocument()
+
+        builder.result.getUnderlyingNode
       }
     }
   }

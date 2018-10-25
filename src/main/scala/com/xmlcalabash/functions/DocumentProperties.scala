@@ -35,7 +35,7 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
     new DocPropsCall(this)
   }
 
-  class DocPropsCall(val xdef: ExtensionFunctionDefinition) extends ExtensionFunctionCall {
+  class DocPropsCall(val xdef: ExtensionFunctionDefinition) extends MessageAwareExtensionFunctionCall {
     var staticContext: StaticContext = _
 
     override def supplyStaticContext(context: StaticContext, locationId: Int, arguments: Array[Expression]): Unit = {
@@ -48,58 +48,31 @@ class DocumentProperties private extends ExtensionFunctionDefinition {
         throw XProcException.xiExtFunctionNotAllowed()
       }
 
-      // Walk up the tree if we get passed some descendant
-      var arg = arguments(0).head
-      var doc: NodeInfo = null
-      var done = false
-
-      while (!done) {
-        arg match {
-          case node: NodeInfo =>
-            if (node.getParent == null) {
-              doc = node
-              done = true
-            } else {
-              arg = node.getParent
-            }
-          case _ =>
-            done = true
-        }
-      }
+      val msg = getMessage(arguments(0).head, exprEval)
 
       var map = new XdmMap()
 
-      if (doc == null) {
-        logger.debug("p:document-properties called with an argument that isn't part of a document")
+      if (msg.isDefined) {
+        val props: Map[QName,XdmValue] = msg.get match {
+          case item: XProcItemMessage =>
+            item.metadata.properties
+          case _ =>
+            Map.empty[QName,XdmItem]
+        }
+
+        for (key <- props.keySet) {
+          val value = props(key)
+          if (key.getNamespaceURI == "") {
+            map = map.put(new XdmAtomicValue(key.getLocalName), value)
+          } else {
+            map = map.put(new XdmAtomicValue(key), value)
+          }
+        }
+
         map.getUnderlyingValue
       } else {
-        val msg = exprEval.dynContext.get.message(doc)
-        if (msg.isEmpty) {
-          val baseURI = doc match {
-            case ni: NodeInfo => ni.getBaseURI
-            case _ => ""
-          }
-          logger.debug(s"p:document-properties-document called with an unknown document: $baseURI")
-          map.getUnderlyingValue
-        } else {
-          val props: Map[QName,XdmValue] = msg.get match {
-            case item: XProcItemMessage =>
-              item.metadata.properties
-            case _ =>
-              Map.empty[QName,XdmItem]
-          }
-
-          for (key <- props.keySet) {
-            val value = props(key)
-            if (key.getNamespaceURI == "") {
-              map = map.put(new XdmAtomicValue(key.getLocalName), value)
-            } else {
-              map = map.put(new XdmAtomicValue(key), value)
-            }
-          }
-
-          map.getUnderlyingValue
-        }
+        logger.debug("p:document-properties called with an argument that isn't part of a document")
+        map.getUnderlyingValue
       }
     }
   }
