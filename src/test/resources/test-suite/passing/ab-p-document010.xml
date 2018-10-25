@@ -1,4 +1,5 @@
-<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XD0011">
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error"
+        expected="fail" code="err:XD0049">
    <t:info>
       <t:title>p:document 010</t:title>
       <t:revision-history>
