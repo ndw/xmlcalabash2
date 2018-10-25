@@ -24,7 +24,6 @@ class InlineLoader(private val baseURI: Option[URI],
                    private val declContentType: Option[MediaType],
                    private val docPropsExpr: Option[String],
                    private val encoding: Option[String]) extends DefaultStep {
-  private var include_expand_text_attribute = false
   private var docProps = Map.empty[QName, XdmItem]
   private val excludeURIs = mutable.HashSet.empty[String]
 
@@ -107,11 +106,7 @@ class InlineLoader(private val baseURI: Option[URI],
       builder.startDocument(baseURI)
       builder.startContent()
       for (node <- trim(nodes)) {
-        if (expandText) {
-          expandTVT(node, builder, expandText)
-        } else {
-          builder.addSubtree(node)
-        }
+        expandTVT(node, builder, expandText)
       }
       builder.endDocument()
       val result = builder.result
@@ -123,11 +118,7 @@ class InlineLoader(private val baseURI: Option[URI],
       builder.startDocument(baseURI)
       builder.startContent()
       for (node <- trim(nodes)) {
-        if (expandText) {
-          expandTVT(node, builder, expandText)
-        } else {
-          builder.addSubtree(node)
-        }
+        expandTVT(node, builder, expandText)
       }
       builder.endDocument()
       val result = builder.result
@@ -285,11 +276,22 @@ class InlineLoader(private val baseURI: Option[URI],
         var newExpand = expandText
         iter = node.axisIterator(Axis.ATTRIBUTE)
         while (iter.hasNext) {
+          var discardAttribute = false
           val attr = iter.next().asInstanceOf[XdmNode]
-          if (attr.getNodeName == XProcConstants.p_expand_text) {
+          if (attr.getNodeName == XProcConstants.p_inline_expand_text) {
+            if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
+              throw XProcException.xsInlineExpandTextNotAllowed(location)
+            }
+            discardAttribute = true
             newExpand = attr.getStringValue == "true"
           }
-          if (include_expand_text_attribute || (attr.getNodeName != XProcConstants.p_expand_text)) {
+          if (attr.getNodeName == XProcConstants._inline_expand_text) {
+            if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
+              discardAttribute = true
+              newExpand = attr.getStringValue == "true"
+            }
+          }
+          if (!discardAttribute) {
             if (expandText) {
               builder.addAttribute(attr.getNodeName, expandString(attr.getStringValue))
             } else {

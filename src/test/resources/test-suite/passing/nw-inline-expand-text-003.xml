@@ -1,0 +1,55 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0"
+        expected="pass">
+
+<t:info>
+  <t:title>Test inline-expand-text 003</t:title>
+  <t:revision-history>
+    <t:revision>
+      <t:date>2018-10-24</t:date>
+      <t:author initials="ndw">
+        <t:name>Norman Walsh</t:name>
+      </t:author>
+      <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Initial checkin.</p>
+      </t:description>
+    </t:revision>
+  </t:revision-history>
+</t:info>
+
+<t:description xmlns="http://www.w3.org/1999/xhtml">
+  <p>Test that <code>p:inline-expand-text</code> turns on expansion
+  inside <code>p:inline</code>.</p>
+</t:description>
+
+<t:pipeline>
+  <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0"
+                  expand-text="false">
+    <p:output port="result"/>
+    <p:identity>
+      <p:with-input>
+        <p:inline>
+          <doc>{1 + 2}=<answer p:inline-expand-text="true">{ 1 + 2 }</answer></doc>
+        </p:inline>
+      </p:with-input>
+    </p:identity>
+  </p:declare-step>
+</t:pipeline>
+
+<!-- Writing tests that use literal curly braces is hard! -->
+<t:schematron>
+  <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+    <s:ns prefix="p" uri="http://www.w3.org/ns/xproc"/>
+    <s:pattern>
+      <s:rule context="/*">
+        <s:assert test="self::doc">The pipeline root is not doc.</s:assert>
+        <s:assert test="matches(., '1 . 2.=')">Curly brace text is missing.</s:assert>
+        <s:assert test="answer='3'">The answer is not 3.</s:assert>
+      </s:rule>
+      <s:rule context="answer">
+        <s:assert test="not(@p:inline-expand-text)">The expand text attribute has not been removed.</s:assert>
+      </s:rule>
+    </s:pattern>
+  </s:schema>
+</t:schematron>
+
+</t:test>

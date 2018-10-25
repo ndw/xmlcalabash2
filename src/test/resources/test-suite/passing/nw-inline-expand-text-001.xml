@@ -1,0 +1,35 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        expected="fail" code="err:XS0084">
+
+<t:info>
+  <t:title>Test inline-expand-text 001</t:title>
+  <t:revision-history>
+    <t:revision>
+      <t:date>2018-10-24</t:date>
+      <t:author initials="ndw">
+        <t:name>Norman Walsh</t:name>
+      </t:author>
+      <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Initial checkin.</p>
+      </t:description>
+    </t:revision>
+  </t:revision-history>
+</t:info>
+
+<t:description xmlns="http://www.w3.org/1999/xhtml">
+  <p>Test that <code>inline-expand-text</code> is forbidden outside of <code>p:inline</code>.</p>
+</t:description>
+
+<t:pipeline>
+  <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0"
+                  inline-expand-text="true">
+    <p:output port="result"/>
+    <p:identity>
+      <p:with-input>
+        <doc/>
+      </p:with-input>
+    </p:identity>
+  </p:declare-step>
+</t:pipeline>
+</t:test>
