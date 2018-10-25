@@ -6,6 +6,7 @@ import com.jafpl.graph.Location
 import com.jafpl.messages.Message
 import net.sf.saxon.om.Item
 import net.sf.saxon.s9api.{QName, XdmNode}
+import net.sf.saxon.value.StringValue
 
 import scala.collection.mutable
 import scala.util.DynamicVariable
@@ -72,7 +73,26 @@ class DynamicContext {
   }
 
   def addItem(item: Item, msg: Message): Unit = {
-    _documents.put(item, msg)
+    item match {
+      case s: StringValue =>
+        _documents.put(new FakeStringValue(s), msg)
+      case _ =>
+        _documents.put(item, msg)
+    }
+
     _imessages.put(msg, item)
+  }
+
+  // WTF? Saxon's StringValue class throws an exception if you call .equals() on it.
+  // So this is a wrapper that doesn't do that.
+  private class FakeStringValue(str: StringValue) extends StringValue {
+    override def equals(other: Any): Boolean = {
+      other match {
+        case s: StringValue =>
+          str.toString == s.toString
+        case _ =>
+          false
+      }
+    }
   }
 }
