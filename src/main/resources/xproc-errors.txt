@@ -25,7 +25,7 @@ XD0019
 Invalid value specified: “$1”. Value must be of type “$2”: $3.
 
 XD0011
-Failed to load XML: $1
+File not found: “$1”
 
 XD0021
 Access denied: $1
@@ -60,6 +60,9 @@ The values of the serialization options must be atomic. Invalid: “$1”
 XD0048
 The serialization options must be a map. Invalid: “$1”
 
+XD0011
+Failed to load XML: $1
+
 XD0054
 Cannot specify an encoding (“$1”) with an XML content type (“$2”).
 
@@ -68,6 +71,9 @@ When an encoding is specified for a p:inline, markup is not allowed.
 
 XD0057
 Invalid JSON: “$1” ($2).
+
+XD0060
+Unsupported encoding: “$1”.
 
 XD0062
 Mismatched content types: “$1” is not the same as “$2”.
