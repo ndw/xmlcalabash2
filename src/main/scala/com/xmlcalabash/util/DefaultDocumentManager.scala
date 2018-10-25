@@ -1,6 +1,6 @@
 package com.xmlcalabash.util
 
-import java.io.{File, FileInputStream, IOException, InputStream}
+import java.io.{File, FileInputStream, FileNotFoundException, IOException, InputStream, UnsupportedEncodingException}
 import java.net.{URI, URLConnection}
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZonedDateTime}
@@ -82,23 +82,28 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
   }
 
   private def loadFile(href: URI, request: DocumentRequest): DocumentResponse = {
-    val contentType = computeContentType(href, request)
-    val file = new File(href)
-    val stream = new FileInputStream(file)
-    request.baseURI = file.getAbsoluteFile.toURI
+    try {
+      val contentType = computeContentType(href, request)
+      val file = new File(href)
+      val stream = new FileInputStream(file)
+      request.baseURI = file.getAbsoluteFile.toURI
 
-    val props = mutable.HashMap.empty[QName,XdmValue] ++ request.docprops
-    if (!props.contains(XProcConstants._base_uri)) {
-      props.put(XProcConstants._base_uri, new XdmAtomicValue(href.toASCIIString))
+      val props = mutable.HashMap.empty[QName,XdmValue] ++ request.docprops
+      if (!props.contains(XProcConstants._base_uri)) {
+        props.put(XProcConstants._base_uri, new XdmAtomicValue(href.toASCIIString))
+      }
+      props.put(XProcConstants._content_type, new XdmAtomicValue(contentType.toString))
+      props.put(XProcConstants._content_length, new XdmAtomicValue(file.length()))
+
+      val lastModified = new Date(file.lastModified())
+      val zdt = ZonedDateTime.ofInstant(lastModified.toInstant, ZoneId.systemDefault())
+      props.put(XProcConstants._last_modified, new XdmAtomicValue(zdt.format(DateTimeFormatter.ISO_INSTANT)))
+
+      loadStream(request, contentType, stream, props.toMap)
+    } catch {
+      case ex: FileNotFoundException =>
+        throw XProcException.xdDoesNotExist(href.toASCIIString, request.location)
     }
-    props.put(XProcConstants._content_type, new XdmAtomicValue(contentType.toString))
-    props.put(XProcConstants._content_length, new XdmAtomicValue(file.length()))
-
-    val lastModified = new Date(file.lastModified())
-    val zdt = ZonedDateTime.ofInstant(lastModified.toInstant, ZoneId.systemDefault())
-    props.put(XProcConstants._last_modified, new XdmAtomicValue(zdt.format(DateTimeFormatter.ISO_INSTANT)))
-
-    loadStream(request, contentType, stream, props.toMap)
   }
 
   private def loadHttp(href: URI, request: DocumentRequest): DocumentResponse = {
@@ -232,7 +237,15 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
 
       val builder = new SaxonTreeBuilder(xmlCalabash)
       builder.startDocument(request.href)
-      builder.addText(new String(bytes, encoding))
+
+      try {
+        builder.addText(new String(bytes, encoding))
+      } catch {
+        case ex: UnsupportedEncodingException =>
+          throw XProcException.xdUnsupportedEncoding(encoding, request.location)
+      }
+
+
       builder.endDocument()
       new DocumentResponse(builder.result, contentType, props)
 
