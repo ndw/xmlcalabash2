@@ -105,7 +105,7 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
       }
     } catch {
       case xproc: XProcException =>
-        println(s"Exception: ${xproc.getMessage}")
+        println(s"XProc exception: ${xproc.getMessage}")
         if (runtime != null) {
           runtime.stop()
         }
