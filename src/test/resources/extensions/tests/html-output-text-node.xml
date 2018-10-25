@@ -1,6 +1,6 @@
 <t:test xmlns:t="http://xproc.org/ns/testsuite/3.0"
         xmlns:cx="http://xmlcalabash.com/ns/extensions"
-        expected="fail" code="cx:XI0057">
+        expected="pass">
 
 <t:info>
   <t:title>Test text node output for text/html</t:title>
@@ -19,7 +19,7 @@
 
 <t:description xmlns="http://www.w3.org/1999/xhtml">
   <p>Test that a step that claims to produce <code>text/html</code>
-  fails if it returns a text node.
+  succeeds if it returns a text node.
   </p>
 </t:description>
 
@@ -40,4 +40,22 @@
     <cx:step-output-test content-type="text/html" result-type="text-node"/>
   </p:declare-step>
 </t:pipeline>
+
+<t:schematron>
+  <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron"
+            xmlns:p="http://www.w3.org/ns/xproc"
+            xmlns:rng="http://relaxng.org/ns/structure/1.0">
+     <s:ns prefix="p" uri="http://www.w3.org/ns/xproc"/>
+     <s:ns prefix="cx" uri="http://xmlcalabash.com/ns/extensions"/>
+     <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step"/>
+
+     <s:pattern>
+       <s:rule context="/">
+         <s:assert test="count(.) = 1">Result should be a single text node.</s:assert>
+         <s:assert test="text()">A single text node is expected.</s:assert>
+         <s:assert test="string(.) = 'Some text.'">Result should be ‘Some text.’</s:assert>
+       </s:rule>
+     </s:pattern>
+  </s:schema>
+</t:schematron>
 </t:test>
