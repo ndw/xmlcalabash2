@@ -8,7 +8,7 @@ import net.sf.saxon.s9api.{QName, XdmValue}
 
 import scala.collection.immutable.HashMap
 
-class DocumentRequest(val href: URI, val contentType: Option[MediaType], val dtdValidate: Boolean) {
+class DocumentRequest(val href: URI, val contentType: Option[MediaType], val location: Option[Location], val dtdValidate: Boolean) {
   private var _baseURI: Option[URI] = None
   private var _dtdValidate: Option[Boolean] = None
   private var _location: Option[Location] = None
@@ -16,11 +16,15 @@ class DocumentRequest(val href: URI, val contentType: Option[MediaType], val dtd
   private var _docprops: Option[Map[QName,XdmValue]] = None
 
   def this(href: URI) {
-    this(href, None, false)
+    this(href, None, None, false)
   }
 
   def this(href: URI, contentType: MediaType) {
-    this(href, Some(contentType), false)
+    this(href, Some(contentType), None, false)
+  }
+
+  def this(href: URI, contentType: MediaType, location: Option[Location]) {
+    this(href, Some(contentType), location, false)
   }
 
   def baseURI: Option[URI] = _baseURI
@@ -29,15 +33,6 @@ class DocumentRequest(val href: URI, val contentType: Option[MediaType], val dtd
       _baseURI = Some(base)
     } else {
       throw new IllegalArgumentException("Only a single assigment to baseURI is allowed")
-    }
-  }
-
-  def location: Option[Location] = _location
-  def location_=(loc: Location): Unit = {
-    if (_location.isEmpty) {
-      _location = Some(loc)
-    } else {
-      throw new IllegalArgumentException("Only a single assigment to location is allowed")
     }
   }
 

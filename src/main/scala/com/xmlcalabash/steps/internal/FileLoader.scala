@@ -115,7 +115,7 @@ class FileLoader(private val context: ExpressionContext,
       false
     }
 
-    val request = new DocumentRequest(href, Some(contentType), dtdValidate)
+    val request = new DocumentRequest(href, Some(contentType), location, dtdValidate)
     request.params = params
     request.docprops = props
 

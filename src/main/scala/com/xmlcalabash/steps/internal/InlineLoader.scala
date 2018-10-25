@@ -137,7 +137,7 @@ class InlineLoader(private val baseURI: Option[URI],
       S9Api.serialize(config.get.config, result, serializer)
       val stream = new ByteArrayInputStream(baos.toByteArray)
 
-      val request = new DocumentRequest(baseURI.getOrElse(new URI("")), Some(contentType), false)
+      val request = new DocumentRequest(baseURI.getOrElse(new URI("")), contentType, location)
       val response = config.get.documentManager.parse(request, stream)
       val metadata = new XProcMetadata(response.contentType, response.props)
 
