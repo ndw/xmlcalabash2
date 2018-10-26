@@ -96,6 +96,11 @@
 
 <!--============================================================ -->
 
+<p:declare-step type="cx:exception-translator">
+  <p:input port="source" content-types="*/*" sequence="true"/>
+  <p:output port="result" content-types="*/*" sequence="true"/>
+</p:declare-step>
+
 <p:declare-step type="cx:base64-encode">
   <p:input port="source" content-types="*/*"/>
   <p:output port="result" content-types="text/plain"/>

@@ -81,11 +81,17 @@ object XProcException {
   def xdInvalidSelection(expr: String, selected: String, location: Option[Location]): XProcException = dynamicError(16, List(expr,selected), location)
   def xdBadValue(value: String, vtype: String, message: String, location: Option[Location]): XProcException = dynamicError(19, List(value,vtype, message), location)
   def xdNotAuthorized(href: String, message: String): XProcException = dynamicError(21, List(href, message))
-  def xdNotValidXML(href: String, message: String): XProcException = dynamicError(23, List(href, message))
+
+  def xdNotValidXML(href: String, message: String, location: Option[Location]): XProcException = dynamicError(23, List(href, message, location))
+  def xdNotValidXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(23, List(href, line, col, message), location)
+
   def xdContextItemAbsent(expr: String, msg: String, location: Option[Location]): XProcException = dynamicError(26, List(expr, msg), location)
   def xdConflictingNamespaceDeclarations(msg: String, location: Option[Location]): XProcException = dynamicError(34, msg, location)
   def xdBadMediaType(ctype: MediaType, allowed: List[MediaType]): XProcException = dynamicError(38, List(ctype, allowed))
-  def xdNotWFXML(href: String, message: String): XProcException = dynamicError(49, List(href, message))
+
+  def xdNotWFXML(href: String, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, message), location)
+  def xdNotWFXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, line, col, message), location)
+
   def xdCannotEncodeXml(encoding: String, contentType: MediaType, location: Option[Location]): XProcException = dynamicError(54, List(encoding,contentType), location)
   def xdNoMarkupAllowed(location: Option[Location]): XProcException = dynamicError(56, location)
   def xdInvalidJson(expr: String, message: String, location: Option[Location]): XProcException = dynamicError(57, List(expr,message), location)

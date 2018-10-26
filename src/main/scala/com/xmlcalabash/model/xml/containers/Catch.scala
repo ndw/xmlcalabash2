@@ -1,10 +1,11 @@
 package com.xmlcalabash.model.xml.containers
 
-import com.jafpl.graph.{Graph, Node, TryCatchStart}
+import com.jafpl.graph.{CatchStart, Graph, Node, TryCatchStart}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, Documentation, PipeInfo}
-import com.xmlcalabash.runtime.XMLCalabashRuntime
+import com.xmlcalabash.runtime.{StaticContext, StepProxy, XMLCalabashRuntime}
+import com.xmlcalabash.steps.ExceptionTranslator
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer
@@ -74,6 +75,14 @@ class Catch(override val config: XMLCalabashRuntime,
         case _ =>
           child.makeEdges(graph, _graphNode.get)
       }
+    }
+
+    // Is anyone reading the errors?
+    if (graphNode.outputs.contains("errors")) {
+      val catchNode = graphNode.asInstanceOf[CatchStart]
+      val impl = config.stepImplementation(XProcConstants.cx_exception_translator, location.get)
+      val proxy = new StepProxy(config, stepType, impl, None, new StaticContext())
+      catchNode.translator = proxy
     }
   }
 }

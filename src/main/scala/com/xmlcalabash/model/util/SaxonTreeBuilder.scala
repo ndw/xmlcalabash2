@@ -5,7 +5,7 @@ import java.net.URI
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
-import com.xmlcalabash.util.S9Api
+import com.xmlcalabash.util.{DefaultLocation, S9Api}
 import net.sf.saxon.Controller
 import net.sf.saxon.`type`.{BuiltInType, SchemaType, SimpleType}
 import net.sf.saxon.event.{NamespaceReducer, Receiver}

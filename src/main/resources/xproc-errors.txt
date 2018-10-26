@@ -31,7 +31,10 @@ XD0021
 Access denied: $1
 
 XD0023
-XML document is not valid: $1
+Validity error in “$1” at line $2, column $3: $4
+
+XD0023
+Validity error in “$1”: $2
 
 XD0026
 The context item is empty in expression: “$1” (Saxon: $2)
@@ -59,6 +62,12 @@ The values of the serialization options must be atomic. Invalid: “$1”
 
 XD0048
 The serialization options must be a map. Invalid: “$1”
+
+XD0049
+Parse error in “$1” at line $2, column $3: $4
+
+XD0049
+Parse error in “$1”: $2
 
 XD0011
 Failed to load XML: $1

@@ -4,12 +4,11 @@ import com.xmlcalabash.config.{ErrorExplanation, XMLCalabashConfig}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import net.sf.saxon.s9api.QName
 
-import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanation {
-  private val messages = mutable.HashMap.empty[QName, String]
-  private val explain = mutable.HashMap.empty[QName, String]
+  private val messages = ListBuffer.empty[ErrorExplanationTemplate]
 
   private var code = Option.empty[QName]
   private var message = ""
@@ -18,8 +17,7 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
   for (line <- Source.fromInputStream(stream).getLines) {
     if (line == "") {
       if (code.isDefined) {
-        messages.put(code.get, message)
-        explain.put(code.get, explanation)
+        messages += new ErrorExplanationTemplate(code.get, message, explanation)
         code = None
         message = ""
         explanation = ""
@@ -40,8 +38,7 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
   }
 
   if (code.isDefined) {
-    messages.put(code.get, message)
-    explain.put(code.get, explanation)
+    messages += new ErrorExplanationTemplate(code.get, message, explanation)
   }
 
   override def message(code: QName): String = {
@@ -49,8 +46,35 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
   }
 
   override def message(code: QName, details: List[Any]): String = {
+    var message = template(code, details.length).message
+    substitute(message, details)
+  }
+
+  override def explanation(code: QName): String = {
+    explanation(code, List.empty[Any])
+  }
+
+  override def explanation(code: QName, details: List[Any]): String = {
+    var message = template(code, details.length).explanation
+    substitute(message, details)
+  }
+
+  private def template(code: QName, count: Integer): ErrorExplanationTemplate = {
+    // Find all the messages with a matching code, with a cardinality <= details.length
+    val templates = messages.filter(_.code == code).filter(_.cardinality <= count)
+
+    if (templates.isEmpty) {
+      // Return a default template
+      new ErrorExplanationTemplate(code, "[No explanatory message for " + code + "]", "")
+    } else {
+      // Return the one with the highest cardinality.
+      templates.maxBy(_.cardinality)
+    }
+  }
+
+  private def substitute(text: String, details: List[Any]): String = {
+    var message = text
     val detail = "^(.*?)\\$(\\d+)(.*)$".r
-    var message = messages.getOrElse(code, "[No explanatory message for " + code + "]")
     var matched = true
 
     while (matched) {
@@ -67,6 +91,7 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
         case _ =>
       }
     }
+
     message
   }
 
@@ -85,11 +110,8 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
     }
   }
 
-  override def explanation(code: QName): String = {
-    explanation(code, List.empty[Any])
+  private class ErrorExplanationTemplate(val code: QName, val message: String, val explanation: String) {
+    def cardinality: Int = message.count(_=='$')
   }
 
-  override def explanation(code: QName, details: List[Any]): String = {
-    explain.getOrElse(code, "")
-  }
 }

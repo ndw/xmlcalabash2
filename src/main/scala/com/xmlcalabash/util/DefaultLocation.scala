@@ -1,4 +1,4 @@
-package com.xmlcalabash.model.util
+package com.xmlcalabash.util
 
 import com.jafpl.graph
 import net.sf.saxon.expr.parser

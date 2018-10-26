@@ -14,7 +14,9 @@ import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XProcXPathExpression}
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
+import javax.xml.transform.{ErrorListener, TransformerException}
 import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmValue}
+import net.sf.saxon.trans.XPathException
 import nu.validator.htmlparser.common.XmlViolationPolicy
 import nu.validator.htmlparser.dom.HtmlDocumentBuilder
 import org.apache.http.client.methods.HttpGet
@@ -26,6 +28,8 @@ import org.xml.sax.helpers.XMLReaderFactory
 import org.xml.sax.{InputSource, SAXException}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
+import scala.xml.SAXParseException
 
 class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentManager {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
@@ -200,6 +204,16 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
         }
       }
 
+      // Is this necessary? I'm carefully synchronizing calls that mess with the
+      // configuration's error listener.
+
+      val listener = new ChainedErrorListener()
+      val saxonConfig = xmlCalabash.processor.getUnderlyingConfiguration
+      saxonConfig.synchronized {
+        listener.chained = saxonConfig.getErrorListener
+        saxonConfig.setErrorListener(listener)
+      }
+
       val builder = xmlCalabash.processor.newDocumentBuilder
       builder.setDTDValidation(request.dtdValidate)
       builder.setLineNumbering(true)
@@ -208,14 +222,37 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
         builder.build(source)
       } catch {
         case sae: SaxonApiException =>
+          val href = request.href.toASCIIString
           val msg = sae.getMessage
           if (msg.contains("validation")) {
-            throw XProcException.xdNotValidXML(request.href.toASCIIString, msg)
+            throw validationError(request, sae, listener.exceptions)
           } else if (msg.contains("HTTP response code: 403 ")) {
             throw XProcException.xdNotAuthorized(request.href.toASCIIString, msg)
           } else {
-            throw XProcException.xdNotWFXML(request.href.toASCIIString, msg)
+            // Let's try to do better about error locations.
+            if (Option(sae.getCause).isDefined) {
+              sae.getCause match {
+                case ex: XPathException =>
+                  val ns = ex.getErrorCodeNamespace
+                  val code = ex.getErrorCodeLocalPart
+                  ns match {
+                    case XProcConstants.ns_xqt_errors =>
+                      throw xqtError(code, request, sae.getCause)
+                    case _ =>
+                      throw XProcException.xdNotWFXML(href, msg, request.location)
+                  }
+                  throw XProcException.xdNotWFXML(href, msg, request.location)
+                case _ =>
+                  throw XProcException.xdNotWFXML(href, msg, request.location)
+              }
+            } else {
+              throw XProcException.xdNotWFXML(href, msg, request.location)
+            }
           }
+      } finally {
+        saxonConfig.synchronized {
+          saxonConfig.setErrorListener(listener.chained.get)
+        }
       }
 
       new DocumentResponse(node, contentType, props)
@@ -320,5 +357,70 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
     val html = htmlBuilder.parse(isource)
     val builder = xmlCalabash.processor.newDocumentBuilder()
     new DocumentResponse(builder.build(new DOMSource(html)), MediaType.HTML, Map.empty[QName,XdmValue])
+  }
+
+  private def xqtError(str: String, request: DocumentRequest, cause: Throwable): XProcException = {
+    val parseError = "org.xml.sax.SAXParseException; systemId: (.*); lineNumber: (\\d+); columnNumber: (\\d+); (.*)$".r
+
+    val message = Option(cause.getMessage).getOrElse("Unknown error")
+    message match {
+      case parseError(uri, line, col, msg) =>
+        XProcException.xdNotWFXML(uri, line.toLong, col.toLong, msg, request.location)
+      case _ =>
+        XProcException.xdNotWFXML(request.href.toASCIIString, message, request.location)
+    }
+  }
+
+  private def validationError(request: DocumentRequest, sae: SaxonApiException, exceptions: List[Exception]): XProcException = {
+    if (exceptions.isEmpty) {
+      XProcException.xdNotValidXML(request.href.toASCIIString, sae.getMessage, request.location)
+    } else {
+      val err = exceptions.head
+      err match {
+        case xpex: XPathException =>
+          val ex = xpex.getException
+          ex match {
+            case sxp: SAXParseException =>
+              XProcException.xdNotValidXML(sxp.getSystemId, sxp.getLineNumber, sxp.getColumnNumber, sxp.getMessage, request.location)
+            case _ =>
+              XProcException.xdNotValidXML(request.href.toASCIIString, err.getMessage, request.location)
+          }
+        case _ =>
+          XProcException.xdNotValidXML(request.href.toASCIIString, err.getMessage, request.location)
+      }
+    }
+  }
+
+  private class ChainedErrorListener() extends ErrorListener {
+    private val _exceptions = ListBuffer.empty[Exception]
+    private var _listener = Option.empty[ErrorListener]
+
+    def chained: Option[ErrorListener] = _listener
+    def chained_=(listen: ErrorListener): Unit = {
+      _listener = Some(listen)
+    }
+
+    def exceptions: List[Exception] = _exceptions.toList
+
+    override def warning(exception: TransformerException): Unit = {
+      if (_listener.isDefined) {
+        _listener.get.warning(exception)
+      }
+      // I don't care about warnings; they won't stop the parse
+    }
+
+    override def error(exception: TransformerException): Unit = {
+      if (_listener.isDefined) {
+        _listener.get.error(exception)
+      }
+      _exceptions += exception
+    }
+
+    override def fatalError(exception: TransformerException): Unit = {
+      if (_listener.isDefined) {
+        _listener.get.fatalError(exception)
+      }
+      _exceptions += exception
+    }
   }
 }

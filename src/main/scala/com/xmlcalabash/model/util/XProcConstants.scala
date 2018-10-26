@@ -12,6 +12,7 @@ object XProcConstants {
   val ns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
   val ns_xml = "http://www.w3.org/XML/1998/namespace"
   val ns_xmlns = "http://www.w3.org/2000/xmlns/"
+  val ns_xqt_errors = "http://www.w3.org/2005/xqt-errors"
 
   val UNKNOWN = new QName("", "UNKNOWN")
 
@@ -117,6 +118,7 @@ object XProcConstants {
 
   val c_data = new QName("c", ns_c, "data")
   val c_error = new QName("c", ns_c, "error")
+  val c_errors = new QName("c", ns_c, "errors")
   val c_param_set = new QName("c", ns_c, "param-set")
   val c_param = new QName("c", ns_c, "param")
   val c_document_properties = new QName("c", ns_c, "document-properties")
@@ -129,8 +131,7 @@ object XProcConstants {
   // Extensions
   val cx_as = new QName("cx", ns_cx, "as")
   val cx_document = new QName("cx", ns_cx, "document")
-  val cx_property_extract = new QName("cx", ns_cx, "property-extract")
-  val cx_property_merge = new QName("cx", ns_cx, "property-merge")
+  val cx_exception_translator = new QName("cx", ns_cx, "exception-translator")
   val cx_unknown = new QName("cx", ns_cx, "unknown")
 
   val _as = new QName("", "as")
