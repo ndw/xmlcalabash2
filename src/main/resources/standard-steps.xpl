@@ -82,6 +82,16 @@
   <p:option name="assert-valid" select="true()" as="xs:boolean"/>
 </p:declare-step>
 
+<p:declare-step type="p:validate-with-schematron">
+  <p:input port="source" primary="true" content-types="application/xml text/xml */*+xml"/>
+  <p:input port="schema" content-types="application/xml text/xml */*+xml"/>
+  <p:output port="result" primary="true" content-types="application/xml"/>
+  <p:output port="report" sequence="true" content-types="application/xml"/>
+  <p:option name="parameters" as="map(xs:QName,item())"/>
+  <p:option name="phase" select="'#ALL'" as="xs:string"/>
+  <p:option name="assert-valid" select="true()" as="xs:boolean"/>
+</p:declare-step>
+
 <p:declare-step type="p:validate-with-xml-schema">
   <p:input port="source" primary="true" content-types="application/xml text/xml */*+xml"/>
   <p:input port="schema" sequence="true" content-types="application/xml text/xml */*+xml"/>
@@ -90,15 +100,15 @@
   <p:option name="try-namespaces" select="false()" as="xs:boolean"/>
   <p:option name="assert-valid" select="true()" as="xs:boolean"/>
   <p:option name="mode" select="'strict'" as="xs:token" cx:as="strict|lax"/>
-  <p:option name="version" as="xs:string"/>                     
+  <p:option name="version" as="xs:string"/>
 </p:declare-step>
 
 <p:declare-step type="p:wrap-sequence">
   <p:input port="source" content-types="application/xml */*+xml text/*" sequence="true"/>
   <p:output port="result" sequence="true" content-types="application/xml"/>
-  <p:option name="wrapper" required="true" as="xs:QName"/>      
-  <p:option name="wrapper-prefix" as="xs:NCName"/>              
-  <p:option name="wrapper-namespace" as="xs:anyURI"/>           
+  <p:option name="wrapper" required="true" as="xs:QName"/>
+  <p:option name="wrapper-prefix" as="xs:NCName"/>
+  <p:option name="wrapper-namespace" as="xs:anyURI"/>
   <p:option name="group-adjacent" as="xs:string" cx:as="XPathExpression"/>
 </p:declare-step>
 
