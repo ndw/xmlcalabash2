@@ -61,6 +61,7 @@ object XProcConstants {
   val p_sink = new QName("p", ns_p, "sink")
 
   val cx_content_type_checker = new QName("cx", ns_cx, "content-type-checker")
+  val cx_exception_translator = new QName("cx", ns_cx, "exception-translator")
 
   // The XML Schema type names must be defined somewhere in Saxon but...
   val xs_ENTITY = new QName("xs", ns_xs, "ENTITY")
@@ -131,7 +132,7 @@ object XProcConstants {
   // Extensions
   val cx_as = new QName("cx", ns_cx, "as")
   val cx_document = new QName("cx", ns_cx, "document")
-  val cx_exception_translator = new QName("cx", ns_cx, "exception-translator")
+  val cx_class = new QName("cx", ns_cx, "class")
   val cx_unknown = new QName("cx", ns_cx, "unknown")
 
   val _as = new QName("", "as")

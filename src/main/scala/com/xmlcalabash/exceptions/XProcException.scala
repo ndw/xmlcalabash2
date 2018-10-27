@@ -11,6 +11,8 @@ import com.xmlcalabash.runtime.{ExpressionContext, XProcExpression}
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmNode}
 
+import scala.collection.mutable.ListBuffer
+
 object XProcException {
   def xiUnkExprType(location: Option[Location]): XProcException = internalError(1, location)
   def xiInvalidMessage(location: Option[Location], message: Message): XProcException = internalError(2, location, message)
@@ -129,6 +131,10 @@ object XProcException {
 
   def xcNotAnElement(pattern: String, nodeType: String, location: Option[Location]): XProcException = stepError(23, List(pattern, nodeType), location)
 
+  def xcNotSchemaValid(href: String, message: String, location: Option[Location]): XProcException = stepError(53, List(href, message), location)
+  def xcNotSchemaValid(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = stepError(53, List(href, line, col, message), location)
+
+
   private def internalError(code: Int, location: Option[Location]): XProcException = {
     internalError(code, location, List())
   }
@@ -227,6 +233,8 @@ object XProcException {
 }
 
 class XProcException(val code: QName, val message: Option[String], val location: Option[Location], val details: List[Any]) extends Exception {
+  private val _underlyingCauses = ListBuffer.empty[Exception]
+
   def this(code: QName) {
     this(code, None, None, List.empty[String])
   }
@@ -245,6 +253,11 @@ class XProcException(val code: QName, val message: Option[String], val location:
 
   def this(code: QName, context: ExpressionContext) {
     this(code, None, context.location, List.empty[String])
+  }
+
+  def underlyingCauses: List[Exception] = _underlyingCauses.toList
+  def underlyingCauses_=(causes: List[Exception]): Unit = {
+    _underlyingCauses ++= causes
   }
 
   override def getMessage: String = {
