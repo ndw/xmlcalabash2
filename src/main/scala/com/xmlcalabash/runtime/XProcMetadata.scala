@@ -43,7 +43,7 @@ class XProcMetadata(private val initialContentType: Option[MediaType],
     this(Some(contentType), initProp)
   }
   def this(contentType: MediaType, metadata: XProcMetadata) {
-    this(Some(contentType), metadata._properties.toMap)
+    this(Some(contentType), metadata.properties)
   }
 
   def properties: Map[QName,XdmValue] = _properties.toMap
