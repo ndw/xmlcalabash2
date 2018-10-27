@@ -7,14 +7,17 @@ import com.jafpl.messages.Message
 import com.jafpl.runtime.{GraphRuntime, RuntimeConfiguration}
 import com.jafpl.steps.DataConsumer
 import com.jafpl.util.{ErrorListener, TraceEventManager}
-import com.xmlcalabash.config.{DocumentManager, Signatures, XMLCalabashConfig, XMLCalabashDebugOptions}
+import com.xmlcalabash.config.{DocumentManager, Signatures, XMLCalabashConfig, XMLCalabashDebugOptions, XProcConfigurer}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep}
 import com.xmlcalabash.util.{MediaType, XProcVarValue}
+import javax.xml.transform.URIResolver
+import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
+import org.xml.sax.EntityResolver
 
 import scala.collection.mutable
 
@@ -25,6 +28,10 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   private var _traceEventManager = config.traceEventManager
   private var _errorListener = config.errorListener
   private var _documentManager = config.documentManager
+  private var _entityResolver = config.entityResolver
+  private var _uriResolver = config.uriResolver
+  private var _moduleURIResolver = config.moduleURIResolver
+  private var _unparsedTextURIResolver = config.unparsedTextURIResolver
   private var _watchdogTimeout = config.watchdogTimeout
   private val _staticOptionBindings = mutable.HashMap.empty[QName, XdmValue]
   private var _defaultSerializationOptions: Map[String,Map[QName,String]] = Map.empty[String,Map[QName,String]]
@@ -177,6 +184,8 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
 
   // ===================================================================================
 
+  def xprocConfigurer: XProcConfigurer = config.xprocConfigurer
+
   def productName: String = config.productName
   def productVersion: String = config.productVersion
   def jafplVersion: String = config.jafplVersion
@@ -194,6 +203,12 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   def watchdogTimeout_=(timeout: Long): Unit = {
     _watchdogTimeout = timeout
   }
+
+  // FIXME: Setters for these
+  def entityResolver: EntityResolver = _entityResolver
+  def uriResolver: URIResolver = _uriResolver
+  def moduleURIResolver: ModuleURIResolver = _moduleURIResolver
+  def unparsedTextURIResolver: UnparsedTextURIResolver = _unparsedTextURIResolver
 
   def documentManager: DocumentManager = _documentManager
   def documentManager_=(manager: DocumentManager): Unit = {

@@ -23,13 +23,13 @@ import org.xml.sax.{EntityResolver, InputSource}
 import scala.collection.mutable
 
 object XMLCalabashConfig {
-  val _configProperty = "com.xmlcalabash.config.XMLCalabashConfigurer"
-  val _configClass = "com.xmlcalabash.util.DefaultXMLCalabashConfigurer"
+  val _configProperty = "com.xmlcalabash.config.XProcConfigurer"
+  val _configClass = "com.xmlcalabash.util.DefaultXProcConfigurer"
 
   def newInstance(): XMLCalabashConfig = {
-    val configurer = Class.forName(configClass).newInstance()
-    val config = new XMLCalabashConfig()
-    configurer.asInstanceOf[XMLCalabashConfigurer].configure(config)
+    val configurer = Class.forName(configClass).newInstance().asInstanceOf[XProcConfigurer]
+    val config = new XMLCalabashConfig(configurer)
+    configurer.xmlCalabashConfigurer.configure(config)
     config.close()
     config
   }
@@ -37,7 +37,7 @@ object XMLCalabashConfig {
   private def configClass: String = Option(System.getProperty(_configProperty)).getOrElse(_configClass)
 }
 
-class XMLCalabashConfig extends RuntimeConfiguration {
+class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeConfiguration {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _expressionEvaluator = new SaxonExpressionEvaluator(this)
   private val _collections = mutable.HashMap.empty[String, List[XdmNode]]
