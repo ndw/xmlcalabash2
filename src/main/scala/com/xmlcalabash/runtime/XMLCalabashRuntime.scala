@@ -14,11 +14,14 @@ import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep}
 import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmValue}
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 
 class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
                                                  private val debug: XMLCalabashDebugOptions) extends RuntimeConfiguration {
+  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
+
   private var _traceEventManager = config.traceEventManager
   private var _errorListener = config.errorListener
   private var _documentManager = config.documentManager
@@ -35,6 +38,10 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   private var decl: DeclareStep = _
   private var graph: Graph = _
   private var runtime: GraphRuntime = _
+
+  logger.info(s"${config.productName} version ${config.productVersion} with Saxon ${config.saxonVersion}")
+  logger.debug(s"Copyright © 2018 ${config.vendor}; ${config.vendorURI}")
+  logger.debug(s"(release id: ${config.productHash}; episode: ${config.episode}; JAFPL version ${config.jafplVersion})")
 
   protected[xmlcalabash] def init(decl: DeclareStep): Unit = {
     this.decl = decl
