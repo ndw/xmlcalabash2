@@ -65,6 +65,7 @@ class XMLCalabashConfig extends RuntimeConfiguration {
 
   def productName: String = BuildInfo.name
   def productVersion: String = BuildInfo.version
+  def productHash: String = BuildInfo.gitHash.substring(0,6)
   def jafplVersion: String = BuildInfo.jafplVersion
   def saxonVersion: String = {
     val sver = processor.getSaxonProductVersion
@@ -75,7 +76,7 @@ class XMLCalabashConfig extends RuntimeConfiguration {
     s"${BuildInfo.version} (with JAFPL $jafplVersion for Saxon $saxonVersion)"
   }
   def vendor: String = "Norman Walsh"
-  def vendorURI: String = "http://xmlcalabash.com/"
+  def vendorURI: String = "https://xmlcalabash.com/"
   def xprocVersion: String = "3.0"
   def xpathVersion: String = "3.1"
   def psviSupported: Boolean = processor.isSchemaAware
