@@ -6,6 +6,8 @@ version      := "1.9.16"
 scalaVersion := "2.12.6"
 
 lazy val jafplVersion = "0.0.74"
+lazy val saxonVersion = "9.8.0-14"
+lazy val useSaxonEE = false
 
 buildInfoKeys ++= Seq[BuildInfoKey](
   "jafplVersion" -> jafplVersion,
@@ -32,6 +34,11 @@ lazy val root = (project in file(".")).
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion),
     buildInfoPackage := "com.xmlcalabash.sbt"
   )
+
+lazy val debugSbtTask = taskKey[Unit]("Task for debugging things I don't understand about sbt")
+debugSbtTask := {
+  println(s"unmanaged: $unmanagedBase")
+}
 
 lazy val failTask = taskKey[Unit]("Force the build to fail")
 failTask := {
@@ -113,6 +120,9 @@ resolvers += "Restlet" at "http://maven.restlet.com"
 resolvers += "My Maven Repository" at "https://nwalsh.com/maven/repo"
 resolvers += "Local Maven Repository" at "file:///space/websites/nwalsh.com/build/website/maven/repo"
 
+// Modern versions of jing and trang don't seem to be available in any
+// of the obvious repositories. I've built my own and stuck them in
+// lib/.
 libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
   "org.apache.logging.log4j" % "log4j-core" % "2.11.0",
@@ -126,8 +136,6 @@ libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.0",
   "org.scala-lang.modules" %% "scala-swing" % "2.0.3",
-  "net.sf.saxon" % "Saxon-HE" % "9.8.0-14",
-  //"com.thaiopensource" % "jing" % "20091111",
   "net.java.dev.msv" % "msv-core" % "2013.6.1",
   "com.ibm.icu" % "icu4j" % "59.1",
   "org.apache.httpcomponents" % "httpclient" % "4.5.3",
@@ -136,8 +144,33 @@ libraryDependencies ++= Seq(
   "org.restlet.jee" % "org.restlet.ext.fileupload" % "2.2.2",
   "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
   "org.xmlresolver" % "xmlresolver" % "0.12.3",
-  "nu.validator" % "htmlparser" % "1.4.6",
+  "nu.validator" % "htmlparser" % "1.4.12",
+  "net.sf.saxon" % "Saxon-HE" % saxonVersion,
   "com.jafpl" % "jafpl_2.12" % jafplVersion
+)
+
+libraryDependencies ++= (
+  if (!useSaxonEE) {
+    Seq("net.sf.saxon" % "Saxon-HE" % saxonVersion)
+  } else {
+    List()
+  }
+)
+
+unmanagedClasspath in Compile ++= (
+  if (useSaxonEE) {
+    Seq(file(s"${baseDirectory.value}/lib/$saxonVersion"))
+  } else {
+    Seq()
+  }
+)
+
+unmanagedClasspath in Runtime ++= (
+  if (useSaxonEE) {
+    Seq(file(s"${baseDirectory.value}/lib/$saxonVersion"))
+  } else {
+    Seq()
+  }
 )
 
 // Yes, this is an odd place for local use, but it's where the website
