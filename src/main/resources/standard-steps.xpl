@@ -73,6 +73,35 @@
   <p:option name="parameters" as="map(*)"/>
 </p:declare-step>
 
+<p:declare-step type="p:validate-with-relax-ng">
+  <p:input port="source" primary="true" content-types="application/xml text/xml */*+xml"/>
+  <p:input port="schema" content-types="application/xml */*+xml"/>
+  <p:output port="result" content-types="application/xml"/>
+  <p:option name="dtd-attribute-values" select="false()" as="xs:boolean"/>
+  <p:option name="dtd-id-idref-warnings" select="false()" as="xs:boolean"/>
+  <p:option name="assert-valid" select="true()" as="xs:boolean"/>
+</p:declare-step>
+
+<p:declare-step type="p:validate-with-xml-schema">
+  <p:input port="source" primary="true" content-types="application/xml text/xml */*+xml"/>
+  <p:input port="schema" sequence="true" content-types="application/xml text/xml */*+xml"/>
+  <p:output port="result" content-types="application/xml"/>
+  <p:option name="use-location-hints" select="false()" as="xs:boolean"/>
+  <p:option name="try-namespaces" select="false()" as="xs:boolean"/>
+  <p:option name="assert-valid" select="true()" as="xs:boolean"/>
+  <p:option name="mode" select="'strict'" as="xs:token" cx:as="strict|lax"/>
+  <p:option name="version" as="xs:string"/>                     
+</p:declare-step>
+
+<p:declare-step type="p:wrap-sequence">
+  <p:input port="source" content-types="application/xml */*+xml text/*" sequence="true"/>
+  <p:output port="result" sequence="true" content-types="application/xml"/>
+  <p:option name="wrapper" required="true" as="xs:QName"/>      
+  <p:option name="wrapper-prefix" as="xs:NCName"/>              
+  <p:option name="wrapper-namespace" as="xs:anyURI"/>           
+  <p:option name="group-adjacent" as="xs:string" cx:as="XPathExpression"/>
+</p:declare-step>
+
 <p:declare-step type="p:xslt">
   <p:input port="source" content-types="application/xml text/xml */*+xml" sequence="true" primary="true"/>
   <p:input port="stylesheet" content-types="application/xml text/xml */*+xml"/>
@@ -83,15 +112,6 @@
   <p:option name="template-name" as="xs:QName"/>
   <p:option name="output-base-uri" as="xs:anyURI"/>
   <p:option name="version" as="xs:string"/>
-</p:declare-step>
-
-<p:declare-step type="p:wrap-sequence">
-  <p:input port="source" content-types="application/xml */*+xml text/*" sequence="true"/>
-  <p:output port="result" sequence="true" content-types="application/xml"/>
-  <p:option name="wrapper" required="true" as="xs:QName"/>      
-  <p:option name="wrapper-prefix" as="xs:NCName"/>              
-  <p:option name="wrapper-namespace" as="xs:anyURI"/>           
-  <p:option name="group-adjacent" as="xs:string" cx:as="XPathExpression"/>
 </p:declare-step>
 
 <!--============================================================ -->
