@@ -207,10 +207,10 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       // Is this necessary? I'm carefully synchronizing calls that mess with the
       // configuration's error listener.
 
-      val listener = new ChainedErrorListener()
+      val listener = new CachingErrorListener()
       val saxonConfig = xmlCalabash.processor.getUnderlyingConfiguration
       saxonConfig.synchronized {
-        listener.chained = saxonConfig.getErrorListener
+        listener.chainedListener = saxonConfig.getErrorListener
         saxonConfig.setErrorListener(listener)
       }
 
@@ -251,7 +251,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
           }
       } finally {
         saxonConfig.synchronized {
-          saxonConfig.setErrorListener(listener.chained.get)
+          saxonConfig.setErrorListener(listener.chainedListener.get)
         }
       }
 
@@ -363,16 +363,25 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
     val parseError = "org.xml.sax.SAXParseException; systemId: (.*); lineNumber: (\\d+); columnNumber: (\\d+); (.*)$".r
 
     val message = Option(cause.getMessage).getOrElse("Unknown error")
-    message match {
+    val except = message match {
       case parseError(uri, line, col, msg) =>
         XProcException.xdNotWFXML(uri, line.toLong, col.toLong, msg, request.location)
       case _ =>
         XProcException.xdNotWFXML(request.href.toASCIIString, message, request.location)
     }
+
+    cause match {
+      case ex: Exception =>
+        except.underlyingCauses = List(ex)
+      case _ =>
+        Unit
+    }
+
+    except
   }
 
   private def validationError(request: DocumentRequest, sae: SaxonApiException, exceptions: List[Exception]): XProcException = {
-    if (exceptions.isEmpty) {
+    val except = if (exceptions.isEmpty) {
       XProcException.xdNotValidXML(request.href.toASCIIString, sae.getMessage, request.location)
     } else {
       val err = exceptions.head
@@ -389,38 +398,8 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
           XProcException.xdNotValidXML(request.href.toASCIIString, err.getMessage, request.location)
       }
     }
-  }
 
-  private class ChainedErrorListener() extends ErrorListener {
-    private val _exceptions = ListBuffer.empty[Exception]
-    private var _listener = Option.empty[ErrorListener]
-
-    def chained: Option[ErrorListener] = _listener
-    def chained_=(listen: ErrorListener): Unit = {
-      _listener = Some(listen)
-    }
-
-    def exceptions: List[Exception] = _exceptions.toList
-
-    override def warning(exception: TransformerException): Unit = {
-      if (_listener.isDefined) {
-        _listener.get.warning(exception)
-      }
-      // I don't care about warnings; they won't stop the parse
-    }
-
-    override def error(exception: TransformerException): Unit = {
-      if (_listener.isDefined) {
-        _listener.get.error(exception)
-      }
-      _exceptions += exception
-    }
-
-    override def fatalError(exception: TransformerException): Unit = {
-      if (_listener.isDefined) {
-        _listener.get.fatalError(exception)
-      }
-      _exceptions += exception
-    }
+    except.underlyingCauses = exceptions
+    except
   }
 }
