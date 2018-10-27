@@ -5,10 +5,13 @@ import java.net.URI
 import com.jafpl.graph.Location
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmValue}
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.immutable.HashMap
 
 class DocumentRequest(val href: URI, val contentType: Option[MediaType], val location: Option[Location], val dtdValidate: Boolean) {
+  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
+
   private var _baseURI: Option[URI] = None
   private var _dtdValidate: Option[Boolean] = None
   private var _location: Option[Location] = None
