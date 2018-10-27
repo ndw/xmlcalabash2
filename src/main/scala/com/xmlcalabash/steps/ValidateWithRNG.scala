@@ -1,16 +1,20 @@
 package com.xmlcalabash.steps
 
-import java.io.IOException
+import java.io.{IOException, StringReader}
 
 import com.jafpl.steps.PortCardinality
-import com.sun.msv.verifier.ValidityViolation
+import com.thaiopensource.util.PropertyMapBuilder
+import com.thaiopensource.validate.auto.AutoSchemaReader
+import com.thaiopensource.validate.prop.rng.RngProperty
+import com.thaiopensource.validate.rng.CompactSchemaReader
+import com.thaiopensource.validate.{SchemaReader, ValidateProperty, ValidationDriver}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{CachingErrorListener, S9Api}
 import net.sf.saxon.s9api.{QName, XdmNode}
-import org.iso_relax.verifier.VerifierConfigurationException
+import org.xml.sax.InputSource
 
-import scala.xml.SAXException
+import scala.xml.{SAXException, SAXParseException}
 
 class ValidateWithRNG() extends DefaultXmlStep {
   private val _assert_valid = new QName("", "assert-valid")
@@ -21,14 +25,16 @@ class ValidateWithRNG() extends DefaultXmlStep {
   private var source: XdmNode = _
   private var sourceMetadata: XProcMetadata = _
   private var schema: XdmNode = _
+  private var schemaMetadata: XProcMetadata = _
   private var assert_valid = true
-  private var dtd_compatibility = false
+  private var dtd_attribute_values = false
+  private var dtd_id_idref_warnings = false
 
   override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
     Map("source" -> PortCardinality.EXACTLY_ONE,
         "schema" -> PortCardinality.EXACTLY_ONE),
     Map("source" -> List("application/xml", "text/xml", "*/*+xml"),
-        "schema" -> List("application/xml", "text/xml", "*/*+xml")))
+        "schema" -> List("application/xml", "text/xml", "*/*+xml", "text/plain")))
 
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
@@ -39,7 +45,9 @@ class ValidateWithRNG() extends DefaultXmlStep {
           case "source" =>
             source = node
             sourceMetadata = metadata
-          case "schema" => schema = node
+          case "schema" =>
+            schema = node
+            schemaMetadata = metadata
           case _ => logger.debug(s"Unexpected connection to p:validate-with-xsd: $port")
         }
       case _ => throw new RuntimeException("Non-XML document passed to xsd validator?")
@@ -47,47 +55,80 @@ class ValidateWithRNG() extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
+    if (bindings.contains(_dtd_id_idref_warnings)) {
+      dtd_id_idref_warnings = bindings(_dtd_id_idref_warnings).getStringValue == "true"
+    }
+
+    val listener = new CachingErrorListener()
+    val properties = new PropertyMapBuilder()
+    properties.put(ValidateProperty.ERROR_HANDLER, listener)
+    properties.put(ValidateProperty.URI_RESOLVER, config.uriResolver)
+    properties.put(ValidateProperty.ENTITY_RESOLVER, config.entityResolver)
+
+    if (dtd_id_idref_warnings) {
+      RngProperty.CHECK_ID_IDREF.add(properties)
+    }
+
+    val docBaseURI = source.getBaseURI
+
+    val compact = schemaMetadata.contentType.textContentType
+
+    val configurer = config.xprocConfigurer.jingConfigurer
+    var sr: SchemaReader = null
+    var schemaInputSource: InputSource = null
+
+    if (compact) {
+      configurer.configRNC(properties)
+      sr = CompactSchemaReader.getInstance()
+
+      // Grotesque hack!
+      val srdr = new StringReader(schema.getStringValue)
+      schemaInputSource = new InputSource(srdr)
+      schemaInputSource.setSystemId(schema.getBaseURI.toASCIIString)
+    } else {
+      configurer.configRNG(properties)
+      sr = new AutoSchemaReader()
+      schemaInputSource = S9Api.xdmToInputSource(config.config, schema)
+    }
+
+    val driver = new ValidationDriver(properties.toPropertyMap, sr)
+
     try {
-      val vfactory = new com.sun.msv.verifier.jarv.TheFactoryImpl()
-      val schemaSource = S9Api.xdmToInputSource(config.config, schema)
-      schemaSource.setSystemId(schema.getBaseURI.toASCIIString)
-
-      val listener = new CachingErrorListener()
-      val docSchema = vfactory.compileSchema(schemaSource)
-      val verifier = docSchema.newVerifier()
-      verifier.setErrorHandler(listener)
-
-      if (!verifier.verify(S9Api.xdmToInputSource(config.config, source))) {
-        var msg = "RELAX NG validation failed"
-        if (listener.exceptions.nonEmpty) {
-          val lex = listener.exceptions.head
-          lex match {
-            case ex: ValidityViolation =>
-              msg = ex.getMessage
-              val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, ex.getLineNumber, ex.getColumnNumber, msg, location)
-              except.underlyingCauses = listener.exceptions
-              throw except
-            case _: Exception =>
-              msg = lex.getMessage
+      if (driver.loadSchema(schemaInputSource)) {
+        val din = S9Api.xdmToInputSource(config.config, source)
+        if (!driver.validate(din)) {
+          if (assert_valid) {
+            var msg = "RELAX NG validation failed"
+            if (listener.exceptions.nonEmpty) {
+              val lex = listener.exceptions.head
+              lex match {
+                case _: Exception =>
+                  msg = lex.getMessage
+                  val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, msg, location)
+                  except.underlyingCauses = listener.exceptions
+                  throw except
+              }
+            } else {
               val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, msg, location)
               except.underlyingCauses = listener.exceptions
               throw except
+            }
           }
-        } else {
-          val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, msg, location)
-          except.underlyingCauses = listener.exceptions
-          throw except
         }
+      } else {
+        throw XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, "Error loading schema", location)
       }
-
-      consumer.get.receive("result", source, sourceMetadata)
     } catch {
-      case ex: VerifierConfigurationException =>
-        throw new RuntimeException("VCD")
+      case ex: SAXParseException =>
+        throw new RuntimeException("SAX Parse Exception")
       case ex: SAXException =>
-        throw new RuntimeException("SAX")
+        throw new RuntimeException("SAX Exception")
       case ex: IOException =>
-        throw new RuntimeException("SAX")
+        throw new RuntimeException("IO Exception")
     }
+
+    consumer.get.receive("result", source, sourceMetadata)
   }
 }
