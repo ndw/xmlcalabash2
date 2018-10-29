@@ -65,6 +65,30 @@ class DefaultXmlStep extends XmlStep {
     // nop
   }
 
+  def stringBinding(name: QName): Option[String] = {
+    if (bindings.contains(name)) {
+      Some(bindings(name).getStringValue)
+    } else {
+      None
+    }
+  }
+
+  def booleanBinding(name: QName): Option[Boolean] = {
+    if (bindings.contains(name)) {
+      Some(bindings(name).getStringValue == "true")
+    } else {
+      None
+    }
+  }
+
+  def integerBinding(name: QName): Option[Integer] = {
+    if (bindings.contains(name)) {
+      Some(bindings(name).getStringValue.toInt)
+    } else {
+      None
+    }
+  }
+
   override def toString: String = {
     val defStr = super.toString
     if (defStr.startsWith("com.xmlcalabash.steps")) {
