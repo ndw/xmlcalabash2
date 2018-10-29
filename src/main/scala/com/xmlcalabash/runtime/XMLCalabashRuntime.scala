@@ -33,6 +33,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   private var _moduleURIResolver = config.moduleURIResolver
   private var _unparsedTextURIResolver = config.unparsedTextURIResolver
   private var _watchdogTimeout = config.watchdogTimeout
+  private var _episode = config.computeEpisode
   private val _staticOptionBindings = mutable.HashMap.empty[QName, XdmValue]
   private var _defaultSerializationOptions: Map[String,Map[QName,String]] = Map.empty[String,Map[QName,String]]
   private var _trim_inline_whitespace = config.trimInlineWhitespace
@@ -198,6 +199,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   def psviSupported: Boolean = config.psviSupported
   def processor: Processor = config.processor
   def staticBaseURI: URI = config.staticBaseURI
+  def episode: String = _episode
 
   def watchdogTimeout: Long = _watchdogTimeout
   def watchdogTimeout_=(timeout: Long): Unit = {

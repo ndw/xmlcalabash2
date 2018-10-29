@@ -60,7 +60,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
   private var _watchdogTimeout = 1000L
   private var _staticBaseURI = URIUtils.cwdAsURI
   private var _language = defaultLocale
-  private var _episode = defaultEpisode
+  private var _episode = computeEpisode
   private var _defaultSerializationOptions = Map.empty[String,Map[QName,String]]
 
   def productName: String = BuildInfo.name
@@ -330,7 +330,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
     Locale.getDefault.toString.replace('_', '-')
   }
 
-  private def defaultEpisode: String = {
+  def computeEpisode: String = {
     import java.security.MessageDigest
     import java.util.GregorianCalendar
 
