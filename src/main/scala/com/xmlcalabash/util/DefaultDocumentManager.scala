@@ -14,7 +14,6 @@ import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XProcXPathExpression}
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
-import javax.xml.transform.{ErrorListener, TransformerException}
 import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmValue}
 import net.sf.saxon.trans.XPathException
 import nu.validator.htmlparser.common.XmlViolationPolicy
@@ -28,7 +27,6 @@ import org.xml.sax.helpers.XMLReaderFactory
 import org.xml.sax.{InputSource, SAXException}
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 import scala.xml.SAXParseException
 
 class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentManager {
@@ -68,7 +66,8 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       href = Some(new URI(source.getSystemId))
     }
 
-    load(href.get, request)
+    val response = load(href.get, request)
+    response
   }
 
   override def parse(request: DocumentRequest, stream: InputStream): DocumentResponse = {
@@ -90,7 +89,9 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       val contentType = computeContentType(href, request)
       val file = new File(href)
       val stream = new FileInputStream(file)
-      request.baseURI = file.getAbsoluteFile.toURI
+      if (request.baseURI.isEmpty) {
+        request.baseURI = file.getAbsoluteFile.toURI
+      }
 
       val props = mutable.HashMap.empty[QName,XdmValue] ++ request.docprops
       if (!props.contains(XProcConstants._base_uri)) {
