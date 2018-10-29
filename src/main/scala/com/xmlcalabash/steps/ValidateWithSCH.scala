@@ -124,7 +124,7 @@ class ValidateWithSCH() extends DefaultXmlStep {
     val report = result.getXdmNode
 
     consumer.get.receive("report", report, new XProcMetadata(MediaType.XML))
-    consumer.get.receive("result", report, sourceMetadata)
+    consumer.get.receive("result", source, sourceMetadata)
   }
 
   private def getSchematronXSLT(xslt: String): SAXSource = {
