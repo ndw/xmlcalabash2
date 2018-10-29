@@ -160,19 +160,6 @@
   <p:option name="option"/>
 </p:declare-step>
 
-<p:declare-step type="cx:property-extract">
-  <p:input port="source"/>
-  <p:output port="result" primary="true"/>
-  <p:output port="properties"/>
-  <p:option name=""/>
-</p:declare-step>
-
-<p:declare-step type="cx:property-merge">
-  <p:input port="source" primary="true"/>
-  <p:input port="properties"/>
-  <p:output port="result"/>
-</p:declare-step>
-
 <p:declare-step type="cx:content-type-checker">
   <p:input port="source" sequence="true"/>
   <p:output port="result" sequence="true"/>
