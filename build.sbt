@@ -145,7 +145,6 @@ libraryDependencies ++= Seq(
   "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
   "org.xmlresolver" % "xmlresolver" % "0.12.3",
   "nu.validator" % "htmlparser" % "1.4.12",
-  "net.sf.saxon" % "Saxon-HE" % saxonVersion,
   "com.jafpl" % "jafpl_2.12" % jafplVersion
 )
 
@@ -157,9 +156,17 @@ libraryDependencies ++= (
   }
 )
 
-unmanagedClasspath in Compile ++= (
+unmanagedJars in Compile ++= (
   if (useSaxonEE) {
-    Seq(file(s"${baseDirectory.value}/lib/$saxonVersion"))
+    Seq(file(s"${baseDirectory.value}/eelib/$saxonVersion/saxon9ee.jar"))
+  } else {
+    Seq()
+  }
+)
+
+unmanagedJars in Runtime ++= (
+  if (useSaxonEE) {
+    Seq(file(s"${baseDirectory.value}/eelib/$saxonVersion/saxon9ee.jar"))
   } else {
     Seq()
   }
@@ -167,7 +174,7 @@ unmanagedClasspath in Compile ++= (
 
 unmanagedClasspath in Runtime ++= (
   if (useSaxonEE) {
-    Seq(file(s"${baseDirectory.value}/lib/$saxonVersion"))
+    Seq(file(s"${baseDirectory.value}/eelib"))
   } else {
     Seq()
   }
