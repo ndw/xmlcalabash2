@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml.datasource
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl}
+import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, PipelineStep, Variable}
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcVtExpression, XProcXPathExpression}
 import com.xmlcalabash.steps.internal.FileLoader
 import com.xmlcalabash.util.MediaType
@@ -73,11 +73,13 @@ class Document(override val config: XMLCalabashRuntime,
     }
 
     hrefAvt = ValueParser.parseAvt(_href.get)
-    bindingRefs ++= lexicalVariables(_href.get)
+    if (hrefAvt.isDefined) {
+      bindingRefs ++= ValueParser.findVariableRefsInAvt(config, hrefAvt.get, location)
+    }
 
     if (_params.isDefined) {
       bindingRefs ++= lexicalVariables(_params.get)
-      paramsExpr = Some(_params.get);
+      paramsExpr = Some(_params.get)
     }
 
     if (_docProps.isDefined) {
@@ -125,6 +127,12 @@ class Document(override val config: XMLCalabashRuntime,
             throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
           }
           graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], hrefBinding)
+
+        case optDecl: OptionDecl =>
+          graph.addBindingEdge(optDecl._graphNode.get.asInstanceOf[Binding], hrefBinding)
+
+        case variable: Variable =>
+          graph.addBindingEdge(variable._graphNode.get.asInstanceOf[Binding], hrefBinding)
 
         case _ =>
           throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)

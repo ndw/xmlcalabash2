@@ -261,7 +261,7 @@ object ValueParser {
         while (iter.hasNext) {
           val attr = iter.next().asInstanceOf[XdmNode]
           if (expandText) {
-            variableRefs ++= ValueParser.findVariableRefsInAvt(config, attr.getStringValue, location)
+            variableRefs ++= ValueParser.findVariableRefsInTvt(config, attr.getStringValue, location)
           }
           if (attr.getNodeName == XProcConstants.p_expand_text) {
             newExpand = ValueParser.parseBoolean(Some(attr.getStringValue), location).get
@@ -274,7 +274,7 @@ object ValueParser {
         }
       case XdmNodeKind.TEXT =>
         if (expandText) {
-          variableRefs ++= ValueParser.findVariableRefsInAvt(config, node.getStringValue, location)
+          variableRefs ++= ValueParser.findVariableRefsInTvt(config, node.getStringValue, location)
         }
       case _ => Unit
     }
@@ -282,7 +282,7 @@ object ValueParser {
     variableRefs.toSet
   }
 
-  private def findVariableRefsInAvt(config: XMLCalabashRuntime, text: String, location: Option[Location]): Set[QName] = {
+  private def findVariableRefsInTvt(config: XMLCalabashRuntime, text: String, location: Option[Location]): Set[QName] = {
     val variableRefs = mutable.HashSet.empty[QName]
 
     val list = ValueParser.parseAvt(text)
@@ -290,8 +290,14 @@ object ValueParser {
       throw new ModelException(ExceptionCode.BADAVT, List("TVT", text), location)
     }
 
+    findVariableRefsInAvt(config, list.get, location)
+  }
+
+  def findVariableRefsInAvt(config: XMLCalabashRuntime, list: List[String], location: Option[Location]): Set[QName] = {
+    val variableRefs = mutable.HashSet.empty[QName]
+
     var avt = false
-    for (substr <- list.get) {
+    for (substr <- list) {
       if (avt) {
         variableRefs ++= ValueParser.findVariableRefsInString(config, substr, location)
       }
