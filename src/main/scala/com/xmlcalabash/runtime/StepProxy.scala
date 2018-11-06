@@ -12,7 +12,7 @@ import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.util.{MediaType, TypeUtils}
-import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import org.apache.http.util.ByteArrayBuffer
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -310,6 +310,14 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
       case value: XdmNode =>
         assertXmlDocument(value)
         new XdmNodeItemMessage(value, metadata)
+      case value: XdmMap =>
+        new XdmValueItemMessage(value, metadata)
+      case value: XdmAtomicValue =>
+        val tree = new SaxonTreeBuilder(config)
+        tree.startDocument(None)
+        tree.addText(value.getStringValue)
+        tree.endDocument()
+        new XdmNodeItemMessage(tree.result, new XProcMetadata(MediaType.TEXT, metadata))
       case value: String =>
         val req = new DocumentRequest(metadata.baseURI.getOrElse(new URI("")), metadata.contentType)
         val result = config.documentManager.parse(req, new ByteArrayInputStream(value.getBytes("UTF-8")))
