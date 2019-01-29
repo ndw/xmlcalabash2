@@ -1,7 +1,4 @@
 dist: trusty
-env:
-  TERM=dumb
-
 install: true
 language: scala
 scala:
@@ -10,10 +7,19 @@ script:
   #- pushd src/test/resources
   #- git clone https://github.com/xproc/3.0-test-suite.git test-suite
   #- popd
-  - sbt ++$TRAVIS_SCALA_VERSION test
+  - sbt ++$TRAVIS_SCALA_VERSION test package
 sudu: false
 jdk:
   - oraclejdk8
 
-#after_success:
-#  - src/website/bin/travis-publish.sh
+deploy:
+  provider: releases
+  api_key:
+    secure: BZDdTj4DUBQWRvNbykH5XoZXOYni0fqE/AaynlM0nBr3Wa5brxMdxDeVZMoo9hjoGQPBbHCrMg8cXKRgiwHtSnKT5ETMsdlszcC++ZbookSO2xMjpVevngM9lEK0MtVQTOXEoQxBkwe2YeZx1SqzwbHl3r/KtSZVY+n2LNMToQW++qZMfm6+KpEPYVBKtuS+UJN/X+BPqlL0rIkctS4/6hhrbMVRyHfuOIfykKp36sOTJG9+6zMzO8fFPHUfZevqd9zPwCDqzfwU2Xww/SHN94Fe6aBUJp+6gqmVyO9JC/SRaAuF9Rn4PufvHAj0mY8cxjVogMaKXyyYzeM1oYCh/pGpaaTT9kx0wFoJul4JmEi7XkzDWDOYwCzG7GCeN6PIQyC/6FGJ1ttbosILyKso05qvjaobC8cOeNDX+F9GgzOSKr/hEBfJaLpkrLk/EQevHUWdb3sMbLRh2XPAuK9YWr5tnaY6fwzWZH9nK1aWnuGO7MKSzDuPVCxEFJtqANhI2p/M/SznKxnRvWxx+KziCZsS2L7RiMzCrzx43ZoBLbmKCIAUenMCIaICoNzUfjrR1apv7Bj8wtpv+N8RXX5c3LyaXVcoke84GnInyAGGZPLODJt9WKnYZw2nnyzUcVOoDpzcE7nhqWcRVFrzJRExLUsykyyYAmDDfatknbJlY+0=
+  file:
+    - target/scala-2.12/xml-calabash_2.12-$TRAVIS_TAG.jar
+    - target/scala-2.12/xml-calabash_2.12-$TRAVIS_TAG-javadoc.jar
+  skip_cleanup: true
+  on:
+    tags: true
+    all_branches: true
