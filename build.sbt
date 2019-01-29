@@ -2,10 +2,11 @@ import java.io.{BufferedReader, InputStreamReader}
 
 name         := "XML Calabash"
 organization := "com.xmlcalabash"
-version      := "1.9.18"
+homepage     := Some(url("https://xmlcalabash.com/"))
+version      := "1.99.1"
 scalaVersion := "2.12.6"
 
-lazy val jafplVersion = "0.0.74"
+lazy val jafplVersion = "0.0.76"
 lazy val saxonVersion = "9.8.0-14"
 lazy val useSaxonEE = false
 
@@ -114,15 +115,10 @@ publish := Def.taskDyn {
   }
 }.value
 
-resolvers += DefaultMavenRepository
+
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 resolvers += "Restlet" at "http://maven.restlet.com"
-resolvers += "My Maven Repository" at "https://nwalsh.com/maven/repo"
-resolvers += "Local Maven Repository" at "file:///space/websites/nwalsh.com/build/website/maven/repo"
 
-// Modern versions of jing and trang don't seem to be available in any
-// of the obvious repositories. I've built my own and stuck them in
-// lib/.
 libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
   "org.apache.logging.log4j" % "log4j-core" % "2.11.0",
@@ -143,7 +139,9 @@ libraryDependencies ++= Seq(
   "org.restlet.jee" % "org.restlet" % "2.2.2",
   "org.restlet.jee" % "org.restlet.ext.fileupload" % "2.2.2",
   "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
-  "org.xmlresolver" % "xmlresolver" % "0.12.3",
+  "org.xmlresolver" % "xmlresolver" % "0.13.1",
+  "org.relaxng" % "jing" % "20181222",
+  "org.relaxng" % "trang" % "20181222",
   "nu.validator" % "htmlparser" % "1.4.12",
   "com.jafpl" % "jafpl_2.12" % jafplVersion
 )
