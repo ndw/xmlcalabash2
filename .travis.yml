@@ -7,7 +7,7 @@ script:
   #- pushd src/test/resources
   #- git clone https://github.com/xproc/3.0-test-suite.git test-suite
   #- popd
-  - sbt ++$TRAVIS_SCALA_VERSION test package
+  - sbt ++$TRAVIS_SCALA_VERSION package
 sudu: false
 jdk:
   - oraclejdk8
