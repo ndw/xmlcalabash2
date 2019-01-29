@@ -186,7 +186,3 @@ unmanagedClasspath in Runtime ++= (
 //)
 
 scalacOptions := Seq("-unchecked", "-deprecation")
-
-// I'm publishing the informal pre-release builds on my own repo
-publishTo := Some(Resolver.file("file",
-  new File("/space/websites/nwalsh.com/build/website/maven/repo")))
