@@ -32,6 +32,17 @@ object XmlPortSpecification {
     Map("result"->PortCardinality.EXACTLY_ONE),
     Map("result"->List("application/octet-stream")))
 
+  /** Allow a single HTML document on the `result` port. */
+  val HTMLRESULT: XmlPortSpecification = new XmlPortSpecification(
+    Map("result"->PortCardinality.EXACTLY_ONE),
+    Map("result" -> List("application/xhtml+xml")))
+
+
+  /** Allow a single TEXT document on the `source` port. */
+  val TEXTSOURCE: XmlPortSpecification = new XmlPortSpecification(
+    Map("source"->PortCardinality.EXACTLY_ONE),
+    Map("source"->List("text/*")))
+
   /** Allow a single XML document on the `source` port. */
   val XMLSOURCE: XmlPortSpecification = new XmlPortSpecification(
     Map("source"->PortCardinality.EXACTLY_ONE),

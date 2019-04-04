@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
-import com.xmlcalabash.model.util.ValueParser
+import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, StepWrapper, XMLCalabashRuntime, XProcExpression, XProcVtExpression, XProcXPathExpression, XmlStep}
 import net.sf.saxon.s9api.QName
 
@@ -30,7 +30,13 @@ class AtomicStep(override val config: XMLCalabashRuntime,
 
     val seenOptions = mutable.HashSet.empty[QName]
     for (key <- attributes.keySet) {
-      if (key.getNamespaceURI == "") {
+      if ((stepType.getNamespaceURI == XProcConstants.ns_p && key == XProcConstants._message)
+        || (stepType.getNamespaceURI != XProcConstants.ns_p && key == XProcConstants.p_message)) {
+        // This is the message pseudo-option
+        val avt = ValueParser.parseAvt(attributes(key))
+        val context = new ExpressionContext(_baseURI, inScopeNS, _location)
+        options.put(key, new XProcVtExpression(context, avt.get, true))
+      } else if (key.getNamespaceURI == "") {
         if (sig.options.contains(key)) {
           val opt = sig.option(key, location.get)
           val context = new ExpressionContext(baseURI, inScopeNS, location)

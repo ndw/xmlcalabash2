@@ -1,5 +1,7 @@
 package com.xmlcalabash.util
 
+import java.io.InputStreamReader
+
 import com.xmlcalabash.config.{ErrorExplanation, XMLCalabashConfig}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import net.sf.saxon.s9api.QName
@@ -14,7 +16,8 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
   private var message = ""
   private var explanation = ""
   private val stream = getClass.getResourceAsStream("/xproc-errors.txt")
-  for (line <- Source.fromInputStream(stream).getLines) {
+
+  for (line <- Source.fromInputStream(stream, "UTF-8").getLines) {
     if (line == "") {
       if (code.isDefined) {
         messages += new ErrorExplanationTemplate(code.get, message, explanation)

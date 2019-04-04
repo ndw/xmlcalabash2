@@ -1,14 +1,15 @@
 import java.io.{BufferedReader, InputStreamReader}
 
-name         := "XML Calabash"
-organization := "com.xmlcalabash"
-homepage     := Some(url("https://xmlcalabash.com/"))
-version      := "1.99.1"
-scalaVersion := "2.12.6"
-
+lazy val xmlCalabashVersion = "1.99.3"
 lazy val jafplVersion = "0.0.76"
 lazy val saxonVersion = "9.8.0-14"
 lazy val useSaxonEE = false
+
+name         := "XML Calabash"
+organization := "com.xmlcalabash"
+homepage     := Some(url("https://xmlcalabash.com/"))
+version      := xmlCalabashVersion
+scalaVersion := "2.12.6"
 
 buildInfoKeys ++= Seq[BuildInfoKey](
   "jafplVersion" -> jafplVersion,
@@ -132,7 +133,6 @@ libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.0",
   "org.scala-lang.modules" %% "scala-swing" % "2.0.3",
-  "net.java.dev.msv" % "msv-core" % "2013.6.1",
   "com.ibm.icu" % "icu4j" % "59.1",
   "org.apache.httpcomponents" % "httpclient" % "4.5.3",
   "org.apache.httpcomponents" % "httpcore" % "4.4.6",
@@ -141,8 +141,8 @@ libraryDependencies ++= Seq(
   "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
   "org.xmlresolver" % "xmlresolver" % "0.13.1",
   "org.relaxng" % "jing" % "20181222",
-  "org.relaxng" % "trang" % "20181222",
   "nu.validator" % "htmlparser" % "1.4.12",
+  "com.atlassian.commonmark" % "commonmark" % "0.12.1",
   "com.jafpl" % "jafpl_2.12" % jafplVersion
 )
 
@@ -153,6 +153,36 @@ libraryDependencies ++= (
     List()
   }
 )
+
+// ============================================================
+// This section is an attempt to get sbt assembly to work.
+// It's a bit of trial and error more than informed choice.
+
+assemblyJarName in assembly := Array("xml-calabash",
+  xmlCalabashVersion,
+  saxonVersion.split("\\.").take(2).mkString("")).mkString("-") + ".jar"
+
+test in assembly := {}
+
+libraryDependencies +=
+  "org.relaxng" % "jing" % "20181222" excludeAll(
+    ExclusionRule(organization = "com.sun.xml.bind.jaxb"),
+    ExclusionRule(organization = "isorelax"),
+    ExclusionRule(organization = "relaxngDatatype")
+  )
+
+libraryDependencies +=
+  "org.apache.httpcomponents" % "httpclient" % "4.5.3" excludeAll(
+    ExclusionRule(organization = "commons-logging")
+  )
+
+mappings in (Compile, packageBin) := {
+  (mappings in (Compile, packageBin)).value.filter {
+    case (file, toPath) => toPath != "com/xmlcalabash/drivers/Test.class"
+  }
+}
+
+// ============================================================
 
 unmanagedJars in Compile ++= (
   if (useSaxonEE) {

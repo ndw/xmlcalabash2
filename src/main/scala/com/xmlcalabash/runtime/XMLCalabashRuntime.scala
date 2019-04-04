@@ -48,7 +48,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   private var runtime: GraphRuntime = _
 
   logger.info(s"${config.productName} version ${config.productVersion} with Saxon ${config.saxonVersion}")
-  logger.debug(s"Copyright © 2018 ${config.vendor}; ${config.vendorURI}")
+  logger.debug(s"Copyright © 2018, 2019 ${config.vendor}; ${config.vendorURI}")
   logger.debug(s"(release id: ${config.productHash}; episode: ${config.episode}; JAFPL version ${config.jafplVersion})")
 
   protected[xmlcalabash] def init(decl: DeclareStep): Unit = {

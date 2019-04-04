@@ -7,7 +7,7 @@ import com.xmlcalabash.config.StepSignature
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
-import com.xmlcalabash.model.xml.containers.{Catch, Choose, Container, ForEach, Group, Try, Viewport, When, WithDocument, WithProperties}
+import com.xmlcalabash.model.xml.containers.{Catch, Choose, Container, ForEach, Group, Otherwise, Try, Viewport, When, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XMLCalabashRuntime, XProcExpression, XProcVtExpression}
@@ -563,6 +563,7 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
       val drpIsPrecedingSibling =
         this match {
           case container: When => false
+          case container: Otherwise => false
           case container: Catch => false
           case container: PipelineStep => true
           case variable: Variable => true

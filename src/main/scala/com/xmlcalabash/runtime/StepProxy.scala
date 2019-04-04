@@ -24,6 +24,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
   private var location = Option.empty[Location]
   private var _id: String = _
   private val openStreams = ListBuffer.empty[InputStream]
+  private var p_message = Option.empty[String]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
   protected val bindings = mutable.HashSet.empty[QName]
@@ -106,6 +107,12 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
       new QName("", bindmsg.name)
     }
 
+    if ((step.signature.stepType.getNamespaceURI == XProcConstants.ns_p && qname == XProcConstants._message)
+      || (step.signature.stepType.getNamespaceURI != XProcConstants.ns_p && qname == XProcConstants.p_message)) {
+      p_message = Some(bindmsg.message.toString)
+      return
+    }
+
     bindings += qname
     bindingsMap.put(qname.getClarkName, bindmsg.message)
 
@@ -151,6 +158,10 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
   }
 
   override def run(): Unit = {
+    if (p_message.isDefined) {
+      println(p_message.get)
+    }
+
     for (port <- inputSpec.ports) {
       if (!received.contains(port)) {
         inputSpec.checkInputCardinality(port, 0)

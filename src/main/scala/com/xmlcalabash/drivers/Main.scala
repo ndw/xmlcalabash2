@@ -5,7 +5,7 @@ import java.net.URI
 
 import com.jafpl.exceptions.JafplException
 import com.jafpl.graph.Graph
-import com.xmlcalabash.config.{XMLCalabashConfig, XMLCalabashDebugOptions}
+import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig, XMLCalabashDebugOptions}
 import com.xmlcalabash.exceptions.{ModelException, ParseException, StepException, XProcException}
 import com.xmlcalabash.model.xml.DeclareStep
 import com.xmlcalabash.runtime.{PrintingConsumer, XProcMetadata}
@@ -31,8 +31,10 @@ object Main extends App {
 
     for (port <- options.inputs.keySet) {
       for (filename <- options.inputs(port)) {
-        val node = config.parse(filename, URIUtils.cwdAsURI)
-        runtime.input(port, node, XProcMetadata.XML)
+        val href = URIUtils.cwdAsURI.resolve(filename)
+        val request = new DocumentRequest(href)
+        val response = config.documentManager.parse(request)
+        runtime.input(port, response.value, new XProcMetadata(response.contentType))
       }
     }
 

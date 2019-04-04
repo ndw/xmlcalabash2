@@ -144,6 +144,12 @@
   <p:option name="parameters" as="map(*)"/>
 </p:declare-step>
 
+<p:declare-step type="cx:markdown">
+  <p:input port="source" content-types="text/*"/>
+  <p:output port="result" content-types="application/xml+html"/>
+  <p:option name="parameters" as="map(*)"/>
+</p:declare-step>
+
 <p:declare-step type="cx:javascript">
   <p:input port="script"/>
   <p:output port="result"/>
