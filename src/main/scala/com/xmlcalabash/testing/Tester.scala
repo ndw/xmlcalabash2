@@ -1,7 +1,7 @@
 package com.xmlcalabash.testing
 
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.exceptions.{TestException, XProcException}
+import com.xmlcalabash.exceptions.{ModelException, TestException, XProcException}
 import com.xmlcalabash.messages.XdmNodeItemMessage
 import com.xmlcalabash.runtime.{BufferingConsumer, ExpressionContext, XMLCalabashRuntime, XProcMetadata}
 import com.xmlcalabash.util.{MediaType, XProcVarValue}
@@ -121,6 +121,22 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
               s"Configuration error: code ($code) is not a QName"
           }
         }
+
+        if (xproc.location.isDefined) {
+          println(s"ERROR ${xproc.location.get} $code $message")
+        } else {
+          println(s"ERROR $code $message")
+        }
+
+        new TestResult(xproc)
+      case xproc: ModelException =>
+        println(s"XProc exception: model exception")
+        if (runtime != null) {
+          runtime.stop()
+        }
+
+        val code = xproc.code
+        val message = "Model Exception"
 
         if (xproc.location.isDefined) {
           println(s"ERROR ${xproc.location.get} $code $message")

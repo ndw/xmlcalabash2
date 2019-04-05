@@ -65,6 +65,10 @@ class TestResult(pass: Boolean) {
   }
 
   override def toString: String = {
-    message
+    if (message == null) {
+      "NULL"
+    } else {
+      message
+    }
   }
 }
