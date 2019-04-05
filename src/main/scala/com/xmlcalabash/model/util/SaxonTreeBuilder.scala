@@ -12,6 +12,7 @@ import net.sf.saxon.event.{NamespaceReducer, Receiver}
 import net.sf.saxon.expr.instruct.Executable
 import net.sf.saxon.om.{FingerprintedQName, NamespaceBinding, NodeName, StandardNames}
 import net.sf.saxon.s9api.{Axis, QName, XdmDestination, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.tree.util.NamespaceIterator
 
 import scala.collection.mutable.ListBuffer
@@ -54,10 +55,10 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
     try {
       exec = new Executable(controller.getConfiguration)
       destination = new XdmDestination()
-      receiver = destination.getReceiver(controller.getConfiguration)
+      val pipe = controller.makePipelineConfiguration()
+      receiver = destination.getReceiver(pipe, new SerializationProperties())
       receiver = new NamespaceReducer(receiver)
 
-      val pipe = controller.makePipelineConfiguration()
       receiver.setPipelineConfiguration(pipe)
 
       if (baseURI.isDefined) {

@@ -232,7 +232,7 @@ object XProcException {
   }
 }
 
-class XProcException(val code: QName, val message: Option[String], val location: Option[Location], val details: List[Any]) extends Exception {
+class XProcException(val code: QName, val message: Option[String], val location: Option[Location], val details: List[Any]) extends RuntimeException {
   private val _underlyingCauses = ListBuffer.empty[Exception]
 
   def this(code: QName) {

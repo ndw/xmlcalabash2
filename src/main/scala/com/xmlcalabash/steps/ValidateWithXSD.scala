@@ -9,6 +9,7 @@ import com.xmlcalabash.util.{CachingErrorListener, MediaType, S9Api}
 import net.sf.saxon.Controller
 import net.sf.saxon.`type`.ValidationException
 import net.sf.saxon.s9api.{QName, SaxonApiException, SchemaManager, XdmDestination, XdmNode}
+import net.sf.saxon.serialize.SerializationProperties
 
 import scala.collection.mutable.ListBuffer
 
@@ -112,8 +113,8 @@ class ValidateWithXSD() extends DefaultXmlStep {
 
     val destination = new XdmDestination
     val controller = new Controller(saxonConfig)
-    val receiver = destination.getReceiver(controller.getConfiguration)
     val pipe = controller.makePipelineConfiguration()
+    val receiver = destination.getReceiver(pipe, new SerializationProperties())
     pipe.setRecoverFromValidationErrors(assert_valid)
     receiver.setPipelineConfiguration(pipe)
 

@@ -503,7 +503,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
 
   class ExprNodeResource(node: XdmNode) extends Resource {
     override def getResourceURI: String = node.getBaseURI.toASCIIString
-    override def getItem(context: XPathContext): Item = node.getUnderlyingNode.head
+    override def getItem(context: XPathContext): Item[_ <: Item[_]] = node.getUnderlyingNode.head
     override def getContentType: String = null
   }
 }

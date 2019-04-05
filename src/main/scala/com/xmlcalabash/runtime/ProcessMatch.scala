@@ -8,6 +8,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import net.sf.saxon.om.NamespaceResolver
 import net.sf.saxon.s9api.{Axis, XdmDestination, XdmNode, XdmNodeKind}
+import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.sxpath.{XPathEvaluator, XPathExpression}
 import net.sf.saxon.trans.XPathException
 
@@ -40,9 +41,9 @@ class ProcessMatch(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes,
     }
 
     destination = new XdmDestination()
-    receiver = destination.getReceiver(config)
-
     val pipe = controller.makePipelineConfiguration()
+    receiver = destination.getReceiver(pipe, new SerializationProperties())
+
     receiver.setPipelineConfiguration(pipe)
     receiver.setSystemId(doc.getBaseURI.toASCIIString)
     receiver.open()

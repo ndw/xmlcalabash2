@@ -69,7 +69,7 @@ class XProcCollectionFinder(config: XMLCalabashConfig, docs: List[XdmNode], chai
   private class DocumentResource(val doc: XdmNode) extends Resource {
     override def getResourceURI: String = doc.getBaseURI.toASCIIString
 
-    override def getItem(context: XPathContext): Item = doc.getUnderlyingValue.head
+    override def getItem(context: XPathContext): Item[_ <: Item[_]] = doc.getUnderlyingValue.head
 
     override def getContentType = null
   }

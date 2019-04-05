@@ -7,8 +7,10 @@ import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, ValueUtils, XProcCollectionFinder}
 import javax.xml.transform.{Result, SourceLocator}
+import net.sf.saxon.Controller
 import net.sf.saxon.lib.OutputURIResolver
 import net.sf.saxon.s9api.{MessageListener, QName, ValidationMode, XdmDestination, XdmNode, XdmValue}
+import net.sf.saxon.serialize.SerializationProperties
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -139,7 +141,9 @@ class Xslt extends DefaultXmlStep {
 
       secondaryResults.put(baseURI.toASCIIString, xdmResult)
 
-      val receiver = xdmResult.getReceiver(config.config.processor.getUnderlyingConfiguration)
+      val controller = new Controller(config.processor.getUnderlyingConfiguration)
+      val pipe = controller.makePipelineConfiguration()
+      val receiver = xdmResult.getReceiver(pipe, new SerializationProperties())
       receiver.setSystemId(baseURI.toASCIIString)
       receiver
     }

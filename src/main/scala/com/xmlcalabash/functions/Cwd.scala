@@ -2,42 +2,18 @@ package com.xmlcalabash.functions
 
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.SaxonExpressionEvaluator
 import net.sf.saxon.expr.XPathContext
-import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
-import net.sf.saxon.om.{Sequence, StructuredQName}
-import net.sf.saxon.value.{AnyURIValue, SequenceType}
+import net.sf.saxon.om.Sequence
+import net.sf.saxon.value.AnyURIValue
 
-class Cwd private extends ExtensionFunctionDefinition {
-  private val funcname = new StructuredQName("exf", XProcConstants.ns_exf, "cwd")
-
-  private var runtime: XMLCalabashConfig = _
-
-  def this(runtime: XMLCalabashConfig) = {
-    this()
-    this.runtime = runtime
-  }
-
-  override def getFunctionQName: StructuredQName = funcname
-
-  override def getArgumentTypes: Array[SequenceType] = Array.empty[SequenceType]
-
-  override def getResultType(suppliedArgumentTypes: Array[SequenceType]): SequenceType = SequenceType.SINGLE_ATOMIC
-
-  override def makeCallExpression(): ExtensionFunctionCall = {
-    new CwdCall(this)
-  }
-
-  class CwdCall(val xdef: ExtensionFunctionDefinition) extends ExtensionFunctionCall {
-    override def call(context: XPathContext, arguments: Array[Sequence]): Sequence = {
-      val exprEval = runtime.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
-      if (exprEval.dynContext == null) {
-        throw XProcException.xiExtFunctionNotAllowed()
-      }
-
-      val cwd = runtime.staticBaseURI.toASCIIString
-      new AnyURIValue(cwd)
+class Cwd(runtime: XMLCalabashConfig) extends FunctionImpl() {
+  def call(context: XPathContext, arguments: Array[Sequence[_]]): Sequence[_] = {
+    val exprEval = runtime.expressionEvaluator
+    if (exprEval.dynContext == null) {
+      throw XProcException.xiExtFunctionNotAllowed()
     }
+
+    val cwd = runtime.staticBaseURI.toASCIIString
+    new AnyURIValue(cwd)
   }
 }

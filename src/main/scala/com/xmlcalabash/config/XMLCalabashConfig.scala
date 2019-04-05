@@ -5,7 +5,7 @@ import java.net.URI
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode}
-import com.xmlcalabash.functions.{Cwd, DocumentProperties, DocumentPropertiesDocument, DocumentProperty, ForceQNameKeys, InjElapsed, InjId, InjName, InjType, SystemProperty}
+import com.xmlcalabash.functions.{CwdShim, DocumentPropertiesDocumentShim, DocumentPropertiesShim, DocumentPropertyShim, ForceQNameKeysShim, InjElapsedShim, InjIdShim, InjNameShim, InjTypeShim, SystemPropertyShim}
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.{DeclareStep, Parser}
 import com.xmlcalabash.parsers.XPathParser
@@ -360,16 +360,16 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
       processor.registerExtensionFunction(f.asInstanceOf[ExtensionFunctionDefinition])
     }
     */
-    processor.registerExtensionFunction(new DocumentProperties(this))
-    processor.registerExtensionFunction(new DocumentProperty(this))
-    processor.registerExtensionFunction(new DocumentPropertiesDocument(this))
-    processor.registerExtensionFunction(new ForceQNameKeys(this))
-    processor.registerExtensionFunction(new SystemProperty(this))
-    processor.registerExtensionFunction(new Cwd(this))
-    processor.registerExtensionFunction(new InjElapsed(this))
-    processor.registerExtensionFunction(new InjName(this))
-    processor.registerExtensionFunction(new InjId(this))
-    processor.registerExtensionFunction(new InjType(this))
+    processor.registerExtensionFunction(new CwdShim(this))
+    processor.registerExtensionFunction(new DocumentPropertiesShim(this))
+    processor.registerExtensionFunction(new DocumentPropertyShim(this))
+    processor.registerExtensionFunction(new DocumentPropertiesDocumentShim(this))
+    processor.registerExtensionFunction(new ForceQNameKeysShim(this))
+    processor.registerExtensionFunction(new InjElapsedShim(this))
+    processor.registerExtensionFunction(new InjIdShim(this))
+    processor.registerExtensionFunction(new InjNameShim(this))
+    processor.registerExtensionFunction(new InjTypeShim(this))
+    processor.registerExtensionFunction(new SystemPropertyShim(this))
   }
   private def checkClosed(): Unit = {
     if (closed) {

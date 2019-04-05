@@ -20,8 +20,8 @@ object DynamicContext {
 class DynamicContext {
   private var _iterationPosition = Option.empty[Long]
   private var _iterationSize = Option.empty[Long]
-  private val _documents = mutable.HashMap.empty[Item,Message]
-  private val _imessages = mutable.HashMap.empty[Message,Item]
+  private val _documents = mutable.HashMap.empty[Item[_ <: Item[_]],Message]
+  private val _imessages = mutable.HashMap.empty[Message,Item[_ <: Item[_]]]
   private val _messages = mutable.HashMap.empty[Message,XdmNode]
   private var _location = Option.empty[Location]
   private var _baseURI = Option.empty[URI]
@@ -33,7 +33,7 @@ class DynamicContext {
   def iterationPosition: Option[Long] = _iterationPosition
   def iterationSize: Option[Long] = _iterationSize
 
-  def message(document: Item): Option[Message] = {
+  def message(document: Item[_ <: Item[_]]): Option[Message] = {
     _documents.get(document)
   }
 
@@ -72,7 +72,7 @@ class DynamicContext {
     _imessages.put(msg, doc.getUnderlyingNode)
   }
 
-  def addItem(item: Item, msg: Message): Unit = {
+  def addItem(item: Item[_ <: Item[_]], msg: Message): Unit = {
     item match {
       case s: StringValue =>
         _documents.put(new FakeStringValue(s), msg)
