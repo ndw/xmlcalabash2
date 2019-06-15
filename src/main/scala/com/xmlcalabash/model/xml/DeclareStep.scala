@@ -1,16 +1,20 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.config.Jafpl
-import com.jafpl.graph.Graph
+import com.jafpl.graph.{Binding, Graph}
+import com.jafpl.runtime.GraphRuntime
 import com.xmlcalabash.config.{OptionSignature, PortSignature, StepSignature}
 import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.{Container, DeclarationContainer, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
-import com.xmlcalabash.runtime.XMLCalabashRuntime
+import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XMLCalabashRuntime, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.steps.internal.ContentTypeParams
-import net.sf.saxon.s9api.{QName, XdmNode}
+import com.xmlcalabash.util.XProcVarValue
+import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class DeclareStep(override val config: XMLCalabashRuntime,
@@ -146,7 +150,7 @@ class DeclareStep(override val config: XMLCalabashRuntime,
 
     val params = new ContentTypeParams(input.port.get, input.contentTypes, input.sequence)
     val checker = new AtomicStep(config, Some(this), XProcConstants.cx_content_type_checker, Some(params))
-    checker.location = input.location.get
+    checker.staticContext.location = input.staticContext.location.get
 
     val idinput = new WithInput(config, checker, "source")
     if (input.select.isDefined) {
@@ -178,9 +182,21 @@ class DeclareStep(override val config: XMLCalabashRuntime,
         case empty: Empty =>
           idinput.addChild(new Empty(config, idinput, empty))
         case _ =>
-          throw XProcException.xiBadPatchChild(source, location)
+          throw XProcException.xiBadPatchChild(source, staticContext.location)
       }
     }
+  }
+
+  override def atomicStep: Boolean = {
+    for (child <- children) {
+      child match {
+        case _: Input => Unit
+        case _: Output => Unit
+        case _: OptionDecl => Unit
+        case _ => return false
+      }
+    }
+    true
   }
 
   override def makeInputBindingsExplicit(): Boolean = {
@@ -291,11 +307,41 @@ class DeclareStep(override val config: XMLCalabashRuntime,
           val optSig = new OptionSignature(option.optionName, option.declaredType, option.required)
           stepSig.addOption(optSig, option.location.get)
         case _ =>
-          println(child)
+          Unit
       }
     }
 
     stepSig
+  }
+
+  protected[xmlcalabash] def evaluateStaticBindings(runtime: GraphRuntime): Unit = {
+    val bindingsMap = mutable.HashMap.empty[String,XdmValueItemMessage]
+
+    for (child <- children) {
+      child match {
+        case variable: Variable =>
+          if (variable.static) {
+            val context = new ExpressionContext(StaticContext.EMPTY) // FIXME: what about namespaces!?
+            val expr = new XProcXPathExpression(context, variable.select.get)
+            val msg = config.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
+            runtime.setStatic(variable._graphNode.get.asInstanceOf[Binding], msg)
+            bindingsMap.put(variable.variableName.getClarkName, msg)
+          }
+        case option: OptionDecl =>
+          if (option.static) {
+            val msg = if (option.externalValue.isDefined) {
+              new XdmValueItemMessage(option.externalValue.get, XProcMetadata.XML)
+            } else {
+              val context = new ExpressionContext(StaticContext.EMPTY) // FIXME: what about namespaces!?
+              val expr = new XProcXPathExpression(context, option.select.get)
+              config.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
+            }
+            runtime.setStatic(option._graphNode.get.asInstanceOf[Binding], msg)
+            bindingsMap.put(option.optionName.getClarkName, msg)
+          }
+        case _ => Unit
+      }
+    }
   }
 
   override def asXML: xml.Elem = {

@@ -44,7 +44,7 @@ class WithInput(override val config: XMLCalabashRuntime,
 
     _select = attributes.get(XProcConstants._select)
     if (_select.isDefined) {
-      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      val context = new ExpressionContext(staticContext)
       _expression = Some(new XProcXPathExpression(context, _select.get))
     }
 

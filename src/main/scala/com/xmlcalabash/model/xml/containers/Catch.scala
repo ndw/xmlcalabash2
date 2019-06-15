@@ -21,7 +21,7 @@ class Catch(override val config: XMLCalabashRuntime,
     val codeList = attributes.get(_code)
     if (codeList.isDefined) {
       for (code <- codeList.get.split("\\s+")) {
-        val qname = ValueParser.parseQName(code, inScopeNS, location)
+        val qname = ValueParser.parseQName(code, staticContext)
         codes += qname
       }
     }
@@ -80,7 +80,9 @@ class Catch(override val config: XMLCalabashRuntime,
     // Is anyone reading the errors?
     if (graphNode.outputs.contains("errors")) {
       val catchNode = graphNode.asInstanceOf[CatchStart]
-      val impl = config.stepImplementation(XProcConstants.cx_exception_translator, location.get)
+      var scontext = new StaticContext(XProcConstants.cx_exception_translator)
+      scontext.location = staticContext.location.get
+      val impl = config.stepImplementation(scontext)
       val proxy = new StepProxy(config, stepType, impl, None, new StaticContext())
       catchNode.translator = proxy
     }

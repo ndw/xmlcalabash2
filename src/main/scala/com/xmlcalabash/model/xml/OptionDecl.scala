@@ -5,7 +5,7 @@ import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
-import net.sf.saxon.s9api.QName
+import net.sf.saxon.s9api.{QName, XdmValue}
 import net.sf.saxon.value.SequenceType
 
 import scala.collection.mutable
@@ -19,7 +19,8 @@ class OptionDecl(override val config: XMLCalabashRuntime,
   private var _as = Option.empty[SequenceType]
   private var _declaredType = Option.empty[String]
   private var _static = false
-  private var _staticValueMessage = Option.empty[XdmValueItemMessage]
+  private var _externalValue = Option.empty[XdmValue]
+  //private var _staticValueMessage = Option.empty[XdmValueItemMessage]
 
   def optionName: QName = _name
   def required: Boolean = _required
@@ -29,6 +30,16 @@ class OptionDecl(override val config: XMLCalabashRuntime,
   def declaredType: String = _declaredType.getOrElse("xs:string")
 
   def static: Boolean = _static
+
+  def externalValue: Option[XdmValue] = _externalValue
+  def externalValue_=(value: XdmValue): Unit = {
+    _externalValue = Some(value)
+  }
+  def externalValue_=(value: Option[XdmValue]): Unit = {
+    _externalValue = value
+  }
+
+  /*
   def staticValueMessage: Option[XdmValueItemMessage] = {
     if (_static && _staticValueMessage.isDefined) {
       _staticValueMessage
@@ -36,6 +47,7 @@ class OptionDecl(override val config: XMLCalabashRuntime,
       None
     }
   }
+  */
 
   override def validate(): Boolean = {
     var valid = super.validate()
@@ -58,9 +70,11 @@ class OptionDecl(override val config: XMLCalabashRuntime,
         throw XProcException.xsNoSelectOnStaticOption(location)
       }
 
-      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      val context = new ExpressionContext(staticContext)
       val varExpr = new XProcXPathExpression(context, _select.get, _as)
       val bindingRefs = lexicalVariables(_select.get)
+
+      /*
       val staticVariableMap = mutable.HashMap.empty[String, XdmValueItemMessage]
       for (vref <- bindingRefs) {
         val msg = staticValue(vref)
@@ -77,6 +91,7 @@ class OptionDecl(override val config: XMLCalabashRuntime,
       } else {
         _staticValueMessage = Some(eval.value(varExpr, List(), staticVariableMap.toMap, None))
       }
+     */
     }
 
     for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._as, XProcConstants.cx_as,
@@ -105,17 +120,23 @@ class OptionDecl(override val config: XMLCalabashRuntime,
       throw new ModelException(ExceptionCode.INTERNAL, "Don't know what to do about opts here", location)
     }
 
-    val context = new ExpressionContext(_baseURI, inScopeNS, _location)
-    val options = new SaxonExpressionOptions(Map("collection" -> false, "optiondecl" -> true))
-    val init = new XProcXPathExpression(context, _select.getOrElse("()"), as)
-    val node = graph.addOption(_name.getClarkName, init, _staticValueMessage)
-    _graphNode = Some(node)
-    config.addNode(node.id, this)
+    if (static) {
+      val node = graph.addStaticOption(_name.getClarkName, None)
+      _graphNode = Some(node)
+      config.addNode(node.id, this)
+    } else {
+      val context = new ExpressionContext(staticContext)
+      val options = new SaxonExpressionOptions(Map("collection" -> false, "optiondecl" -> true))
+      val init = new XProcXPathExpression(context, _select.getOrElse("()"), as)
+      val node = graph.addOption(_name.getClarkName, init, None)
+      _graphNode = Some(node)
+      config.addNode(node.id, this)
+    }
   }
 
   override def makeEdges(graph: Graph, parent: Node): Unit = {
     if (_select.isDefined && !_static) {
-      val context = new ExpressionContext(_baseURI, inScopeNS, _location)
+      val context = new ExpressionContext(staticContext)
       val variableRefs = findVariableRefs(new XProcXPathExpression(context, _select.get))
       for (ref <- variableRefs) {
         val bind = findBinding(ref)

@@ -1,6 +1,7 @@
 package com.xmlcalabash.runtime
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, IOException, InputStream}
+import java.lang
 import java.net.URI
 
 import com.jafpl.graph.Location
@@ -19,9 +20,8 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, params: Option[ImplParams], context: StaticContext) extends Step with XProcDataConsumer {
+class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutable, params: Option[ImplParams], staticContext: StaticContext) extends Step with XProcDataConsumer {
   private val typeUtils = new TypeUtils(config)
-  private var location = Option.empty[Location]
   private var _id: String = _
   private val openStreams = ListBuffer.empty[InputStream]
   private var p_message = Option.empty[String]
@@ -31,7 +31,6 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
   protected val bindingsMap = mutable.HashMap.empty[String, Message]
   protected var dynamicContext = new DynamicContext()
   protected var received = mutable.HashMap.empty[String,Long]
-
   protected var defaultSelect = mutable.HashMap.empty[String, XProcExpression]
 
   def nodeId: String = _id
@@ -39,8 +38,13 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
     if (_id == null) {
       _id = id
     } else {
-      throw XProcException.xiRedefId(id, location)
+      throw XProcException.xiRedefId(id, staticContext.location)
     }
+  }
+
+  def location: Option[Location] = staticContext.location
+  def location_=(location: Location): Unit = {
+    throw new RuntimeException("You can't assign the location")
   }
 
   def setDefaultSelect(port: String, select: XProcExpression): Unit = {
@@ -90,17 +94,13 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
     this.consumer = Some(consumer)
     step.setConsumer(this)
   }
-  override def setLocation(location: Location): Unit = {
-    this.location = Some(location)
-    step.setLocation(location)
-  }
-  override def id: String = _id
+
   override def receiveBinding(bindmsg: BindingMessage): Unit = {
     val qname = if (bindmsg.name.startsWith("{")) {
       val clarkName = "\\{(.*)\\}(.*)".r
       val qname = bindmsg.name match {
         case clarkName(uri,name) => new QName(uri,name)
-        case _ => throw XProcException.xiInvalidClarkName(location, bindmsg.name)
+        case _ => throw XProcException.xiInvalidClarkName(staticContext.location, bindmsg.name)
       }
       qname
     } else {
@@ -118,7 +118,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
 
     val stepsig = step.signature
     if (stepsig.options.contains(qname)) {
-      val optsig  = stepsig.option(qname, location.get)
+      val optsig  = stepsig.option(qname, staticContext.location.get)
       val opttype: Option[QName] = if (optsig.declaredType.isDefined) {
         Some(new QName(XProcConstants.ns_xs, optsig.declaredType.get))
       } else {
@@ -141,7 +141,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
               step.receiveBinding(qname, item.item, item.context)
           }
         case _ =>
-          throw XProcException.xiInvalidMessage(location, bindmsg.message)
+          throw XProcException.xiInvalidMessage(staticContext.location, bindmsg.message)
       }
     }
   }
@@ -151,9 +151,15 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
       case saxon: XMLCalabashRuntime => Unit
       case _ => throw XProcException.xiNotXMLCalabash()
     }
-    if (this.config != config) {
-      throw XProcException.xiDifferentXMLCalabash()
+
+    config match {
+      case xcfg: XMLCalabashRuntime =>
+        if (this.config.config != xcfg.config) {
+          throw XProcException.xiDifferentXMLCalabash()
+        }
+      case _ => Unit
     }
+
     step.initialize(config, params)
   }
 
@@ -177,7 +183,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
 
     for (qname <- step.signature.options) {
       if (!bindings.contains(qname)) {
-        val optsig  = step.signature.option(qname, location.get)
+        val optsig  = step.signature.option(qname, staticContext.location.get)
         val opttype: Option[QName] = if (optsig.declaredType.isDefined) {
           Some(new QName(XProcConstants.ns_xs, optsig.declaredType.get))
         } else {
@@ -191,7 +197,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
     }
 
     try {
-      DynamicContext.withContext(dynamicContext) { step.run(context) }
+      DynamicContext.withContext(dynamicContext) { step.run(staticContext) }
     } finally {
       var thrown = Option.empty[Exception]
       for (stream <- openStreams) {
@@ -255,7 +261,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
         case msg: AnyItemMessage =>
           step.receive(port, msg.shadow, msg.metadata)
         case _ =>
-          throw XProcException.xiInvalidMessage(location, message)
+          throw XProcException.xiInvalidMessage(staticContext.location, message)
       }
     }
   }
@@ -273,7 +279,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepWrapper, 
       item match {
         case node: XdmNode =>
           if (node.getNodeKind == XdmNodeKind.ATTRIBUTE) {
-            throw XProcException.xdInvalidSelection(selectExpr.toString, "an attribute", location)
+            throw XProcException.xdInvalidSelection(selectExpr.toString, "an attribute", staticContext.location)
           }
           if (message.isDefined) {
             dynamicContext.addDocument(node, message.get)

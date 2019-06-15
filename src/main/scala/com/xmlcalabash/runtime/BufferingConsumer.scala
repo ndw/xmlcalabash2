@@ -9,12 +9,10 @@ import com.xmlcalabash.model.util.UniqueId
 import scala.collection.mutable.ListBuffer
 
 class BufferingConsumer extends DataConsumer {
-  private val _id = UniqueId.nextId.toString
   private val _items = ListBuffer.empty[XProcItemMessage]
 
   def messages: List[XProcItemMessage] = _items.toList
 
-  override def id: String = _id
   override def receive(port: String, message: Message): Unit = {
     message match {
       case msg: XProcItemMessage =>

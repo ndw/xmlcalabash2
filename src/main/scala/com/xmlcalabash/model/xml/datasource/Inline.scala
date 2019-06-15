@@ -15,20 +15,19 @@ import scala.collection.mutable.ListBuffer
 class Inline(override val config: XMLCalabashRuntime,
              override val parent: Option[Artifact],
              val isImplicit: Boolean,
+             val excludeUriBindings: Set[String],
              val nodes: List[XdmNode]) extends DataSource(config, parent) {
-  private var _excludeInlinePrefixes = Map.empty[String,String]
   private var _documentProperties = Option.empty[String]
   private var _encoding = Option.empty[String]
   private var _contentType = Option.empty[MediaType]
   protected[xml] val variableRefs = mutable.HashSet.empty[QName]
 
-  def this(config: XMLCalabashRuntime, parent: Option[Artifact], nodes: List[XdmNode]) {
-    this(config, parent, false, nodes)
+  def this(config: XMLCalabashRuntime, parent: Option[Artifact], excludeUriBindings: Set[String], nodes: List[XdmNode]) {
+    this(config, parent, false, excludeUriBindings, nodes)
   }
 
   def this(config: XMLCalabashRuntime, parent: Artifact, inline: Inline) {
-    this(config, Some(parent), inline.isImplicit, inline.nodes)
-    _excludeInlinePrefixes = inline._excludeInlinePrefixes
+    this(config, Some(parent), inline.isImplicit, inline.excludeUriBindings, inline.nodes)
     expandText = inline.expandText
     _documentProperties = inline._documentProperties
     _encoding = inline._encoding
@@ -48,7 +47,6 @@ class Inline(override val config: XMLCalabashRuntime,
   override def validate(): Boolean = {
     var valid = super.validate()
 
-    _excludeInlinePrefixes = lexicalPrefixes(attributes.get(XProcConstants._exclude_inline_prefixes))
     _documentProperties = attributes.get(XProcConstants._document_properties)
     _encoding = attributes.get(XProcConstants._encoding)
     _contentType = MediaType.parse(attributes.get(XProcConstants._content_type))
@@ -90,10 +88,12 @@ class Inline(override val config: XMLCalabashRuntime,
     }
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
 
-    val context = new ExpressionContext(baseURI, inScopeNS, location)
-    val produceInline = new InlineLoader(baseURI, nodes, context, expandText, _excludeInlinePrefixes, _contentType, _documentProperties, _encoding)
+    val context = new ExpressionContext(staticContext)
+    val produceInline = new InlineLoader(baseURI, nodes, context, expandText, excludeUriBindings, _contentType, _documentProperties, _encoding)
 
-    produceInline.location = location
+    if (location.isDefined) {
+      produceInline.location = location.get
+    }
     val inlineProducer = cnode.addAtomic(produceInline)
 
     _graphNode = Some(inlineProducer)

@@ -38,6 +38,12 @@
   <p:option name="exclude-filter" as="xs:string*" cx:as="RegularExpression"/>
 </p:declare-step>
 
+<p:declare-step type="p:delete">
+  <p:input port="source" sequence="true" content-types="*/*"/>
+  <p:output port="result" sequence="true" content-types="*/*"/>
+  <p:option name="match" select="'/*'" as="xs:string" cx:as="XSLTSelectionPattern"/>
+</p:declare-step>
+
 <p:declare-step type="p:error">
   <p:input port="source" sequence="true" content-types="*/*"/>
   <p:output port="result" sequence="true" content-types="*/*"/>
@@ -71,6 +77,13 @@
 <p:declare-step type="p:parameters">
   <p:output port="result" content-types="application/xml"/>
   <p:option name="parameters" as="map(*)"/>
+</p:declare-step>
+
+<p:declare-step type="p:store">
+  <p:input port="source" content-types="*/*"/>
+  <p:output port="result" content-types="application/xml"/>
+  <p:option name="href" required="true" as="xs:anyURI"/>
+  <p:option name="serialization" as="map(*)"/>
 </p:declare-step>
 
 <p:declare-step type="p:validate-with-relax-ng">

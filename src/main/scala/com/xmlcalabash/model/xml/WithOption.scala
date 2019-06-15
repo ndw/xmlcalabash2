@@ -43,7 +43,7 @@ class WithOption(override val config: XMLCalabashRuntime,
     if (selattr.isEmpty) {
       throw new ModelException(ExceptionCode.SELECTATTRREQ, this.toString, location)
     } else {
-      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      val context = new ExpressionContext(staticContext)
       _expression = Some(new XProcXPathExpression(context, selattr.get, as))
     }
 
@@ -76,7 +76,7 @@ class WithOption(override val config: XMLCalabashRuntime,
     grandparent match {
       case start: ContainerStart =>
         val options = new SaxonExpressionOptions(Map("collection" -> _collection))
-        _graphNode = Some(start.addVariable(optionName.getClarkName, expression, None, options))
+        _graphNode = Some(start.addVariable(optionName.getClarkName, expression, options))
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "WithOption grandparent isn't a container???", location)
     }

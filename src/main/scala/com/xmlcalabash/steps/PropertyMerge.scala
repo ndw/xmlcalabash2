@@ -75,7 +75,12 @@ class PropertyMerge extends DefaultXmlStep {
           val vtypestr = Option(pnode.getAttributeValue(XProcConstants.xsi_type))
           val vtype = if (vtypestr.isDefined) {
             val ns = S9Api.inScopeNamespaces(pnode)
-            Some(ValueParser.parseQName(vtypestr.get, ns, location))
+            val scontext = new StaticContext()
+            scontext.inScopeNS = ns
+            if (location.isDefined) {
+              scontext.location = location.get
+            }
+            Some(ValueParser.parseQName(vtypestr.get, scontext))
           } else {
             None
           }
@@ -131,7 +136,12 @@ class PropertyMerge extends DefaultXmlStep {
                 case XProcConstants.xs_anyURI =>
                   prop.put(name, new XdmAtomicValue(strvalue))
                 case XProcConstants.xs_QName =>
-                  prop.put(name, new XdmAtomicValue(ValueParser.parseQName(strvalue, S9Api.inScopeNamespaces(node), location)))
+                  val scontext = new StaticContext()
+                  scontext.inScopeNS = S9Api.inScopeNamespaces(node)
+                  if (location.isDefined) {
+                    scontext.location = location.get
+                  }
+                  prop.put(name, new XdmAtomicValue(ValueParser.parseQName(strvalue,scontext)))
                 case XProcConstants.xs_notation =>
                   prop.put(name, new XdmAtomicValue(strvalue))
                 case XProcConstants.xs_decimal =>

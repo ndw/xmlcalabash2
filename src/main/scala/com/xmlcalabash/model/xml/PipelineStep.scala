@@ -11,8 +11,7 @@ import net.sf.saxon.s9api.QName
 import scala.collection.mutable
 
 class PipelineStep(override val config: XMLCalabashRuntime,
-                   override val parent: Option[Artifact],
-                   val stepType: QName) extends Artifact(config, parent) {
+                   override val parent: Option[Artifact]) extends Artifact(config, parent) {
   protected var _name: Option[String] = None
   // Can be used to create additional variable bindings, e.g., for injectables
   protected[xml] val variableRefs = mutable.HashSet.empty[QName]

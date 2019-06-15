@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepProxy, StepWrapper, XMLCalabashRuntime, XProcExpression, XProcVtExpression, XProcXPathExpression, XmlStep}
+import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepExecutable, StepProxy, StepRunner, StepWrapper, XMLCalabashRuntime, XProcExpression, XProcVtExpression, XProcXPathExpression, XmlStep}
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -12,8 +12,9 @@ import scala.collection.mutable.ListBuffer
 class AtomicStep(override val config: XMLCalabashRuntime,
                  override val parent: Option[Artifact],
                  override val stepType: QName,
-                 params: Option[ImplParams]) extends PipelineStep(config, parent, stepType) {
+                 params: Option[ImplParams]) extends PipelineStep(config, parent) {
   protected[xml] val options = mutable.HashMap.empty[QName, XProcExpression]
+  staticContext.stepType = stepType
 
   def this(config: XMLCalabashRuntime, parent: Option[Artifact], stepType: QName) = {
     this(config, parent, stepType, None)
@@ -21,6 +22,7 @@ class AtomicStep(override val config: XMLCalabashRuntime,
 
   override def validate(): Boolean = {
     var valid = super.validate()
+    val stepType = staticContext.stepType
 
     val sig = if (parent.isDefined) {
       parent.get.stepSignature(stepType).getOrElse(config.signatures.step(stepType))
@@ -34,12 +36,12 @@ class AtomicStep(override val config: XMLCalabashRuntime,
         || (stepType.getNamespaceURI != XProcConstants.ns_p && key == XProcConstants.p_message)) {
         // This is the message pseudo-option
         val avt = ValueParser.parseAvt(attributes(key))
-        val context = new ExpressionContext(_baseURI, inScopeNS, _location)
+        val context = new ExpressionContext(staticContext)
         options.put(key, new XProcVtExpression(context, avt.get, true))
       } else if (key.getNamespaceURI == "") {
         if (sig.options.contains(key)) {
-          val opt = sig.option(key, location.get)
-          val context = new ExpressionContext(baseURI, inScopeNS, location)
+          val opt = sig.option(key, staticContext.location.get)
+          val context = new ExpressionContext(staticContext)
           seenOptions += key
 
           if (opt.declaredType.getOrElse("") == "map(*)") {
@@ -49,19 +51,19 @@ class AtomicStep(override val config: XMLCalabashRuntime,
             if (avt.isDefined) {
               options.put(key, new XProcVtExpression(context, avt.get, true))
             } else {
-              throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), location)
+              throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), staticContext.location)
             }
           }
         } else {
-          throw XProcException.xsUndeclaredOption(stepType, key, location)
+          throw XProcException.xsUndeclaredOption(stepType, key, staticContext.location)
         }
       } else {
         val avt = ValueParser.parseAvt(attributes(key))
         if (avt.isDefined) {
-          val context = new ExpressionContext(_baseURI, inScopeNS, _location)
+          val context = new ExpressionContext(staticContext)
           options.put(key, new XProcVtExpression(context, avt.get, true))
         } else {
-          throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), location)
+          throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), staticContext.location)
         }
       }
     }
@@ -69,30 +71,30 @@ class AtomicStep(override val config: XMLCalabashRuntime,
     val okChildren = List(classOf[WithInput], classOf[WithOption])
     for (child <- relevantChildren) {
       if (!okChildren.contains(child.getClass)) {
-        throw XProcException.xsElementNotAllowed(location, child.nodeName)
+        throw XProcException.xsElementNotAllowed(staticContext.location, child.nodeName)
       }
       valid = valid && child.validate()
 
       child match {
         case wo: WithOption =>
           if (seenOptions.contains(wo.optionName)) {
-            throw XProcException.xsDupWithOptionName(wo.optionName, wo.location)
+            throw XProcException.xsDupWithOptionName(wo.optionName, wo.staticContext.location)
           } else {
             seenOptions += wo.optionName
           }
 
           if (!sig.options.contains(wo.optionName)) {
-            throw XProcException.xsUndeclaredOption(sig.stepType, wo.optionName, wo.location)
+            throw XProcException.xsUndeclaredOption(sig.stepType, wo.optionName, wo.staticContext.location)
           }
         case _ => Unit
       }
     }
 
     for (optName <- sig.options) {
-      val opt = sig.option(optName, location.get)
+      val opt = sig.option(optName, staticContext.location.get)
       if (opt.required) {
         if (!seenOptions.contains(optName)) {
-          throw XProcException.xsMissingRequiredOption(optName, location)
+          throw XProcException.xsMissingRequiredOption(optName, staticContext.location)
         }
       }
 
@@ -102,12 +104,12 @@ class AtomicStep(override val config: XMLCalabashRuntime,
   }
 
   override def makeInputPortsExplicit(): Boolean = {
-    val sig = stepSignature(stepType).get
+    val sig = stepSignature(staticContext.stepType).get
 
     // Work out which input port is primary
     var primaryInput = Option.empty[String]
     for (port <- sig.inputPorts) {
-      val siginput = sig.input(port, location.get)
+      val siginput = sig.input(port, staticContext.location.get)
       if (siginput.primary) {
         primaryInput = Some(siginput.name)
       }
@@ -117,7 +119,7 @@ class AtomicStep(override val config: XMLCalabashRuntime,
     for (input <- inputs) {
       if (input.port.isEmpty) {
         if (primaryInput.isEmpty) {
-          throw new ModelException(ExceptionCode.NOPRIMARYINPUTPORT, List(stepType.toString), location)
+          throw new ModelException(ExceptionCode.NOPRIMARYINPUTPORT, List(staticContext.stepType.toString), staticContext.location)
         } else {
           input.port = primaryInput.get
         }
@@ -129,13 +131,13 @@ class AtomicStep(override val config: XMLCalabashRuntime,
     for (input <- inputs) {
       val port = input.port.get
       if (seenPorts.contains(port)) {
-        throw new ModelException(ExceptionCode.DUPINPUTPORT, List(port), location)
+        throw new ModelException(ExceptionCode.DUPINPUTPORT, List(port), staticContext.location)
       }
       seenPorts += port
     }
 
     for (port <- sig.inputPorts) {
-      val siginput = sig.input(port, location.get)
+      val siginput = sig.input(port, staticContext.location.get)
       if (input(port).isEmpty) {
         val in = new Input(config, this, port, primary=siginput.primary, sequence=siginput.sequence)
         addChild(in)
@@ -148,7 +150,7 @@ class AtomicStep(override val config: XMLCalabashRuntime,
 
     for (port <- inputPorts) {
       if (!sig.inputPorts.contains(port)) {
-        throw new ModelException(ExceptionCode.BADATOMICINPUTPORT, List(stepType.toString, port), location)
+        throw new ModelException(ExceptionCode.BADATOMICINPUTPORT, List(staticContext.stepType.toString, port), staticContext.location)
       }
     }
 
@@ -156,10 +158,10 @@ class AtomicStep(override val config: XMLCalabashRuntime,
   }
 
   override def makeOutputPortsExplicit(): Boolean = {
-    val sig = stepSignature(stepType).get
+    val sig = stepSignature(staticContext.stepType).get
 
     for (port <- sig.outputPorts) {
-      val sigoutput = sig.output(port, location.get)
+      val sigoutput = sig.output(port, staticContext.location.get)
       if (output(port).isEmpty) {
         val out = new Output(config, this, port, primary=sigoutput.primary, sequence=sigoutput.sequence)
         addChild(out)
@@ -172,33 +174,42 @@ class AtomicStep(override val config: XMLCalabashRuntime,
 
     for (port <- outputPorts) {
       if (!sig.outputPorts.contains(port)) {
-        throw new ModelException(ExceptionCode.BADATOMICINPUTPORT, List(stepType.toString, port), location)
+        throw new ModelException(ExceptionCode.BADATOMICINPUTPORT, List(staticContext.stepType.toString, port), staticContext.location)
       }
     }
 
     true
   }
 
-  def stepImplementation(stepType: QName, location: Location): StepWrapper = {
-    stepImplementation(stepType, location, None)
+  def stepImplementation(staticContext: StaticContext): StepExecutable = {
+    stepImplementation(staticContext, None)
   }
 
-  def stepImplementation(stepType: QName, location: Location, implParams: Option[ImplParams]): StepWrapper = {
+  def stepImplementation(staticContext: StaticContext, implParams: Option[ImplParams]): StepExecutable = {
+    val stepType = staticContext.stepType
+    val location = staticContext.location
+
     val sig = stepSignature(stepType)
     if (sig.isEmpty) {
-      config.stepImplementation(stepType, location, implParams)
+      config.stepImplementation(staticContext, implParams)
     } else {
       val implClass = sig.get.implementation
       if (implClass.isEmpty) {
-        throw new ModelException(ExceptionCode.NOIMPL, stepType.toString, location)
-      }
-
-      val klass = Class.forName(implClass.head).newInstance()
-      klass match {
-        case step: XmlStep =>
-          new StepWrapper(step, sig.get)
-        case _ =>
-          throw new ModelException(ExceptionCode.IMPLNOTSTEP, stepType.toString, location)
+        val declStep = parentDeclareStep()
+        if (declStep.isDefined) {
+          val decl = declStep.get.stepDeclaration(stepType)
+          new StepRunner(config, decl.get, sig.get)
+        } else {
+          throw new ModelException(ExceptionCode.NOIMPL, stepType.toString, location)
+        }
+      } else {
+        val klass = Class.forName(implClass.head).newInstance()
+        klass match {
+          case step: XmlStep =>
+            new StepWrapper(step, sig.get)
+          case _ =>
+            throw new ModelException(ExceptionCode.IMPLNOTSTEP, stepType.toString, location)
+        }
       }
     }
   }
@@ -209,14 +220,11 @@ class AtomicStep(override val config: XMLCalabashRuntime,
       addChild(withOpt)
     }
 
-    val context = new StaticContext()
-    context.baseURI = baseURI
-
     var proxy: StepProxy = null
     val node = parent match {
       case start: ContainerStart =>
-        val impl = stepImplementation(stepType, location.get)
-        proxy = new StepProxy(config, stepType, impl, params, context)
+        val impl = stepImplementation(staticContext)
+        proxy = new StepProxy(config, staticContext.stepType, impl, params, staticContext)
 
         for (port <- inputPorts) {
           val in = input(port)
@@ -225,10 +233,9 @@ class AtomicStep(override val config: XMLCalabashRuntime,
           }
         }
 
-        proxy.setLocation(location.get)
         start.addAtomic(proxy, name)
       case _ =>
-        throw new ModelException(ExceptionCode.INTERNAL, "Atomic step parent isn't a container???", location)
+        throw new ModelException(ExceptionCode.INTERNAL, "Atomic step parent isn't a container???", staticContext.location)
     }
     _graphNode = Some(node)
     proxy.nodeId = node.id
@@ -252,7 +259,7 @@ class AtomicStep(override val config: XMLCalabashRuntime,
     for (ref <- variableRefs) {
       val bind = findBinding(ref)
       if (bind.isEmpty) {
-        throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
+        throw new ModelException(ExceptionCode.NOBINDING, ref.toString, staticContext.location)
       }
 
       bind.get match {
@@ -261,7 +268,7 @@ class AtomicStep(override val config: XMLCalabashRuntime,
         case varDecl: Variable =>
           graph.addBindingEdge(varDecl._graphNode.get.asInstanceOf[Binding], graphNode)
         case _ =>
-          throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
+          throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", staticContext.location)
       }
     }
   }
@@ -279,6 +286,8 @@ class AtomicStep(override val config: XMLCalabashRuntime,
       nodes += child.asXML
       nodes += xml.Text("\n")
     }
+
+    val stepType = staticContext.stepType
     new xml.Elem(stepType.getPrefix, stepType.getLocalName,
       dump_attr.getOrElse(xml.Null), namespaceScope, false, nodes:_*)
   }

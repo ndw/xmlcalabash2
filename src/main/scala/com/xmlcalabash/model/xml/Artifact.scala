@@ -10,7 +10,7 @@ import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Catch, Choose, Container, ForEach, Group, Otherwise, Try, Viewport, When, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XMLCalabashRuntime, XProcExpression, XProcVtExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, StaticContext, XMLCalabashRuntime, XProcExpression, XProcVtExpression}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.expr.parser.XPathParser
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
@@ -27,17 +27,15 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
   protected[xml] var id: Long = UniqueId.nextId
   protected[xml] val attributes = mutable.HashMap.empty[QName, String]
   protected[xml] val children: mutable.ListBuffer[Artifact] = mutable.ListBuffer.empty[Artifact]
-  protected[xml] var inScopeNS = Map.empty[String,String]
   protected[xml] val subpiplineClasses = List(classOf[ForEach], classOf[Viewport],
     classOf[Choose], classOf[Group], classOf[Try], classOf[AtomicStep], classOf[Variable],
     classOf[WithProperties], classOf[WithDocument])
   protected[xml] val dataSourceClasses = List(classOf[Empty], classOf[Pipe],
     classOf[Document], classOf[Inline])
+  protected[xml] val staticContext = new StaticContext()
   protected[xml] var _label = Option.empty[String]
   protected[xml] var _graphNode = Option.empty[Node]
   protected[xml] var dump_attr = Option.empty[xml.MetaData]
-  protected[xml] var _location = Option.empty[Location]
-  protected[xml] var _baseURI = Option.empty[URI]
   protected[xml] var _nodeName: QName = XProcConstants.UNKNOWN
   protected[xml] var _xmlId = Option.empty[String]
   protected[xml] val _inputInjectables: ListBuffer[XProcPortInjectable] = ListBuffer.empty[XProcPortInjectable]
@@ -51,15 +49,13 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
   }
 
   def name: String = _label.getOrElse("_" + id)
-
-  def location: Option[Location] = _location
-  protected[xml] def location_=(loc: Location): Unit = {
-    _location = Some(loc)
-  }
-
-  def baseURI: Option[URI] = _baseURI
   def xmlId: Option[String] = _xmlId
   def nodeName: QName = _nodeName
+
+  // Convenience methods
+  def stepType: QName = staticContext.stepType
+  def location: Option[Location] = staticContext.location
+  def baseURI: Option[URI] = staticContext.baseURI
 
   def expandText: Boolean = _expandText
   def expandText_=(expand: Boolean): Unit = {
@@ -83,6 +79,21 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
   protected[xml] def stepInjectables: List[XProcStepInjectable] = _stepInjectables.toList
   protected[xml] def addStepInjectable(injectable: XProcStepInjectable): Unit = {
     _stepInjectables += injectable
+  }
+
+  def atomicStep: Boolean = {
+    throw new RuntimeException("You can't ask if a " + this + " is atomic; it's not a step")
+  }
+
+  def parentDeclareStep(): Option[DeclareStep] = {
+    if (parent.isDefined) {
+      parent.get match {
+        case step: DeclareStep => Some(step)
+        case _ => parent.get.parentDeclareStep()
+      }
+    } else {
+      None
+    }
   }
 
   def stepDeclaration(stepType: QName): Option[DeclareStep] = {
@@ -128,21 +139,21 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
       println("OVERRIDE WITH " + pi)
     }
 
-    _location = Some(new NodeLocation(node))
+    staticContext.location = new NodeLocation(node)
   }
 
   protected[xml] def parse(node: XdmNode): Unit = {
-    _location = Some(new NodeLocation(node))
-    _baseURI = Some(node.getBaseURI)
+    staticContext.location = new NodeLocation(node)
+    staticContext.baseURI = node.getBaseURI
     _nodeName = node.getNodeName
     val ns = S9Api.inScopeNamespaces(node)
 
     // Parse attributes
     val aiter = node.axisIterator(Axis.ATTRIBUTE)
     while (aiter.hasNext) {
-      val attr = aiter.next().asInstanceOf[XdmNode]
+      val attr = aiter.next()
       attr.getNodeName match {
-        case XProcConstants.xml_base => _baseURI = Some(new URI(attr.getStringValue))
+        case XProcConstants.xml_base => staticContext.baseURI = new URI(attr.getStringValue)
         case XProcConstants.xml_id => _xmlId = Some(attr.getStringValue)
         case _ => attributes.put(attr.getNodeName, attr.getStringValue)
       }
@@ -150,17 +161,19 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
 
     var same = parent.isDefined
     if (parent.isDefined) {
-      for (prefix <- parent.get.inScopeNS.keySet) {
-        same = same && (ns.contains(prefix) && (ns(prefix) == parent.get.inScopeNS(prefix)))
+      val inScopeNS = parent.get.staticContext.inScopeNS
+      for (prefix <- inScopeNS.keySet) {
+        same = same && (ns.contains(prefix) && (ns(prefix) == inScopeNS(prefix)))
       }
       for (prefix <- ns.keySet) {
-        same = same && (parent.get.inScopeNS.contains(prefix) && (ns(prefix) == parent.get.inScopeNS(prefix)))
+        same = same && (inScopeNS.contains(prefix) && (ns(prefix) == inScopeNS(prefix)))
       }
     }
-    if (same) {
-      inScopeNS = parent.get.inScopeNS
+
+    staticContext.inScopeNS = if (same) {
+      parent.get.staticContext.inScopeNS
     } else {
-      inScopeNS = ns.toMap
+      ns
     }
   }
 
@@ -204,7 +217,7 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
       found = (children(pos) == node)
     }
     if (!found) {
-      throw XProcException.xiChildNotFound(node.location)
+      throw XProcException.xiChildNotFound(node.staticContext.location)
     }
     children.insert(pos, insert)
 
@@ -218,7 +231,7 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
       found = (children(pos) == node)
     }
     if (!found) {
-      throw XProcException.xiChildNotFound(node.location)
+      throw XProcException.xiChildNotFound(node.staticContext.location)
     }
     children.insert(pos+1, insert)
   }
@@ -230,14 +243,17 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
   }
 
   def lexicalBoolean(value: Option[String]): Option[Boolean] = {
-    ValueParser.parseBoolean(value, location, true)
+    ValueParser.parseBoolean(value, staticContext.location, true)
   }
 
   def lexicalQName(name: Option[String]): Option[QName] = {
-    ValueParser.parseQName(name, inScopeNS, location)
+    ValueParser.parseQName(name, staticContext)
   }
 
   def lexicalPrefixes(value: Option[String]): Map[String,String] = {
+    val inScopeNS = staticContext.inScopeNS
+    val location = staticContext.location
+
     if (value.isDefined) {
       val set = mutable.HashMap.empty[String,String]
       val prefixes = value.get.split("\\s+")
@@ -273,17 +289,18 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
   def lexicalAvt(name: String, value: String): XProcVtExpression = {
     val avt = ValueParser.parseAvt(value)
     if (avt.isDefined) {
-      val context = new ExpressionContext(_baseURI, inScopeNS, _location)
+      val context = new ExpressionContext(staticContext)
       new XProcVtExpression(context, avt.get, true)
     } else {
-      throw new ModelException(ExceptionCode.BADAVT, List(name, value), location)
+      throw new ModelException(ExceptionCode.BADAVT, List(name, value), staticContext.location)
     }
   }
 
   def lexicalVariables(expr: String): Set[QName] = {
-    ValueParser.findVariableRefsInString(config, inScopeNS, expr, location)
+    ValueParser.findVariableRefsInString(config, expr, staticContext)
   }
 
+  /*
   def staticValue(vref: QName): Option[XdmValueItemMessage] = {
     var msg: Option[XdmValueItemMessage] = None
     if (parent.isDefined) {
@@ -314,6 +331,7 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
       None
     }
   }
+  */
 
   def sequenceType(seqType: Option[String]): Option[SequenceType] = {
     if (seqType.isDefined) {
@@ -321,19 +339,23 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
         val parser = new XPathParser
         parser.setLanguage(XPathParser.SEQUENCE_TYPE, 31)
         val ic = new IndependentContext(config.processor.getUnderlyingConfiguration)
-        for ((prefix, uri) <- inScopeNS) {
+        for ((prefix, uri) <- staticContext.inScopeNS) {
           ic.declareNamespace(prefix, uri)
         }
         Some(parser.parseSequenceType(seqType.get, ic))
       } catch {
         case xpe: XPathException =>
-          throw XProcException.xsInvalidSequenceType(seqType.get, xpe.getMessage, location)
+          throw XProcException.xsInvalidSequenceType(seqType.get, xpe.getMessage, staticContext.location)
         case t: Throwable =>
           throw t
       }
     } else {
       None
     }
+  }
+
+  def extensionAttribute(name: QName): Option[String] = {
+    attributes.get(name)
   }
 
   def relevantChildren: List[Artifact] = {
@@ -628,12 +650,12 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
             }
         }
       }
-      throw new ModelException(ExceptionCode.INTERNAL, "Graph navigation error???", location)
+      throw new ModelException(ExceptionCode.INTERNAL, "Graph navigation error???", staticContext.location)
     }
   }
 
   def findVariableRefs(expression: XProcExpression): Set[QName] = {
-    ValueParser.findVariableRefs(config, expression, location)
+    ValueParser.findVariableRefs(config, expression, staticContext.location)
   }
 
   def validate(): Boolean = {
@@ -652,7 +674,7 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
     // The contents of p:inline are never parsed as Artifacts, so we can check this here
     if ((nodeName.getNamespaceURI == XProcConstants.ns_p && attributes.contains(XProcConstants._inline_expand_text))
       || (nodeName.getNamespaceURI != XProcConstants.ns_p && attributes.contains(XProcConstants.p_inline_expand_text))) {
-      throw XProcException.xsInlineExpandTextNotAllowed(location)
+      throw XProcException.xsInlineExpandTextNotAllowed(staticContext.location)
     }
 
     true
@@ -673,7 +695,7 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
             if (drp.isDefined) {
               pipe.step = drp.get.parent.get.name
             } else {
-              throw new ModelException(ExceptionCode.NODRP, List(), location)
+              throw new ModelException(ExceptionCode.NODRP, List(), staticContext.location)
             }
           }
           if (pipe.port.isEmpty) {
@@ -684,17 +706,17 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
                   if (step.get.primaryInput.isDefined) {
                     pipe.port = step.get.primaryInput.get.port.get
                   } else {
-                    throw new ModelException(ExceptionCode.NODRP, List(), location)
+                    throw new ModelException(ExceptionCode.NODRP, List(), staticContext.location)
                   }
                 case _ =>
                   if (step.get.primaryOutput.isDefined) {
                     pipe.port = step.get.primaryOutput.get.port.get
                   } else {
-                    throw new ModelException(ExceptionCode.NODRP, List(), location)
+                    throw new ModelException(ExceptionCode.NODRP, List(), staticContext.location)
                   }
               }
             } else {
-              throw new ModelException(ExceptionCode.NODRP, List(), location)
+              throw new ModelException(ExceptionCode.NODRP, List(), staticContext.location)
             }
           }
 
@@ -787,7 +809,7 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
 
   protected[xml] def namespaceScope: xml.NamespaceBinding = {
     var bindings: xml.NamespaceBinding = xml.TopScope
-    for ((prefix, uri) <- inScopeNS) {
+    for ((prefix, uri) <- staticContext.inScopeNS) {
       bindings = new xml.NamespaceBinding(prefix, uri, bindings)
     }
     bindings

@@ -27,7 +27,7 @@ class Markdown() extends DefaultXmlStep {
 
   override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
     if (variable == XProcConstants._parameters) {
-      parameters = ValueParser.parseParameters(value, context.nsBindings, context.location)
+      parameters = ValueParser.parseParameters(value, context.staticContext)
     }
   }
 

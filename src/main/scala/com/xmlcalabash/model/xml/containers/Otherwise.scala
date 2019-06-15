@@ -27,7 +27,7 @@ class Otherwise(override val config: XMLCalabashRuntime,
   override def makeGraph(graph: Graph, parent: Node) {
     val node = parent match {
       case choose: ChooseStart =>
-        val context = new ExpressionContext(baseURI, inScopeNS, location)
+        val context = new ExpressionContext(staticContext)
         choose.addWhen(new XProcXPathExpression(context, "true()"), name, Manifold.ALLOW_ANY)
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "When parent isn't a choose???", location)

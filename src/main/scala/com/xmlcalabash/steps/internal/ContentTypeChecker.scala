@@ -28,7 +28,7 @@ class ContentTypeChecker() extends XmlStep {
   protected var consumer: Option[XProcDataConsumer] = None
   protected var config: XMLCalabashRuntime = _
   protected val bindings = mutable.HashMap.empty[QName,XProcVarValue]
-  protected var allowedTypes: List[MediaType] = _
+  protected var allowedTypes = List.empty[MediaType]
   protected var portName: String = _
   protected var sequence = false
   protected var documentCount = 0

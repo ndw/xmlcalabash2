@@ -20,7 +20,7 @@ class InlineLoader(private val baseURI: Option[URI],
                    private val nodes: List[XdmNode],
                    private val context: ExpressionContext,
                    private val expandText: Boolean,
-                   private val excludeInlinePrefixes: Map[String,String],
+                   private val excludeUriBindings: Set[String],
                    private val declContentType: Option[MediaType],
                    private val docPropsExpr: Option[String],
                    private val encoding: Option[String]) extends DefaultStep {
@@ -28,7 +28,7 @@ class InlineLoader(private val baseURI: Option[URI],
   private val excludeURIs = mutable.HashSet.empty[String]
 
   excludeURIs += XProcConstants.ns_p
-  for (uri <- excludeInlinePrefixes.values) {
+  for (uri <- excludeUriBindings) {
     excludeURIs += uri
   }
 

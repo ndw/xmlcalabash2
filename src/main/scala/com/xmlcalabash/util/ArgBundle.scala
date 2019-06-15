@@ -5,7 +5,7 @@ import com.xmlcalabash.config.{XMLCalabashConfig, XMLCalabashDebugOptions}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.ValueParser
-import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XProcXPathExpression}
 import net.sf.saxon.lib.NamespaceConstant
 import net.sf.saxon.s9api.{ItemTypeFactory, QName, XdmAtomicValue}
 
@@ -78,8 +78,10 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
           }
           pos += 2
         case paramRegex(kind, name, value) =>
-          val context = new ExpressionContext(None, _nsbindings.toMap, None)
-          val qname = ValueParser.parseQName(name, _nsbindings.toMap, None)
+          val scontext = new StaticContext()
+          scontext.inScopeNS = _nsbindings.toMap
+          val context = new ExpressionContext(scontext)
+          val qname = ValueParser.parseQName(name, scontext)
           if (_params.contains(qname)) {
             throw XProcException.xiArgBundleRedefined(qname)
           }
@@ -116,15 +118,9 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
               case "verbose" => _verbose = true
               case "norun" => _debugOptions.norun = true
               case "debug" => _debugOptions.debug = true
-              case "graph" =>
-                _debugOptions.dumpGraphFilename = args(pos + 1)
-                pos += 1
-              case "graph-before" =>
-                _debugOptions.dumpOpenGraphFilename = args(pos + 1)
-                pos += 1
-              case "dump-xml" =>
-                _debugOptions.dumpXmlFilename = args(pos + 1)
-                pos += 1
+              case "graph" => _debugOptions.dumpGraph = true
+              case "graph-before" => _debugOptions.dumpOpenGraph = true
+              case "dump-xml" => debugOptions.dumpXml = true
               case "inject" =>
                 _injectables += args(pos+1)
                 pos += 1
@@ -183,6 +179,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
                 ch match {
                   case 'v' => _verbose = true
                   case 'D' => _debugOptions.debug = true
+                  case 'G' => _debugOptions.dumpGraph = true
                   case 'i' =>
                     val rest = chars.substring(chpos + 1)
                     val eqpos = rest.indexOf("=")
@@ -231,14 +228,6 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
                       _nsbindings.put(prefix, uri)
                     } else {
                       throw XProcException.xiArgBundleCannotParseNamespace(rest)
-                    }
-                  case 'G' =>
-                    if (chpos + 1 == chars.length) {
-                      _debugOptions.dumpGraphFilename = args(pos + 1)
-                      pos += 1
-                    } else {
-                      _debugOptions.dumpGraphFilename = chars.substring(chpos + 1)
-                      skip = true
                     }
                   case _ =>
                     throw XProcException.xiArgBundleUnexpectedOption(ch.toString)

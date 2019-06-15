@@ -65,6 +65,11 @@ class DeclarationContainer(override val config: XMLCalabashRuntime,
 
     for (art <- _declaredSteps) {
       valid = art.validate() && valid
+      if (! art.atomicStep) {
+        valid = valid && art.makePortsExplicit()
+        valid = valid && art.makePipesExplicit()
+        valid = valid && art.makeBindingsExplicit()
+      }
     }
     for (art <- _declaredFunctions) {
       valid = art.validate() && valid

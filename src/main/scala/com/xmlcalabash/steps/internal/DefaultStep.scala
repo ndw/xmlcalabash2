@@ -12,28 +12,23 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 
 class DefaultStep extends Step {
-  private val _id = UniqueId.nextId.toString
   private var _location = Option.empty[Location]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
   protected var config: Option[XMLCalabashRuntime] = None
   protected val bindings = mutable.HashMap.empty[String,Message]
 
-  def location: Option[Location] = _location
-  protected[xmlcalabash] def location_=(location: Option[Location]): Unit = {
-    _location = location
-  }
-
   // ==========================================================================
 
-  override def setLocation(location: Location): Unit = {
+  override def location: Option[Location] = _location
+  override def location_=(location: Location): Unit = {
     _location = Some(location)
   }
+
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def bindingSpec: BindingSpecification = BindingSpecification.ANY
 
-  override def id: String = _id
   override def receiveBinding(bindmsg: BindingMessage): Unit = {
     bindings.put(bindmsg.name, bindmsg.message)
   }

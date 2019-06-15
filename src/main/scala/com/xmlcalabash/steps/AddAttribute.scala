@@ -79,7 +79,7 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
       throw new IllegalArgumentException("Bad attribute name")
     }
 
-    matcher = new ProcessMatch(config, this, location)
+    matcher = new ProcessMatch(config, this, context)
     matcher.process(source, pattern)
 
     consumer.get.receive("result", matcher.result, metadata)

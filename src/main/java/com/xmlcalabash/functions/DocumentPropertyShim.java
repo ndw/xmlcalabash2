@@ -31,7 +31,7 @@ public class DocumentPropertyShim extends ExtensionFunctionDefinition {
 
     @Override
     public SequenceType[] getArgumentTypes() {
-        return new SequenceType[]{SequenceType.SINGLE_ITEM};
+        return new SequenceType[]{SequenceType.SINGLE_ITEM, SequenceType.SINGLE_ITEM};
     }
 
     @Override
@@ -59,7 +59,7 @@ public class DocumentPropertyShim extends ExtensionFunctionDefinition {
 
         @Override
         public Sequence<?> call(XPathContext context, Sequence[] arguments) {
-            DocumentProperties impl = new DocumentProperties(runtime);
+            DocumentProperty impl = new DocumentProperty(runtime);
             return impl.call(staticContext, context, arguments);
         }
     }

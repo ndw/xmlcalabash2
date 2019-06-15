@@ -44,7 +44,7 @@ class FileLoader(private val context: ExpressionContext,
         _href = valueitem.get.getStringValue
       case "parameters" =>
         bindings.put(XProcConstants._parameters.getClarkName, bindmsg.message)
-        _params = Some(ValueParser.parseParameters(valueitem.get, context.nsBindings, context.location))
+        _params = Some(ValueParser.parseParameters(valueitem.get, context.staticContext))
       case _ =>
         logger.info("Ignoring unexpected option to p:document: " + variable)
     }

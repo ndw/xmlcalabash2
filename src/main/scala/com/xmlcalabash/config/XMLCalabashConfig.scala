@@ -138,6 +138,12 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
     runtime
   }
 
+  def runtime(decl: DeclareStep, debug: XMLCalabashDebugOptions): XMLCalabashRuntime = {
+    val runtime = new XMLCalabashRuntime(this, debug)
+    runtime.init(decl)
+    runtime
+  }
+
   def errorListener: ErrorListener = {
     if (_errorListener == null) {
       throw new ConfigurationException(ExceptionCode.CFGINCOMPLETE, "errorListener")

@@ -15,11 +15,15 @@ import com.xmlcalabash.model.xml.{Artifact, DeclareStep}
 import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import javax.xml.transform.URIResolver
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
-import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmValue}
+import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmNode, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.EntityResolver
 
 import scala.collection.mutable
+
+object XMLCalabashRuntime {
+  var loggedProductDetails = false
+}
 
 class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
                                                  private val debug: XMLCalabashDebugOptions) extends RuntimeConfiguration {
@@ -34,12 +38,12 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   private var _unparsedTextURIResolver = config.unparsedTextURIResolver
   private var _watchdogTimeout = config.watchdogTimeout
   private var _episode = config.computeEpisode
-  private val _staticOptionBindings = mutable.HashMap.empty[QName, XdmValue]
+  //private val _staticOptionBindings = mutable.HashMap.empty[QName, XdmValue]
   private var _defaultSerializationOptions: Map[String,Map[QName,String]] = Map.empty[String,Map[QName,String]]
   private var _trim_inline_whitespace = config.trimInlineWhitespace
   private val inputSet = mutable.HashSet.empty[String]
   private val outputSet = mutable.HashSet.empty[String]
-  private val bindingsMap = mutable.HashMap.empty[String,Message]
+  private val bindingsMap = mutable.HashMap.empty[String,XdmValue]
   private val idMap = mutable.HashMap.empty[String,Artifact]
   private var ran = false
   private var _signatures: Signatures = _
@@ -47,20 +51,41 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   private var graph: Graph = _
   private var runtime: GraphRuntime = _
 
-  logger.info(s"${config.productName} version ${config.productVersion} with Saxon ${config.saxonVersion}")
-  logger.debug(s"Copyright © 2018, 2019 ${config.vendor}; ${config.vendorURI}")
-  logger.debug(s"(release id: ${config.productHash}; episode: ${config.episode}; JAFPL version ${config.jafplVersion})")
+  if (!XMLCalabashRuntime.loggedProductDetails) {
+    logger.info(s"${config.productName} version ${config.productVersion} with Saxon ${config.saxonVersion}")
+    logger.debug(s"Copyright © 2018, 2019 ${config.vendor}; ${config.vendorURI}")
+    logger.debug(s"(release id: ${config.productHash}; episode: ${config.episode}; JAFPL version ${config.jafplVersion})")
+    XMLCalabashRuntime.loggedProductDetails = true
+  }
 
   protected[xmlcalabash] def init(decl: DeclareStep): Unit = {
     this.decl = decl
 
     debug.dumpXml(decl)
     graph = decl.pipelineGraph()
-    debug.dumpOpenGraph(graph)
+    debug.dumpOpenGraph(graph, decl)
     graph.close()
-    debug.dumpGraph(graph)
+    debug.dumpGraph(graph, decl)
     runtime = new GraphRuntime(graph, this)
     runtime.traceEventManager = _traceEventManager
+  }
+
+  def runtime(decl: DeclareStep): XMLCalabashRuntime = {
+    val runtime = config.runtime(decl, debug)
+    runtime._traceEventManager = _traceEventManager
+    runtime._errorListener = _errorListener
+    runtime._documentManager = _documentManager
+    runtime._entityResolver = _entityResolver
+    runtime._uriResolver = _uriResolver
+    runtime._moduleURIResolver = _moduleURIResolver
+    runtime._unparsedTextURIResolver = _unparsedTextURIResolver
+    runtime._watchdogTimeout = _watchdogTimeout
+    //runtime._staticOptionBindings.clear()
+    //runtime._staticOptionBindings ++= _staticOptionBindings
+    runtime._defaultSerializationOptions = _defaultSerializationOptions
+    runtime._trim_inline_whitespace = _trim_inline_whitespace
+    runtime._signatures = _signatures
+    runtime
   }
 
   // ===================================================================================
@@ -109,9 +134,9 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   def option(name: QName, value: XProcVarValue): Unit = {
     if (decl.bindings.contains(name)) {
       config.trace(s"Binding option $name to '$value'", "ExternalBindings")
-      val msg = new XdmValueItemMessage(value.value, XProcMetadata.XML, value.context)
-      runtime.setOption(name.getClarkName, value)
-      bindingsMap.put(name.getClarkName, msg)
+      //val msg = new XdmValueItemMessage(value.value, XProcMetadata.XML, value.context)
+      //runtime.setOption(name.getClarkName, value)
+      bindingsMap.put(name.getClarkName, value.value)
     }
   }
 
@@ -130,34 +155,40 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
 
     for (bind <- decl.bindings) {
       val jcbind = bind.getClarkName
+      val bdecl = decl.bindingDeclaration(bind).get
+      if (bindingsMap.contains(jcbind)) {
+        bdecl.externalValue = bindingsMap(jcbind)
+      } else {
+        bdecl.externalValue = None
+      }
+      /*
       if (!bindingsMap.contains(jcbind)) {
         config.trace(s"No binding provided for option $bind; using default", "ExternalBindings")
-        val bdecl = decl.bindingDeclaration(bind)
-        if (bdecl.isDefined) {
-          if (bdecl.get.select.isDefined) {
-            val context = new ExpressionContext(None, Map.empty[String,String], None) // FIXME: what about namespaces!?
-            val expr = new XProcXPathExpression(context, bdecl.get.select.get)
+        val bdecl = decl.bindingDeclaration(bind).get
+        if (bdecl.select.isDefined) {
+          val context = new ExpressionContext(StaticContext.EMPTY) // FIXME: what about namespaces!?
+          val expr = new XProcXPathExpression(context, bdecl.select.get)
+          val msg = config.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
+          val eval = msg.asInstanceOf[XdmValueItemMessage].item
+          runtime.setOption(jcbind, new XProcVarValue(eval, context))
+          bindingsMap.put(jcbind, msg)
+        } else {
+          if (bdecl.required) {
+            throw XProcException.xsMissingRequiredOption(bind, decl.location)
+          } else {
+            val context = new ExpressionContext(StaticContext.EMPTY) // FIXME: what about namespaces!?
+            val expr = new XProcXPathExpression(context, "()")
             val msg = config.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
             val eval = msg.asInstanceOf[XdmValueItemMessage].item
             runtime.setOption(jcbind, new XProcVarValue(eval, context))
             bindingsMap.put(jcbind, msg)
-          } else {
-            if (bdecl.get.required) {
-              throw XProcException.xsMissingRequiredOption(bind, decl.location)
-            } else {
-              val context = new ExpressionContext(None, Map.empty[String,String], None) // FIXME: what about namespaces!?
-              val expr = new XProcXPathExpression(context, "()")
-              val msg = config.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
-              val eval = msg.asInstanceOf[XdmValueItemMessage].item
-              runtime.setOption(jcbind, new XProcVarValue(eval, context))
-              bindingsMap.put(jcbind, msg)
-            }
           }
-        } else {
-          println("No decl for " + bind + " ???")
         }
       }
+      */
     }
+
+    decl.evaluateStaticBindings(runtime)
 
     try {
       runtime.run()
@@ -167,7 +198,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   }
 
   def reset(): Unit = {
-    _staticOptionBindings.clear()
+    //_staticOptionBindings.clear()
     inputSet.clear()
     outputSet.clear()
     bindingsMap.clear()
@@ -228,10 +259,12 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   }
   override def traceEnabled(trace: String): Boolean = _traceEventManager.traceEnabled(trace)
 
+  /*
   def staticOptionValue(option: QName): Option[XdmValue] = _staticOptionBindings.get(option)
   def setStaticOptionValue(option: QName, value: XdmValue): Unit = {
     _staticOptionBindings.put(option, value)
   }
+  */
 
   override def expressionEvaluator: SaxonExpressionEvaluator = config.expressionEvaluator
   def expressionParser: ExpressionParser = config.expressionParser
@@ -275,11 +308,14 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
 
   // ==============================================================================================
 
-  def stepImplementation(stepType: QName, location: Location): StepWrapper = {
-    stepImplementation(stepType, location, None)
+  def stepImplementation(staticContext: StaticContext): StepWrapper = {
+    stepImplementation(staticContext, None)
   }
 
-  def stepImplementation(stepType: QName, location: Location, implParams: Option[ImplParams]): StepWrapper = {
+  def stepImplementation(staticContext: StaticContext, implParams: Option[ImplParams]): StepWrapper = {
+    val stepType = staticContext.stepType
+    val location = staticContext.location
+
     if (!_signatures.stepTypes.contains(stepType)) {
       throw new ModelException(ExceptionCode.NOTYPE, stepType.toString, location)
     }

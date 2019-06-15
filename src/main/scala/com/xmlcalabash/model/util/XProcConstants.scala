@@ -205,4 +205,5 @@ object XProcConstants {
   val p_expand_text = new QName("p", ns_p, "expand-text")
   val p_inline_expand_text = new QName("p", ns_p, "inline-expand-text")
   val p_message = new QName("p", ns_p, "message")
+  val p_exclude_inline_prefixes = new QName( "p", ns_p,"exclude-inline-prefixes")
 }

@@ -54,10 +54,10 @@ class Xslt extends DefaultXmlStep {
 
   override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
     variable match {
-      case `_initial_mode` => initialMode = Some(ValueParser.parseQName(ValueUtils.singletonStringValue(value, context.location), context.nsBindings, location))
-      case `_template_name` => templateName = Some(ValueParser.parseQName(ValueUtils.singletonStringValue(value, context.location), context.nsBindings, location))
+      case `_initial_mode` => initialMode = Some(ValueParser.parseQName(ValueUtils.singletonStringValue(value, context.location), context.staticContext))
+      case `_template_name` => templateName = Some(ValueParser.parseQName(ValueUtils.singletonStringValue(value, context.location), context.staticContext))
       case `_output_base_uri` => outputBaseURI = Some(ValueUtils.singletonStringValue(value, context.location))
-      case `_parameters` => parameters = ValueParser.parseParameters(value, context.nsBindings, context.location)
+      case `_parameters` => parameters = ValueParser.parseParameters(value, context.staticContext)
       case `_version` => version = Some(ValueUtils.singletonStringValue(value, context.location))
       case _ =>
         logger.info("Ignoring unexpected option to p:xslt: " + variable)

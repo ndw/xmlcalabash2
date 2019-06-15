@@ -6,7 +6,7 @@ import com.jafpl.steps.BindingSpecification
 import com.xmlcalabash.config.StepSignature
 import net.sf.saxon.s9api.{QName, XdmValue}
 
-class StepWrapper(private val step: XmlStep, val signature: StepSignature) extends XmlStep {
+class StepWrapper(private val step: XmlStep, val signature: StepSignature) extends StepExecutable {
   override def inputSpec: XmlPortSpecification = step.inputSpec
   override def outputSpec: XmlPortSpecification = step.outputSpec
   override def bindingSpec: BindingSpecification = step.bindingSpec

@@ -21,8 +21,6 @@ class PrintingConsumer private(config: XMLCalabashRuntime, serialOpts: Map[QName
     this(config, serialization, Some(outputs))
   }
 
-  override def id: String = _id
-
   override def receive(port: String, message: Message): Unit = {
     message match {
       case msg: XProcItemMessage =>

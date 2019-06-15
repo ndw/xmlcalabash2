@@ -19,7 +19,7 @@ class Variable(override val config: XMLCalabashRuntime,
   private var _expression = Option.empty[XProcExpression]
   private var _as = Option.empty[SequenceType]
   private var _static = false
-  private var _staticValueMessage = Option.empty[XdmValueItemMessage]
+  //private var _staticValueMessage = Option.empty[XdmValueItemMessage]
 
   def variableName: QName = _name
   def select: Option[String] = _select
@@ -27,6 +27,8 @@ class Variable(override val config: XMLCalabashRuntime,
   def as: Option[SequenceType] = _as
 
   def static: Boolean = _static
+
+  /*
   def staticValueMessage: Option[XdmValueItemMessage] = {
     if (_static && _staticValueMessage.isDefined) {
       _staticValueMessage
@@ -34,6 +36,7 @@ class Variable(override val config: XMLCalabashRuntime,
       None
     }
   }
+  */
 
   override def validate(): Boolean = {
     var valid = super.validate()
@@ -56,8 +59,9 @@ class Variable(override val config: XMLCalabashRuntime,
 
     _as = sequenceType(attributes.get(XProcConstants._as))
 
+    /*
     if (_static) {
-      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      val context = new ExpressionContext(staticContext)
       val varExpr = new XProcXPathExpression(context, _select.get, _as)
       val bindingRefs = lexicalVariables(_select.get)
       val staticVariableMap = mutable.HashMap.empty[String, XdmValueItemMessage]
@@ -72,6 +76,7 @@ class Variable(override val config: XMLCalabashRuntime,
       val eval = config.expressionEvaluator
       _staticValueMessage = Some(eval.value(varExpr, List(), staticVariableMap.toMap, None))
     }
+    */
 
     for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._as,
       XProcConstants._select, XProcConstants._pipe, XProcConstants._href, XProcConstants._collection,
@@ -134,46 +139,55 @@ class Variable(override val config: XMLCalabashRuntime,
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
-    val context = new ExpressionContext(_baseURI, inScopeNS, _location)
     val options = new SaxonExpressionOptions(Map("collection" -> _collection))
-    _expression = Some(new XProcXPathExpression(context, _select.get, as))
-    val node = cnode.addVariable(_name.getClarkName, expression, _staticValueMessage, options)
-    _graphNode = Some(node)
-    config.addNode(node.id, this)
 
-    for (child <- children) {
-      child.makeGraph(graph, parent)
+    if (static) {
+      val node = cnode.addStaticVariable(_name.getClarkName, options)
+      _graphNode = Some(node)
+      config.addNode(node.id, this)
+    } else {
+      val context = new ExpressionContext(staticContext)
+      _expression = Some(new XProcXPathExpression(context, _select.get, as))
+      val node = cnode.addVariable(_name.getClarkName, expression, options)
+      _graphNode = Some(node)
+      config.addNode(node.id, this)
+
+      for (child <- children) {
+        child.makeGraph(graph, parent)
+      }
     }
   }
 
   override def makeEdges(graph: Graph, parent: Node): Unit = {
-    var explicitBinding = false
-    for (child <- children) {
-      child match {
-        case doc: Documentation => Unit
-        case pipe: PipeInfo => Unit
-        case _ =>
-          child.makeEdges(graph, parent)
-          explicitBinding = true
+    if (!static) {
+      var explicitBinding = false
+      for (child <- children) {
+        child match {
+          case doc: Documentation => Unit
+          case pipe: PipeInfo => Unit
+          case _ =>
+            child.makeEdges(graph, parent)
+            explicitBinding = true
+        }
       }
-    }
 
-    if (!explicitBinding) {
-      val drp = defaultReadablePort
-      if (drp.isDefined) {
-        val src = drp.get.parent.get
-        graph.addEdge(src._graphNode.get, drp.get.port.get, _graphNode.get, "source")
+      if (!explicitBinding) {
+        val drp = defaultReadablePort
+        if (drp.isDefined) {
+          val src = drp.get.parent.get
+          graph.addEdge(src._graphNode.get, drp.get.port.get, _graphNode.get, "source")
+        }
       }
-    }
 
-    val variableRefs = findVariableRefs(expression)
-    for (ref <- variableRefs) {
-      this.parent.get.asInstanceOf[PipelineStep].addVariableRef(ref)
-      val bind = findBinding(ref)
-      if (bind.isEmpty) {
-        throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
+      val variableRefs = findVariableRefs(expression)
+      for (ref <- variableRefs) {
+        this.parent.get.asInstanceOf[PipelineStep].addVariableRef(ref)
+        val bind = findBinding(ref)
+        if (bind.isEmpty) {
+          throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
+        }
+        graph.addBindingEdge(bind.get._graphNode.get.asInstanceOf[Binding], _graphNode.get)
       }
-      graph.addBindingEdge(bind.get._graphNode.get.asInstanceOf[Binding], _graphNode.get)
     }
   }
 }

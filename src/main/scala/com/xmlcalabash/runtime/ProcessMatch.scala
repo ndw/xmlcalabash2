@@ -16,7 +16,7 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.ListBuffer
 
-class ProcessMatch(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes, location: Option[Location]) extends SaxonTreeBuilder(runtime) {
+class ProcessMatch(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes, staticContext: StaticContext) extends SaxonTreeBuilder(runtime) {
   private val SAW_ELEMENT = 1
   private val SAW_WHITESPACE = 2
   private val SAW_TEXT = 4
@@ -29,14 +29,14 @@ class ProcessMatch(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes,
 
   def process(doc: XdmNode, pattern: String): Unit = {
     val xeval = new XPathEvaluator(config)
-    val resolver = new MatchingNamespaceResolver(nsBindings(doc))
+    val resolver = new MatchingNamespaceResolver(staticContext.inScopeNS)
 
     xeval.getStaticContext.setNamespaceResolver(resolver)
 
     try {
       matcher = xeval.createPattern(pattern)
     } catch {
-      case ex: XPathException =>  throw XProcException.xdBadValue(pattern, XProcConstants.pxs_XSLTMatchPattern.getLocalName, ex.getMessage, location)
+      case ex: XPathException =>  throw XProcException.xdBadValue(pattern, XProcConstants.pxs_XSLTMatchPattern.getLocalName, ex.getMessage, staticContext.location)
       case t: Exception => throw t
     }
 
@@ -263,9 +263,7 @@ class ProcessMatch(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes,
     bindings.toMap
   }
 
-  private class MatchingNamespaceResolver(bindings: Map[String, String]) extends NamespaceResolver {
-    private val ns = HashMap.empty[String,String]
-
+  private class MatchingNamespaceResolver(ns: Map[String, String]) extends NamespaceResolver {
     override def getURIForPrefix(prefix: String, useDefault: Boolean): String = {
       if ("" == prefix && !useDefault) {
         return ""

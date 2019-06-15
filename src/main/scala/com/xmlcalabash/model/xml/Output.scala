@@ -45,10 +45,11 @@ class Output(override val config: XMLCalabashRuntime,
     val ser = attributes.get(XProcConstants._serialization)
     if (ser.isDefined) {
       val opts = mutable.HashMap.empty[QName, String]
-      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      val context = new ExpressionContext(staticContext)
       val serAvt = new XProcXPathExpression(context, ser.get)
       val bindingRefs = lexicalVariables(ser.get)
       val staticVariableMap = mutable.HashMap.empty[String, XdmValueItemMessage]
+      /*
       for (vref <- bindingRefs) {
         val msg = staticValue(vref)
         if (msg.isDefined) {
@@ -57,6 +58,7 @@ class Output(override val config: XMLCalabashRuntime,
           throw new ModelException(ExceptionCode.NOBINDING, vref.toString, location)
         }
       }
+     */
       val eval = config.expressionEvaluator
       val message = eval.singletonValue(serAvt, List(), staticVariableMap.toMap, None)
       message match {

@@ -2,9 +2,11 @@ package com.xmlcalabash.runtime
 
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.ValueParser
+import com.xmlcalabash.parsers.XPathParser
+import net.sf.saxon.expr.parser.ExpressionTool
+import net.sf.saxon.stax.XMLStreamWriterDestination
 
-class XProcVtExpression private(override val context: ExpressionContext)
-  extends XProcExpression(context) {
+class XProcVtExpression private(override val context: ExpressionContext) extends XProcExpression(context) {
   private var _avt: List[String] = _
   private var _string = false
 
@@ -48,5 +50,18 @@ class XProcVtExpression private(override val context: ExpressionContext)
       isavt = !isavt
     }
     str
+  }
+
+  def checkContext(config: XMLCalabashRuntime): Unit = {
+    var isexpr = false
+    for (xpathexpr <- avt) {
+      if (isexpr) {
+        val compiler = config.processor.newXPathCompiler()
+        val expr = compiler.compile(xpathexpr).getUnderlyingExpression.getInternalExpression
+        val focus = ExpressionTool.dependsOnFocus(expr)
+        print(focus,":",xpathexpr)
+      }
+      isexpr = !isexpr
+    }
   }
 }

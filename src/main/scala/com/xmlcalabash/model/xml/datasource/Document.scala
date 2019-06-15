@@ -30,7 +30,14 @@ class Document(override val config: XMLCalabashRuntime,
     _params = doc._params
     _docProps = doc._docProps
     _contentType = doc._contentType
-    _baseURI = doc._baseURI
+
+    if (doc.staticContext.baseURI.isDefined) {
+      staticContext.baseURI = doc.staticContext.baseURI.get
+    }
+    if (doc.staticContext.location.isDefined) {
+      staticContext.location = doc.staticContext.location.get
+    }
+
     hrefAvt = doc.hrefAvt
     paramsExpr = doc.paramsExpr
     bindingRefs.clear()
@@ -92,7 +99,7 @@ class Document(override val config: XMLCalabashRuntime,
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get.parent.get.parent.get
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
-    val context = new ExpressionContext(baseURI, inScopeNS, location)
+    val context = new ExpressionContext(staticContext)
     val step = new FileLoader(context, _contentType, _docProps)
     val docReader = cnode.addAtomic(step, "document")
 

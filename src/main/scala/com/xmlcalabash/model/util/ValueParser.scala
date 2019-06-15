@@ -2,7 +2,7 @@ package com.xmlcalabash.model.util
 
 import com.jafpl.graph.Location
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
-import com.xmlcalabash.runtime.{XMLCalabashRuntime, XProcExpression, XProcVtExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime, XProcExpression, XProcVtExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.{Axis, QName, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
@@ -73,13 +73,13 @@ object ValueParser {
     }
   }
 
-  def findVariableRefsInString(config: XMLCalabashRuntime, inScopeNS: Map[String,String], text: String, location: Option[Location]): Set[QName] = {
+  def findVariableRefsInString(config: XMLCalabashRuntime, text: String, staticContext: StaticContext): Set[QName] = {
     val names = mutable.HashSet.empty[QName]
 
     val parser = config.expressionParser
     parser.parse(text)
     for (ref <- parser.variableRefs) {
-      val qname = parseQName(ref, inScopeNS, location)
+      val qname = parseQName(ref, staticContext)
       names += qname
     }
 
@@ -110,11 +110,11 @@ object ValueParser {
     }
   }
 
-  def parseQName(name: String, inScopeNS: Map[String,String], location: Option[Location]): QName = {
-    parseQName(Some(name), inScopeNS, location).get
+  def parseQName(name: String, staticContext: StaticContext): QName = {
+    parseQName(Some(name), staticContext).get
   }
 
-  def parseQName(name: Option[String], inScopeNS: Map[String,String], location: Option[Location]): Option[QName] = {
+  def parseQName(name: Option[String], staticContext: StaticContext): Option[QName] = {
     if (name.isDefined) {
       val eqname = "^Q\\{(.*)\\}(\\S+)$".r
       name.get match {
@@ -124,10 +124,10 @@ object ValueParser {
             val pos = name.get.indexOf(':')
             val prefix = name.get.substring(0, pos)
             val local = name.get.substring(pos+1)
-            if (inScopeNS.contains(prefix)) {
-              Some(new QName(prefix, inScopeNS(prefix), local))
+            if (staticContext.inScopeNS.contains(prefix)) {
+              Some(new QName(prefix, staticContext.inScopeNS(prefix), local))
             } else {
-              throw XProcException.dynamicError(15, name.get, location)
+              throw XProcException.dynamicError(15, name.get, staticContext.location)
             }
           } else {
             Some(new QName("", name.get))
@@ -159,7 +159,7 @@ object ValueParser {
   }
 
 
-  def parseParameters(value: XdmValue, nsBindings: Map[String,String], location: Option[Location]): Map[QName, XdmValue] = {
+  def parseParameters(value: XdmValue, staticContext: StaticContext): Map[QName, XdmValue] = {
     val params = mutable.HashMap.empty[QName, XdmValue]
 
     value match {
@@ -170,11 +170,11 @@ object ValueParser {
           val key = iter.next()
           val value = map.get(key)
 
-          val qname = ValueParser.parseQName(key.getStringValue, nsBindings, location)
+          val qname = ValueParser.parseQName(key.getStringValue, staticContext)
           params.put(qname, value)
         }
       case _ =>
-        throw XProcException.xiParamsNotMap(location, value)
+        throw XProcException.xiParamsNotMap(staticContext.location, value)
     }
 
     params.toMap

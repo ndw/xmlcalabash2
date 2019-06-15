@@ -8,7 +8,7 @@ class RunFailingTestsSpec extends XProcTestSpec {
   if (Option(System.getenv("TRAVIS")).isDefined) {
     println("Failing tests are not run on Travis")
   } else {
-    val root = new File("src/test/resources/test-suite/failing-x")
+    val root = new File("src/test/resources/test-suite/failing")
     if (root.exists) {
       runtests("Run the XProc test suite", root.getAbsolutePath)
     } else {

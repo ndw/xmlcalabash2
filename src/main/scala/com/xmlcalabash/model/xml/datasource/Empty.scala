@@ -19,7 +19,7 @@ class Empty(override val config: XMLCalabashRuntime,
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get.parent.get.parent.get
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
-    val context = new ExpressionContext(baseURI, inScopeNS, location)
+    val context = new ExpressionContext(staticContext)
     val step = new EmptyLoader()
     val emptyReader = cnode.addAtomic(step, "empty")
 

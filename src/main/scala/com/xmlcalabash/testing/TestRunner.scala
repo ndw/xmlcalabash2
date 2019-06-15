@@ -10,7 +10,7 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.TestException
 import com.xmlcalabash.messages.XdmNodeItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, StaticContext, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.{MediaType, S9Api, URIUtils}
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind, XdmValue}
@@ -651,7 +651,10 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
               ns.put("xqterr", "http://www.w3.org/2005/xqt-errors")
               ns ++= S9Api.inScopeNamespaces(node)
 
-              val qcode = ValueParser.parseQName(ecode, ns.toMap, Some(new NodeLocation(node)))
+              val scontext = new StaticContext()
+              scontext.inScopeNS = ns.toMap
+              scontext.location = new NodeLocation(node)
+              val qcode = ValueParser.parseQName(ecode, scontext)
               if (result.errQName.isDefined) {
                 passed = passed || qcode == result.errQName.get
               }
@@ -699,7 +702,11 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
 
     val src = node.getAttributeValue(_src)
     if ((src == null) && children.isEmpty) {
-      val exprContext = new ExpressionContext(node.getBaseURI, S9Api.inScopeNamespaces(node), new NodeLocation(node))
+      val scontext = new StaticContext()
+      scontext.baseURI = node.getBaseURI
+      scontext.inScopeNS = S9Api.inScopeNamespaces(node)
+      scontext.location = new NodeLocation(node)
+      val exprContext = new ExpressionContext(scontext)
       val value = node.getAttributeValue(_select)
       val eval = runtimeConfig.expressionEvaluator
       val context = inlineDocument(node)

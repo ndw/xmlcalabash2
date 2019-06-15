@@ -276,44 +276,36 @@ class ArgBundleSpec extends FlatSpec {
     assert(pass)
   }
 
-  "Parsing -Gname pipeline" should "succeed" in {
+  "Parsing -G to pipeline" should "succeed" in {
     val bundle = new ArgBundle(config)
-    val args = "-Gpipe.xml pipe.xpl".split("\\s+")
+    val args = "-G pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpGraphFilename.isDefined && (bundle.debugOptions.dumpGraphFilename.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpGraph)
     assert(bundle.pipeline == "pipe.xpl")
   }
 
-  "Parsing -vGname pipeline" should "succeed" in {
+  "Parsing -vG pipeline" should "succeed" in {
     val bundle = new ArgBundle(config)
-    val args = "-vGpipe.xml pipe.xpl".split("\\s+")
+    val args = "-vG pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpGraphFilename.isDefined && (bundle.debugOptions.dumpGraphFilename.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpGraph)
     assert(bundle.verbose)
     assert(bundle.pipeline == "pipe.xpl")
   }
 
-  "Parsing -G name pipeline" should "succeed" in {
+  "Parsing --graph pipeline" should "succeed" in {
     val bundle = new ArgBundle(config)
-    val args = "-G pipe.xml pipe.xpl".split("\\s+")
+    val args = "--graph pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpGraphFilename.isDefined && (bundle.debugOptions.dumpGraphFilename.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpGraph)
     assert(bundle.pipeline == "pipe.xpl")
   }
 
-  "Parsing --graph name pipeline" should "succeed" in {
+  "Parsing -v --graph pipeline" should "succeed" in {
     val bundle = new ArgBundle(config)
-    val args = "--graph pipe.xml pipe.xpl".split("\\s+")
+    val args = "-v --graph pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpGraphFilename.isDefined && (bundle.debugOptions.dumpGraphFilename.get == "pipe.xml"))
-    assert(bundle.pipeline == "pipe.xpl")
-  }
-
-  "Parsing -v --graph name pipeline" should "succeed" in {
-    val bundle = new ArgBundle(config)
-    val args = "-v --graph pipe.xml pipe.xpl".split("\\s+")
-    bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpGraphFilename.isDefined && (bundle.debugOptions.dumpGraphFilename.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpGraph)
     assert(bundle.verbose)
     assert(bundle.pipeline == "pipe.xpl")
   }
@@ -332,19 +324,19 @@ class ArgBundleSpec extends FlatSpec {
     assert(pass)
   }
 
-  "Parsing --graph-before name pipeline" should "succeed" in {
+  "Parsing --graph-before pipeline" should "succeed" in {
     val bundle = new ArgBundle(config)
-    val args = "--graph-before pipe.xml pipe.xpl".split("\\s+")
+    val args = "--graph-before pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpOpenGraphFilename.isDefined && (bundle.debugOptions.dumpOpenGraphFilename.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpOpenGraph)
     assert(bundle.pipeline == "pipe.xpl")
   }
 
-  "Parsing -v --graph-before name pipeline" should "succeed" in {
+  "Parsing -v --graph-before pipeline" should "succeed" in {
     val bundle = new ArgBundle(config)
-    val args = "-v --graph-before pipe.xml pipe.xpl".split("\\s+")
+    val args = "-v --graph-before pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpOpenGraphFilename.isDefined && (bundle.debugOptions.dumpOpenGraphFilename.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpOpenGraph)
     assert(bundle.verbose)
     assert(bundle.pipeline == "pipe.xpl")
   }
@@ -363,11 +355,11 @@ class ArgBundleSpec extends FlatSpec {
     assert(pass)
   }
 
-  "Parsing --dump-xml name pipeline" should "succeed" in {
+  "Parsing --dump-xml pipeline" should "succeed" in {
     val bundle = new ArgBundle(config)
-    val args = "--dump-xml pipe.xml pipe.xpl".split("\\s+")
+    val args = "--dump-xml pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpXmlFilename.isDefined && (bundle.debugOptions.dumpXmlFilename.get == "pipe.xml"))
+    assert(bundle.debugOptions.dumpXml)
     assert(bundle.pipeline == "pipe.xpl")
   }
 

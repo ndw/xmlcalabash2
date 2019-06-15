@@ -3,14 +3,15 @@ package com.xmlcalabash.model.xml
 import com.xmlcalabash.config.Signatures
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, XProcConstants}
-import com.xmlcalabash.model.xml.containers.{Catch, Choose, Finally, ForEach, Group, Otherwise, Try, When, WithDocument, WithProperties}
+import com.xmlcalabash.model.xml.containers.{Catch, Choose, DeclarationContainer, Finally, ForEach, Group, Otherwise, Try, When, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, XMLCalabashRuntime, XProcVtExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, StaticContext, XMLCalabashRuntime, XProcVtExpression, XProcXPathExpression}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.immutable.HashMap
 import scala.collection.mutable.ListBuffer
 
 class Parser(val config: XMLCalabashRuntime) {
@@ -259,20 +260,42 @@ class Parser(val config: XMLCalabashRuntime) {
   }
 
   private def parseInline(parent: Option[Artifact], node: XdmNode): Artifact = {
+    var exclPrefixes: String = null
     val nodes = ListBuffer.empty[XdmNode]
     if (node.getNodeName == XProcConstants.p_inline) {
+      exclPrefixes = node.getAttributeValue(XProcConstants._exclude_inline_prefixes)
       val iter = node.axisIterator(Axis.CHILD)
       while (iter.hasNext) {
-        nodes += iter.next().asInstanceOf[XdmNode]
+        nodes += iter.next()
       }
     } else {
+      exclPrefixes = node.getParent.getAttributeValue(XProcConstants._exclude_inline_prefixes)
       val iter = node.getParent.axisIterator(Axis.CHILD)
       while (iter.hasNext) {
-        nodes += iter.next().asInstanceOf[XdmNode]
+        nodes += iter.next()
       }
     }
 
-    val art = new Inline(config, parent, node.getNodeName != XProcConstants.p_inline, nodes.toList)
+    // Find exclude-inline-prefixes
+    var contextNode = node
+    while (contextNode != null && contextNode.getNodeKind == XdmNodeKind.ELEMENT && exclPrefixes == null) {
+      contextNode = contextNode.getParent
+      if (contextNode != null && contextNode.getNodeKind == XdmNodeKind.ELEMENT) {
+        if (contextNode.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
+          exclPrefixes = contextNode.getAttributeValue(XProcConstants._exclude_inline_prefixes)
+        } else {
+          exclPrefixes = contextNode.getAttributeValue(XProcConstants.p_exclude_inline_prefixes)
+        }
+      }
+    }
+
+    var excludeUriBindings = Set.empty[String]
+    if (exclPrefixes != null) {
+      val prefixes = exclPrefixes.split("\\s+").toList
+      excludeUriBindings = S9Api.urisForPrefixes(contextNode, prefixes)
+    }
+
+    val art = new Inline(config, parent, node.getNodeName != XProcConstants.p_inline, excludeUriBindings, nodes.toList)
     art.parse(node)
     art
   }
@@ -528,7 +551,12 @@ class Parser(val config: XMLCalabashRuntime) {
       None
     }
 
-    val context = new ExpressionContext(node.getBaseURI, S9Api.inScopeNamespaces(node), new NodeLocation(node))
+    val scontext = new StaticContext()
+    scontext.baseURI = node.getBaseURI
+    scontext.inScopeNS = S9Api.inScopeNamespaces(node)
+    scontext.location = new NodeLocation(node)
+
+    val context = new ExpressionContext(scontext)
     val stepExpr = new XProcXPathExpression(context, step.getOrElse("/p:declare-step/p:*"))
     val conditionExpr = new XProcXPathExpression(context, condition.getOrElse("true()"))
 

@@ -13,7 +13,7 @@ class Parameters() extends DefaultXmlStep {
 
   override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
     variable match {
-      case XProcConstants._parameters => parameters = ValueParser.parseParameters(value, context.nsBindings, context.location)
+      case XProcConstants._parameters => parameters = ValueParser.parseParameters(value, context.staticContext)
       case _ =>
         logger.info("Ignoring unexpected option to p:parameters: " + variable)
     }

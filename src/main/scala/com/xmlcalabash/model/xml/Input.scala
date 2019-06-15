@@ -28,7 +28,7 @@ class Input(override val config: XMLCalabashRuntime,
   // This is a bit of a hack for the special case of rewriting DeclareStep inputs
   protected[xml] def select_=(sel: String): Unit = {
     _select = Some(sel)
-    val context = new ExpressionContext(baseURI, inScopeNS, location)
+    val context = new ExpressionContext(staticContext)
     _expression = Some(new XProcXPathExpression(context, _select.get))
   }
 
@@ -63,7 +63,7 @@ class Input(override val config: XMLCalabashRuntime,
     _port = attributes.get(XProcConstants._port)
     _select = attributes.get(XProcConstants._select)
     if (_select.isDefined) {
-      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      val context = new ExpressionContext(staticContext)
       _expression = Some(new XProcXPathExpression(context, _select.get))
     }
 
@@ -111,7 +111,7 @@ class Input(override val config: XMLCalabashRuntime,
 
       for (uri <- href.get.split("\\s+")) {
         val doc = new Document(config, this, uri)
-        doc._baseURI = baseURI
+        doc.staticContext.copy(staticContext)
         _defaultInputs += doc
       }
     }
@@ -138,7 +138,7 @@ class Input(override val config: XMLCalabashRuntime,
 
     if (select.isDefined) {
       val graphNode = this.parent.get._graphNode
-      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      val context = new ExpressionContext(staticContext)
       val expression = new XProcXPathExpression(context, select.get)
       val variableRefs = findVariableRefs(expression)
       for (ref <- variableRefs) {

@@ -3,8 +3,8 @@ package com.xmlcalabash.drivers
 import java.io.{File, PrintWriter}
 import java.net.URI
 
-import com.jafpl.exceptions.JafplException
-import com.jafpl.graph.Graph
+import com.jafpl.exceptions.{JafplException, JafplLoopDetected}
+import com.jafpl.graph.{Binding, Graph, Node}
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig, XMLCalabashDebugOptions}
 import com.xmlcalabash.exceptions.{ModelException, ParseException, StepException, XProcException}
 import com.xmlcalabash.model.xml.DeclareStep
@@ -68,6 +68,41 @@ object Main extends App {
           println(model)
         case parse: ParseException =>
           println(parse)
+        case jafpl: JafplLoopDetected =>
+          println("Loop detected:")
+          var first = true
+          var pnode = Option.empty[Node]
+          for (node <- jafpl.nodes) {
+            val prefix = if (first) {
+              "An output from"
+            } else {
+              "flows to"
+            }
+
+            node match {
+              case bind: Binding =>
+                val bnode = bind.bindingFor
+                pnode = Some(bnode)
+
+                val bnodeLabel = bnode.userLabel.getOrElse(bnode.label)
+                val bindLabel = bind.userLabel.getOrElse(bind.label)
+
+                println(s"\tis the context item for $bnodeLabel/$bindLabel; $bnodeLabel")
+                if (bnode.location.isDefined) {
+                  println(s"\t\t${bnode.location.get}")
+                }
+              case _ =>
+                if (pnode.isEmpty || pnode.get != node) {
+                  println(s"\t$prefix ${node.userLabel.getOrElse(node.label)}")
+                  if (node.location.isDefined) {
+                    println(s"\t\t${node.location.get}")
+                  }
+                  pnode = Some(node)
+                }
+            }
+
+            first = false
+          }
         case jafpl: JafplException =>
           println(jafpl)
         case xproc: XProcException =>

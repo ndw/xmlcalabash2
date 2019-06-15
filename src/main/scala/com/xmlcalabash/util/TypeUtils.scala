@@ -133,7 +133,7 @@ class TypeUtils(val config: XMLCalabashRuntime) {
     }
 
     if (xsdtype.get == XProcConstants.xs_QName) {
-      return new XdmAtomicValue(ValueParser.parseQName(value.getStringValue, context.nsBindings, None))
+      return new XdmAtomicValue(ValueParser.parseQName(value.getStringValue, context.staticContext))
     }
 
     // FIXME: deal with the psuedo-types in some more rational way

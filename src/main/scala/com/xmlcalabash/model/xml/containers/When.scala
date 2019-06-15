@@ -16,7 +16,7 @@ class When(override val config: XMLCalabashRuntime,
 
     val test = attributes.get(XProcConstants._test)
     if (test.isDefined) {
-      val context = new ExpressionContext(baseURI, inScopeNS, location)
+      val context = new ExpressionContext(staticContext)
       testExpr = new XProcXPathExpression(context, test.get)
     } else {
       throw new ModelException(ExceptionCode.TESTREQUIRED, List.empty[String], location)
