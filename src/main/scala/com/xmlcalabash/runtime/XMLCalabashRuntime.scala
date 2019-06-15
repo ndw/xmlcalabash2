@@ -161,31 +161,14 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
       } else {
         bdecl.externalValue = None
       }
-      /*
-      if (!bindingsMap.contains(jcbind)) {
-        config.trace(s"No binding provided for option $bind; using default", "ExternalBindings")
-        val bdecl = decl.bindingDeclaration(bind).get
-        if (bdecl.select.isDefined) {
-          val context = new ExpressionContext(StaticContext.EMPTY) // FIXME: what about namespaces!?
-          val expr = new XProcXPathExpression(context, bdecl.select.get)
-          val msg = config.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
-          val eval = msg.asInstanceOf[XdmValueItemMessage].item
-          runtime.setOption(jcbind, new XProcVarValue(eval, context))
-          bindingsMap.put(jcbind, msg)
-        } else {
-          if (bdecl.required) {
-            throw XProcException.xsMissingRequiredOption(bind, decl.location)
-          } else {
-            val context = new ExpressionContext(StaticContext.EMPTY) // FIXME: what about namespaces!?
-            val expr = new XProcXPathExpression(context, "()")
-            val msg = config.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
-            val eval = msg.asInstanceOf[XdmValueItemMessage].item
-            runtime.setOption(jcbind, new XProcVarValue(eval, context))
-            bindingsMap.put(jcbind, msg)
-          }
+
+      if (bindingsMap.contains(jcbind)) {
+        runtime.setOption(jcbind, new XProcVarValue(bindingsMap(jcbind), new ExpressionContext(StaticContext.EMPTY)))
+      } else {
+        if (bdecl.required) {
+          throw XProcException.xsMissingRequiredOption(bind, decl.location)
         }
       }
-      */
     }
 
     decl.evaluateStaticBindings(runtime)
