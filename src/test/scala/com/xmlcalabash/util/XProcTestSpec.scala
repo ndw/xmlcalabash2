@@ -41,7 +41,9 @@ class XProcTestSpec extends FunSpec {
     val runner = new TestRunner(runtimeConfig, List(fn))
     val results = runner.run()
     for (result <- results) {
-      if (!result.passed) {
+      if (result.passed) {
+        println(s"PASS: $fn")
+      } else {
         println("BANG")
       }
       assert(result.passed)
