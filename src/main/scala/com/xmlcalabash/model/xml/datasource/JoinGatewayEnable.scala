@@ -3,11 +3,11 @@ package com.xmlcalabash.model.xml.datasource
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.model.xml.{Artifact, IOPort}
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime}
-import com.xmlcalabash.steps.internal.EmptyLoader
+import com.xmlcalabash.steps.internal.GatedLoader
 
-class Empty(override val config: XMLCalabashRuntime,
-            override val parent: Option[Artifact]) extends DataSource(config, parent) {
-  def this(config: XMLCalabashRuntime, parent: Artifact, empty: Empty) {
+class JoinGatewayEnable(override val config: XMLCalabashRuntime,
+                        override val parent: Option[Artifact]) extends DataSource(config, parent) {
+  def this(config: XMLCalabashRuntime, parent: Artifact, empty: JoinGatewayEnable) {
     this(config, Some(parent))
   }
 
@@ -21,7 +21,7 @@ class Empty(override val config: XMLCalabashRuntime,
     val container = istep.parent.get
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
     val context = new ExpressionContext(staticContext)
-    val step = new EmptyLoader()
+    val step = new GatedLoader()
     val emptyReader = cnode.addAtomic(step, "empty")
 
     _graphNode = Some(emptyReader)

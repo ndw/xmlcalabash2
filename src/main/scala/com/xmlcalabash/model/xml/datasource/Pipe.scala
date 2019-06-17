@@ -13,7 +13,7 @@ class Pipe(override val config: XMLCalabashRuntime,
            override val parent: Option[Artifact]) extends DataSource(config, parent) {
   private var _step = Option.empty[String]
   private var _port = Option.empty[String]
-  protected[xml] var priority = false
+  protected[xml] var gated = false
 
   def this(config: XMLCalabashRuntime, parent: Artifact, step: String) = {
     this(config, Some(parent))
@@ -150,8 +150,8 @@ class Pipe(override val config: XMLCalabashRuntime,
       }
     }
 
-    if (priority) {
-      graph.addPriorityEdge(fromStep.get._graphNode.get, fromPort, toNode.get, toPort)
+    if (gated) {
+      graph.addGatedEdge(fromStep.get._graphNode.get, fromPort, toNode.get, toPort)
     } else {
       graph.addOrderedEdge(fromStep.get._graphNode.get, fromPort, toNode.get, toPort)
     }

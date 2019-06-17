@@ -1,11 +1,12 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{ContainerStart, Graph, Node}
+import com.jafpl.graph.Node
 import com.jafpl.steps.{Manifold, PortCardinality, PortSpecification}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.datasource.Pipe
+import com.xmlcalabash.model.xml.datasource.{Empty, JoinGatewayEnable, Pipe}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
+import com.xmlcalabash.steps.internal.GatedLoader
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -19,16 +20,6 @@ class PipelineStep(override val config: XMLCalabashRuntime,
   protected[xml] def name_=(name: String): Unit = {
     _name = Some(name)
   }
-
-  /* this breaks implicit pipeline connections.
-  override def name: String = {
-    if (label.isDefined && !label.get.startsWith("!")) {
-      label.get
-    } else {
-      stepType.toString
-    }
-  }
-  */
 
   def graphNode: Node = _graphNode.get // Steps always have graphNodes
 
@@ -82,8 +73,20 @@ class PipelineStep(override val config: XMLCalabashRuntime,
             val pipe = new Pipe(config, in, drp.get.parent.get.name, drp.get.port.get)
             in.addChild(pipe)
           } else {
-            valid = false
-            throw XProcException.xsUnconnectedPrimaryInputPort(name, port, location)
+            val decl = stepDeclaration(stepType)
+            if (decl.isDefined) {
+              val input = decl.get.input(port)
+              if (input.isEmpty || input.get.defaultInputs.isEmpty) {
+                valid = false
+                throw XProcException.xsUnconnectedPrimaryInputPort(name, port, location)
+              } else {
+                val gate = new JoinGatewayEnable(config, Some(in))
+                in.addChild(gate)
+              }
+            } else {
+              valid = false
+              throw XProcException.xsUnconnectedPrimaryInputPort(name, port, location)
+            }
           }
         } else {
           valid = false
@@ -105,10 +108,6 @@ class PipelineStep(override val config: XMLCalabashRuntime,
 
   override def makeBindingsExplicit(): Boolean = {
     makeInputBindingsExplicit() && makeOutputBindingsExplicit()
-  }
-
-  override def makeEdges(graph: Graph, parent: Node) {
-    graphEdges(graph, _graphNode.get.asInstanceOf[ContainerStart])
   }
 
   def manifold: Manifold = {

@@ -168,7 +168,7 @@ class DeclareStep(override val config: XMLCalabashRuntime,
     DrpRemap.remap(sinput.get, cresult.get)
 
     val pipe = new Pipe(config, idinput, name, input.port.get)
-    pipe.priority = true
+    pipe.gated = true
     idinput.addChild(pipe)
 
     for (source <- input.defaultInputs) {

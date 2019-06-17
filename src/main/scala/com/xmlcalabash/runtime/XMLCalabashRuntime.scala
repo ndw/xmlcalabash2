@@ -2,20 +2,20 @@ package com.xmlcalabash.runtime
 
 import java.net.URI
 
-import com.jafpl.graph.{Graph, Location}
-import com.jafpl.messages.Message
+import com.jafpl.graph.Graph
+import com.jafpl.messages.{JoinGateMessage, Message}
 import com.jafpl.runtime.{GraphRuntime, RuntimeConfiguration}
 import com.jafpl.steps.DataConsumer
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.config.{DocumentManager, Signatures, XMLCalabashConfig, XMLCalabashDebugOptions, XProcConfigurer}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.XdmValueItemMessage
-import com.xmlcalabash.model.util.ExpressionParser
+import com.xmlcalabash.model.util.{ExpressionParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep}
 import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import javax.xml.transform.URIResolver
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
-import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.EntityResolver
 
@@ -28,6 +28,7 @@ object XMLCalabashRuntime {
 class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
                                                  private val debug: XMLCalabashDebugOptions) extends RuntimeConfiguration {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
+  protected[runtime] val joinGateMarker = new XdmAtomicValue(new QName(XProcConstants.ns_cx, "JOIN-GATE-MARKER"))
 
   private var _traceEventManager = config.traceEventManager
   private var _errorListener = config.errorListener
@@ -93,6 +94,10 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   def inputs: List[String] = decl.inputPorts
   def outputs: List[String] = decl.outputPorts
 
+  protected[runtime] def inputMessage(port: String, msg: Message): Unit = {
+    runtime.inputs(port).send(msg)
+  }
+
   def input(port: String, item: XdmValue, metadata: XProcMetadata): Unit = {
     if (runtime.inputs.contains(port)) {
       inputSet += port
@@ -140,18 +145,40 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
     }
   }
 
+  protected[runtime] def runAsStep(): Unit = {
+    if (ran) {
+      throw new RuntimeException("You must call reset() before running a pipeline a second time.")
+    }
+
+    runCommon()
+  }
+
   def run(): Unit = {
     if (ran) {
       throw new RuntimeException("You must call reset() before running a pipeline a second time.")
     }
 
-    ran = true
-
     for (input <- decl.inputs) {
+      if (!inputSet.contains(input.port.get)) {
+        if (input.defaultInputs.isEmpty) {
+          if (!input.sequence) {
+            throw XProcException.xsMissingRequiredInput(input.port.get, input.location)
+          }
+        } else {
+          runtime.inputs(input.port.get).send(new JoinGateMessage())
+        }
+      }
+
       if (!inputSet.contains(input.port.get) && input.defaultInputs.isEmpty && !input.sequence) {
         throw XProcException.xsMissingRequiredInput(input.port.get, input.location)
       }
     }
+
+    runCommon()
+  }
+
+  private def runCommon(): Unit = {
+    ran = true
 
     for (bind <- decl.bindings) {
       val jcbind = bind.getClarkName

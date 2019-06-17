@@ -1,6 +1,6 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{Binding, ContainerStart, Graph, Location, Node}
+import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepExecutable, StepProxy, StepRunner, StepWrapper, XMLCalabashRuntime, XProcExpression, XProcVtExpression, XProcXPathExpression, XmlStep}

@@ -1,6 +1,6 @@
 package com.xmlcalabash.runtime
 import com.jafpl.graph.Location
-import com.jafpl.messages.{ExceptionMessage, Message}
+import com.jafpl.messages.{ExceptionMessage, JoinGateMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality}
 import com.xmlcalabash.config.StepSignature
@@ -27,8 +27,8 @@ class StepRunner(private val pruntime: XMLCalabashRuntime, val decl: DeclareStep
     }
     typeMap.put(portSig.name, List("application/octet-stream")) // FIXME: THIS IS A LIE
   }
-  private val iSpec = new XmlPortSpecification(cardMap.toMap, typeMap.toMap)
 
+  private val iSpec = new XmlPortSpecification(cardMap.toMap, typeMap.toMap)
   cardMap.clear()
   typeMap.clear()
   for (port <- signature.outputPorts) {
@@ -65,6 +65,12 @@ class StepRunner(private val pruntime: XMLCalabashRuntime, val decl: DeclareStep
 
   // Input to the pipeline
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
+    if (item == runtime.joinGateMarker) {
+      // This is a hack to tunnel the JoinGateMessage through...
+      runtime.inputMessage(port, new JoinGateMessage())
+      return
+    }
+
     item match {
       case value: XdmItem => runtime.input(port, value, metadata)
       case _ => throw new RuntimeException("Unexpected value sent to StepRunner")
@@ -76,7 +82,7 @@ class StepRunner(private val pruntime: XMLCalabashRuntime, val decl: DeclareStep
   }
 
   override def run(context: StaticContext): Unit = {
-    runtime.run()
+    runtime.runAsStep()
   }
 
   override def reset(): Unit = {

@@ -1,11 +1,10 @@
 package com.xmlcalabash.runtime
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, IOException, InputStream}
-import java.lang
 import java.net.URI
 
 import com.jafpl.graph.Location
-import com.jafpl.messages.{BindingMessage, ExceptionMessage, Message}
+import com.jafpl.messages.{BindingMessage, ExceptionMessage, JoinGateMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality, Step}
 import com.xmlcalabash.config.DocumentRequest
@@ -168,12 +167,6 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
       println(p_message.get)
     }
 
-    for (port <- inputSpec.ports) {
-      if (!received.contains(port)) {
-        inputSpec.checkInputCardinality(port, 0)
-      }
-    }
-
     for (port <- defaultSelect.keySet) {
       if (!received.contains(port)) {
         // If the input has a select, this is the context for that expression
@@ -260,6 +253,8 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
           step.receive(port, msg.item, msg.metadata)
         case msg: AnyItemMessage =>
           step.receive(port, msg.shadow, msg.metadata)
+        case msg: JoinGateMessage =>
+          step.receive(port, config.joinGateMarker, XProcMetadata.ANY)
         case _ =>
           throw XProcException.xiInvalidMessage(staticContext.location, message)
       }
