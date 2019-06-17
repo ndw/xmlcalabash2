@@ -6,8 +6,9 @@ package com.xmlcalabash.util
  */
 
 import java.io.File
+import java.net.URI
 
-import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.testing.TestRunner
 import org.scalatest.FunSpec
 
@@ -16,6 +17,14 @@ import scala.collection.mutable.ListBuffer
 class XProcTestSpec extends FunSpec {
   protected val runtimeConfig: XMLCalabashConfig = XMLCalabashConfig.newInstance()
   protected val testFiles: ListBuffer[String] = ListBuffer.empty[String]
+
+  protected val online: Boolean = try {
+    val docreq = new DocumentRequest(new URI("http://www.w3.org/"), MediaType.HTML)
+    val doc = runtimeConfig.documentManager.parse(docreq)
+    true
+  } catch {
+    case ex: Exception => false
+  }
 
   protected def runtests(title: String, source: String): Unit = {
     describe(title) {
@@ -38,13 +47,13 @@ class XProcTestSpec extends FunSpec {
   }
 
   protected def test(fn: String) {
-    val runner = new TestRunner(runtimeConfig, List(fn))
+    val runner = new TestRunner(runtimeConfig, online, List(fn))
     val results = runner.run()
     for (result <- results) {
       if (result.passed) {
         println(s"PASS: $fn")
       } else {
-        println("BANG")
+        println(s"FAIL: $fn")
       }
       assert(result.passed)
     }

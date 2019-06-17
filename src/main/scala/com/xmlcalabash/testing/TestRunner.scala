@@ -20,7 +20,7 @@ import org.xml.sax.InputSource
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
+class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: List[String]) {
   private val _testsuite = new QName("", "testsuite")
   private val _properties = new QName("", "properties")
   private val _property = new QName("", "property")
@@ -522,6 +522,14 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, testloc: List[String]) {
         result.baseURI = node.getBaseURI
         result.skipped = "The 'lazy-eval' feature is not supported"
         return result
+      }
+      if (features.contains("webaccess")) {
+        if (!online) {
+          val result = new TestResult(true) // skipped counts as a pass...
+          result.baseURI = node.getBaseURI
+          result.skipped = "The 'webaccess' feature is not supported when the test runner is offline"
+          return result
+        }
       }
     }
 

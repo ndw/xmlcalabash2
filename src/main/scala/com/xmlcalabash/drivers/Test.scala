@@ -1,10 +1,11 @@
 package com.xmlcalabash.drivers
 
 import java.io.File
+import java.net.URI
 
-import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.testing.TestRunner
-import com.xmlcalabash.util.S9Api
+import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.s9api.Serializer
 
 import scala.collection.mutable.ListBuffer
@@ -19,6 +20,14 @@ object Test extends App {
   private var xmlOutput: Option[String] = None
   private var testLocations = ListBuffer.empty[String]
 
+  protected val online: Boolean = try {
+    val docreq = new DocumentRequest(new URI("http://www.w3.org/"), MediaType.HTML)
+    val doc = xmlCalabash.documentManager.parse(docreq)
+    true
+  } catch {
+    case ex: Exception => false
+  }
+
   crudeArgParse()
 
   private val showAll = !showPassing && !showFailing && !showSkipping
@@ -28,7 +37,7 @@ object Test extends App {
   }
 
   try {
-    val runner = new TestRunner(xmlCalabash, testLocations.toList)
+    val runner = new TestRunner(xmlCalabash, online, testLocations.toList)
 
     if (xmlOutput.isDefined) {
       val junit = runner.junit()
