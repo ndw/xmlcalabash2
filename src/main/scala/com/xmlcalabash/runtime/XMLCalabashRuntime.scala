@@ -21,10 +21,6 @@ import org.xml.sax.EntityResolver
 
 import scala.collection.mutable
 
-object XMLCalabashRuntime {
-  var loggedProductDetails = false
-}
-
 class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig) extends RuntimeConfiguration {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected[runtime] val joinGateMarker = new XdmAtomicValue(new QName(XProcConstants.ns_cx, "JOIN-GATE-MARKER"))
@@ -50,44 +46,19 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig) 
   private var graph: Graph = _
   private var runtime: GraphRuntime = _
 
-  if (!XMLCalabashRuntime.loggedProductDetails) {
-    logger.info(s"${config.productName} version ${config.productVersion} with Saxon ${config.saxonVersion}")
-    logger.debug(s"Copyright © 2018, 2019 ${config.vendor}; ${config.vendorURI}")
-    logger.debug(s"(release id: ${config.productHash}; episode: ${config.episode}; JAFPL version ${config.jafplVersion})")
-    XMLCalabashRuntime.loggedProductDetails = true
-  }
-
   protected[xmlcalabash] def setDeclaration(decl: DeclareStep): Unit = {
     this.decl = decl
   }
 
   protected[xmlcalabash] def init(): Unit = {
-    //debug.dumpXml(decl)
+    config.debugOptions.dumpXml(decl)
     graph = decl.pipelineGraph()
-    //debug.dumpOpenGraph(graph, decl)
+    config.debugOptions.dumpOpenGraph(graph, decl)
     graph.close()
-    //debug.dumpGraph(graph, decl)
+    config.debugOptions.dumpGraph(graph, decl)
     runtime = new GraphRuntime(graph, this)
     runtime.traceEventManager = _traceEventManager
   }
-
-  /*
-  def runtime(decl: DeclareStep): XMLCalabashRuntime = {
-    val runtime = config.runtime(decl, debug)
-    runtime._traceEventManager = _traceEventManager
-    runtime._errorListener = _errorListener
-    runtime._documentManager = _documentManager
-    runtime._entityResolver = _entityResolver
-    runtime._uriResolver = _uriResolver
-    runtime._moduleURIResolver = _moduleURIResolver
-    runtime._unparsedTextURIResolver = _unparsedTextURIResolver
-    runtime._watchdogTimeout = _watchdogTimeout
-    runtime._defaultSerializationOptions = _defaultSerializationOptions
-    runtime._trim_inline_whitespace = _trim_inline_whitespace
-    runtime._signatures = _signatures
-    runtime
-  }
-  */
 
   // ===================================================================================
 

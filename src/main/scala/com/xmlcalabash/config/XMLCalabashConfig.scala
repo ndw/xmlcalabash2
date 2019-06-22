@@ -26,12 +26,19 @@ import scala.collection.mutable
 object XMLCalabashConfig {
   val _configProperty = "com.xmlcalabash.config.XProcConfigurer"
   val _configClass = "com.xmlcalabash.util.DefaultXProcConfigurer"
+  var loggedPI = false
 
   def newInstance(): XMLCalabashConfig = {
     val configurer = Class.forName(configClass).newInstance().asInstanceOf[XProcConfigurer]
     val config = new XMLCalabashConfig(configurer)
     configurer.xmlCalabashConfigurer.configure(config)
     config.close()
+
+    if (!loggedPI) {
+      config.logProductDetails()
+      loggedPI = true
+    }
+
     config
   }
 
@@ -42,7 +49,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _expressionEvaluator = new SaxonExpressionEvaluator(this)
   private val _collections = mutable.HashMap.empty[String, List[XdmNode]]
-  private val staticOptionBindings = mutable.HashMap.empty[QName, XdmValue]
+  private var _debugOptions: XMLCalabashDebugOptions = new XMLCalabashDebugOptions()
 
   private var closed = false
   private var _processor: Processor = _
@@ -64,8 +71,6 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
   private var _episode = computeEpisode
   private var _defaultSerializationOptions = Map.empty[String,Map[QName,String]]
   private var _standardLibrary = Option.empty[Library]
-
-  protected[config] val debugOptions = new XMLCalabashDebugOptions()
 
   def productName: String = BuildInfo.name
   def productVersion: String = BuildInfo.version
@@ -94,6 +99,12 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
   def processor_=(proc: Processor): Unit = {
     checkClosed()
     _processor = proc
+  }
+
+  def logProductDetails(): Unit = {
+    logger.info(s"$productName version $productVersion with Saxon $saxonVersion")
+    logger.debug(s"Copyright © 2018, 2019 $vendor; $vendorURI")
+    logger.debug(s"(release id: $productHash; episode: $episode; JAFPL version $jafplVersion)")
   }
 
   def standardLibrary: Library = {
@@ -126,6 +137,11 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
         }
       case _ => throw new RuntimeException(s"Don't know how to parse a $source")
     }
+  }
+
+  def debugOptions: XMLCalabashDebugOptions = _debugOptions
+  def debugOptions_=(options: XMLCalabashDebugOptions): Unit = {
+    _debugOptions = options
   }
 
   def errorListener: ErrorListener = {
@@ -261,11 +277,6 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
   def episode_=(episode: String): Unit = {
     checkClosed()
     _episode = episode
-  }
-
-  def staticOptionValue(option: QName): Option[XdmValue] = staticOptionBindings.get(option)
-  def setStaticOptionValue(option: QName, value: XdmValue): Unit = {
-    staticOptionBindings.put(option, value)
   }
 
   // ==============================================================================================

@@ -19,7 +19,8 @@ object Main extends App {
 
   val options = new ArgBundle(config, args.toList)
 
-  options.debugOptions.injectables = options.injectables
+  config.debugOptions = options.debugOptions
+  config.debugOptions.injectables = options.injectables
 
   var errored = false
   try {
