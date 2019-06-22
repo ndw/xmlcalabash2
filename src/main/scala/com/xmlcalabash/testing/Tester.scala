@@ -59,7 +59,8 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
 
     var runtime: XMLCalabashRuntime = null
     try {
-      runtime = runtimeConfig.runtime(_pipeline.get)
+      val decl = runtimeConfig.load(_pipeline.get)
+      runtime = decl.config
       val result = new BufferingConsumer()
 
       for (port <- _inputs.keySet) {

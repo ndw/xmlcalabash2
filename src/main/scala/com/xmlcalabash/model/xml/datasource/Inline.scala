@@ -1,7 +1,8 @@
 package com.xmlcalabash.model.xml.datasource
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.jafpl.messages.Message
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, Input, OptionDecl, Output, Variable, WithInput, WithOption}
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime}
@@ -101,33 +102,35 @@ class Inline(override val config: XMLCalabashRuntime,
 
     for (ref <- variableRefs) {
       val bind = findBinding(ref)
-      if (bind.isEmpty) {
-        throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
-      }
-
-      bind.get match {
-        case declStep: DeclareStep =>
-          // ???
-          var optDecl = Option.empty[OptionDecl]
-          for (child <- declStep.children) {
-            child match {
-              case opt: OptionDecl =>
-                if (opt.optionName == ref) {
-                  optDecl = Some(opt)
-                }
-              case _ => Unit
+      if (bind.isDefined) {
+        bind.get match {
+          case declStep: DeclareStep =>
+            // ???
+            var optDecl = Option.empty[OptionDecl]
+            for (child <- declStep.children) {
+              child match {
+                case opt: OptionDecl =>
+                  if (opt.optionName == ref) {
+                    optDecl = Some(opt)
+                  }
+                case _ => Unit
+              }
             }
-          }
-          if (optDecl.isEmpty) {
-            throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
-          }
-          graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], inlineProducer)
-        case optDecl: OptionDecl =>
-          graph.addBindingEdge(optDecl._graphNode.get.asInstanceOf[Binding], inlineProducer)
-        case varDecl: Variable =>
-          graph.addBindingEdge(varDecl._graphNode.get.asInstanceOf[Binding], inlineProducer)
-        case _ =>
-          throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
+            if (optDecl.isEmpty) {
+              throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
+            }
+            graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], inlineProducer)
+          case optDecl: OptionDecl =>
+            if (!optDecl.static) {
+              graph.addBindingEdge(optDecl._graphNode.get.asInstanceOf[Binding], inlineProducer)
+            }
+          case varDecl: Variable =>
+            if (!varDecl.static) {
+              graph.addBindingEdge(varDecl._graphNode.get.asInstanceOf[Binding], inlineProducer)
+            }
+          case _ =>
+            throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", location)
+        }
       }
     }
   }
@@ -154,6 +157,27 @@ class Inline(override val config: XMLCalabashRuntime,
 
     if (toNode.isDefined) {
       graph.addOrderedEdge(_graphNode.get, "result", toNode.get, toPort)
+    }
+  }
+
+  override protected[xmlcalabash] def propagateStaticBindings(): Unit = {
+    val statics = collectStatics(Map.empty[QName,Artifact])
+    val staticBindings = mutable.HashMap.empty[Binding, Message]
+
+    for ((name,static) <- statics) {
+      static match {
+        case variable: Variable =>
+          staticBindings.put(static._graphNode.get.asInstanceOf[Binding], variable.staticValueMessage.get)
+        case option: OptionDecl =>
+          staticBindings.put(static._graphNode.get.asInstanceOf[Binding], option.staticValueMessage.get)
+        case _ =>
+          throw new RuntimeException("This can't happen; statics isn't variable or option")
+      }
+    }
+    _graphNode.get.staticBindings = staticBindings.toMap
+
+    for (child <- children) {
+      child.exposeStatics()
     }
   }
 

@@ -5,7 +5,7 @@ import java.net.URI
 import com.jafpl.graph.Location
 
 object ExpressionContext {
-  private val _none = new ExpressionContext(StaticContext.EMPTY)
+  private val _none = new ExpressionContext(new StaticContext())
   def NONE: ExpressionContext = _none
 }
 

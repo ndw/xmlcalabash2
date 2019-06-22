@@ -43,8 +43,8 @@ class DefaultStep extends Step {
 
   override def initialize(config: RuntimeConfiguration): Unit = {
     config match {
-      case pipe: XMLCalabashRuntime =>
-        this.config = Some(pipe)
+      case runtime: XMLCalabashRuntime =>
+        this.config = Some(runtime)
       case _ => throw XProcException.xiNotXMLCalabash()
     }
   }
@@ -54,7 +54,7 @@ class DefaultStep extends Step {
   }
 
   override def reset(): Unit = {
-    // nop
+    bindings.clear()
   }
 
   override def abort(): Unit = {

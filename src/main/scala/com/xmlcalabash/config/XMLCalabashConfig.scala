@@ -6,16 +6,17 @@ import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode}
 import com.xmlcalabash.functions.{CwdShim, DocumentPropertiesDocumentShim, DocumentPropertiesShim, DocumentPropertyShim, ForceQNameKeysShim, InjElapsedShim, InjIdShim, InjNameShim, InjTypeShim, SystemPropertyShim}
-import com.xmlcalabash.model.util.ExpressionParser
-import com.xmlcalabash.model.xml.{DeclareStep, Parser}
+import com.xmlcalabash.model.util.{ExpressionParser, XProcConstants}
+import com.xmlcalabash.model.xml.containers.DeclarationContainer
+import com.xmlcalabash.model.xml.{DeclareStep, Library, Parser}
 import com.xmlcalabash.parsers.XPathParser
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XMLCalabashRuntime}
 import com.xmlcalabash.sbt.BuildInfo
-import com.xmlcalabash.util.{MediaType, URIUtils}
+import com.xmlcalabash.util.{MediaType, S9Api, URIUtils}
 import javax.xml.transform.URIResolver
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
-import net.sf.saxon.s9api.{Processor, QName, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{Processor, QName, XdmNode, XdmNodeKind, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.helpers.XMLReaderFactory
 import org.xml.sax.{EntityResolver, InputSource}
@@ -62,6 +63,9 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
   private var _language = defaultLocale
   private var _episode = computeEpisode
   private var _defaultSerializationOptions = Map.empty[String,Map[QName,String]]
+  private var _standardLibrary = Option.empty[Library]
+
+  protected[config] val debugOptions = new XMLCalabashDebugOptions()
 
   def productName: String = BuildInfo.name
   def productVersion: String = BuildInfo.version
@@ -92,56 +96,36 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
     _processor = proc
   }
 
-  def runtime(uri: URI): XMLCalabashRuntime = {
-    runtime(uri, new XMLCalabashDebugOptions())
-  }
-
-  def runtime(uri: URI, debug: XMLCalabashDebugOptions): XMLCalabashRuntime = {
-    val request = new DocumentRequest(uri, MediaType.XML)
-    val response = documentManager.parse(request)
-    runtime(response.value.asInstanceOf[XdmNode], debug)
-  }
-
-  def runtime(node: XdmNode): XMLCalabashRuntime = {
-    runtime(node, new XMLCalabashDebugOptions())
-  }
-
-  def runtime(node: XdmNode, debug: XMLCalabashDebugOptions): XMLCalabashRuntime = {
-    // There's an ugly dance here to initialize two co-dependent structures.
-    // It's all hidden inside but it's still ugly.
-    val runtime = new XMLCalabashRuntime(this, debug)
-    val parser = new Parser(runtime)
-
-    val xmlbuilder = processor.newDocumentBuilder()
-    val stream = getClass.getResourceAsStream("/standard-steps.xpl")
-    val source = new SAXSource(new InputSource(stream))
-    xmlbuilder.setDTDValidation(false)
-    xmlbuilder.setLineNumbering(true)
-    val standardSteps = xmlbuilder.build(source)
-
-    runtime.signatures = parser.signatures(standardSteps)
-    runtime.setDefaultSerializationOptions(_defaultSerializationOptions)
-
-    if (debug.injectables.nonEmpty) {
-      val builder = processor.newDocumentBuilder()
-      builder.setDTDValidation(false)
-      builder.setLineNumbering(true)
-      for (injectable <- debug.injectables) {
-        val doc = builder.build(new SAXSource(new InputSource(injectable)))
-        parser.parseInjectables(doc)
-      }
+  def standardLibrary: Library = {
+    if (_standardLibrary.isEmpty) {
+      val xmlbuilder = processor.newDocumentBuilder()
+      val stream = getClass.getResourceAsStream("/standard-steps.xpl")
+      val source = new SAXSource(new InputSource(stream))
+      xmlbuilder.setDTDValidation(false)
+      xmlbuilder.setLineNumbering(true)
+      val standardSteps = xmlbuilder.build(source)
+      val parser = new Parser(this)
+      _standardLibrary = Some(parser.loadStandardLibrary(standardSteps))
     }
-
-    val pipeline: DeclareStep = parser.parsePipeline(node)
-    runtime.init(pipeline)
-
-    runtime
+    _standardLibrary.get
   }
 
-  def runtime(decl: DeclareStep, debug: XMLCalabashDebugOptions): XMLCalabashRuntime = {
-    val runtime = new XMLCalabashRuntime(this, debug)
-    runtime.init(decl)
-    runtime
+  def load(source: Any): DeclarationContainer = {
+    source match {
+      case node: XdmNode =>
+        val parser = new Parser(this)
+        var xdm = S9Api.documentElement(node)
+        if (xdm.isDefined) {
+          xdm.get.getNodeName match {
+            case XProcConstants.p_library => parser.loadLibrary(xdm.get)
+            case XProcConstants.p_declare_step => parser.loadDeclareStep(xdm.get)
+            case _ => throw new RuntimeException(s"Don't know how to parse a ${xdm.get}")
+          }
+        } else {
+          throw new RuntimeException(s"Don't know how to parse a $xdm")
+        }
+      case _ => throw new RuntimeException(s"Don't know how to parse a $source")
+    }
   }
 
   def errorListener: ErrorListener = {

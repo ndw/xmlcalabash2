@@ -273,6 +273,14 @@ class AtomicStep(override val config: XMLCalabashRuntime,
     }
   }
 
+  override protected[xmlcalabash] def exposeStatics(): Boolean = {
+    val statics = collectStatics(Map.empty[QName,Artifact])
+    for (child <- children) {
+      child.exposeStatics()
+    }
+    true
+  }
+
   override def asXML: xml.Elem = {
     dumpAttr("name", _name.getOrElse(name))
     dumpAttr("id", id.toString)

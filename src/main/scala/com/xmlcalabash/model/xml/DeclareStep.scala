@@ -7,12 +7,11 @@ import com.xmlcalabash.config.{OptionSignature, PortSignature, StepSignature}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.containers.{Container, DeclarationContainer, WithDocument, WithProperties}
+import com.xmlcalabash.model.xml.containers.{Container, DeclarationContainer}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XMLCalabashRuntime, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.steps.internal.ContentTypeParams
-import com.xmlcalabash.util.XProcVarValue
-import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -24,11 +23,38 @@ class DeclareStep(override val config: XMLCalabashRuntime,
   private var _xpathVersion: Option[String] = None
   private var _excludeInlinePrefixes = Map.empty[String,String]
   private var _version: Option[String] = None
+  private val _varOptList = ListBuffer.empty[Artifact]
 
   def declaredType: Option[QName] = _type
   def psviRequired: Boolean = _psviRequired.getOrElse(false)
   def xpathVersion: Option[String] = _xpathVersion
   def version: Option[String] = _version
+
+  protected[model] def addVarOpt(art: Artifact): Unit = {
+    art match {
+      case variable: Variable => _varOptList += variable
+      case option: OptionDecl => _varOptList += option
+      case _ => throw new RuntimeException("Sent non opt to addVarOpt")
+    }
+  }
+
+  protected[xmlcalabash] def _init(): Unit = {
+    var valid = validate()
+
+    if (!atomicStep) {
+      valid = valid && makePortsExplicit()
+      valid = valid && makePipesExplicit()
+      valid = valid && makeBindingsExplicit()
+    }
+
+    if (!valid) {
+      throw new RuntimeException("Invalid declare-step")
+    }
+
+    if (!atomicStep) {
+      config.init()
+    }
+  }
 
   def pipelineGraph(): Graph = {
     val jafpl = Jafpl.newInstance()
@@ -223,45 +249,10 @@ class DeclareStep(override val config: XMLCalabashRuntime,
       }
     }
 
-    /*
-    for (key <- attributes.keySet) {
-      if (key.getNamespaceURI == "") {
-        throw new ModelException(ExceptionCode.BADCONTAINERATTR, key.getLocalName, location)
-      } else {
-        options.put(key, lexicalAvt(key.toString, attributes(key)))
-      }
-    }
-    */
-
     // N.B. The parser strips nested DeclareStep and Import elements out.
     for (child <- children) {
       valid = child.validate() && valid
     }
-
-    /*
-    val groupOne = List(classOf[Input], classOf[Output], classOf[OptionDecl],
-      classOf[Serialization], classOf[Documentation], classOf[PipeInfo], classOf[Variable])
-    val groupTwo = List(classOf[DeclareStep], classOf[Import], classOf[Documentation], classOf[PipeInfo])
-    val groupThree = subpiplineClasses ++ List(classOf[Documentation], classOf[PipeInfo])
-
-    valid = true
-    var index = 0
-    while (index < children.length && groupOne.contains(children(index).getClass)) {
-      valid = valid && children(index).validate()
-      index += 1
-    }
-    while (index < children.length && groupTwo.contains(children(index).getClass)) {
-      valid = valid && children(index).validate()
-      index += 1
-    }
-    while (index < children.length && groupThree.contains(children(index).getClass)) {
-      valid = valid && children(index).validate()
-      index += 1
-    }
-    if (index < children.length) {
-      throw XProcException.xsElementNotAllowed(location, children(index).nodeName)
-    }
-    */
 
     if (valid) {
       // Clarify primary and sequence
@@ -314,16 +305,104 @@ class DeclareStep(override val config: XMLCalabashRuntime,
     stepSig
   }
 
-  protected[xmlcalabash] def evaluateStaticBindings(runtime: GraphRuntime): Unit = {
-    val bindingsMap = mutable.HashMap.empty[String,XdmValueItemMessage]
+  override protected[xmlcalabash] def collectStatics(statics: Map[QName, Artifact]): Map[QName, Artifact] = {
+    // It's the _varOptList that counts here because declared steps aren't in the child list
 
+    // If the static is redefined several times, only the last one matters
+    val staticHash = mutable.HashMap.empty[QName, Artifact]
+    for (item <- _varOptList) {
+      item match {
+        case variable: Variable =>
+          if (variable.static) {
+            staticHash.put(variable.variableName, variable)
+          }
+        case option: OptionDecl =>
+          if (option.static) {
+            staticHash.put(option.optionName, option)
+          }
+        case _ =>
+          throw new RuntimeException("This can't happen; static isn't variable or option")
+      }
+    }
+
+    // If there are existing declarations at "lower levels", they're "last"
+    for ((name,art) <- statics) {
+      staticHash.put(name,art)
+    }
+
+    staticHash.toMap
+  }
+
+  protected[xmlcalabash] override def exposeStatics(): Boolean = {
+    var valid = true
+
+    // If the static is redefined several times, only the last one matters
+    val staticHash = mutable.HashMap.empty[QName, Artifact]
+    for (item <- _varOptList) {
+      item match {
+        case variable: Variable =>
+          if (variable.static) {
+            staticHash.put(variable.variableName, variable)
+          }
+        case option: OptionDecl =>
+          if (option.static) {
+            staticHash.put(option.optionName, option)
+          }
+        case _ =>
+          throw new RuntimeException("This can't happen; static isn't variable or option")
+      }
+    }
+
+    _varOptList.clear()
+    for ((name,art) <- staticHash) {
+      _varOptList += art
+    }
+
+    // Expose statics to the children, as appropriate
+    for (child <- children) {
+      child.exposeStatics()
+    }
+
+    // Also expose them to declared steps, which are no longer children
+    for (art <- _declaredSteps) {
+      valid = art.exposeStatics() && valid
+    }
+    for (art <- _declaredFunctions) {
+      valid = art.exposeStatics() && valid
+    }
+
+    valid
+  }
+
+  protected[xmlcalabash] def evaluateStaticBindings(runtime: GraphRuntime): Unit = {
+    val globalBindingsMap = mutable.HashMap.empty[String,XdmValueItemMessage]
+
+    // If this is a user-defined step being called from a pipeline, there may already be
+    // static variables in scope; make sure they get exposed.
+    for (static <- _varOptList) {
+      static match {
+        case variable: Variable =>
+          //runtime.setExternalStatic(variable.variableName.getClarkName, variable.staticValueMessage.get)
+          globalBindingsMap.put(variable.variableName.getClarkName, variable.staticValueMessage.get)
+          //config.globalContext.externalStatics.put(variable.variableName.getClarkName, variable.staticValueMessage.get)
+        case option: OptionDecl =>
+          //runtime.setExternalStatic(option.optionName.getClarkName, option.staticValueMessage.get)
+          globalBindingsMap.put(option.optionName.getClarkName, option.staticValueMessage.get)
+          //config.globalContext.externalStatics.put(option.optionName.getClarkName, option.staticValueMessage.get)
+        case _ =>
+          throw new RuntimeException("This can't happen; static isn't variable or option")
+      }
+    }
+
+    val bindingsMap = mutable.HashMap.empty[String,XdmValueItemMessage] ++ globalBindingsMap
     for (child <- children) {
       child match {
         case variable: Variable =>
           if (variable.static) {
-            val context = new ExpressionContext(StaticContext.EMPTY) // FIXME: what about namespaces!?
+            val context = new ExpressionContext(new StaticContext()) // FIXME: what about namespaces!?
             val expr = new XProcXPathExpression(context, variable.select.get)
             val msg = config.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
+            variable.staticValueMessage = msg
             runtime.setStatic(variable._graphNode.get.asInstanceOf[Binding], msg)
             bindingsMap.put(variable.variableName.getClarkName, msg)
           }
@@ -332,10 +411,11 @@ class DeclareStep(override val config: XMLCalabashRuntime,
             val msg = if (option.externalValue.isDefined) {
               new XdmValueItemMessage(option.externalValue.get, XProcMetadata.XML)
             } else {
-              val context = new ExpressionContext(StaticContext.EMPTY) // FIXME: what about namespaces!?
+              val context = new ExpressionContext(new StaticContext()) // FIXME: what about namespaces!?
               val expr = new XProcXPathExpression(context, option.select.get)
               config.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
             }
+            option.staticValueMessage = msg
             runtime.setStatic(option._graphNode.get.asInstanceOf[Binding], msg)
             bindingsMap.put(option.optionName.getClarkName, msg)
           }

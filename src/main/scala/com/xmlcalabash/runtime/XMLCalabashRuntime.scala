@@ -25,8 +25,7 @@ object XMLCalabashRuntime {
   var loggedProductDetails = false
 }
 
-class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
-                                                 private val debug: XMLCalabashDebugOptions) extends RuntimeConfiguration {
+class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig) extends RuntimeConfiguration {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected[runtime] val joinGateMarker = new XdmAtomicValue(new QName(XProcConstants.ns_cx, "JOIN-GATE-MARKER"))
 
@@ -39,7 +38,6 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   private var _unparsedTextURIResolver = config.unparsedTextURIResolver
   private var _watchdogTimeout = config.watchdogTimeout
   private var _episode = config.computeEpisode
-  //private val _staticOptionBindings = mutable.HashMap.empty[QName, XdmValue]
   private var _defaultSerializationOptions: Map[String,Map[QName,String]] = Map.empty[String,Map[QName,String]]
   private var _trim_inline_whitespace = config.trimInlineWhitespace
   private val inputSet = mutable.HashSet.empty[String]
@@ -59,18 +57,21 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
     XMLCalabashRuntime.loggedProductDetails = true
   }
 
-  protected[xmlcalabash] def init(decl: DeclareStep): Unit = {
+  protected[xmlcalabash] def setDeclaration(decl: DeclareStep): Unit = {
     this.decl = decl
+  }
 
-    debug.dumpXml(decl)
+  protected[xmlcalabash] def init(): Unit = {
+    //debug.dumpXml(decl)
     graph = decl.pipelineGraph()
-    debug.dumpOpenGraph(graph, decl)
+    //debug.dumpOpenGraph(graph, decl)
     graph.close()
-    debug.dumpGraph(graph, decl)
+    //debug.dumpGraph(graph, decl)
     runtime = new GraphRuntime(graph, this)
     runtime.traceEventManager = _traceEventManager
   }
 
+  /*
   def runtime(decl: DeclareStep): XMLCalabashRuntime = {
     val runtime = config.runtime(decl, debug)
     runtime._traceEventManager = _traceEventManager
@@ -81,13 +82,12 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
     runtime._moduleURIResolver = _moduleURIResolver
     runtime._unparsedTextURIResolver = _unparsedTextURIResolver
     runtime._watchdogTimeout = _watchdogTimeout
-    //runtime._staticOptionBindings.clear()
-    //runtime._staticOptionBindings ++= _staticOptionBindings
     runtime._defaultSerializationOptions = _defaultSerializationOptions
     runtime._trim_inline_whitespace = _trim_inline_whitespace
     runtime._signatures = _signatures
     runtime
   }
+  */
 
   // ===================================================================================
 
@@ -190,7 +190,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
       }
 
       if (bindingsMap.contains(jcbind)) {
-        runtime.setOption(jcbind, new XProcVarValue(bindingsMap(jcbind), new ExpressionContext(StaticContext.EMPTY)))
+        runtime.setOption(jcbind, new XProcVarValue(bindingsMap(jcbind), new ExpressionContext(new StaticContext())))
       } else {
         if (bdecl.required) {
           throw XProcException.xsMissingRequiredOption(bind, decl.location)
@@ -199,6 +199,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
     }
 
     decl.evaluateStaticBindings(runtime)
+    decl.propagateStaticBindings()
 
     try {
       runtime.run()
@@ -269,15 +270,22 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig,
   }
   override def traceEnabled(trace: String): Boolean = _traceEventManager.traceEnabled(trace)
 
-  /*
-  def staticOptionValue(option: QName): Option[XdmValue] = _staticOptionBindings.get(option)
-  def setStaticOptionValue(option: QName, value: XdmValue): Unit = {
-    _staticOptionBindings.put(option, value)
-  }
-  */
-
   override def expressionEvaluator: SaxonExpressionEvaluator = config.expressionEvaluator
   def expressionParser: ExpressionParser = config.expressionParser
+
+  // Combine the specified bindings with any external, global bindings
+  def runtimeBindings(bindings: Map[String, Message]): Map[String,Message] = {
+    val runtimeBindings = mutable.HashMap.empty[String,Message]
+    /*
+    for ((name, message) <- globalContext.externalStatics) {
+      runtimeBindings.put(name, message)
+    }
+    */
+    for ((name, message) <- bindings) {
+      runtimeBindings.put(name, message)
+    }
+    runtimeBindings.toMap
+  }
 
   // ====================================================================================
 

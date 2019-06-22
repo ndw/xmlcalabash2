@@ -19,6 +19,7 @@ import net.sf.saxon.trans.XPathException
 import net.sf.saxon.value.SequenceType
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.immutable.{HashMap, HashSet}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -631,10 +632,6 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
     } else {
       var binding = Option.empty[Artifact]
       for (child <- parent.get.children) {
-        if ((child == this) && binding.isDefined) {
-          return binding
-        }
-
         child match {
           case varbind: Variable =>
             if (varbind.variableName == varname) {
@@ -646,11 +643,14 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
             }
           case art: Artifact =>
             if (art == this) {
+              if (binding.isDefined) {
+                return binding
+              }
               return parent.get.findBinding(varname)
             }
         }
       }
-      throw new ModelException(ExceptionCode.INTERNAL, "Graph navigation error???", staticContext.location)
+      binding
     }
   }
 
@@ -678,6 +678,58 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
     }
 
     true
+  }
+
+  protected[xmlcalabash] def collectStatics(statics: Map[QName, Artifact]): Map[QName, Artifact] = {
+    // FIXME: this seems very inefficient
+
+    // Only look at declarations before "this"
+    // If there are several declarations at the same level, the last one counts
+    val localMap = mutable.HashMap.empty[QName,Artifact]
+    var found = false
+    if (parent.isDefined) {
+      for (child <- parent.get.children) {
+        found = found || (child == this)
+        if (!found) {
+          child match {
+            case variable: Variable =>
+              if (variable.static) {
+                localMap.put(variable.variableName, variable)
+
+              }
+            case option: OptionDecl =>
+              if (option.static) {
+                localMap.put(option.optionName, option)
+              }
+            case _ => Unit
+          }
+        }
+      }
+
+      // If there are existing declarations at "lower levels", they're "last"
+      for ((name,art) <- statics) {
+        localMap.put(name,art)
+      }
+
+      parent.get.collectStatics(localMap.toMap)
+    } else {
+      statics // I guess
+    }
+  }
+
+  protected[xmlcalabash] def exposeStatics(): Boolean = {
+    var valid = true
+    for (child <- children) {
+      //println(s"ACHILD: $child")
+      valid = child.exposeStatics() && valid
+    }
+    valid
+  }
+
+  protected[xmlcalabash] def propagateStaticBindings(): Unit = {
+    for (child <- children) {
+      child.propagateStaticBindings()
+    }
   }
 
   def makePortsExplicit(): Boolean = {

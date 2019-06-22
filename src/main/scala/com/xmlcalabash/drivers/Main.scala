@@ -9,8 +9,8 @@ import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig, XMLCalabashDe
 import com.xmlcalabash.exceptions.{ModelException, ParseException, StepException, XProcException}
 import com.xmlcalabash.model.xml.DeclareStep
 import com.xmlcalabash.runtime.{PrintingConsumer, XProcMetadata}
-import com.xmlcalabash.util.{ArgBundle, URIUtils}
-import net.sf.saxon.s9api.QName
+import com.xmlcalabash.util.{ArgBundle, MediaType, URIUtils}
+import net.sf.saxon.s9api.{QName, XdmNode}
 
 object Main extends App {
   type OptionMap = Map[Symbol, Any]
@@ -23,7 +23,11 @@ object Main extends App {
 
   var errored = false
   try {
-    val runtime = config.runtime(new URI(options.pipeline), options.debugOptions)
+    val request = new DocumentRequest(new URI(options.pipeline), MediaType.XML)
+    val response = config.documentManager.parse(request)
+
+    val decl = config.load(response.value)
+    val runtime = decl.config
 
     if (options.debugOptions.norun) {
       System.exit(0)

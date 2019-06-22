@@ -128,6 +128,7 @@ object XProcException {
   def xsNoSelectOnStaticOption(location: Option[Location]): XProcException = staticError(93, None, location)
   def xsNoSelectOnVariable(location: Option[Location]): XProcException = staticError(94, None, location)
   def xsInvalidSequenceType(seqType: String, errMsg: String, location: Option[Location]): XProcException = staticError(96, List(seqType, errMsg), location)
+  def xsNoBindingInExpression(name: String, location: Option[Location]): XProcException = staticError(107, name, location)
 
   def xcNotAnElement(pattern: String, nodeType: String, location: Option[Location]): XProcException = stepError(23, List(pattern, nodeType), location)
 

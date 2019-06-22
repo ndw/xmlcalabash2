@@ -20,7 +20,7 @@ class OptionDecl(override val config: XMLCalabashRuntime,
   private var _declaredType = Option.empty[String]
   private var _static = false
   private var _externalValue = Option.empty[XdmValue]
-  //private var _staticValueMessage = Option.empty[XdmValueItemMessage]
+  private var _staticValueMessage = Option.empty[XdmValueItemMessage]
 
   def optionName: QName = _name
   def required: Boolean = _required
@@ -39,7 +39,6 @@ class OptionDecl(override val config: XMLCalabashRuntime,
     _externalValue = value
   }
 
-  /*
   def staticValueMessage: Option[XdmValueItemMessage] = {
     if (_static && _staticValueMessage.isDefined) {
       _staticValueMessage
@@ -47,7 +46,9 @@ class OptionDecl(override val config: XMLCalabashRuntime,
       None
     }
   }
-  */
+  protected[model] def staticValueMessage_=(msg: XdmValueItemMessage): Unit = {
+    _staticValueMessage = Some(msg)
+  }
 
   override def validate(): Boolean = {
     var valid = super.validate()

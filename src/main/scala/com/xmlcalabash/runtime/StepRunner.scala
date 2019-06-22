@@ -1,5 +1,5 @@
 package com.xmlcalabash.runtime
-import com.jafpl.graph.Location
+import com.jafpl.graph.{Binding, Location}
 import com.jafpl.messages.{ExceptionMessage, JoinGateMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality}
@@ -13,7 +13,8 @@ import net.sf.saxon.s9api.{QName, XdmItem, XdmValue}
 import scala.collection.mutable
 
 class StepRunner(private val pruntime: XMLCalabashRuntime, val decl: DeclareStep, val signature: StepSignature) extends StepExecutable {
-  private val runtime = pruntime.runtime(decl)
+  private val runtime = decl.config
+  private val consumers = mutable.HashMap.empty[String, ConsumerMap]
 
   private val cardMap = mutable.HashMap.empty[String,PortCardinality]
   private val typeMap = mutable.HashMap.empty[String,List[String]]
@@ -50,8 +51,9 @@ class StepRunner(private val pruntime: XMLCalabashRuntime, val decl: DeclareStep
   override def bindingSpec: BindingSpecification = BindingSpecification.ANY
 
   override def setConsumer(consumer: XProcDataConsumer): Unit = {
+    // It's too early to set in the runtime, save for later
     for (port <- signature.outputPorts) {
-      runtime.output(port, new ConsumerMap(port, consumer))
+      consumers.put(port, new ConsumerMap(port, consumer))
     }
   }
 
@@ -78,7 +80,9 @@ class StepRunner(private val pruntime: XMLCalabashRuntime, val decl: DeclareStep
   }
 
   override def initialize(config: RuntimeConfiguration, params: Option[ImplParams]): Unit = {
-    // nop?
+    for ((port, consumer) <- consumers) {
+      runtime.output(port, consumer)
+    }
   }
 
   override def run(context: StaticContext): Unit = {

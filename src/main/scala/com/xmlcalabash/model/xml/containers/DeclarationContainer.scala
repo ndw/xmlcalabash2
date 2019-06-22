@@ -11,20 +11,24 @@ class DeclarationContainer(override val config: XMLCalabashRuntime,
                            override val parent: Option[Artifact],
                            override val stepType: QName) extends Container(config, parent, stepType) {
   // FIXME: what about static variables referenced by declared steps?
-  protected val _declaredSteps: ListBuffer[Artifact] = ListBuffer.empty[Artifact]
-  protected var _declaredFunctions: ListBuffer[Function] = ListBuffer.empty[Function]
+  protected val _declaredSteps = ListBuffer.empty[DeclareStep]
+  protected val _declaredLibraries = ListBuffer.empty[Library]
+  protected val _declaredFunctions = ListBuffer.empty[Function]
 
-  def declaredSteps: List[Artifact] = _declaredSteps.toList
+  def declaredSteps: List[DeclareStep] = _declaredSteps.toList
   def declaredFunctions: List[Function] = _declaredFunctions.toList
+  def decalredLibraries: List[Library] = _declaredLibraries.toList
+
   def declarations: List[Artifact] = {
     val buf = ListBuffer.empty[Artifact]
     buf ++= _declaredSteps
     buf ++= _declaredFunctions
+    buf ++= _declaredLibraries
     buf.toList
   }
 
   override def stepDeclaration(stepType: QName): Option[DeclareStep] = {
-    var stepDecl: Option[DeclareStep] = None
+    var stepDecl = Option.empty[DeclareStep]
     for (art <- _declaredSteps) {
       art match {
         case decl: DeclareStep =>
@@ -63,6 +67,7 @@ class DeclarationContainer(override val config: XMLCalabashRuntime,
   override def validate(): Boolean = {
     var valid = super.validate()
 
+    /* already done in the parser
     for (art <- _declaredSteps) {
       valid = art.validate() && valid
       if (! art.atomicStep) {
@@ -74,6 +79,7 @@ class DeclarationContainer(override val config: XMLCalabashRuntime,
     for (art <- _declaredFunctions) {
       valid = art.validate() && valid
     }
+    */
 
     valid
   }
@@ -81,9 +87,9 @@ class DeclarationContainer(override val config: XMLCalabashRuntime,
   override protected[xml] def addChild(child: Artifact): Unit = {
     child match {
       case decl: DeclareStep =>
-        _declaredSteps += child
+        _declaredSteps += decl
       case lib: Library =>
-        _declaredSteps += child
+        _declaredLibraries += lib
       case func: Function =>
         _declaredFunctions += func
       case _ =>

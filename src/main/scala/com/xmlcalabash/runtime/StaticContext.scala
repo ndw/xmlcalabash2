@@ -6,25 +6,20 @@ import com.jafpl.graph.Location
 import com.xmlcalabash.exceptions.XProcException
 import net.sf.saxon.s9api.QName
 
-object StaticContext {
-  protected val _anonymous = new QName("_")
-  private val _empty = new StaticContext()
-  def EMPTY = _empty
-}
-
 class StaticContext(init_stepType: QName) {
+  protected val _anonymous = new QName("_")
   private var _stepType: QName = init_stepType
   private var _baseURI: Option[URI] = None
   private var _inScopeNS = Map.empty[String,String]
   private var _location: Option[Location] = None
 
   def this() = {
-    this(StaticContext._anonymous)
+    this(new QName("_"))
   }
 
   def stepType: QName = _stepType
   def stepType_=(name: QName): Unit = {
-    if (_stepType == StaticContext._anonymous) {
+    if (_stepType == _anonymous) {
       _stepType = name
     } else {
       throw new RuntimeException("Attempt to rename step type in static context")

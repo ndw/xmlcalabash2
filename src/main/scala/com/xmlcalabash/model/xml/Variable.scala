@@ -1,6 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
+import com.jafpl.messages.Message
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.XProcConstants
@@ -19,7 +20,7 @@ class Variable(override val config: XMLCalabashRuntime,
   private var _expression = Option.empty[XProcExpression]
   private var _as = Option.empty[SequenceType]
   private var _static = false
-  //private var _staticValueMessage = Option.empty[XdmValueItemMessage]
+  private var _staticValueMessage = Option.empty[XdmValueItemMessage]
 
   def variableName: QName = _name
   def select: Option[String] = _select
@@ -28,7 +29,6 @@ class Variable(override val config: XMLCalabashRuntime,
 
   def static: Boolean = _static
 
-  /*
   def staticValueMessage: Option[XdmValueItemMessage] = {
     if (_static && _staticValueMessage.isDefined) {
       _staticValueMessage
@@ -36,7 +36,9 @@ class Variable(override val config: XMLCalabashRuntime,
       None
     }
   }
-  */
+  protected[model] def staticValueMessage_=(msg: XdmValueItemMessage): Unit = {
+    _staticValueMessage = Some(msg)
+  }
 
   override def validate(): Boolean = {
     var valid = super.validate()
@@ -58,25 +60,6 @@ class Variable(override val config: XMLCalabashRuntime,
     val href = attributes.get(XProcConstants._href)
 
     _as = sequenceType(attributes.get(XProcConstants._as))
-
-    /*
-    if (_static) {
-      val context = new ExpressionContext(staticContext)
-      val varExpr = new XProcXPathExpression(context, _select.get, _as)
-      val bindingRefs = lexicalVariables(_select.get)
-      val staticVariableMap = mutable.HashMap.empty[String, XdmValueItemMessage]
-      for (vref <- bindingRefs) {
-        val msg = staticValue(vref)
-        if (msg.isDefined) {
-          staticVariableMap.put(vref.getClarkName, msg.get)
-        } else {
-          throw new ModelException(ExceptionCode.NOBINDING, vref.toString, location)
-        }
-      }
-      val eval = config.expressionEvaluator
-      _staticValueMessage = Some(eval.value(varExpr, List(), staticVariableMap.toMap, None))
-    }
-    */
 
     for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._as,
       XProcConstants._select, XProcConstants._pipe, XProcConstants._href, XProcConstants._collection,
@@ -180,14 +163,35 @@ class Variable(override val config: XMLCalabashRuntime,
       }
 
       val variableRefs = findVariableRefs(expression)
+      val statics = collectStatics(Map.empty[QName,Artifact])
       for (ref <- variableRefs) {
         this.parent.get.asInstanceOf[PipelineStep].addVariableRef(ref)
         val bind = findBinding(ref)
-        if (bind.isEmpty) {
-          throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
+        if (bind.isDefined) {
+          graph.addBindingEdge(bind.get._graphNode.get.asInstanceOf[Binding], _graphNode.get)
         }
-        graph.addBindingEdge(bind.get._graphNode.get.asInstanceOf[Binding], _graphNode.get)
       }
+    }
+  }
+
+  override protected[xmlcalabash] def propagateStaticBindings(): Unit = {
+    val statics = collectStatics(Map.empty[QName,Artifact])
+    val staticBindings = mutable.HashMap.empty[Binding, Message]
+
+    for ((name,static) <- statics) {
+      static match {
+        case variable: Variable =>
+          staticBindings.put(static._graphNode.get.asInstanceOf[Binding], variable.staticValueMessage.get)
+        case option: OptionDecl =>
+          staticBindings.put(static._graphNode.get.asInstanceOf[Binding], option.staticValueMessage.get)
+        case _ =>
+          throw new RuntimeException("This can't happen; statics isn't variable or option")
+      }
+    }
+    _graphNode.get.staticBindings = staticBindings.toMap
+
+    for (child <- children) {
+      child.exposeStatics()
     }
   }
 }

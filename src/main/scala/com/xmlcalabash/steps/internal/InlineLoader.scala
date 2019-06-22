@@ -322,7 +322,7 @@ class InlineLoader(private val baseURI: Option[URI],
     val expr = new XProcVtExpression(context, text)
     var s = ""
     var string = ""
-    val iter = evaluator.value(expr, List.empty[Message], bindings.toMap, None).item.iterator()
+    val iter = evaluator.value(expr, List.empty[Message], config.get.runtimeBindings(bindings.toMap), None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
       string = string + s + next.getStringValue
@@ -334,7 +334,8 @@ class InlineLoader(private val baseURI: Option[URI],
   private def expandNodes(text: String, builder: SaxonTreeBuilder): Unit = {
     val evaluator = config.get.expressionEvaluator
     val expr = new XProcVtExpression(context, text)
-    val iter = evaluator.value(expr, List.empty[Message], bindings.toMap, None).item.iterator()
+
+    val iter = evaluator.value(expr, List.empty[Message], config.get.runtimeBindings(bindings.toMap), None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
       next match {

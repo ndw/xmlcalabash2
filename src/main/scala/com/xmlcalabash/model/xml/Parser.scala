@@ -1,9 +1,9 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.config.Signatures
+import com.xmlcalabash.config.{Signatures, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, XProcConstants}
-import com.xmlcalabash.model.xml.containers.{Catch, Choose, DeclarationContainer, Finally, ForEach, Group, Otherwise, Try, When, WithDocument, WithProperties}
+import com.xmlcalabash.model.xml.containers.{Catch, Choose, DeclarationContainer, Finally, ForEach, Group, Otherwise, Try, When}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
 import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, StaticContext, XMLCalabashRuntime, XProcVtExpression, XProcXPathExpression}
@@ -11,15 +11,40 @@ import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.immutable.HashMap
 import scala.collection.mutable.ListBuffer
 
-class Parser(val config: XMLCalabashRuntime) {
+class Parser(val config: XMLCalabashConfig) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private var exception: Option[Throwable] = None
   private val injectables = ListBuffer.empty[Injectable]
+  private var varOptStack = ListBuffer.empty[Artifact]
+  private var runtime: XMLCalabashRuntime = _
+  private var loadingStandardLibrary = false
 
-  def parsePipeline(node: XdmNode): DeclareStep = {
+  def loadLibrary(node: XdmNode): Library = {
+    val pipeline = parsePipeline(node)
+    pipeline match {
+      case library: Library => library
+      case _ => throw new RuntimeException(s"$node wasn't a library")
+    }
+  }
+
+  def loadDeclareStep(node: XdmNode): DeclareStep = {
+    val pipeline = parsePipeline(node)
+    pipeline match {
+      case decl: DeclareStep => decl
+      case _ => throw new RuntimeException(s"$node wasn't a library")
+    }
+  }
+
+  protected[xmlcalabash] def loadStandardLibrary(node: XdmNode): Library = {
+    loadingStandardLibrary = true
+    val library = loadLibrary(node)
+    loadingStandardLibrary = false
+    library
+  }
+
+  def parsePipeline(node: XdmNode): DeclarationContainer = {
     for (injectable <- injectables) {
       injectable.findSteps(node)
     }
@@ -35,13 +60,14 @@ class Parser(val config: XMLCalabashRuntime) {
       throw exception.get
     }
 
-    if (! art.get.isInstanceOf[DeclareStep]) {
-      exception = Some(new ModelException(ExceptionCode.BADPIPELINEROOT, node.toString, node))
-      config.errorListener.error(exception.get)
-      throw exception.get
+    val step = art.get match {
+      case decl: DeclareStep => decl
+      case lib: Library => lib
+      case _ =>
+        exception = Some(new ModelException(ExceptionCode.BADPIPELINEROOT, node.toString, node))
+        config.errorListener.error(exception.get)
+        throw exception.get
     }
-
-    val step = art.get.asInstanceOf[DeclareStep]
 
     for (injectable <- injectables) {
       if (!injectable.matched) {
@@ -57,14 +83,48 @@ class Parser(val config: XMLCalabashRuntime) {
   private def parse(node: XdmNode): Option[Artifact] = {
     val root = parse(None, node)
     if (exception.isEmpty) {
-      var valid = root.get.validate()
-      valid = valid && root.get.makePortsExplicit()
-      valid = valid && root.get.makePipesExplicit()
-      valid = valid && root.get.makeBindingsExplicit()
-      if (!valid) {
-        config.errorListener.error(new ModelException(ExceptionCode.INVALIDPIPELINE, List(), node))
+      // This is complicated; we want to validate in a depth first mannner, but
+      // we must expose statics iin a breadth-first manner. So this code does both.
+
+      root.get match {
+        case dcontainer: DeclarationContainer =>
+          for (decl <- dcontainer.declarations) {
+            decl match {
+              case decl: DeclareStep =>
+                decl._init()
+              case library: Library =>
+                // nop? We'll already have done this when we parsed the library, right?
+                Unit
+              case func: Function =>
+                func.validate()
+              case _ => throw new RuntimeException("This isn't possible: not a decl")
+            }
+          }
+
+          dcontainer match {
+            case decl: DeclareStep =>
+              decl._init()
+              decl.exposeStatics()
+            case _ => Unit
+          }
+
+          for (decl <- dcontainer.declarations) {
+            decl match {
+              case decl: DeclareStep =>
+                decl.exposeStatics()
+              case library: Library =>
+                // FIXME: we're going to need to do this part here, right?
+                Unit
+              case func: Function =>
+                Unit
+              case _ => throw new RuntimeException("This isn't possible: not a decl")
+            }
+          }
+
+
       }
     }
+
     root
   }
 
@@ -74,7 +134,7 @@ class Parser(val config: XMLCalabashRuntime) {
         var art: Option[Artifact] = None
         val iter = node.axisIterator(Axis.CHILD)
         while (iter.hasNext) {
-          val child = iter.next().asInstanceOf[XdmNode]
+          val child = iter.next()
           if (child.getNodeKind == XdmNodeKind.ELEMENT) {
             art = parse(None, child)
           }
@@ -85,7 +145,6 @@ class Parser(val config: XMLCalabashRuntime) {
         try {
           val art: Option[Artifact] = node.getNodeName match {
             case XProcConstants.p_declare_step => Some(parseDeclareStep(parent, node))
-            case XProcConstants.p_pipeline => Some(parsePipeline(parent, node))
             case XProcConstants.p_serialization => Some(parseSerialization(parent, node))
             case XProcConstants.p_output => Some(parseOutput(parent, node))
             case XProcConstants.p_input => Some(parseInput(parent, node))
@@ -165,7 +224,7 @@ class Parser(val config: XMLCalabashRuntime) {
             if (exception.isEmpty) {
               exception = Some(t)
             }
-            config.errorListener.error(t)
+            runtime.errorListener.error(t)
             None
         }
       case XdmNodeKind.TEXT =>
@@ -182,7 +241,7 @@ class Parser(val config: XMLCalabashRuntime) {
     if (decl.isDefined) {
       true
     } else {
-      config.signatures.stepTypes.contains(stepType)
+      runtime.signatures.stepTypes.contains(stepType)
     }
   }
 
@@ -200,52 +259,64 @@ class Parser(val config: XMLCalabashRuntime) {
   // ==========================================================================================
 
   private def parseDeclareStep(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new DeclareStep(config, parent)
+    val saveConfig = runtime
+    runtime = new XMLCalabashRuntime(config)
+    if (!loadingStandardLibrary) {
+      runtime.signatures = signatures(config.standardLibrary)
+    }
+    val art = new DeclareStep(runtime, parent)
+    runtime.setDeclaration(art)
+
+    val head = varOptStack.size
+    for (varopt <- varOptStack) {
+      art.addVarOpt(varopt)
+    }
+
     art.parse(node)
     parseChildren(art, node)
+
+    varOptStack = varOptStack.take(head)
+
+    runtime = saveConfig
     art
   }
 
-  private def parsePipeline(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new DeclareStep(config, parent)
-    val input = new Input(config, Some(art))
-    input.attributes.put(XProcConstants._port, "source")
-    input.attributes.put(XProcConstants._primary, "true")
-    art.children += input
-
-    val output = new Output(config, Some(art))
-    output.attributes.put(XProcConstants._port, "result")
-    output.attributes.put(XProcConstants._primary, "true")
-    art.children += output
-
+  private def parseLibrary(parent: Option[Artifact], node: XdmNode): Artifact = {
+    val saveConfig = runtime
+    runtime = new XMLCalabashRuntime(config)
+    if (!loadingStandardLibrary) {
+      runtime.signatures = signatures(config.standardLibrary)
+    }
+    val art = new Library(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
+    runtime = saveConfig
     art
   }
 
   private def parseAtomicStep(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new AtomicStep(config, parent, node.getNodeName)
+    val art = new AtomicStep(runtime, parent, node.getNodeName)
     art.parse(node)
     parseChildren(art, node)
     art
   }
 
   private def parseSerialization(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Serialization(config, parent)
+    val art = new Serialization(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
   }
 
   private def parseOutput(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Output(config, parent)
+    val art = new Output(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
   }
 
   private def parseInput(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Input(config, parent)
+    val art = new Input(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art.manageDefaultInputs()
@@ -253,7 +324,7 @@ class Parser(val config: XMLCalabashRuntime) {
   }
 
   private def parseWithInput(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new WithInput(config, parent)
+    val art = new WithInput(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
@@ -295,62 +366,64 @@ class Parser(val config: XMLCalabashRuntime) {
       excludeUriBindings = S9Api.urisForPrefixes(contextNode, prefixes)
     }
 
-    val art = new Inline(config, parent, node.getNodeName != XProcConstants.p_inline, excludeUriBindings, nodes.toList)
+    val art = new Inline(runtime, parent, node.getNodeName != XProcConstants.p_inline, excludeUriBindings, nodes.toList)
     art.parse(node)
     art
   }
 
   private def parseEmpty(parent: Option[Artifact], node: XdmNode): Artifact = {
     // FIXME: check that p:empty is empty!
-    val art = new Empty(config, parent)
+    val art = new Empty(runtime, parent)
     art.parse(node)
     art
   }
 
   private def parseDocument(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Document(config, parent)
+    val art = new Document(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
   }
 
   private def parsePipe(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Pipe(config, parent)
+    val art = new Pipe(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
   }
 
   private def parseOption(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new OptionDecl(config, parent)
+    val art = new OptionDecl(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
+    varOptStack += art
     art
   }
 
   private def parseVariable(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Variable(config, parent)
+    val art = new Variable(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
+    varOptStack += art
     art
   }
 
   private def parseWithOption(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new WithOption(config, parent)
+    val art = new WithOption(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
   }
 
   private def parseGroup(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Group(config, parent)
+    val art = new Group(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
   }
 
   private def parseChoose(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Choose(config, parent)
+    val art = new Choose(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
 
@@ -364,7 +437,7 @@ class Parser(val config: XMLCalabashRuntime) {
     }
 
     if (!hasOtherwise) {
-      val builder = new SaxonTreeBuilder(config)
+      val builder = new SaxonTreeBuilder(runtime)
       builder.startDocument(node.getBaseURI)
       builder.addStartElement(XProcConstants.p_otherwise)
       builder.startContent()
@@ -385,43 +458,43 @@ class Parser(val config: XMLCalabashRuntime) {
   }
 
   private def parseWhen(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new When(config, parent)
+    val art = new When(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
   }
 
   private def parseOtherwise(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Otherwise(config, parent)
+    val art = new Otherwise(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
   }
 
   private def parseTry(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Try(config, parent)
+    val art = new Try(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
   }
 
   private def parseCatch(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Catch(config, parent)
+    val art = new Catch(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
   }
 
   private def parseFinally(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Finally(config, parent)
+    val art = new Finally(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
   }
 
   private def parseIf(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Choose(config, parent)
-    val when = new When(config, Some(art))
+    val art = new Choose(runtime, parent)
+    val when = new When(runtime, Some(art))
 
     when.parse(node)
     parseChildren(when, node)
@@ -431,7 +504,7 @@ class Parser(val config: XMLCalabashRuntime) {
   }
 
   private def parseForEach(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new ForEach(config, parent)
+    val art = new ForEach(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
@@ -444,7 +517,7 @@ class Parser(val config: XMLCalabashRuntime) {
       val child = iter.next().asInstanceOf[XdmNode]
       nodes += child
     }
-    val art = new Documentation(config, parent, nodes.toList)
+    val art = new Documentation(runtime, parent, nodes.toList)
     art.parse(node)
     art
   }
@@ -456,20 +529,13 @@ class Parser(val config: XMLCalabashRuntime) {
       val child = iter.next().asInstanceOf[XdmNode]
       nodes += child
     }
-    val art = new PipeInfo(config, parent,nodes.toList)
+    val art = new PipeInfo(runtime, parent,nodes.toList)
     art.parse(node)
-    art
-  }
-
-  private def parseLibrary(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Library(config, parent)
-    art.parse(node)
-    parseChildren(art, node)
     art
   }
 
   private def parseFunction(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Function(config, parent)
+    val art = new Function(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
     art
@@ -477,13 +543,7 @@ class Parser(val config: XMLCalabashRuntime) {
 
   // =====================================================================================
 
-  protected[xmlcalabash] def signatures(doc: XdmNode): Signatures = {
-    val xdmLibrary = S9Api.documentElement(doc).get
-    if (xdmLibrary.getNodeName != XProcConstants.p_library) {
-      throw new RuntimeException("Signatures can only be loaded from a p:library")
-    }
-    val library = parse(xdmLibrary).get.asInstanceOf[Library]
-
+  private def signatures(library: Library): Signatures = {
     val signatures = new Signatures()
     for (child <- library.declarations) {
       child match {
@@ -599,7 +659,7 @@ class Parser(val config: XMLCalabashRuntime) {
       "inj-" + UniqueId.nextId
     }
 
-    val injectable = new Injectable(config, id, node.getNodeName, stepExpr ,conditionExpr, baseURI, new NodeLocation(node))
+    val injectable = new Injectable(runtime, id, node.getNodeName, stepExpr ,conditionExpr, baseURI, new NodeLocation(node))
     if ((node.getNodeName == XProcConstants.p_input) || (node.getNodeName == XProcConstants.p_output)) {
       val port = Option(node.getAttributeValue(XProcConstants._port))
       if (port.isDefined) {

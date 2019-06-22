@@ -137,7 +137,7 @@
   <p:option name="version" as="xs:string"/>
 </p:declare-step>
 
-<!--============================================================ -->
+<!-- ============================================================ -->
 
 <p:declare-step type="cx:exception-translator">
   <p:input port="source" content-types="*/*" sequence="true"/>
