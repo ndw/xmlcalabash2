@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
+import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Inline, Pipe}
 import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 import net.sf.saxon.value.SequenceType
@@ -47,7 +47,11 @@ class WithOption(override val config: XMLCalabashRuntime,
       _expression = Some(new XProcXPathExpression(context, selattr.get, as))
     }
 
-    for (key <- List(XProcConstants._name, XProcConstants._select, XProcConstants._collection)) {
+    val href = attributes.get(XProcConstants._href)
+    val pipe = attributes.get(XProcConstants._pipe)
+
+    for (key <- List(XProcConstants._name, XProcConstants._select, XProcConstants._collection,
+      XProcConstants._href, XProcConstants._pipe)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -58,12 +62,67 @@ class WithOption(override val config: XMLCalabashRuntime,
       throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
-    val okChildren = List(classOf[Empty], classOf[Inline], classOf[Pipe], classOf[Document])
-    for (child <- relevantChildren) {
-      if (!okChildren.contains(child.getClass)) {
-        throw XProcException.xsElementNotAllowed(location, child.nodeName)
+    var hasDataSources = false
+    var emptyCount = 0
+    var nonEmptyCount = 0
+    var hasImplicit = false
+    var hasExplicit = false
+    for (child <- children) {
+      child match {
+        case ds: DataSource =>
+          hasDataSources = true
+          valid = valid && child.validate()
+          child match {
+            case inline: Inline =>
+              hasImplicit = hasImplicit || inline.isImplicit
+              hasExplicit = hasExplicit || !inline.isImplicit
+              nonEmptyCount += 1
+            case empty: Empty =>
+              emptyCount += 1
+              hasExplicit = true
+            case _ =>
+              nonEmptyCount += 1
+              hasExplicit = true
+          }
+          if (hasImplicit && hasExplicit) {
+            throw XProcException.xsElementNotAllowed(child.location, child.nodeName, "cannot mix implicit inlines with elements in the XProc namespace")
+          }
+        case d: Documentation =>
+          hasExplicit = true
+          if (hasImplicit) {
+            throw XProcException.xsElementNotAllowed(child.location, child.nodeName, "cannot mix implicit inlines with elements in the XProc namespace")
+          }
+        case p: PipeInfo =>
+          hasExplicit = true
+          if (hasImplicit) {
+            throw XProcException.xsElementNotAllowed(child.location, child.nodeName, "cannot mix implicit inlines with elements in the XProc namespace")
+          }
+        case _ => throw XProcException.xsElementNotAllowed(location, child.nodeName)
       }
-      valid = valid && child.validate()
+    }
+
+    if ((emptyCount > 0) && ((emptyCount != 1) || (nonEmptyCount != 0))) {
+      throw XProcException.xsNoSiblingsOnEmpty(location)
+    }
+
+    if (href.isDefined) {
+      if (hasDataSources) {
+        throw XProcException.staticError(81, href.get, location)
+      }
+      hasDataSources = true
+
+      for (uri <- href.get.split("\\s+")) {
+        val ruri = baseURI.get.resolve(uri)
+        val doc = new Document(config, this, ruri.toASCIIString)
+        addChild(doc)
+      }
+    }
+
+    if (pipe.isDefined) {
+      if (hasDataSources) {
+        throw XProcException.staticError(82, pipe.get, location)
+      }
+      parsePipeAttribute(pipe.get)
     }
 
     valid
