@@ -79,6 +79,10 @@
   <p:option name="parameters" as="map(*)"/>
 </p:declare-step>
 
+<p:declare-step type="p:sink">
+  <p:input port="source" content-types="any" sequence="true"/>
+</p:declare-step>
+
 <p:declare-step type="p:store">
   <p:input port="source" content-types="*/*"/>
   <p:output port="result" content-types="application/xml"/>
