@@ -44,10 +44,9 @@ class Pipe(override val config: XMLCalabashRuntime,
   }
 
   override def toString: String = {
-    val s = step.getOrElse("undefined")
-    val p = port.getOrElse("undefined")
-    val par = parent.getOrElse("undefined")
-    s"Pipe: $s.$p to $par"
+    val s = step.getOrElse("")
+    val p = port.getOrElse("")
+    s"$p@$s"
   }
 
   def step: Option[String] = _step

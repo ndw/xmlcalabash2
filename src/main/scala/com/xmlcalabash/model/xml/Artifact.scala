@@ -768,7 +768,7 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
                   }
               }
             } else {
-              throw new ModelException(ExceptionCode.NODRP, List(), staticContext.location)
+              throw XProcException.xsPortNotReadable(pipe.toString, staticContext.location)
             }
           }
 
