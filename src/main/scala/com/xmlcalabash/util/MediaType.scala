@@ -9,11 +9,35 @@ import scala.collection.mutable.ListBuffer
 
 object MediaType {
   val OCTET_STREAM = new MediaType("application", "octet-stream")
-  //def ANY = new MediaType("*", "*")
   val TEXT = new MediaType("text", "plain")
-  val XML = new MediaType("application", "xml")
+  val XML  = new MediaType("application", "xml")
   val JSON = new MediaType("application", "json")
   val HTML = new MediaType("text", "html")
+
+  val MATCH_XML: Array[MediaType] = Array(
+    MediaType.parse("application/xml"),
+    MediaType.parse("text/xml"),
+    MediaType.parse("*/*+xml"),
+    MediaType.parse("-application/xhtml+xml"))
+
+  val MATCH_HTML: Array[MediaType] = Array(
+    MediaType.parse("text/html"),
+    MediaType.parse("application/xhtml+xml")
+  )
+
+  val MATCH_TEXT: Array[MediaType] = Array(
+    MediaType.parse("text/*"),
+    MediaType.parse("-text/html"),
+    MediaType.parse("-text/xml")
+  )
+
+  val MATCH_JSON: Array[MediaType] = Array(
+    MediaType.parse("application/json")
+  )
+
+  val MATCH_ANY: Array[MediaType] = Array(
+    MediaType.parse("*/*")
+  )
 
   def parse(mtype: Option[String]): Option[MediaType] = {
     if (mtype.isDefined) {
@@ -24,29 +48,44 @@ object MediaType {
   }
 
   def parse(mtype: String): MediaType = {
-    // type/subtype; name1=val1; name2=val2
+    // [-]type/subtype; name1=val1; name2=val2
     var pos = mtype.indexOf("/")
     if (pos <= 0) {
-      throw XProcException.xsBadTypeValue("content-types", "content type")
+      throw XProcException.xsUnrecognizedContentType(mtype, None)
     }
-    val mediaType = mtype.substring(0, pos).trim
+    var mediaType = mtype.substring(0, pos).trim
     var rest = mtype.substring(pos + 1)
     val plist = ListBuffer.empty[String]
 
+    var inclusive = true
+    if (mediaType.startsWith("-")) {
+      inclusive = false
+      mediaType = mediaType.substring(1)
+    }
+
+    // This is a bit convoluted because of the way 'rest' is reused.
+    // There was a bug and this was the easiest fix. #hack
+
+    var params = ""
     pos = rest.indexOf(";")
-    if (pos < 0) {
-      new MediaType(mediaType, rest.trim)
+    if (pos >= 0) {
+      params = rest.substring(pos+1)
+      rest = rest.substring(0, pos).trim
+    }
+
+    var mediaSubtype = rest
+    var suffix = Option.empty[String]
+
+    if (mediaSubtype.contains("+")) {
+      pos = mediaSubtype.indexOf("+")
+      suffix = Some(mediaSubtype.substring(pos+1).trim)
+      mediaSubtype = mediaSubtype.substring(0, pos).trim
+    }
+
+    if (params == "") {
+      new MediaType(mediaType, mediaSubtype, suffix, inclusive, None)
     } else {
-      var mediaSubtype = rest.substring(0, pos).trim
-      var suffix = Option.empty[String]
-
-      if (mediaSubtype.contains("+")) {
-        pos = mediaSubtype.indexOf("+")
-        suffix = Some(mediaSubtype.substring(pos+1).trim)
-        mediaSubtype = mediaSubtype.substring(0, pos).trim
-      }
-
-      rest = rest.substring(pos+1)
+      rest = params
       pos = rest.indexOf(";")
       while (pos >= 0) {
         val param = rest.substring(0, pos).trim
@@ -59,27 +98,33 @@ object MediaType {
       if (rest.trim != "") {
         plist.append(rest.trim)
       }
-      new MediaType(mediaType, mediaSubtype, suffix, Some(plist.toArray))
+      new MediaType(mediaType, mediaSubtype, suffix, inclusive, Some(plist.toArray))
     }
   }
 
   def parseList(ctypes: String): ListBuffer[MediaType] = {
     val contentTypes = ListBuffer.empty[MediaType]
     for (ctype <- ctypes.split("\\s+")) {
-      val mtype = MediaType.parse(ctype)
-      contentTypes += mtype
+      ctype match {
+        case "xml"  => contentTypes ++= MATCH_XML
+        case "html" => contentTypes ++= MATCH_HTML
+        case "text" => contentTypes ++= MATCH_TEXT
+        case "json" => contentTypes ++= MATCH_JSON
+        case "any"  => contentTypes ++= MATCH_ANY
+        case _      => contentTypes += MediaType.parse(ctype)
+      }
     }
     contentTypes
   }
 }
 
-class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Option[String], val param: Option[Array[String]]) {
+class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Option[String], val inclusive: Boolean, val param: Option[Array[String]]) {
   def this(mediaType: String, mediaSubtype: String) {
-    this(mediaType, mediaSubtype, None, None)
+    this(mediaType, mediaSubtype, None, true, None)
   }
 
   def this(mediaType: String, mediaSubtype: String, suffix: String) {
-    this(mediaType, mediaSubtype, Some(suffix), None)
+    this(mediaType, mediaSubtype, Some(suffix), true, None)
   }
 
   def classification: MediaType = {
@@ -97,54 +142,55 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
   }
 
   def textContentType: Boolean = {
-    mediaType == "text"
+    val mtype = matchingMediaType(MediaType.MATCH_TEXT)
+    mtype.isDefined && mtype.get.inclusive
   }
 
   def xmlContentType: Boolean = {
-    ((mediaType == "application" && mediaSubtype == "xml")
-      || (mediaType == "text" && mediaSubtype == "xml")
-      || (suffix.isDefined && suffix.get == "xml"))
+    val mtype = matchingMediaType(MediaType.MATCH_XML)
+    mtype.isDefined && mtype.get.inclusive
   }
 
   def jsonContentType: Boolean = {
-    (mediaType == "application" || mediaType == "text") && (mediaSubtype == "json")
+    val mtype = matchingMediaType(MediaType.MATCH_JSON)
+    mtype.isDefined && mtype.get.inclusive
   }
 
   def htmlContentType: Boolean = {
-    ((mediaType == "text" && mediaSubtype == "html")
-      || (mediaType == "application" && mediaSubtype == "html"))
+    val mtype = matchingMediaType(MediaType.MATCH_HTML)
+    mtype.isDefined && mtype.get.inclusive
   }
+
+  def anyContentType: Boolean = true
 
   def markupContentType: Boolean = {
     xmlContentType || jsonContentType || htmlContentType
   }
 
-  def anyContentType: Boolean = {
-    mediaType == "application" && mediaSubtype == "octet-stream"
+  def matchingMediaType(mtypes: Array[MediaType]): Option[MediaType] = {
+    var matching = Option.empty[MediaType]
+    for (mtype <- mtypes) {
+      //println(s"$this $mtype ${matches(mtype)}")
+      if (matches(mtype)) {
+        matching = Some(mtype)
+      }
+    }
+    matching
   }
 
   def matches(mtype: MediaType): Boolean = {
-    if (mtype.anyContentType) {
-      return true
+    var mmatch = mediaType == mtype.mediaType || mtype.mediaType == "*"
+    mmatch = mmatch && (mediaSubtype == mtype.mediaSubtype || mtype.mediaSubtype == "*")
+    if (suffix.isDefined && mtype.suffix.isDefined) {
+      mmatch = mmatch && suffix.get == mtype.suffix.get
     }
 
-    if (xmlContentType && mtype.xmlContentType) {
-      return true
+    // This special rule seems necessary but I can't really justify it
+    if (mmatch && mtype.mediaType == "*" && mtype.mediaSubtype == "*") {
+      mmatch = mmatch && (suffix.isEmpty && mtype.suffix.isEmpty || suffix.isDefined && mtype.suffix.isDefined)
     }
 
-    if (mtype.mediaType == "*") {
-      return true
-    }
-
-    if (mediaType != mtype.mediaType) {
-      return false
-    }
-
-    if (mtype.mediaSubtype == "*") {
-      return true
-    }
-
-    mediaSubtype == mtype.mediaSubtype
+    mmatch
   }
 
   def charset: Option[String] = {
@@ -159,9 +205,14 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
   }
 
   override def toString: String = {
-    var ctype = mediaType + "/" + mediaSubtype
+    var ctype = if (inclusive) {
+      ""
+    } else {
+      "-"
+    }
+    ctype += mediaType + "/" + mediaSubtype
     if (suffix.isDefined) {
-      ctype = ctype + "+" + suffix
+      ctype = ctype + "+" + suffix.get
     }
     if (param.isDefined) {
       for (param <- param.get) {
