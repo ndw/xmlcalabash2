@@ -1,0 +1,36 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" 
+        xmlns:err="http://www.w3.org/ns/xproc-step" 
+        expected="fail" code="err:XS0036">
+   <t:info>
+      <t:title>Library import 012 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-02-25</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Added new tests for p:declare-step and p:import.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests XS0036 is raised if declared and imported steps have the same name.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc"
+         xmlns:x="http://test">
+         <p:import href="../pipelines/ab-library-007.xpl" />
+         <p:output port="result" />
+         
+         <p:declare-step type="x:step1">
+            <p:output port="source" />
+            <p:identity>
+               <p:with-input><doc /></p:with-input>
+            </p:identity>
+         </p:declare-step>
+         <x:step1 />
+      </p:declare-step>
+   </t:pipeline>
+ </t:test>

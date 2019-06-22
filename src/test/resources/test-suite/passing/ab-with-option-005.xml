@@ -3,6 +3,15 @@
       <t:title>With-option 005</t:title>
       <t:revision-history>
          <t:revision>
+            <t:date>2019-06-13</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Changed from p:insert to p:add-attribute, because p:insert/@position is no longer required.</p>
+            </t:description>
+         </t:revision>
+         <t:revision>
             <t:date>2018-10-05T08:38:17-05:00</t:date>
             <t:author>
                <t:name>Norman Walsh</t:name>
@@ -30,14 +39,11 @@
             <p:input port="source"/>
             <p:output port="result"/>
             
-            <p:insert>
-                <p:with-input>
-               <doc/>
-            </p:with-input>
-                <p:with-input port="insertion">
-               <insert/>
-            </p:with-input>
-            </p:insert>
+            <p:add-attribute match="/*">
+               <p:with-input>
+                  <doc/>
+               </p:with-input>
+            </p:add-attribute>
         </p:declare-step>
    </t:pipeline>
 </t:test>

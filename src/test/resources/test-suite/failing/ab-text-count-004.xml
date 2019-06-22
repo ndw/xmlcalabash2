@@ -1,0 +1,43 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>p:text-count 004 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-30</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Tests for p:text-count</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:text-count</p>
+   </t:description>
+   
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:output port="result"/>
+            
+         <p:text-count>
+            <p:with-input>
+               <p:inline content-type="text/plain">First line &#xD; second line</p:inline>
+            </p:with-input>
+         </p:text-count>
+         
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:ns uri="http://www.w3.org/ns/xproc-step" prefix="c" />
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="c:result">Root element is not 'c:result'.</s:assert>
+               <s:assert test="c:result/text()=2">Content of result does not equal 0.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

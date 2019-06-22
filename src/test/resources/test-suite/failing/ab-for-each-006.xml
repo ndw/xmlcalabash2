@@ -1,0 +1,48 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>AB for-each 006</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-01-09</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Initial test</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Test <code>p:for-each</code> with nested <code>p:output</code> (ported from 1.0-testsuite/for-each-006)</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:output port="result" sequence="true"/>
+         
+         <p:for-each>
+            <p:with-input>
+               <p:empty/>
+            </p:with-input>
+            <p:output port="out" sequence="true"/>
+            <p:identity/>
+         </p:for-each>
+         
+         <p:count/>
+         
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step"/>
+         <s:pattern>
+            <s:rule context="/*">
+               <s:assert test="self::c:result">The pipeline root is not c:result.</s:assert>
+               <s:assert test="string(.) = '0'">The result isn't "0"</s:assert>
+            </s:rule>
+         </s:pattern>
+         
+      </s:schema>
+   </t:schematron>
+</t:test>

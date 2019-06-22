@@ -1,0 +1,57 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>p:wrap-sequence 010 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-06-02</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Tests for p:wrap-sequence (Partly ported from 1.0)</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:wrap-sequence</p>
+   </t:description>
+   
+   <t:input port="source"><doc /></t:input>
+   
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" name="pipeline" version="3.0">
+         <p:input port="source" />
+         <p:output port="result"/>
+         
+         <p:identity name="pr">
+            <p:with-input>
+               <p:pipe step="pipeline" port="source" />
+               <p:pipe step="pipeline" port="source" />
+               <p:pipe step="pipeline" port="source" />
+               <p:pipe step="pipeline" port="source" />
+            </p:with-input>
+         </p:identity>
+        
+         <p:wrap-sequence name="splitseq" wrapper="sequence"
+            group-adjacent="position() = last()"/>
+         
+         <p:wrap-sequence wrapper="result" />
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="result">Root element is not 'result'.</s:assert>
+               <s:assert test="count(result/child::node())=2">Root element should have two children.</s:assert>
+               <s:assert test="count(result/sequence)=2">All children of root element should be 'sequence'.</s:assert>
+               <s:assert test="count(result/sequence[1]/child::node())=3">First sequence element should have three child.</s:assert>
+               <s:assert test="count(result/sequence[2]/child::node())=1">Second sequence element should have one child.</s:assert>
+               <s:assert test="count(result/sequence[1]/doc)=3">First sequence element should have three 'doc' children.</s:assert>
+               <s:assert test="result/sequence[2]/doc">Second sequence element should have one 'doc' child.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

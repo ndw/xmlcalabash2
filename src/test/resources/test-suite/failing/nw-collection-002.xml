@@ -1,9 +1,18 @@
 <t:test xmlns:t="http://xproc.org/ns/testsuite/3.0"
         xmlns:err="http://www.w3.org/ns/xproc-error"
-        expected="fail" code="err:XD0008">
+        expected="fail" code="err:XD0001">
    <t:info>
       <t:title>Collection 002</t:title>
       <t:revision-history>
+        <t:revision>
+          <t:date>2019-04-22</t:date>
+          <t:author>
+            <t:name>Achim Berndzen</t:name>
+          </t:author>
+          <t:description xmlns="http://www.w3.org/1999/xhtml">
+            <p>Adapted test to new context item strategy, new error code.</p>
+          </t:description>
+        </t:revision>
          <t:revision>
             <t:date>2018-10-14</t:date>
             <t:author initials="ndw">
@@ -16,7 +25,7 @@
       </t:revision-history>
    </t:info>
    <t:description xmlns="http://www.w3.org/1999/xhtml">
-      <p>Tests that <code>err:XD0008</code> is raised if a sequence of documents is the context
+      <p>Tests that <code>err:XD0001</code> is raised if a sequence of documents is the context
       for an XPath expression on a <tag>p:variable</tag>.</p>
    </t:description>
    <t:pipeline>
@@ -43,7 +52,7 @@
           <p:with-input port="source" pipe="@id1 @id2"/>
         </p:identity>
 
-        <p:variable name="a" select="count(collection())"/>
+        <p:variable name="a" select="count(.)"/>
 
         <p:identity>
           <p:with-input>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0102">
+    <t:info>
+        <t:title>p:choose-002 (AB)</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2019-04-05</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>New tests</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Tests XS0102 is raised if alternative subpipelines have different primary output ports.</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>
+            
+            <p:identity>
+                <p:with-input><doc /></p:with-input>
+            </p:identity>
+            
+            <p:choose>
+                <p:when test="/doc">
+                    <p:output port="default" />
+                    <p:identity />
+                </p:when>
+                <p:when test="true()">
+                    <p:identity />
+                </p:when>
+            </p:choose>
+        </p:declare-step>
+    </t:pipeline>
+</t:test>

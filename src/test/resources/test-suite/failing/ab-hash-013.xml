@@ -1,0 +1,33 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" 
+   xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XC0036">
+   <t:info>
+      <t:title>hash 013 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-01</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>New tests for p:hash</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Testing p:hash raises XC0036 for known algorithm but unsupported version.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc">
+         <p:output port="result" />
+         
+         <p:hash value="XML Processing Model Working Group" algorithm="crc" version="unsupported" match="/doc/@att">
+            <p:with-input>
+               <doc att="wrong" />
+            </p:with-input>
+         </p:hash>
+        
+      </p:declare-step>
+   </t:pipeline>
+   
+</t:test>

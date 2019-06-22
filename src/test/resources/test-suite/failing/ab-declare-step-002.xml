@@ -1,0 +1,35 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" 
+   xmlns:err="http://www.w3.org/ns/xproc-error"
+   expected="fail" code="err:XS0025">
+   <t:info>
+      <t:title>Declare-step-002 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-02-20</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Added new tests for p:declare-step and p:import.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests XS0025 is raised if type of declared step is in no namespace.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc">
+         <p:output port="result" />
+         <p:declare-step type="step">
+            <p:output port="result"/>
+            <p:identity>
+               <p:with-input><doc /></p:with-input>
+            </p:identity>
+         </p:declare-step>
+         
+         <step />
+      </p:declare-step>
+   </t:pipeline>
+   
+</t:test>

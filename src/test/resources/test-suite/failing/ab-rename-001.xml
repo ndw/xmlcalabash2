@@ -1,0 +1,48 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>p:rename-001 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-18</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Ported tests for p:rename</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:rename</p>
+   </t:description>
+   <t:input port='source'>
+      <p:pipeline name="pipeline" xmlns:p="http://www.w3.org/ns/xproc">  
+         <p:rename>
+            <p:option name="match" value="p:rename"/>
+            <p:option name="new-name" value="p:changed-rename"/>
+         </p:rename>
+      </p:pipeline>
+   </t:input>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:input port="source" />
+         <p:output port="result"/>
+            
+         <p:rename match="p:rename" new-name="p:changed-name"/>
+         
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:ns uri="http://www.w3.org/ns/xproc" prefix="p" />
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="p:pipeline">The root element is not 'Q{http://www.w3.org/ns/xproc}pipeline'.</s:assert>
+               <s:assert test="p:pipeline/p:changed-name">The root element does not have a child 'Q{http://www.w3.org/ns/xproc}changed-name'.</s:assert>
+               <s:assert test="count(p:pipeline/p:changed-name/p:option)=2">Element 'p:changed-name' does not have two 'p:option' children.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

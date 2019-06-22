@@ -1,0 +1,59 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+    <t:info>
+        <t:title>DRP as context for TVT 015</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2019-02-16</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>Fixed error in test by adding p:declare-step/@version</p>
+                </t:description>
+             </t:revision>
+             <t:revision>
+                <t:date>2018-12-31</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>Created new test</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Tests DRP is context sequence for TVT in p:inline with no reference to context.</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>
+            
+            <p:identity>
+                <p:with-input>
+                    <doc1 />
+                    <doc2 />
+                </p:with-input>
+            </p:identity>
+            
+            <p:identity>
+                <p:with-input>
+                    <p:inline>
+                        <result>{2+3}</result>
+                    </p:inline>
+                </p:with-input>
+            </p:identity>
+        </p:declare-step>
+    </t:pipeline>
+    <t:schematron>
+        <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+            <s:pattern>
+                <s:rule context="/">
+                    <s:assert test="/result">Document root is not named 'result'.</s:assert>
+                    <s:assert test="count(*) = 1">Document does not have exactly one child element.</s:assert>
+                    <s:assert test="/result/text()='5'">Element 'result' does not have a text child with '5'.</s:assert>
+                </s:rule>
+            </s:pattern>
+        </s:schema>
+    </t:schematron>
+</t:test>

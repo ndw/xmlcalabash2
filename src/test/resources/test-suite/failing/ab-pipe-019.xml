@@ -1,0 +1,40 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0022">
+   <t:info>
+      <t:title>pipe-019 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-06-16</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Initial test.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Checks p:pipe in p:catch can not access steps in p:try.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:output port="result" />
+         
+         <p:try>
+            <p:identity name="not-visible">
+               <p:with-input>
+                  <doc />
+               </p:with-input>
+            </p:identity>
+            <p:error code="error" />
+            
+            <p:catch>
+               <p:identity>
+                  <p:with-input pipe="result@not-visible" />
+               </p:identity>
+            </p:catch>
+         </p:try>
+         
+      </p:declare-step>
+   </t:pipeline>
+</t:test>

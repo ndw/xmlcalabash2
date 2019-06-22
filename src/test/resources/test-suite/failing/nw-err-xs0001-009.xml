@@ -5,6 +5,15 @@
   <t:title>Test err:XS0001 009</t:title>
   <t:revision-history>
     <t:revision>
+      <t:date>2019-01-24</t:date>
+      <t:author>
+        <t:name>Achim Berndzen</t:name>
+      </t:author>
+      <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Changed syntax from 1.0 to 3.0</p>
+      </t:description>
+    </t:revision>
+    <t:revision>
       <t:date>2018-10-16</t:date>
       <t:author>
         <t:name>Norman Walsh</t:name>
@@ -23,14 +32,14 @@
 <t:pipeline>
   <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
     <p:choose name="step">
-      <p:xpath-context>
+      <p:with-input>
         <p:pipe step="following" port="result"/>
-      </p:xpath-context>
+      </p:with-input>
       <p:when test="1 = 1">
         <p:identity>
-          <p:input port="source">
+          <p:with-input port="source">
             <p:inline><doc/></p:inline>
-          </p:input>
+          </p:with-input>
         </p:identity>
       </p:when>
     </p:choose>

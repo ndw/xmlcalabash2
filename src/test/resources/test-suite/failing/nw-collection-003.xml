@@ -1,9 +1,36 @@
 <t:test xmlns:t="http://xproc.org/ns/testsuite/3.0"
         xmlns:err="http://www.w3.org/ns/xproc-error"
-        expected="fail" code="err:XD0008">
+        expected="fail" code="err:XD0001">
    <t:info>
       <t:title>Collection 003</t:title>
-      <t:revision-history>
+        <t:revision-history>
+          <t:revision>
+            <t:date>2019-04-22</t:date>
+            <t:author>
+              <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+              <p>Adapted test to new context item strategy, new error code.</p>
+            </t:description>
+          </t:revision>
+          <t:revision>
+            <t:date>2019-04-04</t:date>
+            <t:author initials="ab">
+              <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+              <p>Changed XPath expression on p:wrap-sequence/p:with-option so context item is used and XD0008 has to be raised.</p>
+            </t:description>
+          </t:revision>
+          <t:revision>
+            <t:date>2018-10-17</t:date>
+            <t:author initials="ab">
+              <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+              <p>Fixed error in XPath expression for variable 'a': Missing ')'</p>
+            </t:description>
+        </t:revision>
          <t:revision>
             <t:date>2018-10-14</t:date>
             <t:author initials="ndw">
@@ -16,7 +43,7 @@
       </t:revision-history>
    </t:info>
    <t:description xmlns="http://www.w3.org/1999/xhtml">
-      <p>Tests that <code>err:XD0008</code> is raised if a sequence of documents is the context
+      <p>Tests that <code>err:XD0001</code> is raised if a sequence of documents is the context
       for an XPath expression on a <tag>p:with-option</tag>.</p>
    </t:description>
    <t:pipeline>
@@ -46,7 +73,7 @@
         <p:variable name="a" select="count(collection())" collection="true"/>
 
         <p:wrap-sequence>
-          <p:with-option name="wrapper" select="concat('wrapper', count(collection())"/>
+          <p:with-option name="wrapper" select="concat('wrapper', *[1]/name())"/>
           <p:with-input>
             <doc>{$a}</doc>
           </p:with-input>

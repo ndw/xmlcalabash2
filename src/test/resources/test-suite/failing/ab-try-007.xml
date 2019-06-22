@@ -1,0 +1,38 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0064">
+   <t:info>
+      <t:title>p:try-007</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-10-31</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Initial test</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests XS0064 is raised if p:catch without @code is not the last.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:try>
+               <p:identity>
+                  <p:with-input><doc /></p:with-input>
+               </p:identity>
+               <p:catch>
+                  <p:identity>
+                     <p:with-input><doc /></p:with-input>
+                  </p:identity>
+               </p:catch>
+               <p:catch code="some-error">
+                  <p:identity>
+                     <p:with-input><doc /></p:with-input>
+                  </p:identity>
+               </p:catch>
+            </p:try>
+        </p:declare-step>
+   </t:pipeline>
+</t:test>

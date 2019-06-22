@@ -1,0 +1,72 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>AB for-each 005</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-01-09</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Initial test</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Test evaluation of variables in the context of a <code>p:for-each</code> (ported from 1.0-testsuite/for-each-005)</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            
+         <p:output port="result" />
+         
+         <p:input port="source">
+            <p:inline>
+               <doc>
+                  <para id="x1">Some paragraph.</para>
+                  <para id="x2">Some paragraph.</para>
+                  <para id="x3">Some paragraph.</para>
+               </doc>
+            </p:inline>
+         </p:input>
+         
+         <p:for-each name="loop">
+            <p:with-input select="/doc/para"/>
+            
+            <p:variable name="q" select="/para/@id" as="xs:string">
+               <p:pipe step="loop" port="current"/>
+            </p:variable>
+            
+            <p:choose>
+               <p:when test="$q = 'x2'">
+                  <p:identity/>
+               </p:when>
+               <p:otherwise>
+                  <p:identity>
+                     <p:with-input port="source">
+                        <p:empty/>
+                     </p:with-input>
+                  </p:identity>
+               </p:otherwise>
+            </p:choose>
+         </p:for-each>
+         
+         <p:wrap-sequence wrapper="newdoc"/>
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="newdoc">The document root is not 'newdoc'.</s:assert>            
+               <s:assert test="newdoc/para">The root element does not have a child 'para'</s:assert>
+               <s:assert test="count(newdoc/para)=1">The root element does not have ONE child 'para'.</s:assert>
+               <s:assert test="newdoc/para/@id='x2'">The para element with @id='x2' was not selected.</s:assert>
+               <s:assert test="newdoc/para='Some paragraph.'">The content of para element is not 'Some pharagraph.'</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

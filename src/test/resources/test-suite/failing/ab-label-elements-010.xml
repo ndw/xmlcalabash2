@@ -1,0 +1,46 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>label-elements 010 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-04</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Ported test from 1.0 test suite.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Testing p:label-elements.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc">
+         <p:output port="result" />
+         <p:input port="source">
+            <doc>
+               <div>
+                  <p>Some para.</p>
+                  <p>Some other para.</p>
+               </div>
+            </doc>
+         </p:input>
+         
+         <p:label-elements match="p" attribute="text" label='text()'/>
+         
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="doc/div/p[1]/@text='Some para.'">Value of doc/div/p[1]/@text is not 'Some para.'</s:assert>
+               <s:assert test="doc/div/p[2]/@text='Some other para.'">Value of doc/div/p[1]/@text is not 'Some other para.'</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

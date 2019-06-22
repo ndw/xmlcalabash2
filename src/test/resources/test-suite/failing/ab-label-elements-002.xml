@@ -1,0 +1,63 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>label-elements 002 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-04</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Ported test from 1.0 test suite</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Testing p:label-elements.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc">
+         <p:output port="result" />
+         <p:input port="source">
+            <doc>
+               <div>
+                  <p>Some para.</p>
+                  <p>Some other para.</p>
+               </div>
+            </doc>
+         </p:input>
+         
+         <p:label-elements label="concat(&quot;_foo_&quot;, $p:index, &quot;_bar_&quot;)"
+            attribute="test:pid"
+            match="p"
+            xmlns:test="http://test.com"/>
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:ns uri="http://test.com" prefix="test"/>
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="doc">The document root is not 'doc'</s:assert>
+               <s:assert test="count(doc/@*)=0">The document root should not have an attribute.</s:assert>
+               <s:assert test="doc/div">The root element does not have a child 'div'.</s:assert>
+               <s:assert test="count(doc/*)=1">The root element should have only one child.</s:assert>
+               <s:assert test="count(doc/div/@*)=0">Element 'div' should not have an attribute.</s:assert>
+               <s:assert test="count(doc/div/*)=2">Element 'div' should have two children.</s:assert>
+               
+               <s:assert test="doc/div/p[1]/@test:pid">Element 'p[1]' does not have an attribute 'test:pid'.</s:assert>
+               <s:assert test="count(doc/div/p[1]/@*)=1">Element 'p[1]' should habe exactly one attribute.</s:assert>
+               <s:assert test="doc/div/p[1]/@test:pid='_foo_1_bar_'">Value of p[1]/test:pid is not '_foo_1_bar_'.</s:assert>
+               <s:assert test="doc/div/p[1]/text()='Some para.'">Text value of p[1] is not 'Some para.'</s:assert>
+               
+               <s:assert test="doc/div/p[2]/@test:pid">Element 'p[2]' does not have an attribute 'test:pid'.</s:assert>
+               <s:assert test="count(doc/div/p[2]/@*)=1">Element 'p[2]' should habe exactly one attribute.</s:assert>
+               <s:assert test="doc/div/p[2]/@test:pid='_foo_2_bar_'">Value of p[2]/test:pid is not '_foo_2_bar_'.</s:assert>
+               <s:assert test="doc/div/p[2]/text()='Some other para.'">Text value of p[2] is not 'Some other para.'</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

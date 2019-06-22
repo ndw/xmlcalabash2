@@ -1,0 +1,40 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>Library import 017 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-02-26</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Added new tests for p:declare-step and p:import.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests static option import.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc"
+         xmlns:x="http://test">
+         <p:import href="../pipelines/ab-library-015.xpl" />
+         <p:output port="result" />
+         
+         <p:identity>
+            <p:with-input><doc>{$option}</doc></p:with-input>
+         </p:identity>
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="doc">The document root is not 'doc'.</s:assert>
+               <s:assert test="doc/text()='42'">Document root does not contain a text node with '42'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

@@ -1,0 +1,44 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>Add-attribute-010 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-02-16</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Added new tests for p:add-attribute.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests adding an attribute with a prefixed QName() in p:with-option to doc (conflict in prefix).</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc"
+         xmlns:x="http://other-namespace">
+         <p:output port="result" />
+         
+         <p:add-attribute match="/x:doc" attribute-value="5">
+            <p:with-input><x:doc/></p:with-input>
+            <p:with-option name="attribute-name" select="QName('http://attribute-namespace', 'x:att')" />
+         </p:add-attribute>
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:ns prefix="x" uri="http://other-namespace" />
+         <s:ns prefix="att-ns" uri="http://attribute-namespace" />
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="x:doc">The document root is not doc.</s:assert>
+               <s:assert test="x:doc/@att-ns:att">There is not attribute "Q{http://attribute-namespace}att" at doc.</s:assert>
+               <s:assert test="x:doc/@att-ns:att=5">Value of attribute "Q{http://attribute-namespace}att" is not 5.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

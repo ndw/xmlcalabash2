@@ -1,0 +1,55 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+    <t:info>
+        <t:title>Test for p:delete 009 (AB)</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2019-03-22</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>Created new test</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Tests deleting all text nodes of a given parent.</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+
+            <p:output port="result" />
+            
+            <p:delete match="par/text()" >
+                <p:with-input>
+                    <html>
+                        <body>
+                            <par>Text</par>
+                            <par>Text</par>
+                            <par>Text</par>
+                            <div>Text</div>
+                        </body>
+                    </html>
+                </p:with-input>
+            </p:delete>
+            
+        </p:declare-step>
+    </t:pipeline>
+    <t:schematron>
+        <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+            <s:pattern>
+                <s:rule context="/">
+                    <s:assert test="html">The document root is not 'html'.</s:assert>
+                    <s:assert test="html/body">Child of root is not 'body'.</s:assert>
+                    <s:assert test="count(html/body/par[1]/text()=0)">Element 'par[1]' should not have a text child.</s:assert>
+                    <s:assert test="count(html/body/par[2]/text()=0)">Element 'par[2]' should not have a text child.</s:assert>
+                    <s:assert test="count(html/body/par[3]/text()=0)">Element 'par[3]' should not have a text child.</s:assert>
+                    <s:assert test="/html/body/div/text()='Text'">Element 'div' should have a text child.</s:assert>
+                </s:rule>
+            </s:pattern>
+        </s:schema>
+    </t:schematron>
+    
+</t:test>
+

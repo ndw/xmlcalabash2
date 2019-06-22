@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+    <t:info>
+        <t:title>p:choose-029 (AB)</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2019-04-05</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>New tests</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Test p:choose with a top level p:with-input and no input port. (ported from choose #008 of 1.0 test-suite)</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step name="pipeline" xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>
+            <p:choose>
+                <p:with-input>
+                    <p:inline>
+                        <document>
+                            <title>Some Title</title>
+                            <para>Some paragraph.</para>
+                        </document>
+                    </p:inline>
+                </p:with-input>
+                <p:when test="count(//*) mod 2 = 0">
+                    <p:output port="result"/>
+                    <p:identity>
+                        <p:with-input port="source">
+                            <p:inline><p>There are an even number of elements in the document.</p></p:inline>
+                        </p:with-input>
+                    </p:identity>
+                </p:when>
+                <p:otherwise>
+                    <p:output port="result"/>
+                    <p:identity>
+                        <p:with-input port="source">
+                            <p:inline><p>There are an odd number of elements in the document.</p></p:inline>
+                        </p:with-input>
+                    </p:identity>
+                </p:otherwise>
+            </p:choose>
+        </p:declare-step>
+    </t:pipeline>
+    <t:schematron>
+        <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+            <s:pattern>
+                <s:rule context="/">
+                    <s:assert test="/p">Root element is not 'p'.</s:assert>
+                    <s:assert test="/p/text()='There are an odd number of elements in the document.'">Text of 'p' is not 'There are an odd number of elements in the document.'</s:assert>
+                </s:rule>
+            </s:pattern>
+        </s:schema>
+    </t:schematron>
+</t:test>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+    <t:info>
+        <t:title>p:choose-031 (AB)</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2019-04-05</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>New tests</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Test p:choose with different named secondary output ports.</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>
+            
+            <p:choose name="choose">
+                <p:when test="false()">
+                    <p:output port="result" primary="true"/>
+                    <p:output port="when-output">
+                        <when />
+                    </p:output>
+                    <p:identity>
+                        <p:with-input><true /></p:with-input>
+                    </p:identity>
+                </p:when>
+                <p:otherwise>
+                    <p:output port="result" primary="true"/>
+                    <p:output port="otherwise-output">
+                        <otherwise />
+                    </p:output>
+                    <p:identity>
+                        <p:with-input><false /></p:with-input>
+                    </p:identity>
+                </p:otherwise>
+            </p:choose>
+            
+            <p:wrap-sequence name="wrap1" wrapper="when">
+                <p:with-input pipe="when-output@choose" />
+            </p:wrap-sequence>
+            <p:wrap-sequence name="wrap2" wrapper="otherwise">
+                <p:with-input pipe="otherwise-output@choose" />
+            </p:wrap-sequence>
+            
+            <p:wrap-sequence wrapper="result">
+                <p:with-input pipe="@choose @wrap1 @wrap2" />
+            </p:wrap-sequence>
+            
+        </p:declare-step>
+    </t:pipeline>
+    <t:schematron>
+        <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+            <s:pattern>
+                <s:rule context="/">
+                    <s:assert test="/result">Root element is not 'result'.</s:assert>
+                    <s:assert test="/result/*[1]/name()='false'">The first child of result is not named 'false'.</s:assert>
+                    <s:assert test="/result/*[2]/name()='when'">The second child of result is not named 'when'.</s:assert>
+                    <s:assert test="/result/*[3]/name()='otherwise'">The third child of result is not named 'otherwise'.</s:assert>
+                    <s:assert test="/result/otherwise/otherwise">'otherwise' does not have a child 'otherwise'.</s:assert>
+                </s:rule>
+            </s:pattern>
+        </s:schema>
+    </t:schematron>
+</t:test>

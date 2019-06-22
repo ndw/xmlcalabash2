@@ -1,0 +1,44 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>hash 006 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-01</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Ported tests for p:hash from 1.0 test-suite</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Testing p:hash with sha (version 1) replacing an attribute.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc">
+         <p:output port="result" />
+         
+         <p:hash value="XML Processing Model Working Group" algorithm="sha" version="1" match="/doc/@hash">
+            <p:with-input>
+               <doc hash="wrong">
+                  <p>This is a p.</p>
+               </doc>
+            </p:with-input>
+         </p:hash>
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="doc">The document root is not doc.</s:assert>
+               <s:assert test="doc/@hash='14c8a3c3a2438acaa1814f2c2d111aa403c7b5d4'">Value of doc/@hash is not '14c8a3c3a2438acaa1814f2c2d111aa403c7b5d4'.</s:assert>
+               <s:assert test="doc/p/text()='This is a p.'">Value of doc/p/text() is not 'This is a p.'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

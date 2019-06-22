@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+    <t:info>
+        <t:title>p:choose-032 (AB)</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2019-04-05</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>New tests</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Test p:choose with (implicit) p:otherwise and implicit output port.</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>
+            
+            <p:identity>
+                <p:with-input><doc /></p:with-input>
+            </p:identity>
+            <p:choose>
+                <p:when test="false()">
+                    <p:identity>
+                        <p:with-input><false /></p:with-input>
+                    </p:identity>
+                </p:when>
+            </p:choose>
+        </p:declare-step>
+    </t:pipeline>
+    <t:schematron>
+        <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+            <s:pattern>
+                <s:rule context="/">
+                    <s:assert test="/doc">Root element is not 'doc'.</s:assert>
+                </s:rule>
+            </s:pattern>
+        </s:schema>
+    </t:schematron>
+</t:test>

@@ -1,0 +1,43 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>hash 008 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-01</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>New tests for p:hash</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Testing p:hash replaces text node.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc">
+         <p:output port="result" />
+         
+         <p:hash value="XML Processing Model Working Group" algorithm="crc" match="/doc/p/text()">
+            <p:with-input>
+               <doc>
+                  <p>This is a p.</p>
+               </doc>
+            </p:with-input>
+         </p:hash>
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="doc">The document root is not doc.</s:assert>
+               <s:assert test="doc/p/text()='852b1f51'">Value of doc/p/text() is not '852b1f51'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

@@ -1,0 +1,46 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>label-elements 012 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-04</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Additional test with replace="false"</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Testing p:label-elements.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc">
+         <p:output port="result" />
+         <p:input port="source">
+            <doc>
+               <p att="val1" />
+               <p />
+               <p att="val2" />
+            </doc>
+         </p:input>
+         
+         <p:label-elements match="p" attribute="att" replace="false"/>
+         
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="doc/p[1]/@att='val1'">Value of doc/p[1]/@att is not 'val1'.</s:assert>
+               <s:assert test="doc/p[2]/@att='_2'">Value of doc/p[2]/@att is not '_2'.</s:assert>
+               <s:assert test="doc/p[3]/@att='val2'">Value of doc/p[3]/@att is not 'val2'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

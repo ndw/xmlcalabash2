@@ -1,0 +1,48 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>p:string-replace 002 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-29</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Porting 1.0 tests for p:string-replace</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:string-replace</p>
+   </t:description>
+   
+   <t:input port="source">
+      <doc>
+         <version>1</version>
+         <para>some text</para>
+      </doc>
+   </t:input>
+   
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:input port="source" />
+         <p:output port="result"/>
+            
+         <p:string-replace match="version/text()" replace="number(/doc/version)+1"/>
+         
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="doc">Root element is not 'doc'.</s:assert>
+               <s:assert test="doc/version/text()='2'">Root element does not have child 'version' = 2.</s:assert>
+               <s:assert test="doc/para">Root element does not have child "para".</s:assert>
+               <s:assert test="doc/para/text()='some text'">Element 'para' does not have a text child 'some text'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

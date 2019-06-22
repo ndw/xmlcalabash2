@@ -1,0 +1,50 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>Add-attribute-017 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-02-16</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Added new tests for p:add-attribute.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests document-properties are preserved on p:add-attribute.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc">
+         <p:output port="result" />
+         <p:identity>
+            <p:with-input>
+               <p:inline document-properties="map{'base-uri' : 'http://base-uri' ,
+                  'add-prop' : 'some-additional-prop'}">
+                  <doc />
+               </p:inline>
+            </p:with-input>
+         </p:identity>
+         
+         <p:add-attribute attribute-value="5" attribute-name="att" />
+         <p:identity>
+            <p:with-input select="p:document-properties-document(.)" />
+         </p:identity>
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+          <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step" />
+          <s:pattern>
+            <s:rule context="/">
+               <s:assert test="c:document-properties">The document root is not 'document-properties'.</s:assert>
+               <s:assert test="c:document-properties/base-uri='http://base-uri'">Value of element 'base-uri' is not 'http://base-uri'.</s:assert>
+               <s:assert test="c:document-properties/add-prop='some-additional-prop'">Value of element 'add-prop' is not 'some-additional-prop'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

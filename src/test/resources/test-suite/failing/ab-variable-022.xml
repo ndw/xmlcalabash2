@@ -1,7 +1,16 @@
-<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XD0008">
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XD0001">
    <t:info>
       <t:title>Variable declaration 022</t:title>
       <t:revision-history>
+         <t:revision>
+            <t:date>2019-04-22</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Adapted test to new context item strategy, new error code.</p>
+            </t:description>
+         </t:revision>
          <t:revision>
             <t:date>2018-06-02T17:53:51-05:00</t:date>
             <t:author>
@@ -32,12 +41,12 @@
       </t:revision-history>
    </t:info>
    <t:description xmlns="http://www.w3.org/1999/xhtml">
-      <p>Checks XD0008 is raised if more than one document appears as connection of p:variable and @connection is false.</p>
+      <p>Checks XD0001 is raised if more than one document appears as connection of p:variable and @connection is false.</p>
    </t:description>
    <t:pipeline>
       <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
             <p:output port="result"/>
-            <p:variable name="var" select="5" collection="false">
+            <p:variable name="var" select="count(.)" collection="false">
                 <doc/>
                 <doc/>
             </p:variable>

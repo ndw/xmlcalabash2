@@ -1,0 +1,21 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>ab-doc-props-012</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2018-12-30</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Test added</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests context item for document-properties on p:document, dynamic href</p>
+   </t:description>
+   <t:pipeline src="../pipelines/ab-doc-prop-012.xpl"/>
+   <t:schematron src="../schematron/doc-prop.sch"/>
+</t:test>

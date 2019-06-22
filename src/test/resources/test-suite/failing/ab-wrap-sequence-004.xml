@@ -1,0 +1,60 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>p:wrap-sequence 004 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-06-02</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Tests for p:wrap-sequence (Partly ported from 1.0)</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:wrap-sequence</p>
+   </t:description>
+   
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:output port="result"/>
+         
+         <p:identity name="one">
+            <p:with-input><one /></p:with-input>
+         </p:identity>
+
+         <p:identity name="two">
+            <p:with-input><two /></p:with-input>
+         </p:identity>
+         
+         <p:identity name="identity">
+            <p:with-input port="source">
+               <p:pipe step="one" />
+               <p:pipe step="two" />
+               <p:pipe step="one" />
+               <p:pipe step="two" />
+            </p:with-input>
+         </p:identity>
+         
+         <p:wrap-sequence name="splitseq" wrapper="pipe-sequence"/>
+
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="pipe-sequence">Root element is not 'pipe-sequence'.</s:assert>
+               
+               <s:assert test="count(pipe-sequence/*)=4">Root element should have 4 children.</s:assert>
+               <s:assert test="pipe-sequence/*[1]/local-name()='one'">First child of root element is not 'one'.</s:assert>
+               <s:assert test="pipe-sequence/*[2]/local-name()='two'">Second child of root element is not 'two'.</s:assert>
+               <s:assert test="pipe-sequence/*[3]/local-name()='one'">Third child of root element is not 'one'.</s:assert>
+               <s:assert test="pipe-sequence/*[4]/local-name()='two'">Forth child of root element is not 'two'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

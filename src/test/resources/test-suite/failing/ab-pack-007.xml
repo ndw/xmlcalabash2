@@ -1,0 +1,61 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>pack 007 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-06</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Additional test for p:pack.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Testing correct handling of non element noded by p:pack.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc">
+         <p:output port="result" />
+         
+         <p:pack wrapper="wrap">
+            <p:with-input port="source">
+               <p:inline>
+                  <!-- comment1 -->
+                  <doc1 />
+                  <?pi1 target?>
+               </p:inline>
+            </p:with-input>
+            <p:with-input port="alternate">
+               <p:inline>
+                  <?pi2 ?>
+                  <doc2 />
+                  <!-- comment2 -->
+               </p:inline>
+            </p:with-input>
+         </p:pack>
+         
+         <p:wrap-sequence wrapper="doc" />
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+          <s:pattern>
+            <s:rule context="/">
+               <s:assert test="doc">The document root is not doc.</s:assert>
+               <s:assert test="doc/wrap/child::node()[1] instance of comment()">First child of wrap should be a comment.</s:assert>
+               <s:assert test="doc/wrap/child::node()[2] instance of element()">Second child of wrap should be an element.</s:assert>
+               <s:assert test="doc/wrap/child::node()[3] instance of processing-instruction()">Third child of wrap should be a pi.</s:assert>
+               <s:assert test="doc/wrap/child::node()[4] instance of processing-instruction()">Fourth child of wrap should be an pi.</s:assert>
+               <s:assert test="doc/wrap/child::node()[5] instance of element()">Fifth child of wrap should be an element.</s:assert>
+               <s:assert test="doc/wrap/child::node()[6] instance of comment()">Sixth child of wrap should be a comment.</s:assert>
+               
+               <s:assert test="count(doc/wrap/child::node())=6">Element 'wrap' should have 6 children.</s:assert>              
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

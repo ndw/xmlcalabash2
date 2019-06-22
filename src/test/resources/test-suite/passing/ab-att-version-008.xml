@@ -1,0 +1,43 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+    <t:info>
+        <t:title>Version attribute 008 (AB)</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2019-02-17</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>New tests for draconian @version</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Tests that @version is optional on inner p:declare-step</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" 
+                        xmlns:test="http://test" version="3.0">
+            <p:output port="result"/>
+            
+            <p:declare-step type="test:test">
+                <p:output port="result" />
+                <p:identity>
+                    <p:with-input><passed /></p:with-input>
+                </p:identity>
+            </p:declare-step>
+            
+            <test:test />
+        </p:declare-step>
+    </t:pipeline>
+    <t:schematron>
+        <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+            <s:pattern>
+                <s:rule context="/">
+                    <s:assert test="passed">The document root is not 'passed'.</s:assert>
+                </s:rule>
+            </s:pattern>
+        </s:schema>
+    </t:schematron>
+</t:test>

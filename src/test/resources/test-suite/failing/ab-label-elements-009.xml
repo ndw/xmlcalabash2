@@ -1,0 +1,49 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>label-elements 009 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-04</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Ported test from 1.0 test suite: </p>
+               <p>Tests attribute-namespace and attribute-prefix. If you attempt
+                  to duplicate a prefix, make sure the namespace bindings don't
+                  get mangled!</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Testing p:label-elements.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc">
+         <p:output port="result" />
+         <p:input port="source">
+            <doc>
+               <element bar:baz="baz" xmlns:bar="http://bar.com/"/>
+            </doc>
+         </p:input>
+         
+         <p:label-elements match="element"
+               attribute="bar:foo" xmlns:bar="http://bar2.com/"/>
+         
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="doc/element/@*:foo='_1'">Child 'element' of 'doc' does not have @*:foo with '_1'.</s:assert>
+               <s:assert test="namespace-uri(doc/element/@*:foo)='http://bar2.com/'">Namespace URI of @foo is not 'http://bar2.com/'.</s:assert>
+               <s:assert test="doc/element/@*:baz='baz'">Child 'element' of 'doc' does not have @baz with 'baz'.</s:assert>
+               <s:assert test="namespace-uri(doc/element/@*:baz)='http://bar.com/'">Namespace URI of @baz is not 'http://bar.com/'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

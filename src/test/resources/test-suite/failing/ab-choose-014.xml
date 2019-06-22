@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0032">
+    <t:info>
+        <t:title>p:choose-014 (AB)</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2019-04-05</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>New tests</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Tests that a default XPath binding for guards does not count as binding for a primary input port.</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result"/>
+            
+            <p:choose>
+                <p:with-input><doc /></p:with-input>
+                <p:when test="true()">
+                    <p:identity />
+                </p:when>
+                <p:otherwise name="otherwise">
+                    <p:identity />
+                </p:otherwise>
+            </p:choose>
+        </p:declare-step>
+    </t:pipeline>
+</t:test>

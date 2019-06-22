@@ -1,0 +1,30 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        expected="fail" code="err:XS0044">
+   <t:info>
+      <t:title>Library import 010 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-02-25</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Added new tests for p:declare-step and p:import.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests that imported steps with @visibility='private' are not visible to importer.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc"
+         xmlns:x="http://test">
+         <p:import href="../pipelines/ab-library-009.xpl" />
+         <p:output port="result" />
+         
+         <x:step1 />
+      </p:declare-step>
+   </t:pipeline>
+ </t:test>

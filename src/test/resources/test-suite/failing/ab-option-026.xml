@@ -1,7 +1,16 @@
-<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0071">
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0107">
    <t:info>
       <t:title>Option declaration 026</t:title>
       <t:revision-history>
+         <t:revision>
+            <t:date>2019-01-26</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Changed error code from XS0071 to XS0107.</p>
+            </t:description>
+         </t:revision>
          <t:revision>
             <t:date>2018-08-22T16:48:12+02:00</t:date>
             <t:author>
@@ -23,7 +32,7 @@
       </t:revision-history>
    </t:info>
    <t:description xmlns="http://www.w3.org/1999/xhtml">
-      <p>Checks XS0071 is raised for a static invalid XPath expression, even if it is never used. (See #506)</p>
+      <p>Checks XS0107 is raised for a static invalid XPath expression, even if it is never used. (See #506)</p>
    </t:description>
    <t:pipeline>
       <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">

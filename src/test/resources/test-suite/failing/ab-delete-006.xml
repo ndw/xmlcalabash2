@@ -1,0 +1,60 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+    <t:info>
+        <t:title>Test for p:delete 006 (AB)</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2019-03-22</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>Created new test</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Tests root element is correctly deleted, but document properties are preserved.</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+
+            <p:output port="result" />
+            
+            <p:delete match="html" >
+                <p:with-input>
+                    <p:inline document-properties="map{'add':'prop'}">
+                        <html>
+                            <body>
+                                <par />
+                                <list />
+                                <par />
+                                <list />
+                                <par />
+                            </body>
+                        </html>
+                    </p:inline>
+                </p:with-input>
+            </p:delete>
+            
+            <p:identity>
+                <p:with-input>
+                    <p:inline>{p:document-properties-document(.)}</p:inline>
+                </p:with-input>
+            </p:identity>
+        </p:declare-step>
+    </t:pipeline>
+    <t:schematron>
+        <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+            <s:ns prefix="c" uri="http://www.w3.org/ns/xproc-step"/>
+            <s:pattern>
+                <s:rule context="/">
+                    <s:assert test="c:document-properties">The document root is not document-properties.</s:assert>
+                    <s:assert test="c:document-properties/add='prop'">Either 'add' not found or 'prop' is not a text child of add.</s:assert>
+                </s:rule>
+            </s:pattern>
+        </s:schema>
+    </t:schematron>
+    
+</t:test>
+

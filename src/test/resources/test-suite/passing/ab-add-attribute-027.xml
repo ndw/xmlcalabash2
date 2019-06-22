@@ -1,0 +1,62 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>Add-attribute-027 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-02-16</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Added new tests for p:add-attribute.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests adding attribute at multiple levels</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc"
+         xmlns:html="http://www.w3.org/1999/xhtml">
+         <p:output port="result" />
+         
+         
+         <p:add-attribute match="//html:*" attribute-value="html" attribute-name="class" >
+            <p:with-input>
+               <html xmlns="http://www.w3.org/1999/xhtml">
+                  <body>
+                     <h1>Header</h1>
+                     <p>Some text with <em>emphazised</em> phrase.</p>
+                     <ul>
+                        <li>item</li>
+                        <li><p>item</p></li>
+                        <li><p><b>bold</b></p></li>
+                     </ul>
+                  </body>
+               </html>
+            </p:with-input>
+         </p:add-attribute>
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:ns prefix="html" uri="http://www.w3.org/1999/xhtml" />
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="html:html">The document root is not "html:html".</s:assert>
+               <s:assert test="html:html/@class='html'">Element "html:html" does not have @class='html'.</s:assert>
+               <s:assert test="html:html/html:body/@class='html'">Element "html/body" does not have @class='html'.</s:assert>
+               <s:assert test="html:html/html:body/html:h1/@class='html'">Element "html/body/h1" does not have @class='html'.</s:assert>
+               <s:assert test="html:html/html:body/html:p/@class='html'">Element "html/body/p" does not have @class='html'.</s:assert>
+               <s:assert test="html:html/html:body/html:p/html:em/@class='html'">Element "html/body/p/em" does not have @class='html'.</s:assert>
+               <s:assert test="html:html/html:body/html:ul/@class='html'">Element "html/body/ul" does not have @class='html'.</s:assert>               
+               <s:assert test="html:html/html:body/html:ul/html:li/@class='html'">Element "html/body/ul/li" does not have @class='html'.</s:assert>               
+               <s:assert test="html:html/html:body/html:ul/html:li[2]/html:p/@class='html'">Element "html/body/ul/li[2]/p" does not have @class='html'.</s:assert>
+               <s:assert test="html:html/html:body/html:ul/html:li[3]/html:p/@class='html'">Element "html/body/ul/li[3]/p" does not have @class='html'.</s:assert>               
+               <s:assert test="html:html/html:body/html:ul/html:li[3]/html:p//html:b/@class='html'">Element "html/body/ul/li[3]/p/b" does not have @class='html'.</s:assert>                              
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

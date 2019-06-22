@@ -1,0 +1,62 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>Connection 026</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-22</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Additional tests for connections</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests correct order of multiple pipes on an output port.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" 
+         xmlns:test="http://test" version="3.0">
+            <p:output port="result"/>
+            
+            <p:declare-step type="test:test">
+               <p:output port="result" sequence="true">
+                  <p:pipe step="one" port="result" />
+                  <p:pipe port="result" />
+                  <p:pipe step="one" />
+                  <p:pipe step="two" />
+               </p:output>
+               <p:identity name="one" >
+                  <p:with-input><one /></p:with-input>
+               </p:identity>
+         
+               <p:identity name="two">
+                  <p:with-input><two /></p:with-input>
+               </p:identity>
+            </p:declare-step>   
+            
+            <test:test />
+            <p:wrap-sequence wrapper="wrapper">
+               <p:with-input>
+                  
+               </p:with-input>
+            </p:wrap-sequence>
+        </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="wrapper">The root is not 'wrapper'.</s:assert>
+               <s:assert test="count(wrapper/*)=4">The root element should have exactly four child.</s:assert>
+               <s:assert test="wrapper/*[1]/name()='one'">First child is not named 'one'.</s:assert>
+               <s:assert test="wrapper/*[2]/name()='two'">Second child is not named 'two'.</s:assert>
+               <s:assert test="wrapper/*[3]/name()='one'">Third child is not named 'one'.</s:assert>
+               <s:assert test="wrapper/*[4]/name()='two'">Forth child is not named 'two'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

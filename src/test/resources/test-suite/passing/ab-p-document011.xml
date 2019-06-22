@@ -3,9 +3,15 @@
    <t:info>
       <t:title>p:document 011</t:title>
       <t:revision-history>
+         <t:revision initials="ndw">
+            <t:date>2018-10-24</t:date>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Correct error code, <code>err:XD0049</code> is expected.</p>
+            </t:description>
+         </t:revision>
          <t:revision>
             <t:date>2018-06-02T17:53:51-05:00</t:date>
-            <t:author>
+            <t:author initials="ndw">
                <t:name>Norman Walsh</t:name>
             </t:author>
             <t:description xmlns="http://www.w3.org/1999/xhtml">
@@ -24,7 +30,8 @@
       </t:revision-history>
    </t:info>
    <t:description xmlns="http://www.w3.org/1999/xhtml">
-      <p>Tests p:with-input with @href to a not well-formed document: XD0011 expected.</p>
+      <p>Tests that a <code>p:with-input</code> with an @href to a not well-formed document
+      raises <code>err:XD0049</code>.</p>
    </t:description>
    <t:pipeline>
       <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">

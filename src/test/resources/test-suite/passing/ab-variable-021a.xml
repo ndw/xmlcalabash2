@@ -1,4 +1,6 @@
-<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0"
+        features="lazy-eval"
+        expected="pass">
    <t:info>
       <t:title>Variable declaration 021a</t:title>
       <t:revision-history>
@@ -19,7 +21,7 @@
    <t:pipeline>
       <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
             <p:output port="result"/>
-            <p:variable name="var" select="5">
+            <p:variable name="var" select="count(.)">
                 <doc/>
                 <doc/>
             </p:variable>

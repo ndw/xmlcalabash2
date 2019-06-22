@@ -1,0 +1,46 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass"> 
+   <t:info>
+      <t:title>Library import 024 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-02-28</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Added new tests for p:declare-step and p:import.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests cascading import with identical option names.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc"
+         xmlns:x="http://test">
+         <p:import href="../pipelines/ab-library-019.xpl" />
+         <p:output port="result" />
+         <p:option name="option1" static="true" select="99" />
+         <p:identity name="step1">
+            <p:with-input><doc>{$option1}</doc></p:with-input>
+         </p:identity>
+         <x:step name="step2"/>
+         
+         <p:wrap-sequence wrapper="result">
+            <p:with-input pipe="@step1 @step2" />
+         </p:wrap-sequence>
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="result">The document root is not result.</s:assert>
+               <s:assert test="result/doc[1]/text()=99">Text child of doc is not 99.</s:assert>
+               <s:assert test="result/doc[2]/text()=42">Text child of doc is not 42.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

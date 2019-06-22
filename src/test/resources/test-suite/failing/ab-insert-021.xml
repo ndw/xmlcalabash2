@@ -1,0 +1,39 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" 
+    xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XC0025">
+    <t:info>
+        <t:title>Test for p:insert 021 (AB)</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2019-03-23</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>new tests.</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Tests that p:insert with matched processing instruction and position 'first-child' is an error.</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            
+            <p:output port="result" />
+            
+            <p:insert match="/doc/processing-instruction()" position="first-child">
+                <p:with-input>
+                    <doc><?pi text?></doc>
+                </p:with-input>
+                <p:with-input port="insertion">
+                    <doc2 />
+                </p:with-input>            
+            </p:insert>
+            
+            <p:wrap-sequence wrapper="wrap" />
+        </p:declare-step>
+            
+    </t:pipeline>
+</t:test>
+

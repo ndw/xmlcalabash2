@@ -1,0 +1,56 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+    <t:info>
+        <t:title>Test for p:insert 008 (AB)</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2019-03-22</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>Ported tests from 1.0 test suite</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Tests p:insert document after selected child.</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            
+            <p:output port="result" />
+            
+            <p:insert match="div/p[1]" position="after">
+                <p:with-input port="source">
+                    <doc>
+                        <div>
+                            <p>First paragraph.</p>
+                            <p>Middle paragraph.</p>
+                            <p>Last paragraph.</p>
+                        </div>
+                    </doc>
+                </p:with-input>
+                <p:with-input port="insertion">
+                    <p>New middle paragraph.</p>
+                </p:with-input>
+            </p:insert>
+        </p:declare-step>  
+    </t:pipeline>
+    <t:schematron>
+        <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+            <s:pattern>
+                <s:rule context="/">
+                    <s:assert test="doc">The root element is not 'doc'.</s:assert>
+                    <s:assert test="doc/div">Root element does not have child element 'div'.</s:assert>
+                    <s:assert test="doc/div/p[1]='First paragraph.'">p[1] is not 'First paragraph.'.</s:assert>
+                    <s:assert test="doc/div/p[2]='New middle paragraph.'">p[2] is not 'New middle paragraph.'.</s:assert>
+                    <s:assert test="doc/div/p[3]='Middle paragraph.'">p[3] is not 'Middle paragraph.'.</s:assert>
+                    <s:assert test="doc/div/p[4]='Last paragraph.'">p[4] is not 'Last paragraph.'.</s:assert>
+                    <s:assert test="count(doc/div/p)=4">Element 'div' does not have exactly 4 p children.</s:assert>
+                </s:rule>
+            </s:pattern>
+        </s:schema>
+    </t:schematron>
+</t:test>
+

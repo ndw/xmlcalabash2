@@ -1,0 +1,59 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+    <t:info>
+        <t:title>Test for p:insert 006 (AB)</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2019-03-22</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>Ported tests from 1.0 test suite</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Tests p:insert multiple documents into a populated child element</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            
+            <p:output port="result" />
+            
+            <p:insert match="a" position="first-child">
+                <p:with-input>
+                    <p:inline>
+                        <root>
+                            <a>
+                                <d />
+                            </a>
+                        </root>    
+                    </p:inline>
+                </p:with-input>
+                <p:with-input port="insertion">
+                    <p:inline>
+                        <b/>
+                    </p:inline>
+                    <p:inline>
+                        <c/>
+                    </p:inline>
+                </p:with-input>            
+            </p:insert>
+        </p:declare-step>  
+    </t:pipeline>
+    <t:schematron>
+        <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+            <s:pattern>
+                <s:rule context="/">
+                    <s:assert test="root">The root element is not 'root'.</s:assert>
+                    <s:assert test="root/a">Root element does not have child element 'a'.</s:assert>
+                    <s:assert test="root/a/*[1]/name()='b'">Name of the first element of a is not 'b'.</s:assert>
+                    <s:assert test="root/a/*[2]/name()='c'">Name of the second element of a is not 'c'.</s:assert>
+                    <s:assert test="root/a/*[3]/name()='d'">Name of the third element of a is not 'd'.</s:assert>
+                </s:rule>
+            </s:pattern>
+        </s:schema>
+    </t:schematron>
+</t:test>
+

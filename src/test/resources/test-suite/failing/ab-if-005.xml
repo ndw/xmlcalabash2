@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="fail"
+    xmlns:err="http://www.w3.org/ns/xproc-error" code="err:XS0108">
+    <t:info>
+        <t:title>p:if-005 (AB)</t:title>
+        <t:revision-history>
+            <t:revision>
+                <t:date>2019-04-06</t:date>
+                <t:author>
+                    <t:name>Achim Berndzen</t:name>
+                </t:author>
+                <t:description xmlns="http://www.w3.org/1999/xhtml">
+                    <p>New tests</p>
+                </t:description>
+            </t:revision>
+        </t:revision-history>
+    </t:info>
+    <t:description xmlns="http://www.w3.org/1999/xhtml">
+        <p>Test XS0108 is raised, if the p:if step does not specify a primary output port (implicit).</p>
+    </t:description>
+    <t:pipeline>
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            <p:output port="result" sequence="true"/>
+            
+            <p:identity>
+                <p:with-input>
+                    <doc />
+                </p:with-input>
+            </p:identity>
+            
+            <p:if test="." name="if">
+                <p:identity />
+                <p:sink />
+            </p:if>
+            
+        </p:declare-step>
+    </t:pipeline>
+</t:test>

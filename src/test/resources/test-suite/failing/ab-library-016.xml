@@ -1,0 +1,45 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>Library import 016 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-02-26</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Added new tests for p:declare-step and p:import.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests cyclic import of libraries.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc"
+         xmlns:x="http://test">
+         <p:import href="../pipelines/ab-library-013.xpl" />
+         <p:output port="result" />
+         
+         <x:one name="step1" />
+         <x:two name="step2" />
+         
+         <p:wrap-sequence wrapper="result">
+            <p:with-input pipe="@step1 @step2" />
+         </p:wrap-sequence>
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="result">The document root is not 'result'.</s:assert>
+               <s:assert test="count(result/*)=2">The document root does not have two children</s:assert>
+               <s:assert test="result/*[1]/name()='one'">First child of root is not named 'one'.</s:assert>
+               <s:assert test="result/*[2]/name()='two'">First child of root is not named 'one'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

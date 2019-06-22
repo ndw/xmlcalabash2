@@ -1,0 +1,47 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>p:rename-004 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-18</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Ported tests for p:rename</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:rename</p>
+   </t:description>
+   <t:input port='source'>
+      <doc>
+         <a>
+            <?a b c d?>
+         </a>
+      </doc>
+   </t:input>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:input port="source" />
+         <p:output port="result"/>
+            
+         <p:rename match="processing-instruction('a')" new-name="b"/>
+         
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="doc">The root element is not 'doc'.</s:assert>
+               <s:assert test="doc/a">Root element does not have a child 'a'.</s:assert>
+               <s:assert test="doc/a/processing-instruction(b)">Element 'a' does not have a PI child named 'b'.</s:assert>
+               <s:assert test="doc/a/processing-instruction(b)='b c d'">PI's value is not 'b c d'.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

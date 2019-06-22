@@ -1,0 +1,42 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>uuid 006 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-06-16</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Tests for p:uuid</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Testing p:uuid replaces @xml:base.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:output port="result"/>
+         
+         <p:uuid match="/doc/@xml:base">
+            <p:with-input>
+               <doc xml:base="http://some-thing"/>
+            </p:with-input>
+         </p:uuid>
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="doc">The document element is not doc.</s:assert>
+               <s:assert test="not(doc/@xml:base='http://some-thing')">The @xml:base is not correctly changed.</s:assert>
+               <s:assert test="ends-with(doc/@xml:base,doc/@xml-base)">Base uri should be equal to @xml:base.</s:assert>
+              </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

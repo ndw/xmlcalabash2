@@ -1,0 +1,64 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>p:wrap-sequence 014 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-06-02</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Tests for p:wrap-sequence (Partly ported from 1.0)</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests group-adjacent is correctly atomized in p:wrap-sequence</p>
+   </t:description>
+   
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" name="pipeline" version="3.0">
+         <p:output port="result"/>
+         
+         <p:identity name="pr">
+            <p:with-input>
+               <doc1>one</doc1>
+               <doc2>one</doc2>
+               <doc3>two</doc3>
+               <doc4>two</doc4>
+            </p:with-input>
+         </p:identity>
+        
+         <p:wrap-sequence name="splitseq" wrapper="sequence"
+            group-adjacent="."/>
+         
+         <p:wrap-sequence wrapper="result" />
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="result">Root element is not 'result'.</s:assert>
+               <s:assert test="count(result/child::node())=2">Root element should have two children.</s:assert>
+               <s:assert test="count(result/sequence)=2">Root element should have two children elements named 'sequence'.</s:assert>
+               
+               <s:assert test="count(result/sequence[1]/*)=2">First element 'sequence' should have two children.</s:assert>
+               <s:assert test="result/sequence[1]/*[1]/local-name()='doc1'">First element of first sequence should be named 'doc1'.</s:assert>
+               <s:assert test="result/sequence[1]/*[2]/local-name()='doc2'">Second element of first sequence should be named 'doc2'.</s:assert>
+               
+               <s:assert test="count(result/sequence[2]/*)=2">Second element 'sequence' should have two children.</s:assert>
+               <s:assert test="result/sequence[2]/*[1]/local-name()='doc3'">First element of second sequence should be named 'doc3'.</s:assert>
+               <s:assert test="result/sequence[2]/*[2]/local-name()='doc4'">Second element of second sequence should be named 'doc4'.</s:assert>
+               
+               <s:assert test="result/sequence/doc1/text()='one'">Text of doc1 should be 'one'.</s:assert>
+               <s:assert test="result/sequence/doc2/text()='one'">Text of doc2 should be 'one'.</s:assert>
+               <s:assert test="result/sequence/doc3/text()='two'">Text of doc3 should be 'two'.</s:assert>
+               <s:assert test="result/sequence/doc4/text()='two'">Text of doc1 should be 'two'.</s:assert>
+               
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

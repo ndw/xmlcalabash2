@@ -1,0 +1,36 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0"
+   xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XC0069">
+   <t:info>
+      <t:title>p:set-properties-021 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-19</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Tests for p:set-properties</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:set-properties</p>
+   </t:description>
+   
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:output port="result"/>
+            
+         <p:set-properties properties="map{'content-type':'application/octet-stream'}" merge="true">
+            <p:with-input>
+               <p:inline><doc /></p:inline>
+            </p:with-input>
+         </p:set-properties>
+         
+         <p:identity>
+            <p:with-input select="p:document-properties-document(.)" />
+         </p:identity>
+      </p:declare-step>
+   </t:pipeline>
+</t:test>

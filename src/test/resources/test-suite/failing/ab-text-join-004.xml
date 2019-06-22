@@ -1,0 +1,47 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>p:text-join 004 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-31</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Tests for p:text-join</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Tests p:text-join</p>
+   </t:description>
+   
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:output port="result"/>
+            
+         <p:text-join suffix=" ">
+            <p:with-input>
+               <p:inline content-type="text/plain">First</p:inline>
+               <p:inline content-type="text/plain">second</p:inline>
+               <p:inline content-type="text/plain">third</p:inline>
+            </p:with-input>
+         </p:text-join>
+         
+         <p:wrap-sequence wrapper="text"/>
+
+      </p:declare-step>
+   </t:pipeline>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="text">Root element is not 'text'.</s:assert>
+               <s:assert test="count(text/text())=1">Root element should have one text child.</s:assert>
+               <s:assert test="text/text()='Firstsecondthird '">Text content of 'text' is wrong.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

@@ -1,0 +1,46 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>hash 016 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-01</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>New tests for p:hash</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Testing p:hash preserves document-properties.</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc">
+         <p:output port="result" />
+         
+         <p:hash value="XML Processing Model Working Group" algorithm="sha" version="1" match="/doc/@hash">
+            <p:with-input>
+               <p:inline document-properties="map{'property':4}">
+                  <doc hash="wrong" />
+               </p:inline>
+            </p:with-input>
+         </p:hash>
+         <p:identity>
+            <p:with-input><result>{p:document-property(.,'property')}</result></p:with-input>
+         </p:identity>
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="result">The document root is not result.</s:assert>
+               <s:assert test="result/text()=4">Value of content-type is not 4.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

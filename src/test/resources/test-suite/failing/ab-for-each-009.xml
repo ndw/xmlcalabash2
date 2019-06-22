@@ -1,0 +1,50 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>AB for-each 009</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-01-09</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Initial test</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Test <code>p:for-each</code> with nested <code>p:output</code> (ported from 1.0-testsuite/for-each-009)</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+         <p:output port="result"/>
+         
+         <p:for-each name="loop">
+            <p:with-input>
+               <p:inline><foo/></p:inline>
+               <p:inline><foo/></p:inline>
+            </p:with-input>
+            <p:output port="out">
+               <p:inline><bar/></p:inline>
+            </p:output>
+            <p:sink/>
+         </p:for-each>
+         
+         <p:wrap-sequence wrapper="wrapper"/>
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="wrapper">The pipeline root is not 'wrapper'.</s:assert>
+               <s:assert test="count(wrapper/bar)=2">Element 'wrapper' does not have 2 children 'bar'.</s:assert>
+               <s:assert test="count(wrapper/*)=2">Element 'wrapper' does not have exactly 2 children.</s:assert>
+            </s:rule>
+         </s:pattern>
+         
+      </s:schema>
+   </t:schematron>
+</t:test>

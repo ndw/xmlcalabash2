@@ -1,0 +1,58 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>AB for-each 001</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-01-06</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Initial test</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Simple for-each test (ported from 1.0-testsuite/for-each-001)</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
+            
+            <p:input port="source" sequence="true"/>
+            <p:output port="result" />
+            
+            <p:for-each>
+               <p:identity/>
+            </p:for-each>
+            
+            <p:wrap-sequence wrapper="wrapper" />
+        </p:declare-step>
+   </t:pipeline>
+   <t:input port="source">
+      <doc>
+         <title>Some title</title>
+         <para>Some paragraph.</para>
+      </doc>
+      <doc>
+         <title>Some other title</title>
+         <para>Some other paragraph.</para>
+      </doc>
+   </t:input>
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron" xmlns="http://www.w3.org/1999/xhtml">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="wrapper">The document root is not wrapper.</s:assert>
+               <s:assert test="wrapper/doc[1]/title='Some title'">doc[1]/title is not 'Some title'.</s:assert>
+               <s:assert test="wrapper/doc[1]/para='Some paragraph.'">doc[1]/para is not 'Some paragraph.'</s:assert>
+               
+               <s:assert test="wrapper/doc[2]/title='Some other title'">doc[2]/title is not 'Some other title'.</s:assert>
+               <s:assert test="wrapper/doc[2]/para='Some other paragraph.'">doc[2]/para is not 'Some other paragraph.'</s:assert>
+               
+               <s:assert test="count(wrapper/doc)=2">Root 'wrapper' does not have two 'doc'-children.</s:assert>
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>

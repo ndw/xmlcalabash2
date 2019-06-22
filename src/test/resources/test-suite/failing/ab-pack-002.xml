@@ -1,0 +1,57 @@
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
+   <t:info>
+      <t:title>pack 002 (AB)</t:title>
+      <t:revision-history>
+         <t:revision>
+            <t:date>2019-05-06</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Ported test for p:pack from 1.0 test suite.</p>
+            </t:description>
+         </t:revision>
+      </t:revision-history>
+   </t:info>
+   <t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Testing p:pack</p>
+   </t:description>
+   <t:pipeline>
+      <p:declare-step version="3.0" xmlns:p="http://www.w3.org/ns/xproc">
+         <p:output port="result" />
+         
+         <p:pack wrapper="wrapper">
+            <p:with-input port="source">
+               <doc1 />
+               <doc2 />
+               <doc3 />
+            </p:with-input>
+            <p:with-input port="alternate">
+               <p:empty />
+            </p:with-input>
+         </p:pack>
+         
+         <p:wrap-sequence wrapper="sequence-wrapper" />
+      </p:declare-step>
+   </t:pipeline>
+   
+   <t:schematron>
+      <s:schema xmlns:s="http://purl.oclc.org/dsdl/schematron">
+         <s:pattern>
+            <s:rule context="/">
+               <s:assert test="sequence-wrapper">The document root is not sequence-wrapper.</s:assert>
+               
+               <s:assert test="sequence-wrapper/wrapper[1]/*[1][local-name()='doc1']">wrapper[1]/*[1] is not correct.</s:assert>
+               <s:assert test="count(sequence-wrapper/wrapper[1]/*)=1">wrapper[1] does not have exactly 1 child element.</s:assert>
+
+               <s:assert test="sequence-wrapper/wrapper[2]/*[1][local-name()='doc2']">wrapper[2]/*[1] is not correct.</s:assert>
+               <s:assert test="count(sequence-wrapper/wrapper[2]/*)=1">wrapper[2] does not have exactly 1 child element.</s:assert>
+               
+               <s:assert test="sequence-wrapper/wrapper[3]/*[1][local-name()='doc3']">wrapper[3]/*[1] is not correct.</s:assert>
+               <s:assert test="count(sequence-wrapper/wrapper[3]/*)=1">wrapper[3] does not have exactly 1 child elements.</s:assert>
+               
+            </s:rule>
+         </s:pattern>
+      </s:schema>
+   </t:schematron>
+</t:test>
