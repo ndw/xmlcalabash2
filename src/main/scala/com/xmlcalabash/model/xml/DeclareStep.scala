@@ -299,6 +299,13 @@ class DeclareStep(override val config: XMLCalabashRuntime,
           if (option.allowedValues.isDefined) {
             optSig.tokenList = option.allowedValues.get
           }
+          if (option.select.isDefined) {
+            // Evaluate it; no reference to context is allowed.
+            val context = new ExpressionContext(new StaticContext()) // FIXME: what about namespaces!?
+            val expr = new XProcXPathExpression(context, option.select.get)
+            val msg = config.expressionEvaluator.value(expr, List(), Map.empty[String,XdmValueItemMessage], None)
+            optSig.defaultValue = msg.item.toString
+          }
           stepSig.addOption(optSig, option.location.get)
         case _ =>
           Unit

@@ -136,7 +136,6 @@ class OptionDecl(override val config: XMLCalabashRuntime,
       config.addNode(node.id, this)
     }
   }
-  */
 
   override def makeEdges(graph: Graph, parent: Node): Unit = {
     if (_select.isDefined && !_static) {
@@ -151,4 +150,5 @@ class OptionDecl(override val config: XMLCalabashRuntime,
       }
     }
   }
+  */
 }

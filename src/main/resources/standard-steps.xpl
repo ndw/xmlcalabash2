@@ -10,7 +10,7 @@
 <p:declare-step type="p:add-attribute">
   <p:input port="source" content-types="application/xml"/>
   <p:output port="result" content-types="application/xml"/>
-  <p:option name="match" cx:as="XSLTMatchPattern"/>
+  <p:option name="match" cx:as="XSLTMatchPattern" select="'/*'"/>
   <p:option name="attribute-name" required="true" as="xs:QName"/>
   <p:option name="attribute-prefix" as="xs:NCName"/>
   <p:option name="attribute-namespace" as="xs:anyURI"/>
