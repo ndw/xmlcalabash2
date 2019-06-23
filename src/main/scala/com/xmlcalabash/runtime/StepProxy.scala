@@ -468,7 +468,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     var count = 0
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
-      val child = iter.next().asInstanceOf[XdmNode]
+      val child = iter.next()
       if (count > 0 || child.getNodeKind != XdmNodeKind.TEXT) {
         throw XProcException.xiNotATextDocument(None)
       }

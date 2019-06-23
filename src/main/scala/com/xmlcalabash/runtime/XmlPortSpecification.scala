@@ -41,7 +41,17 @@ object XmlPortSpecification {
   /** Allow a single TEXT document on the `source` port. */
   val TEXTSOURCE: XmlPortSpecification = new XmlPortSpecification(
     Map("source"->PortCardinality.EXACTLY_ONE),
-    Map("source"->List("text/*")))
+    Map("source"->List("text")))
+
+  /** Allow a sequence of TEXT documents on the `source` port. */
+  val TEXTSOURCESEQ: XmlPortSpecification = new XmlPortSpecification(
+    Map("source"->PortCardinality.ZERO_OR_MORE),
+    Map("source"->List("text")))
+
+  /** Allow a single TEXT document on the `result` port. */
+  val TEXTRESULT: XmlPortSpecification = new XmlPortSpecification(
+    Map("result"->PortCardinality.EXACTLY_ONE),
+    Map("result" -> List("text")))
 
   /** Allow a single XML document on the `source` port. */
   val XMLSOURCE: XmlPortSpecification = new XmlPortSpecification(

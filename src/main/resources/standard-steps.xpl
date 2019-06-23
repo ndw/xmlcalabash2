@@ -90,6 +90,57 @@
   <p:option name="serialization" as="map(*)"/>
 </p:declare-step>
 
+<p:declare-step type="p:text-count">
+  <p:input port="source" content-types="text"/>
+  <p:output port="result" content-types="application/xml"/>
+</p:declare-step>
+
+<p:declare-step type="p:text-head">
+  <p:input port="source" primary="true" sequence="false" content-types="text"/>
+  <p:output port="result" primary="true" sequence="false" content-types="text"/>
+  <p:option name="count" required="true" as="xs:integer"/>
+</p:declare-step>
+
+<p:declare-step type="p:text-join">
+  <p:input port="source" sequence="true" content-types="text"/>
+  <p:output port="result" sequence="false" content-types="text/plain"/>
+  <p:option name="separator" required="false" as="xs:string"/>
+  <p:option name="prefix" required="false" as="xs:string"/>
+  <p:option name="suffix" required="false" as="xs:string"/>
+  <p:option name="override-content-type" required="false" as="xs:string"/>
+</p:declare-step>
+
+<p:declare-step type="p:text-replace">
+  <p:input port="source" primary="true" sequence="false" content-types="text"/>
+  <p:output port="result" primary="true" sequence="false" content-types="text"/>
+  <p:option name="pattern" required="true" as="xs:string"/>
+  <p:option name="replacement" required="true" as="xs:string"/>
+  <p:option name="flags" required="false" as="xs:string"/>
+</p:declare-step>
+
+<!--
+<p:declare-step type="p:text-sort">
+  <p:input port="source" primary="true" sequence="false" content-types="text"/>
+  <p:output port="result" primary="true" sequence="false" content-types="text"/>
+  <p:option name="order" required="false" as="xs:string" select="'ascending'"
+            values="('ascending', 'descending')"/>
+  <p:option name="case-order" required="false" as="xs:string"
+            values="('upper-first', 'lower-first')"/>
+  <p:option name="lang" required="false" as="xs:language"/>
+  <p:option name="data-type" required="false" as="xs:string" select="'text'"
+            values="('text', 'number')"/>
+  <p:option name="collation" required="false" as="xs:string"
+            select="'https://www.w3.org/2005/xpath-functions/collation/codepoint'"/>
+  <p:option name="stable" required="false" as="xs:boolean" select="true()"/>
+</p:declare-step>
+-->
+
+<p:declare-step type="p:text-tail">
+  <p:input port="source" primary="true" sequence="false" content-types="text"/>
+  <p:output port="result" primary="true" sequence="false" content-types="text"/>
+  <p:option name="count" required="true" as="xs:integer"/>
+</p:declare-step>
+
 <p:declare-step type="p:validate-with-relax-ng">
   <p:input port="source" primary="true" content-types="application/xml text/xml */*+xml"/>
   <p:input port="schema" content-types="application/xml */*+xml"/>
