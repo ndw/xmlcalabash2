@@ -113,8 +113,9 @@ object XProcException {
   def xsUndeclaredOption(stepType: QName, optName: QName, location: Option[Location]): XProcException = staticError(31, List(stepType,optName), location)
   def xsUnconnectedPrimaryInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(32, List(step,port), location)
   def xsMissingRequiredAttribute(attName: QName, location: Option[Location]): XProcException = staticError(38, attName, location)
-  def xsElementNotAllowed(location: Option[Location], element: QName, message: String): XProcException = staticError(44, List(element, message), location)
-  def xsElementNotAllowed(location: Option[Location], element: QName): XProcException = staticError(44, List(element, "element is not allowed here"), location)
+
+  def xsElementNotAllowed(location: Option[Location], element: QName, message: String): XProcException = staticError(100, List(element, message), location)
+  def xsElementNotAllowed(location: Option[Location], element: QName): XProcException = staticError(100, List(element, "element is not allowed here"), location)
 
   def xsTextNotAllowed(location: Option[Location], text: String): XProcException = staticError(999, text, location)
   def xsMissingRequiredInput(port: String, location: Option[Location]): XProcException = staticError(998, port, location)
