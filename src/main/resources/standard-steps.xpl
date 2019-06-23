@@ -118,12 +118,11 @@
   <p:option name="flags" required="false" as="xs:string"/>
 </p:declare-step>
 
-<!--
 <p:declare-step type="p:text-sort">
-  <p:input port="source" primary="true" sequence="false" content-types="text"/>
-  <p:output port="result" primary="true" sequence="false" content-types="text"/>
+  <p:input port="source" content-types="text"/>
+  <p:output port="result" content-types="text"/>
   <p:option name="order" required="false" as="xs:string" select="'ascending'"
-            values="('ascending', 'descending')"/>
+            values="('ascending', 'descending', 1.5, true())"/>
   <p:option name="case-order" required="false" as="xs:string"
             values="('upper-first', 'lower-first')"/>
   <p:option name="lang" required="false" as="xs:language"/>
@@ -133,7 +132,6 @@
             select="'https://www.w3.org/2005/xpath-functions/collation/codepoint'"/>
   <p:option name="stable" required="false" as="xs:boolean" select="true()"/>
 </p:declare-step>
--->
 
 <p:declare-step type="p:text-tail">
   <p:input port="source" primary="true" sequence="false" content-types="text"/>
