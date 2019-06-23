@@ -2,9 +2,8 @@ package com.xmlcalabash.steps.text
 
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
-import net.sf.saxon.s9api.{QName, XdmAtomicValue}
-
-import scala.collection.mutable.ListBuffer
+import com.xmlcalabash.util.xc.XsltStylesheet
+import net.sf.saxon.s9api.{QName, XdmDestination}
 
 class Sort() extends TextLines {
   private val _order = new QName("", "order")
@@ -13,31 +12,54 @@ class Sort() extends TextLines {
   private val _data_type = new QName("", "data-type")
   private val _collation = new QName("", "collation")
   private val _stable = new QName("", "stable")
-
-  private var ascending = true
+  private val _sort = new QName("", "sort")
+  private val _line = new QName("", "line")
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.TEXTSOURCE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.TEXTRESULT
 
-  def comparitor(a: String, b: String): Boolean = {
-    if (ascending) {
-      a.compareTo(b) < 0
+  private def svalue(key: QName): Option[String] = {
+    if (bindings.contains(key)) {
+      Some(bindings(key).getStringValue)
     } else {
-      a.compareTo(b) > 0
+      None
     }
   }
 
   override def run(context: StaticContext): Unit = {
-    if (bindings.contains(_order)) {
-      ascending = bindings(_order).getStringValue == "ascending"
-    }
+    val xslbuilder = new XsltStylesheet(config)
 
-    val newLines = lines.sortWith(comparitor)
-    var hlines = ""
-    for (line <- newLines) {
-      hlines += line + "\n"
+    xslbuilder.startVariable("lines", "element()*")
+    for (line <- lines) {
+      xslbuilder.literal(_line, line)
     }
+    xslbuilder.endVariable()
 
-    consumer.get.receive("result", new XdmAtomicValue(hlines), new XProcMetadata(MediaType.TEXT))
+    xslbuilder.startNamedTemplate("sort")
+    xslbuilder.startForEach("$lines")
+    xslbuilder.startSort(".", svalue(_lang), svalue(_order), svalue(_collation),
+      svalue(_stable), svalue(_case_order), svalue(_data_type))
+    xslbuilder.endSort()
+    xslbuilder.valueOf(".")
+    xslbuilder.text("\n")
+    xslbuilder.endForEach()
+    xslbuilder.endTemplate()
+
+    val stylesheet = xslbuilder.endStylesheet()
+
+    val processor = config.processor
+    val compiler = processor.newXsltCompiler()
+    compiler.setSchemaAware(processor.isSchemaAware)
+    val exec = compiler.compile(stylesheet.asSource())
+    val transformer = exec.load()
+    transformer.setInitialTemplate(_sort)
+
+    val result = new XdmDestination()
+    transformer.setDestination(result)
+    transformer.transform()
+
+    val xformed = result.getXdmNode
+
+    consumer.get.receive("result", xformed, new XProcMetadata(MediaType.TEXT))
   }
 }

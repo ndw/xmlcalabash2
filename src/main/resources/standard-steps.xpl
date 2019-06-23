@@ -122,7 +122,7 @@
   <p:input port="source" content-types="text"/>
   <p:output port="result" content-types="text"/>
   <p:option name="order" required="false" as="xs:string" select="'ascending'"
-            values="('ascending', 'descending', 1.5, true())"/>
+            values="('ascending', 'descending')"/>
   <p:option name="case-order" required="false" as="xs:string"
             values="('upper-first', 'lower-first')"/>
   <p:option name="lang" required="false" as="xs:language"/>
