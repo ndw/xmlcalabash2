@@ -9,17 +9,6 @@ import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode}
 
 import scala.collection.mutable.ListBuffer
 
-/*
-<p:declare-step type="p:text-join">
-     <p:output port="source" primary="true" sequence="true" content-types="text"/>
-     <p:output port="result" primary="true" sequence="false" content-types="text/plain"/>
-     <p:option name="separator" required="false" as="xs:string"/>
-     <p:option name="prefix" required="false" as="xs:string"/>
-     <p:option name="suffix" required="false" as="xs:string"/>
-     <p:option name="override-content-type" required="false" as="xs:string"/>
-</p:declare-step>
- */
-
 class Join() extends DefaultXmlStep {
   private val _separator = new QName("", "separator")
   private val _prefix = new QName("", "prefix")
