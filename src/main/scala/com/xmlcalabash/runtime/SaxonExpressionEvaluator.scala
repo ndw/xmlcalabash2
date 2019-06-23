@@ -173,6 +173,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
       case _ => None
     }
 
+    val allowedValues = xpath match {
+      case xxe: XProcXPathExpression => xxe.values
+      case _ => None
+    }
+
     val expr = xpath.asInstanceOf[XProcExpression]
 
     if (as.isDefined) {
@@ -200,6 +205,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
       if (!matches) {
         throw XProcException.dynamicError(36, List(xdmval, as.get), expr.context.location)
       }
+    }
+
+    if (allowedValues.isDefined) {
+      println("ALLOWD IN EXPR")
+      println(allowedValues.get)
     }
 
     new XdmValueItemMessage(xdmval, XProcMetadata.XML, expr.context)

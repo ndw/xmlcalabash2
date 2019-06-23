@@ -176,6 +176,7 @@ object XProcConstants {
   val _type = new QName("", "type")
   val _undeclare_prefixes = new QName("", "undeclare-prefixes")
   val _value = new QName("", "value")
+  val _values = new QName("", "values")
   val _version = new QName("", "version")
   val _xpath_version = new QName("", "xpath-version")
 

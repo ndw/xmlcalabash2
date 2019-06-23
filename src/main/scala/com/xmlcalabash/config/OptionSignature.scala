@@ -1,6 +1,6 @@
 package com.xmlcalabash.config
 
-import net.sf.saxon.s9api.QName
+import net.sf.saxon.s9api.{QName, XdmAtomicValue}
 
 import scala.collection.mutable.ListBuffer
 
@@ -8,7 +8,7 @@ class OptionSignature(val name: QName) {
   private var _required = true
   private var _declaredType = Option.empty[String]
   private var _occurrence = Option.empty[String]
-  private var _tokenList: Option[ListBuffer[String]] = None
+  private var _tokenList: Option[ListBuffer[XdmAtomicValue]] = None
   private var _defaultValue = Option.empty[String]
 
   def this(name: QName, optType: String, required: Boolean) = {
@@ -32,15 +32,15 @@ class OptionSignature(val name: QName) {
     _occurrence = Some(value)
   }
 
-  def tokenList: Option[List[String]] = {
+  def tokenList: Option[List[XdmAtomicValue]] = {
     if (_tokenList.isDefined) {
       Some(_tokenList.get.toList)
     } else {
       None
     }
   }
-  def tokenList_=(list: List[String]): Unit = {
-    _tokenList = Some(ListBuffer.empty[String] ++ list)
+  def tokenList_=(list: List[XdmAtomicValue]): Unit = {
+    _tokenList = Some(ListBuffer.empty[XdmAtomicValue] ++ list)
   }
 
   def defaultValue: Option[String] = _defaultValue

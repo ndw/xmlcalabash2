@@ -296,6 +296,9 @@ class DeclareStep(override val config: XMLCalabashRuntime,
           stepSig.addOutput(portSig, output.location.get)
         case option: OptionDecl =>
           val optSig = new OptionSignature(option.optionName, option.declaredType, option.required)
+          if (option.allowedValues.isDefined) {
+            optSig.tokenList = option.allowedValues.get
+          }
           stepSig.addOption(optSig, option.location.get)
         case _ =>
           Unit

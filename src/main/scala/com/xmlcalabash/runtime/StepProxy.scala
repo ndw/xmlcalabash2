@@ -123,6 +123,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
       } else {
         None
       }
+      val optlist: Option[List[XdmAtomicValue]] = optsig.tokenList
       val occurrence = optsig.occurrence
 
       bindmsg.message match {
@@ -134,6 +135,15 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
                 step.receiveBinding(qname, seq, item.context)
               } else {
                 val value = typeUtils.castAtomicAs(atomic, opttype, item.context)
+                if (optlist.isDefined) {
+                  var found = false
+                  for (item <- optlist.get) {
+                    found = found || value.equals(item)
+                  }
+                  if (!found) {
+                    throw XProcException.xdValueNotInList(value.getStringValue, item.context.location)
+                  }
+                }
                 step.receiveBinding(qname, value, item.context)
               }
             case _ => Unit

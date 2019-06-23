@@ -1,14 +1,15 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
+import com.jafpl.messages.Message
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
-import net.sf.saxon.s9api.{QName, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmValue}
 import net.sf.saxon.value.SequenceType
 
-import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class OptionDecl(override val config: XMLCalabashRuntime,
                  override val parent: Option[Artifact]) extends Artifact(config, parent) {
@@ -18,6 +19,7 @@ class OptionDecl(override val config: XMLCalabashRuntime,
   private var _expression = Option.empty[XProcExpression]
   private var _as = Option.empty[SequenceType]
   private var _declaredType = Option.empty[String]
+  private var _allowedValues = Option.empty[List[XdmAtomicValue]]
   private var _static = false
   private var _externalValue = Option.empty[XdmValue]
   private var _staticValueMessage = Option.empty[XdmValueItemMessage]
@@ -28,6 +30,7 @@ class OptionDecl(override val config: XMLCalabashRuntime,
   def expression: XProcExpression = _expression.get
   def as: Option[SequenceType] = _as
   def declaredType: String = _declaredType.getOrElse("xs:string")
+  def allowedValues: Option[List[XdmAtomicValue]] = _allowedValues
 
   def static: Boolean = _static
 
@@ -66,6 +69,20 @@ class OptionDecl(override val config: XMLCalabashRuntime,
     _declaredType = attributes.get(XProcConstants._as)
     _as = sequenceType(attributes.get(XProcConstants._as))
 
+    if (attributes.contains(XProcConstants._values)) {
+      val seq = attributes(XProcConstants._values)
+      val evaluator = config.expressionEvaluator
+      val expr = new XProcXPathExpression(ExpressionContext.NONE, seq)
+      val exlist = evaluator.value(expr, List(), Map.empty[String,Message], None)
+      val list = ListBuffer.empty[XdmAtomicValue]
+      val iter = exlist.item.iterator()
+      while (iter.hasNext) {
+        val item = iter.next()
+        list += item.asInstanceOf[XdmAtomicValue]
+      }
+      _allowedValues = Some(list.toList)
+    }
+
     if (_static) {
       if (_select.isEmpty) {
         throw XProcException.xsNoSelectOnStaticOption(location)
@@ -74,29 +91,10 @@ class OptionDecl(override val config: XMLCalabashRuntime,
       val context = new ExpressionContext(staticContext)
       val varExpr = new XProcXPathExpression(context, _select.get, _as)
       val bindingRefs = lexicalVariables(_select.get)
-
-      /*
-      val staticVariableMap = mutable.HashMap.empty[String, XdmValueItemMessage]
-      for (vref <- bindingRefs) {
-        val msg = staticValue(vref)
-        if (msg.isDefined) {
-          staticVariableMap.put(vref.getClarkName, msg.get)
-        } else {
-          throw new ModelException(ExceptionCode.NOBINDING, vref.toString, location)
-        }
-      }
-      val eval = config.expressionEvaluator
-      if (config.staticOptionValue(optionName).isDefined) {
-        logger.debug(s"Using static option value: $optionName = ${config.staticOptionValue(optionName).get}")
-        _staticValueMessage = Some(eval.precomputedValue(varExpr, config.staticOptionValue(optionName).get, List(), staticVariableMap.toMap, None))
-      } else {
-        _staticValueMessage = Some(eval.value(varExpr, List(), staticVariableMap.toMap, None))
-      }
-     */
     }
 
     for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._as, XProcConstants.cx_as,
-      XProcConstants._select, XProcConstants._static)) {
+      XProcConstants._select, XProcConstants._static, XProcConstants._values)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }
@@ -114,6 +112,7 @@ class OptionDecl(override val config: XMLCalabashRuntime,
     valid
   }
 
+  /*
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
@@ -128,12 +127,16 @@ class OptionDecl(override val config: XMLCalabashRuntime,
     } else {
       val context = new ExpressionContext(staticContext)
       val options = new SaxonExpressionOptions(Map("collection" -> false, "optiondecl" -> true))
-      val init = new XProcXPathExpression(context, _select.getOrElse("()"), as)
+      if (_allowedValues.isDefined) {
+        println("HERE")
+      }
+      val init = new XProcXPathExpression(context, _select.getOrElse("()"), as, _allowedValues)
       val node = graph.addOption(_name.getClarkName, init, None)
       _graphNode = Some(node)
       config.addNode(node.id, this)
     }
   }
+  */
 
   override def makeEdges(graph: Graph, parent: Node): Unit = {
     if (_select.isDefined && !_static) {
