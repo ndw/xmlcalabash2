@@ -310,7 +310,7 @@ class InlineLoader(private val baseURI: Option[URI],
         if (expandText && str.contains("{")) {
           expandNodes(str, builder)
         } else {
-          builder.addText(str)
+          builder.addText(str.replace("}}", "}"))
         }
       case _ =>
         builder.addSubtree(node)
