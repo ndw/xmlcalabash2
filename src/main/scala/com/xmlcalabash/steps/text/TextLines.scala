@@ -18,7 +18,9 @@ class TextLines() extends DefaultXmlStep {
     item match {
       case node: XdmNode =>
         text = node
-        lines ++= text.getStringValue.split('\n')
+        if (text.getStringValue != "") {
+          lines ++= text.getStringValue.split('\n')
+        }
       case _ => throw new RuntimeException("non node to text?")
     }
     meta = metadata

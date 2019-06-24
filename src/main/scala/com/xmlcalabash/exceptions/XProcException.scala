@@ -83,6 +83,7 @@ object XProcException {
   def xdInvalidSelection(expr: String, selected: String, location: Option[Location]): XProcException = dynamicError(16, List(expr,selected), location)
   def xdBadValue(value: String, vtype: String, message: String, location: Option[Location]): XProcException = dynamicError(19, List(value,vtype, message), location)
   def xdNotAuthorized(href: String, message: String): XProcException = dynamicError(21, List(href, message))
+  def xdGeneralError(message: String, location: Option[Location]): XProcException = dynamicError(30, message, location)
 
   def xdNotValidXML(href: String, message: String, location: Option[Location]): XProcException = dynamicError(23, List(href, message, location))
   def xdNotValidXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(23, List(href, line, col, message), location)
@@ -139,6 +140,7 @@ object XProcException {
 
   def xcNotSchemaValid(href: String, message: String, location: Option[Location]): XProcException = stepError(53, List(href, message), location)
   def xcNotSchemaValid(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = stepError(53, List(href, line, col, message), location)
+  def xcUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = stepError(70, ctype, location)
 
 
   private def internalError(code: Int, location: Option[Location]): XProcException = {

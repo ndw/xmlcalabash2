@@ -252,6 +252,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
           evalAvt = !evalAvt
         }
 
+        // Special case for AVT=""
+        if (xdmval == null) {
+          xdmval = new XdmAtomicValue("")
+        }
+
         if (avtexpr.stringResult) {
           val viter = xdmval.iterator()
           var s = ""
@@ -368,6 +373,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
               throw XProcException.xdContextItemAbsent(xpath, sae.getMessage, exprContext.location)
             }
           } else {
+            throw XProcException.xdGeneralError(sae.getMessage, exprContext.location)
             throw sae
           }
         case ex: Exception =>

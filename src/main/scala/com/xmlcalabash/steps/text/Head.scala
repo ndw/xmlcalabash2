@@ -27,7 +27,10 @@ class Head() extends TextLines {
 
     var hlines = ""
     for (line <- newLines) {
-      hlines += line + "\n"
+      if (hlines != "") {
+        hlines += "\n"
+      }
+      hlines += line
     }
 
     consumer.get.receive("result", new XdmAtomicValue(hlines), new XProcMetadata(MediaType.TEXT))

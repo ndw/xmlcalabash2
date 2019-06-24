@@ -22,6 +22,8 @@ class Tail() extends TextLines {
     } else if (count > 0) {
       if (count < lines.size) {
         newLines = lines.drop(lines.size - count)
+      } else {
+        newLines = lines
       }
     } else if (count < 0) {
       newLines = lines.dropRight(-count)
@@ -29,7 +31,10 @@ class Tail() extends TextLines {
 
     var hlines = ""
     for (line <- newLines) {
-      hlines += line + "\n"
+      if (hlines != "") {
+        hlines += "\n"
+      }
+      hlines += line
     }
 
     consumer.get.receive("result", new XdmAtomicValue(hlines), new XProcMetadata(MediaType.TEXT))

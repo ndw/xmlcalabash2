@@ -39,6 +39,9 @@ Validity error in “$1”: $2
 XD0026
 The context item is empty in expression: “$1” (Saxon: $2)
 
+XD0030
+Error: $1
+
 XD0034
 $1
 
