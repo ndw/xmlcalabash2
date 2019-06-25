@@ -74,7 +74,18 @@ class Input(override val config: XMLCalabashRuntime,
 
     val ctypes = attributes.get(XProcConstants._content_types)
     if (ctypes.isDefined) {
-      _contentTypes ++= MediaType.parseList(ctypes.get)
+      try {
+        _contentTypes ++= MediaType.parseList(ctypes.get)
+      } catch {
+        case ex: XProcException =>
+          if (ex.code == XProcException.xc0070) {
+            // Map to the static error...
+            throw XProcException.xsUnrecognizedContentType(ex.details.head.toString, ex.location)
+          } else {
+            throw ex
+          }
+        case ex: Exception => throw ex
+      }
     } else {
       _contentTypes += MediaType.OCTET_STREAM
     }

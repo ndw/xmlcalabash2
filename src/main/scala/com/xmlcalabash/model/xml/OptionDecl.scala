@@ -112,7 +112,6 @@ class OptionDecl(override val config: XMLCalabashRuntime,
     valid
   }
 
-  /*
   override def makeGraph(graph: Graph, parent: Node) {
     val container = this.parent.get
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
@@ -150,5 +149,4 @@ class OptionDecl(override val config: XMLCalabashRuntime,
       }
     }
   }
-  */
 }

@@ -14,6 +14,8 @@ import net.sf.saxon.s9api.{QName, XdmNode}
 import scala.collection.mutable.ListBuffer
 
 object XProcException {
+  val xc0070 = new QName("err", XProcConstants.ns_err, "XC0070")
+
   def xiUnkExprType(location: Option[Location]): XProcException = internalError(1, location)
   def xiInvalidMessage(location: Option[Location], message: Message): XProcException = internalError(2, location, message)
   def xiBadBoundValue(location: Option[Location], value: Any): XProcException = internalError(3, location, value)
@@ -97,7 +99,7 @@ object XProcException {
 
   def xdCannotEncodeXml(encoding: String, contentType: MediaType, location: Option[Location]): XProcException = dynamicError(54, List(encoding,contentType), location)
   def xdNoMarkupAllowed(location: Option[Location]): XProcException = dynamicError(56, location)
-  def xdInvalidJson(expr: String, message: String, location: Option[Location]): XProcException = dynamicError(57, List(expr,message), location)
+  def xdInvalidJson(message: String, location: Option[Location]): XProcException = dynamicError(57, message, location)
   def xdUnsupportedEncoding(encoding: String, location: Option[Location]): XProcException = dynamicError(60, encoding, location)
   def xdMismatchedContentType(declType: MediaType, propType: MediaType, location: Option[Location]): XProcException = dynamicError(62, List(declType,propType), location)
 

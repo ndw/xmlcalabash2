@@ -179,6 +179,10 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
   }
 
   def matches(mtype: MediaType): Boolean = {
+    if (mtype.mediaType == "application" && mtype.mediaSubtype == "octet-stream") {
+      return true
+    }
+
     var mmatch = mediaType == mtype.mediaType || mtype.mediaType == "*"
     mmatch = mmatch && (mediaSubtype == mtype.mediaSubtype || mtype.mediaSubtype == "*")
     if (suffix.isDefined && mtype.suffix.isDefined) {

@@ -161,19 +161,7 @@ class DeclareStep(override val config: XMLCalabashRuntime,
   // the logic considerably and has very little performance impact.
   //
   private def patchDefaultInputs(input: Input): Unit = {
-    var firstChild: Option[Artifact] = None
-    for (child <- children) {
-      child match {
-        case input: Input => Unit
-        case output: Output => Unit
-        case variable: Variable => Unit
-        case art: Artifact =>
-          if (firstChild.isEmpty) {
-            firstChild = Some(art)
-          }
-      }
-    }
-
+    // Insert the new step right before the input; this assures that the in-scope statics will be correct
     val params = new ContentTypeParams(input.port.get, input.contentTypes, input.sequence)
     val checker = new AtomicStep(config, Some(this), XProcConstants.cx_content_type_checker, Some(params))
     checker.staticContext.location = input.staticContext.location.get
@@ -184,7 +172,7 @@ class DeclareStep(override val config: XMLCalabashRuntime,
     }
     checker.addChild(idinput)
 
-    insertChildBefore(firstChild.get, checker)
+    insertChildBefore(input, checker)
     checker.makePortsExplicit()
 
     val sinput = this.input(input.port.get)
@@ -323,10 +311,12 @@ class DeclareStep(override val config: XMLCalabashRuntime,
     for (item <- _varOptList) {
       item match {
         case variable: Variable =>
+          println(s"$variable ${variable.static}")
           if (variable.static) {
             staticHash.put(variable.variableName, variable)
           }
         case option: OptionDecl =>
+          println(s"$option ${option.static}")
           if (option.static) {
             staticHash.put(option.optionName, option)
           }

@@ -373,8 +373,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
               throw XProcException.xdContextItemAbsent(xpath, sae.getMessage, exprContext.location)
             }
           } else {
-            throw XProcException.xdGeneralError(sae.getMessage, exprContext.location)
-            throw sae
+            if (sae.getMessage.contains("Invalid JSON")) {
+              throw XProcException.xdInvalidJson(sae.getMessage, exprContext.location)
+            } else {
+              throw XProcException.xdGeneralError(sae.getMessage, exprContext.location)
+            }
           }
         case ex: Exception =>
           throw ex

@@ -176,7 +176,7 @@ class InlineLoader(private val baseURI: Option[URI],
         } catch {
           case ex: SaxonApiException =>
             if (ex.getMessage.contains("Invalid JSON")) {
-              throw XProcException.xdInvalidJson(text, ex.getMessage, location)
+              throw XProcException.xdInvalidJson(ex.getMessage, location)
             } else {
               throw ex
             }
