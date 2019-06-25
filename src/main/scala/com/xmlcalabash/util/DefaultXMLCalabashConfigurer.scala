@@ -64,6 +64,9 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
     configuration.documentManager = new DefaultDocumentManager(configuration)
     configuration.defaultSerializationOptions = config.serialization
     configuration.trimInlineWhitespace = config.trim_inline_whitespace
+    if (config.graphviz_dot.isDefined) {
+      configuration.debugOptions.graphviz_dot = config.graphviz_dot.get
+    }
 
     loadProperties(configuration)
   }

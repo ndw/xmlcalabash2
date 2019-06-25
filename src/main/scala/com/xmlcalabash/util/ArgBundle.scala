@@ -24,7 +24,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
   private val _params = mutable.HashMap.empty[QName, XProcVarValue]
   private var _pipeline = Option.empty[String]
   private var _verbose = false
-  private var _debugOptions = new XMLCalabashDebugOptions()
+  private var _debugOptions = xmlCalabash.debugOptions
 
   def this(config: XMLCalabashConfig, args: List[String]) = {
     this(config)
@@ -45,8 +45,6 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
       throw XProcException.xiArgBundleNoPipeline()
     }
   }
-
-  def debugOptions: XMLCalabashDebugOptions = _debugOptions
 
   def parse(args: List[String]): Unit = {
     // -iport=input | --input port=input
@@ -120,7 +118,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
               case "debug" => _debugOptions.debug = true
               case "graph" => _debugOptions.dumpGraph = true
               case "graph-before" => _debugOptions.dumpOpenGraph = true
-              case "dump-xml" => debugOptions.dumpXml = true
+              case "dump-xml" => xmlCalabash.debugOptions.dumpXml = true
               case "inject" =>
                 _injectables += args(pos+1)
                 pos += 1

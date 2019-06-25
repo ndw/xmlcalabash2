@@ -24,9 +24,11 @@ class XMLCalabashConfiguration {
   private val cc_unparsed_text_uri_resolver = new QName("cc", ns_cc, "unparsed-text-uri-resolver")
   private val cc_system_property = new QName("cc", ns_cc, "system-property")
   private val cc_watchdog_timeout = new QName("cc", ns_cc, "watchdog-timeout")
+  private val cc_graphviz = new QName("cc", ns_cc, "graphviz")
   private val _key = new QName("key")
   private val _value = new QName("value")
   private val _type = new QName("type")
+  private val _dot = new QName("dot")
 
   private var _show_messages = Option.empty[Boolean]
   private var _schema_aware = Option.empty[Boolean]
@@ -38,6 +40,7 @@ class XMLCalabashConfiguration {
   private var _uri_resolver = Option.empty[String]
   private var _module_uri_resolver = Option.empty[String]
   private var _unparsed_text_uri_resolver = Option.empty[String]
+  private var _graphviz_dot = Option.empty[String]
 
   def show_messages: Boolean = _show_messages.getOrElse(false)
   def schema_aware: Boolean = _schema_aware.getOrElse(false)
@@ -49,6 +52,7 @@ class XMLCalabashConfiguration {
   def uri_resolver: Option[String] = _uri_resolver
   def module_uri_resolver: Option[String] = _module_uri_resolver
   def unparsed_text_uri_resolver: Option[String] = _unparsed_text_uri_resolver
+  def graphviz_dot: Option[String] = _graphviz_dot
 
   def serialization: Map[String,Map[QName,String]] = {
     val map = mutable.HashMap.empty[String, Map[QName,String]]
@@ -135,6 +139,8 @@ class XMLCalabashConfiguration {
         _module_uri_resolver = Some(setString(node, option))
       case `cc_unparsed_text_uri_resolver` =>
         _unparsed_text_uri_resolver = Some(setString(node, option))
+      case `cc_graphviz` =>
+        parseGraphviz(node)
       case _ =>
         logger.error(s"Unexpected configuration option: ${node.getNodeName}")
     }
@@ -196,6 +202,13 @@ class XMLCalabashConfiguration {
         }
       }
       _serialization.put(ctype, map)
+    }
+  }
+
+  private def parseGraphviz(node: XdmNode): Unit = {
+    val dot = node.getAttributeValue(_dot)
+    if (dot != null) {
+      _graphviz_dot = Some(dot)
     }
   }
 

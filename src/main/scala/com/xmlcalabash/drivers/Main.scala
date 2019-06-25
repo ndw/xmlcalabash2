@@ -19,7 +19,6 @@ object Main extends App {
 
   val options = new ArgBundle(config, args.toList)
 
-  config.debugOptions = options.debugOptions
   config.debugOptions.injectables = options.injectables
 
   var errored = false
@@ -30,7 +29,7 @@ object Main extends App {
     val decl = config.load(response.value)
     val runtime = decl.config
 
-    if (options.debugOptions.norun) {
+    if (config.debugOptions.norun) {
       System.exit(0)
     }
 
@@ -62,7 +61,7 @@ object Main extends App {
     case ex: Exception =>
       errored = true
 
-      if (options.debugOptions.debug) {
+      if (config.debugOptions.debug) {
         ex.printStackTrace()
       }
 

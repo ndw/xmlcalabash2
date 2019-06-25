@@ -247,7 +247,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "--norun".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.norun)
+    assert(config.debugOptions.norun)
   }
 
   // -G | --graph
@@ -280,7 +280,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "-G pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpGraph)
+    assert(config.debugOptions.dumpGraph)
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -288,7 +288,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "-vG pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpGraph)
+    assert(config.debugOptions.dumpGraph)
     assert(bundle.verbose)
     assert(bundle.pipeline == "pipe.xpl")
   }
@@ -297,7 +297,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "--graph pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpGraph)
+    assert(config.debugOptions.dumpGraph)
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -305,7 +305,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "-v --graph pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpGraph)
+    assert(config.debugOptions.dumpGraph)
     assert(bundle.verbose)
     assert(bundle.pipeline == "pipe.xpl")
   }
@@ -328,7 +328,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "--graph-before pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpOpenGraph)
+    assert(config.debugOptions.dumpOpenGraph)
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -336,7 +336,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "-v --graph-before pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpOpenGraph)
+    assert(config.debugOptions.dumpOpenGraph)
     assert(bundle.verbose)
     assert(bundle.pipeline == "pipe.xpl")
   }
@@ -359,7 +359,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "--dump-xml pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(bundle.debugOptions.dumpXml)
+    assert(config.debugOptions.dumpXml)
     assert(bundle.pipeline == "pipe.xpl")
   }
 

@@ -49,7 +49,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _expressionEvaluator = new SaxonExpressionEvaluator(this)
   private val _collections = mutable.HashMap.empty[String, List[XdmNode]]
-  private var _debugOptions: XMLCalabashDebugOptions = new XMLCalabashDebugOptions()
+  private var _debugOptions: XMLCalabashDebugOptions = new XMLCalabashDebugOptions(this)
 
   private var closed = false
   private var _processor: Processor = _
