@@ -3,9 +3,9 @@ package com.xmlcalabash.model.xml.datasource
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, PipelineStep, Variable}
+import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, PipelineStep, Variable, WithInput}
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcVtExpression, XProcXPathExpression}
-import com.xmlcalabash.steps.internal.FileLoader
+import com.xmlcalabash.steps.internal.{EmptyLoader, FileLoader}
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.QName
 
@@ -151,6 +151,35 @@ class Document(override val config: XMLCalabashRuntime,
     val toStep = this.parent.get.parent
     val toPort = this.parent.get.asInstanceOf[IOPort].port.get
     graph.addOrderedEdge(_graphNode.get, "result", toStep.get._graphNode.get, toPort)
+
+    val docparent = this.parent.get
+    val istep = docparent.parent.get
+    val container = if (istep.parent.isDefined) {
+      istep.parent.get
+    } else {
+      istep
+    }
+
+    var emptyLatch = true
+    if (container.isInstanceOf[DeclareStep] && docparent.isInstanceOf[WithInput]) {
+      val port = docparent.asInstanceOf[WithInput].port.get
+      if (container.input(port).isDefined) {
+        if (container.input(port).get.defaultInputs.nonEmpty) {
+          graph.addEdge(container._graphNode.get, port, _graphNode.get, "latch")
+          emptyLatch = false
+        }
+      }
+    }
+
+    if (emptyLatch) {
+      val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
+      val context = new ExpressionContext(staticContext)
+      val step = new EmptyLoader()
+      val emptyReader = cnode.addAtomic(step, "empty")
+
+      config.addNode(emptyReader.id, this)
+      graph.addEdge(emptyReader, "result", _graphNode.get, "latch")
+    }
   }
 
   override def asXML: xml.Elem = {

@@ -4,7 +4,8 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.net.URI
 import java.util.Base64
 
-import com.jafpl.messages.Message
+import com.jafpl.messages.{JoinGateMessage, Message}
+import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
@@ -26,16 +27,30 @@ class InlineLoader(private val baseURI: Option[URI],
                    private val encoding: Option[String]) extends DefaultStep {
   private var docProps = Map.empty[QName, XdmItem]
   private val excludeURIs = mutable.HashSet.empty[String]
+  private var latch = false
 
   excludeURIs += XProcConstants.ns_p
   for (uri <- excludeUriBindings) {
     excludeURIs += uri
   }
 
-  override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
-  override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
+  override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
+    Map("latch"->PortCardinality.ZERO_OR_MORE),
+    Map("latch"->List("application/octet-stream")))
+  override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULTSEQ
+
+  override def receive(port: String, message: Message): Unit = {
+    message match {
+      case msg: JoinGateMessage => Unit
+      case _ => latch = true
+    }
+  }
 
   override def run(): Unit = {
+    if (latch) {
+      return
+    }
+
     if (docPropsExpr.isDefined) {
       val expr = new XProcXPathExpression(context, docPropsExpr.get)
       val result = xpathValue(expr)

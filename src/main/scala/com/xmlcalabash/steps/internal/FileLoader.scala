@@ -2,7 +2,8 @@ package com.xmlcalabash.steps.internal
 
 import java.net.{URI, URLConnection}
 
-import com.jafpl.messages.{BindingMessage, Message}
+import com.jafpl.messages.{BindingMessage, JoinGateMessage, Message}
+import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.config.{DocumentRequest, XProcTypes}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
@@ -17,9 +18,19 @@ class FileLoader(private val context: ExpressionContext,
   private var _href = ""
   private var _params = Option.empty[XProcTypes.Parameters]
   private var docProps = Map.empty[QName, XdmItem]
+  private var latch = false
 
-  override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
-  override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
+  override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
+    Map("latch"->PortCardinality.ZERO_OR_MORE),
+    Map("latch"->List("application/octet-stream")))
+  override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULTSEQ
+
+  override def receive(port: String, message: Message): Unit = {
+    message match {
+      case msg: JoinGateMessage => Unit
+      case _ => latch = true
+    }
+  }
 
   override def receiveBinding(bindmsg: BindingMessage): Unit = {
     val variable = bindmsg.name
@@ -51,6 +62,10 @@ class FileLoader(private val context: ExpressionContext,
   }
 
   override def run(): Unit = {
+    if (latch) {
+      return
+    }
+
     val href = if (context.baseURI.isDefined) {
       context.baseURI.get.resolve(_href)
     } else {
