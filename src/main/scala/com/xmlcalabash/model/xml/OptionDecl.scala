@@ -16,7 +16,6 @@ class OptionDecl(override val config: XMLCalabashRuntime,
   private var _name: QName = new QName("", "UNINITIALIZED")
   private var _required = false
   private var _select = Option.empty[String]
-  private var _expression = Option.empty[XProcExpression]
   private var _as = Option.empty[SequenceType]
   private var _declaredType = Option.empty[String]
   private var _allowedValues = Option.empty[List[XdmAtomicValue]]
@@ -27,7 +26,6 @@ class OptionDecl(override val config: XMLCalabashRuntime,
   def optionName: QName = _name
   def required: Boolean = _required
   def select: Option[String] = _select
-  def expression: XProcExpression = _expression.get
   def as: Option[SequenceType] = _as
   def declaredType: String = _declaredType.getOrElse("xs:string")
   def allowedValues: Option[List[XdmAtomicValue]] = _allowedValues
@@ -83,14 +81,8 @@ class OptionDecl(override val config: XMLCalabashRuntime,
       _allowedValues = Some(list.toList)
     }
 
-    if (_static) {
-      if (_select.isEmpty) {
-        throw XProcException.xsNoSelectOnStaticOption(location)
-      }
-
-      val context = new ExpressionContext(staticContext)
-      val varExpr = new XProcXPathExpression(context, _select.get, _as)
-      val bindingRefs = lexicalVariables(_select.get)
+    if (_static && _select.isEmpty) {
+      throw XProcException.xsNoSelectOnStaticOption(location)
     }
 
     for (key <- List(XProcConstants._name, XProcConstants._required, XProcConstants._as, XProcConstants.cx_as,

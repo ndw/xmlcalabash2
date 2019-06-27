@@ -311,12 +311,10 @@ class DeclareStep(override val config: XMLCalabashRuntime,
     for (item <- _varOptList) {
       item match {
         case variable: Variable =>
-          println(s"$variable ${variable.static}")
           if (variable.static) {
             staticHash.put(variable.variableName, variable)
           }
         case option: OptionDecl =>
-          println(s"$option ${option.static}")
           if (option.static) {
             staticHash.put(option.optionName, option)
           }
