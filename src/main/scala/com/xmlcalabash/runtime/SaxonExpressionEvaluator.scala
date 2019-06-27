@@ -178,7 +178,10 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
       case _ => None
     }
 
-    val expr = xpath.asInstanceOf[XProcExpression]
+    val context = value match {
+      case xpvv: XProcVarValue => xpvv.context
+      case _ => ExpressionContext.NONE
+    }
 
     if (as.isDefined) {
       var matches = as.get.matches(xdmval.getUnderlyingValue, config.getTypeHierarchy)
@@ -189,7 +192,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
           if (!matches) {
             // FIXME: This is a hack
             val castExpr = "\"" + ua.getStringValue.replace("\"", "\"\"") + "\" cast as " + as.get
-            val cxpath = new XProcXPathExpression(expr.context, castExpr, as)
+            val cxpath = new XProcXPathExpression(context, castExpr, as)
             try {
               val casted = singletonValue(cxpath, List(), Map(), None)
               xdmval = casted.item
@@ -203,7 +206,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
       }
 
       if (!matches) {
-        throw XProcException.dynamicError(36, List(xdmval, as.get), expr.context.location)
+        throw XProcException.dynamicError(36, List(xdmval, as.get), context.location)
       }
     }
 
@@ -212,7 +215,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
       println(allowedValues.get)
     }
 
-    new XdmValueItemMessage(xdmval, XProcMetadata.XML, expr.context)
+    new XdmValueItemMessage(xdmval, XProcMetadata.XML, context)
   }
 
   def compute(xpath: XProcExpression, context: List[Message], bindings: Map[String, Message],
