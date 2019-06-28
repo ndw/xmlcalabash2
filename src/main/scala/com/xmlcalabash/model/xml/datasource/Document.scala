@@ -101,7 +101,7 @@ class Document(override val config: XMLCalabashRuntime,
     val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
     val context = new ExpressionContext(staticContext)
     val step = new FileLoader(context, _contentType, _docProps)
-    val docReader = cnode.addAtomic(step, "document")
+    val docReader = cnode.addAtomic(step,"p:document " + name)
 
     val hrefBinding = cnode.addVariable("href", new XProcVtExpression(context, hrefAvt.get, true))
     graph.addBindingEdge(hrefBinding, docReader)

@@ -5,7 +5,6 @@ import java.net.URI
 import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
 import com.xmlcalabash.config.StepSignature
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
-import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
 import com.xmlcalabash.model.xml.containers.{Catch, Choose, Container, ForEach, Group, Otherwise, Try, Viewport, When, WithDocument, WithProperties}
 import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
@@ -19,7 +18,6 @@ import net.sf.saxon.trans.XPathException
 import net.sf.saxon.value.SequenceType
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.immutable.{HashMap, HashSet}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -49,7 +47,7 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
     _label = Some(label)
   }
 
-  def name: String = _label.getOrElse("_" + id)
+  def name: String = _label.getOrElse("?" + id)
   def xmlId: Option[String] = _xmlId
   def nodeName: QName = _nodeName
 

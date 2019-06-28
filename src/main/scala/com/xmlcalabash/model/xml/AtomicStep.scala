@@ -233,7 +233,7 @@ class AtomicStep(override val config: XMLCalabashRuntime,
           }
         }
 
-        start.addAtomic(proxy, name)
+        start.addAtomic(proxy, stepType + " " + name)
       case _ =>
         throw new ModelException(ExceptionCode.INTERNAL, "Atomic step parent isn't a container???", staticContext.location)
     }

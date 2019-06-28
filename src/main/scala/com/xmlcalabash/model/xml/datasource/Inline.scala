@@ -95,7 +95,7 @@ class Inline(override val config: XMLCalabashRuntime,
     if (location.isDefined) {
       produceInline.location = location.get
     }
-    val inlineProducer = cnode.addAtomic(produceInline)
+    val inlineProducer = cnode.addAtomic(produceInline, "p:inline " + name)
 
     _graphNode = Some(inlineProducer)
     config.addNode(inlineProducer.id, this)

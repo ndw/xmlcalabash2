@@ -55,6 +55,8 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
         decl.name
       }
 
+      fn = fn + "-" + kind
+
       if (filenames.contains(fn)) {
         fn + "-" + decl.hashCode().toHexString
       } else {
@@ -75,6 +77,7 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
       return
     }
 
+
     val fn = baseName(decl, cx_graph, ".svg")
     logger.debug("Dumping graph of " + decl.name + " to: " + fn)
 
@@ -84,6 +87,11 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
     pw.close()
 
     svgGraph(fn, baos)
+
+    val xfn = baseName(decl, cx_graph, ".xml")
+    pw = new PrintWriter(new File(xfn))
+    pw.write(graph.asXML.toString)
+    pw.close()
   }
 
   def dumpOpenGraph(graph: Graph, decl: DeclareStep): Unit = {
