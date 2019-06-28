@@ -4,6 +4,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
+import net.sf.saxon.value.QNameValue
 
 import scala.collection.mutable
 
@@ -32,41 +33,8 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
-    val attrNameStr = bindings(_attribute_name).getStringValue
-    val apfx = if (bindings.contains(_attribute_prefix)) {
-      Some(bindings(_attribute_prefix).getStringValue)
-    } else {
-      None
-    }
-    val ans = if (bindings.contains(_attribute_namespace)) {
-      Some(bindings(_attribute_namespace).getStringValue)
-    } else {
-      None
-    }
-
-    if (apfx.isDefined && ans.isEmpty) {
-      throw XProcException.xdConflictingNamespaceDeclarations("Prefix specified without a namespace", location)
-    }
-
-    attrName = if (attrNameStr.contains(":")) {
-      if (ans.isDefined) {
-        throw XProcException.xdConflictingNamespaceDeclarations("Namespace specified but name contains a colon", location)
-      }
-      val pos = attrNameStr.indexOf(":")
-      val pfx = attrNameStr.substring(0, pos)
-      val local = attrNameStr.substring(pos+1)
-      val nsbindings = bindings(_attribute_name).context.nsBindings
-      val ns = if (nsbindings.contains(pfx)) {
-        nsbindings(pfx)
-      } else {
-        throw new IllegalArgumentException(s"There is no binding for the prefix: $pfx")
-      }
-
-      new QName(pfx, ns, local)
-    } else {
-      new QName(apfx.getOrElse(""), ans.getOrElse(""), attrNameStr)
-    }
-
+    val qn = bindings(_attribute_name).value.getUnderlyingValue.asInstanceOf[QNameValue]
+    attrName = new QName(qn.getPrefix, qn.getNamespaceURI, qn.getLocalName)
     attrValue = bindings(_attribute_value).getStringValue
     pattern = bindings(XProcConstants._match).getStringValue
 
@@ -95,11 +63,14 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
     val attrs = mutable.HashMap.empty[QName, String]
     val iter = node.axisIterator(Axis.ATTRIBUTE)
     while (iter.hasNext) {
-      val attr = iter.next.asInstanceOf[XdmNode]
+      val attr = iter.next
       if (attr.getNodeName != attrName) {
-        attrs.put(attrName, attr.getStringValue)
+        attrs.put(attr.getNodeName, attr.getStringValue)
       }
     }
+
+    // Ok, add the element to the output
+    matcher.addStartElement(node)
 
     var instanceAttrName = attrName
     if (attrName.getNamespaceURI != null && attrName.getNamespaceURI != "") {
@@ -128,12 +99,12 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
             }
           }
         }
+
+        matcher.addNamespace(aprefix, attrName.getNamespaceURI)
+
         instanceAttrName = new QName(aprefix, attrName.getNamespaceURI, attrName.getLocalName)
       }
     }
-
-    // Ok, add the element to the output
-    matcher.addStartElement(node)
 
     // Add the "new" attribute in, with its instance-valid QName
     matcher.addAttribute(instanceAttrName, attrValue)
