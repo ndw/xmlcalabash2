@@ -179,6 +179,8 @@ class Parser(val config: XMLCalabashConfig) {
                       Some(parseInline(parent, node))
                     case input: Input =>
                       Some(parseInline(parent, node))
+                    case output: Output =>
+                      Some(parseInline(parent, node))
                     case variable: Variable =>
                       Some(parseInline(parent, node))
                     case _ =>

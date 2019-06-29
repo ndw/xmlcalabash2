@@ -2,10 +2,12 @@ package com.xmlcalabash.model.xml.containers
 
 import com.jafpl.graph.{ChooseStart, Graph, Node}
 import com.jafpl.steps.Manifold
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.{Artifact, Documentation, PipeInfo}
+import com.xmlcalabash.model.xml.{Artifact, Documentation, Output, PipeInfo}
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcXPathExpression}
+
+import scala.collection.mutable
 
 class Otherwise(override val config: XMLCalabashRuntime,
                 override val parent: Option[Artifact],
@@ -29,6 +31,36 @@ class Otherwise(override val config: XMLCalabashRuntime,
 
     valid
   }
+
+  override def makeOutputPortsExplicit(): Boolean = {
+    if (!synthetic) {
+      return super.makeOutputPortsExplicit()
+    }
+
+    // Null sucks, but there has to be a when...
+    var when: When = null
+    val x = parent.get.children
+    for (child <- parent.get.children) {
+      child match {
+        case w: When => when = w
+        case _ => Unit
+      }
+    }
+
+    if (when.primaryOutput.isEmpty) {
+      throw XProcException.xsPrimaryOutputRequired(when.location)
+    }
+
+    // lastChildStep is always p:identity
+    val step = lastChildStep
+    if (when.primaryOutput.isDefined) {
+      val output = new Output(config, this, when.primaryOutput.get.port.get, primary=true, sequence=step.get.primaryOutput.get.sequence)
+      addChild(output)
+    }
+
+    true
+  }
+
 
   override def makeGraph(graph: Graph, parent: Node) {
     val node = parent match {
