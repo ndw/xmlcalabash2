@@ -38,8 +38,8 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
     new SaxonExpressionEvaluator(xmlCalabash)
   }
 
-  override def singletonValue(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XdmValueItemMessage = {
-    val xdmval = value(xpath, context, bindings, options).item.asInstanceOf[XdmValue]
+  override def singletonValue(xpath: Any, context: List[Message], bindings: Map[String, Message]): XdmValueItemMessage = {
+    val xdmval = value(xpath, context, bindings).item.asInstanceOf[XdmValue]
 
     if (xdmval.size() == 1) {
       new XdmValueItemMessage(xdmval, XProcMetadata.XML, xpath.asInstanceOf[XProcExpression].context)
@@ -63,7 +63,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
     }
   }
 
-  override def value(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XdmValueItemMessage = {
+  override def value(xpath: Any, context: List[Message], bindings: Map[String, Message]): XdmValueItemMessage = {
     val proxies = mutable.HashMap.empty[Any, XdmItem]
     val newContext = new DynamicContext()
     for (message <- context) {
@@ -82,6 +82,12 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
           checkDocument(newContext, msg.item, context.head)
         case _ => Unit
       }
+    }
+
+    val options = xpath match {
+      case xp: XProcXPathExpression => xp.context.options
+      case xp: XProcVtExpression => xp.context.options
+      case _ => None
     }
 
     if (options.isDefined) {
@@ -145,8 +151,8 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
     new XdmValueItemMessage(xdmvalue, metadata, xpath.asInstanceOf[XProcExpression].context)
   }
 
-  override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): Boolean = {
-    val xdmval = singletonValue(xpath, context, bindings, options).item.asInstanceOf[XdmValue]
+  override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message]): Boolean = {
+    val xdmval = singletonValue(xpath, context, bindings).item.asInstanceOf[XdmValue]
 
     if (xdmval.size() == 1) {
       xdmval.itemAt(0) match {
@@ -159,7 +165,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
     }
   }
 
-  override def precomputedValue(xpath: Any, value: Any, context: List[Message], bindings: Map[String, Message], options: Option[Any]): XdmValueItemMessage = {
+  override def precomputedValue(xpath: Any, value: Any, context: List[Message], bindings: Map[String, Message]): XdmValueItemMessage = {
     val config = xmlCalabash.processor.getUnderlyingConfiguration
 
     var xdmval = value match {
@@ -194,7 +200,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
             val castExpr = "\"" + ua.getStringValue.replace("\"", "\"\"") + "\" cast as " + as.get
             val cxpath = new XProcXPathExpression(context, castExpr, as)
             try {
-              val casted = singletonValue(cxpath, List(), Map(), None)
+              val casted = singletonValue(cxpath, List(), Map())
               xdmval = casted.item
               matches = true
             } catch {
@@ -237,7 +243,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         var evalAvt = false
         for (part <- avtexpr.avt) {
           if (evalAvt) {
-            val epart = computeValue(part, None, context, avtexpr.context, patchBindings.toMap, proxies, avtexpr.extensionFunctionsAllowed, options)
+            val epart = computeValue(part, None, context, avtexpr.context, patchBindings.toMap, proxies, avtexpr.extensionFunctionsAllowed)
             if (xdmval == null) {
               xdmval = epart
             } else {
@@ -279,7 +285,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
 
         xdmval
       case xpathexpr: XProcXPathExpression =>
-        computeValue(xpathexpr.expr, xpathexpr.as, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed, options)
+        computeValue(xpathexpr.expr, xpathexpr.as, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed)
       case _ =>
         throw XProcException.xiUnexpectedExprType(xpath.context.location, xpath)
     }
@@ -291,14 +297,13 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
                            exprContext: ExpressionContext,
                            bindings: Map[QName,XdmValue],
                            proxies: Map[Any, XdmItem],
-                           extensionsOk: Boolean,
-                           options: Option[Any]): XdmValue = {
+                           extensionsOk: Boolean): XdmValue = {
     val results = ListBuffer.empty[XdmItem]
     val config = xmlCalabash.processor.getUnderlyingConfiguration
     val collection = List.empty[XdmNode]
 
-    val useCollection = if (options.isDefined) {
-      options.get match {
+    val useCollection = if (exprContext.options.isDefined) {
+      exprContext.options.get match {
         case seo: SaxonExpressionOptions => seo.contextCollection.getOrElse(false)
         case _ => false
       }

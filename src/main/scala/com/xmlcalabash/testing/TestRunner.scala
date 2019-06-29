@@ -399,7 +399,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
     if (when != null) {
       val evaluator = new SaxonExpressionEvaluator(runtimeConfig)
       val expr = new XProcXPathExpression(ExpressionContext.NONE, when)
-      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message], None)
+      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message])
       if (!run) {
         val result = new TestResult(true, "Skipped test suite")
         result.skipped = s"When '$when' evaluated to false"
@@ -454,7 +454,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
     if (when != null) {
       val evaluator = new SaxonExpressionEvaluator(runtimeConfig)
       val expr = new XProcXPathExpression(ExpressionContext.NONE, when)
-      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message], None)
+      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message])
       if (!run) {
         logger.info("Skipping test-div")
         val result = new TestResult(true, "Skipped test-div")
@@ -506,7 +506,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
     if (when != null) {
       val evaluator = new SaxonExpressionEvaluator(runtimeConfig)
       val expr = new XProcXPathExpression(ExpressionContext.NONE, when)
-      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message], None)
+      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message])
       if (!run) {
         val result = new TestResult(true) // skipped counts as a pass...
         result.baseURI = node.getBaseURI
@@ -719,7 +719,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
       val eval = runtimeConfig.expressionEvaluator
       val context = inlineDocument(node)
       val message = new XdmNodeItemMessage(context.get, new XProcMetadata(MediaType.XML))
-      val result = eval.singletonValue(new XProcXPathExpression(exprContext, value), List(message), Map.empty[String,Message], None)
+      val result = eval.singletonValue(new XProcXPathExpression(exprContext, value), List(message), Map.empty[String,Message])
       Some(result.item)
     } else {
       loadResource(node)

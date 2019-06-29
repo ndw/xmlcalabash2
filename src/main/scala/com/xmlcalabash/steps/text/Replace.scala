@@ -44,7 +44,7 @@ class Replace() extends DefaultXmlStep {
     val expr = new XProcXPathExpression(ExpressionContext.NONE, replexpr)
     val context = new XdmNodeItemMessage(text, meta)
 
-    val repl = evaluator.singletonValue(expr, List(context), Map.empty[String,Message], None)
+    val repl = evaluator.singletonValue(expr, List(context), Map.empty[String,Message])
 
     consumer.get.receive("result", repl.item, meta)
   }

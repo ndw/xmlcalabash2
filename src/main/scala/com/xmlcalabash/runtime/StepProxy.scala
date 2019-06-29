@@ -274,9 +274,9 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
   private def evalSelect(port: String, selectExpr: XProcExpression, message: Option[Message]): Unit = {
     val expr = config.expressionEvaluator.newInstance()
     val selected = if (message.isDefined) {
-      expr.value(selectExpr, List(message.get), bindingsMap.toMap, None)
+      expr.value(selectExpr, List(message.get), bindingsMap.toMap)
     } else {
-      expr.value(selectExpr, List(), bindingsMap.toMap, None)
+      expr.value(selectExpr, List(), bindingsMap.toMap)
     }
     val iter = selected.item.iterator()
     while (iter.hasNext) {

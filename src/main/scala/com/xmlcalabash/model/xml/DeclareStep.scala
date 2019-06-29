@@ -291,7 +291,7 @@ class DeclareStep(override val config: XMLCalabashRuntime,
             // Evaluate it; no reference to context is allowed.
             val context = new ExpressionContext(new StaticContext()) // FIXME: what about namespaces!?
             val expr = new XProcXPathExpression(context, option.select.get)
-            val msg = config.expressionEvaluator.value(expr, List(), Map.empty[String,XdmValueItemMessage], None)
+            val msg = config.expressionEvaluator.value(expr, List(), Map.empty[String,XdmValueItemMessage])
             optSig.defaultValue = msg.item.toString
           }
           stepSig.addOption(optSig, option.location.get)
@@ -399,7 +399,7 @@ class DeclareStep(override val config: XMLCalabashRuntime,
           if (variable.static) {
             val context = new ExpressionContext(new StaticContext()) // FIXME: what about namespaces!?
             val expr = new XProcXPathExpression(context, variable.select.get)
-            val msg = config.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
+            val msg = config.expressionEvaluator.value(expr, List(), bindingsMap.toMap)
             variable.staticValueMessage = msg
             runtime.setStatic(variable._graphNode.get.asInstanceOf[Binding], msg)
             bindingsMap.put(variable.variableName.getClarkName, msg)
@@ -411,7 +411,7 @@ class DeclareStep(override val config: XMLCalabashRuntime,
             } else {
               val context = new ExpressionContext(new StaticContext()) // FIXME: what about namespaces!?
               val expr = new XProcXPathExpression(context, option.select.get)
-              config.expressionEvaluator.value(expr, List(), bindingsMap.toMap, None)
+              config.expressionEvaluator.value(expr, List(), bindingsMap.toMap)
             }
             option.staticValueMessage = msg
             runtime.setStatic(option._graphNode.get.asInstanceOf[Binding], msg)

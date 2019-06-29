@@ -60,20 +60,20 @@ abstract class XProcInjectable(injectable: Injectable) {
 
   def nodes: List[XdmNode] = _nodes.toList
 
-  protected def expandTVT(node: XdmNode, builder: SaxonTreeBuilder, contextNode: List[ItemMessage], context: ExpressionContext, opts: Option[SaxonExpressionOptions]): Unit = {
+  protected def expandTVT(node: XdmNode, builder: SaxonTreeBuilder, contextNode: List[ItemMessage], context: ExpressionContext): Unit = {
     node.getNodeKind match {
       case XdmNodeKind.DOCUMENT =>
         val iter = node.axisIterator(Axis.CHILD)
         while (iter.hasNext) {
           val child = iter.next().asInstanceOf[XdmNode]
-          expandTVT(child, builder, contextNode, context, opts)
+          expandTVT(child, builder, contextNode, context)
         }
       case XdmNodeKind.ELEMENT =>
         val scontext = new StaticContext()
         scontext.baseURI = node.getBaseURI
         scontext.inScopeNS = S9Api.inScopeNamespaces(node)
         scontext.location = new NodeLocation(node)
-        val newContext = new ExpressionContext(scontext)
+        val newContext = new ExpressionContext(scontext, context.options)
 
         builder.addStartElement(node.getNodeName)
         var iter = node.axisIterator(Axis.NAMESPACE)
@@ -89,19 +89,19 @@ abstract class XProcInjectable(injectable: Injectable) {
         iter = node.axisIterator(Axis.ATTRIBUTE)
         while (iter.hasNext) {
           val attr = iter.next().asInstanceOf[XdmNode]
-          builder.addAttribute(attr.getNodeName, expandString(attr.getStringValue, contextNode, newContext, opts))
+          builder.addAttribute(attr.getNodeName, expandString(attr.getStringValue, contextNode, newContext))
         }
         iter = node.axisIterator(Axis.CHILD)
         while (iter.hasNext) {
           val child = iter.next().asInstanceOf[XdmNode]
-          expandTVT(child, builder, contextNode, newContext, opts)
+          expandTVT(child, builder, contextNode, newContext)
         }
         builder.addEndElement()
       case XdmNodeKind.TEXT =>
         var str = node.getStringValue
         if (str != "") {
           if (str.contains("{")) {
-            val iter = expandNodes(str, contextNode, context, opts).item.iterator()
+            val iter = expandNodes(str, contextNode, context).item.iterator()
             while (iter.hasNext) {
               val item = iter.next()
               item match {
@@ -120,18 +120,18 @@ abstract class XProcInjectable(injectable: Injectable) {
     }
   }
 
-  private def expandString(text: String, contextNode: List[ItemMessage], context: ExpressionContext, opts: Option[SaxonExpressionOptions]): String = {
+  private def expandString(text: String, contextNode: List[ItemMessage], context: ExpressionContext): String = {
     var s = ""
-    val iter = expandNodes(text, contextNode, context, opts).item.iterator()
+    val iter = expandNodes(text, contextNode, context).item.iterator()
     while (iter.hasNext) {
       s += iter.next.getStringValue
     }
     s
   }
 
-  private def expandNodes(text: String, contextNode: List[ItemMessage], context: ExpressionContext, opts: Option[SaxonExpressionOptions]): XdmValueItemMessage = {
+  private def expandNodes(text: String, contextNode: List[ItemMessage], context: ExpressionContext): XdmValueItemMessage = {
     val evaluator = config.expressionEvaluator
     val expr = new XProcVtExpression(context, text)
-    evaluator.value(expr, contextNode, bindings.toMap, opts)
+    evaluator.value(expr, contextNode, bindings.toMap)
   }
 }

@@ -77,11 +77,11 @@ object XProcException {
   def xiNotBinary(location: Option[Location]): XProcException = internalError(59, location, None)
   def xiUnexpectedItem(kind: String, location: Option[Location]): XProcException = internalError(60, location, kind)
 
+  def xdContextItemSequence(expr: String, msg: String, location: Option[Location]): XProcException = dynamicError(1, List(expr, msg), location)
   def xdSequenceNotAllowedOnIf(location: Option[Location]): XProcException = dynamicError(5, location)
   def xdInputSequenceNotAllowed(port: String, location: Option[Location]): XProcException = dynamicError(6, port, location)
   def xdOutputSequenceNotAllowed(port: String, location: Option[Location]): XProcException = dynamicError(7, port, location)
   def xdSequenceNotAllowedAsContext(location: Option[Location]): XProcException = dynamicError(8, location)
-  def xdContextItemSequence(expr: String, msg: String, location: Option[Location]): XProcException = dynamicError(8, List(expr, msg), location)
   def xdDoesNotExist(href: String, location: Option[Location]): XProcException = dynamicError(11, href, location)
   def xdInvalidSelection(expr: String, selected: String, location: Option[Location]): XProcException = dynamicError(16, List(expr,selected), location)
   def xdBadValue(value: String, vtype: String, message: String, location: Option[Location]): XProcException = dynamicError(19, List(value,vtype, message), location)

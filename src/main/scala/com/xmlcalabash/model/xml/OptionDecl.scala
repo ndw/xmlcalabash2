@@ -71,7 +71,7 @@ class OptionDecl(override val config: XMLCalabashRuntime,
       val seq = attributes(XProcConstants._values)
       val evaluator = config.expressionEvaluator
       val expr = new XProcXPathExpression(ExpressionContext.NONE, seq)
-      val exlist = evaluator.value(expr, List(), Map.empty[String,Message], None)
+      val exlist = evaluator.value(expr, List(), Map.empty[String,Message])
       val list = ListBuffer.empty[XdmAtomicValue]
       val iter = exlist.item.iterator()
       while (iter.hasNext) {
@@ -112,7 +112,7 @@ class OptionDecl(override val config: XMLCalabashRuntime,
     }
 
     if (static) {
-      val node = graph.addStaticOption(_name.getClarkName, None)
+      val node = graph.addStaticOption(_name.getClarkName)
       _graphNode = Some(node)
       config.addNode(node.id, this)
     } else {
@@ -122,7 +122,7 @@ class OptionDecl(override val config: XMLCalabashRuntime,
         println("HERE")
       }
       val init = new XProcXPathExpression(context, _select.getOrElse("()"), as, _allowedValues)
-      val node = graph.addOption(_name.getClarkName, init, None)
+      val node = graph.addOption(_name.getClarkName, init)
       _graphNode = Some(node)
       config.addNode(node.id, this)
     }

@@ -35,7 +35,6 @@ class XProcVtExpression private(override val context: ExpressionContext) extends
   }
 
   def avt: List[String] = _avt
-
   def stringResult: Boolean = _string
 
   override def toString: String = {

@@ -58,7 +58,7 @@ class Injectable(val config: XMLCalabashRuntime,
   def findSteps(root: XdmNode): Unit = {
     val exprEval = config.expressionEvaluator
     val findContext = new XdmValueItemMessage(root, XProcMetadata.XML, ExpressionContext.NONE)
-    val found = exprEval.value(stepXPath, List(findContext), Map.empty[String,Message], None)
+    val found = exprEval.value(stepXPath, List(findContext), Map.empty[String,Message])
 
     if (found.item.size() == 0) {
       logger.warn(s"Injector XPath expression matches nothing: ${stepXPath.expr}")

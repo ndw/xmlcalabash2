@@ -2,27 +2,31 @@ package com.xmlcalabash.model.xml.containers
 
 import com.jafpl.graph.{Binding, ChooseStart, Graph, Node}
 import com.jafpl.steps.Manifold
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.{Artifact, Documentation, OptionDecl, PipeInfo, Variable}
-import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
 
 class When(override val config: XMLCalabashRuntime,
            override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_when) {
   private var testExpr: XProcExpression = _
+  private var _collection = false
 
   override def validate(): Boolean = {
     var valid = super.validate()
 
+    _collection = lexicalBoolean(attributes.get(XProcConstants._collection)).getOrElse(false)
+
     val test = attributes.get(XProcConstants._test)
     if (test.isDefined) {
-      val context = new ExpressionContext(staticContext)
+      val options = new SaxonExpressionOptions(Map("collection" -> _collection))
+      val context = new ExpressionContext(staticContext, Some(options))
       testExpr = new XProcXPathExpression(context, test.get)
     } else {
-      throw new ModelException(ExceptionCode.TESTREQUIRED, List.empty[String], location)
+      throw XProcException.xsMissingRequiredAttribute(XProcConstants._test, location)
     }
 
-    for (key <- List(XProcConstants._test)) {
+    for (key <- List(XProcConstants._test, XProcConstants._collection)) {
       if (attributes.contains(key)) {
         attributes.remove(key)
       }

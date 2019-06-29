@@ -71,7 +71,7 @@ class Output(override val config: XMLCalabashRuntime,
       }
      */
       val eval = config.expressionEvaluator
-      val message = eval.singletonValue(serAvt, List(), staticVariableMap.toMap, None)
+      val message = eval.singletonValue(serAvt, List(), staticVariableMap.toMap)
       message match {
         case item: XdmValueItemMessage =>
           item.item match {

@@ -77,14 +77,14 @@ class CastContentType() extends DefaultXmlStep {
         val bindingsMap = mutable.HashMap.empty[String, Message]
         var vmsg = new XdmValueItemMessage(item.get.asInstanceOf[XdmItem], XProcMetadata.XML, ExpressionContext.NONE)
         bindingsMap.put("{}map", vmsg)
-        var smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+        var smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap)
 
         // Step 2, convert the JSON to XML
         expr = new XProcXPathExpression(ExpressionContext.NONE, "json-to-xml($json)")
         bindingsMap.clear()
         vmsg = new XdmValueItemMessage(smsg.item, XProcMetadata.XML, ExpressionContext.NONE)
         bindingsMap.put("{}json", vmsg)
-        smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+        smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap)
 
         consumer.get.receive("result", smsg.item, new XProcMetadata(castTo, metadata.get.properties))
       case MediaType.OCTET_STREAM =>
@@ -151,7 +151,7 @@ class CastContentType() extends DefaultXmlStep {
         val bindingsMap = mutable.HashMap.empty[String, Message]
         var vmsg = new XdmValueItemMessage(item.get.asInstanceOf[XdmValue], XProcMetadata.XML, ExpressionContext.NONE)
         bindingsMap.put("{}map", vmsg)
-        var smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+        var smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap)
 
         val builder = new SaxonTreeBuilder(config)
         builder.startDocument(metadata.get.baseURI)

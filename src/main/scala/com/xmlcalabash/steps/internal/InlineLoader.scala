@@ -186,7 +186,7 @@ class InlineLoader(private val baseURI: Option[URI],
         val vmsg = new XdmValueItemMessage(new XdmAtomicValue(text), XProcMetadata.JSON, ExpressionContext.NONE)
         bindingsMap.put("{}json", vmsg)
         try {
-          val smsg = config.get.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+          val smsg = config.get.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap)
           consumer.get.receive("result", new XdmValueItemMessage(smsg.item, new XProcMetadata(contentType, props.toMap)))
         } catch {
           case ex: SaxonApiException =>
@@ -337,7 +337,7 @@ class InlineLoader(private val baseURI: Option[URI],
     val expr = new XProcVtExpression(context, text)
     var s = ""
     var string = ""
-    val iter = evaluator.value(expr, List.empty[Message], config.get.runtimeBindings(bindings.toMap), None).item.iterator()
+    val iter = evaluator.value(expr, List.empty[Message], config.get.runtimeBindings(bindings.toMap)).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
       string = string + s + next.getStringValue
@@ -350,7 +350,7 @@ class InlineLoader(private val baseURI: Option[URI],
     val evaluator = config.get.expressionEvaluator
     val expr = new XProcVtExpression(context, text)
 
-    val iter = evaluator.value(expr, List.empty[Message], config.get.runtimeBindings(bindings.toMap), None).item.iterator()
+    val iter = evaluator.value(expr, List.empty[Message], config.get.runtimeBindings(bindings.toMap)).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
       next match {
@@ -363,7 +363,7 @@ class InlineLoader(private val baseURI: Option[URI],
   def xpathValue(expr: XProcExpression): XdmValue = {
     val eval = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
     val dynContext = new DynamicContext()
-    val msg = eval.withContext(dynContext) { eval.singletonValue(expr, List.empty[Message], bindings.toMap, None) }
+    val msg = eval.withContext(dynContext) { eval.singletonValue(expr, List.empty[Message], bindings.toMap) }
     msg.asInstanceOf[XdmValueItemMessage].item
   }
 }

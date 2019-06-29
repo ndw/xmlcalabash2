@@ -125,13 +125,13 @@ class Variable(override val config: XMLCalabashRuntime,
     val options = new SaxonExpressionOptions(Map("collection" -> _collection))
 
     if (static) {
-      val node = cnode.addStaticVariable(_name.getClarkName, options)
+      val node = cnode.addStaticVariable(_name.getClarkName)
       _graphNode = Some(node)
       config.addNode(node.id, this)
     } else {
-      val context = new ExpressionContext(staticContext)
+      val context = new ExpressionContext(staticContext, Some(options))
       _expression = Some(new XProcXPathExpression(context, _select.get, as))
-      val node = cnode.addVariable(_name.getClarkName, expression, options)
+      val node = cnode.addVariable(_name.getClarkName, expression)
       _graphNode = Some(node)
       config.addNode(node.id, this)
 
