@@ -21,7 +21,8 @@ class Join() extends DefaultXmlStep {
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     item match {
       case node: XdmNode => docs += node
-      case _ => throw new RuntimeException("non node to text?")
+      case _ =>
+        throw XProcException.xiUnexpectedItem(item.toString, location)
     }
   }
 

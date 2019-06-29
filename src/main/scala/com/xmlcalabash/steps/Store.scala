@@ -39,7 +39,7 @@ class Store extends DefaultXmlStep {
     }
 
     if (href.getScheme != "file") {
-      throw new RuntimeException("Cannot store to URI: " + href)
+      throw XProcException.xcCannotStore(href, context.location)
     }
 
     val os = new FileOutputStream(href.getPath)
@@ -76,7 +76,7 @@ class Store extends DefaultXmlStep {
 
         S9Api.serialize(config.config, node, serializer)
       case _ =>
-        throw new RuntimeException(s"Don't know how to store ${source.get}")
+        throw XProcException.xiUnexpectedItem(source.get.toString, context.location)
     }
     os.close()
 

@@ -75,6 +75,7 @@ object XProcException {
   def xiNotAnXmlDocument(location: Option[Location]): XProcException = internalError(57, location, None)
   def xiNotJSON(location: Option[Location]): XProcException = internalError(58, location, None)
   def xiNotBinary(location: Option[Location]): XProcException = internalError(59, location, None)
+  def xiUnexpectedItem(kind: String, location: Option[Location]): XProcException = internalError(60, location, kind)
 
   def xdSequenceNotAllowedOnIf(location: Option[Location]): XProcException = dynamicError(5, location)
   def xdInputSequenceNotAllowed(port: String, location: Option[Location]): XProcException = dynamicError(6, port, location)
@@ -138,8 +139,11 @@ object XProcException {
   def xsNoBindingInExpression(name: String, location: Option[Location]): XProcException = staticError(107, name, location)
   def xsUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = staticError(111, ctype, location)
 
-  def xcNotAnElement(pattern: String, nodeType: String, location: Option[Location]): XProcException = stepError(23, List(pattern, nodeType), location)
+  def xcInvalidSelection(pattern: String, nodeType: String, location: Option[Location]): XProcException = stepError(23, List(pattern, nodeType), location)
+  def xcBadPosition(pattern: String, position: String, location: Option[Location]): XProcException = stepError(24, List(pattern, position), location)
+  def xcBadChildPosition(pattern: String, position: String, location: Option[Location]): XProcException = stepError(25, List(pattern, position), location)
 
+  def xcCannotStore(href: URI, location: Option[Location]): XProcException = stepError(50, href, location)
   def xcNotSchemaValid(href: String, message: String, location: Option[Location]): XProcException = stepError(53, List(href, message), location)
   def xcNotSchemaValid(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = stepError(53, List(href, line, col, message), location)
   def xcUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = stepError(70, ctype, location)

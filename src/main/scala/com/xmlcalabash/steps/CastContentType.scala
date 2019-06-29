@@ -122,7 +122,7 @@ class CastContentType() extends DefaultXmlStep {
             val base64str = Base64.getMimeEncoder.encodeToString(bos.toByteArray).replace("\r", "")
             builder.addText(base64str)
           case _ =>
-            throw new RuntimeException(s"Don't know how to base64 encode ${item.get}")
+            throw XProcException.xiUnexpectedItem(item.get.toString, location)
         }
 
         builder.addEndElement()

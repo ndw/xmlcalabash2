@@ -54,7 +54,7 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
   }
 
   override def startDocument(node: XdmNode): Boolean = {
-    throw XProcException.xcNotAnElement(pattern, "document", location)
+    throw XProcException.xcInvalidSelection(pattern, "document", location)
   }
 
   override def startElement(node: XdmNode): Boolean = {
@@ -122,23 +122,23 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
   }
 
   override def endDocument(node: XdmNode): Unit = {
-    throw XProcException.xcNotAnElement(pattern, "document", location)
+    throw XProcException.xcInvalidSelection(pattern, "document", location)
   }
 
   override def attribute(node: XdmNode): Unit = {
-    throw XProcException.xcNotAnElement(pattern, "attribute", location)
+    throw XProcException.xcInvalidSelection(pattern, "attribute", location)
   }
 
   override def text(node: XdmNode): Unit = {
-    throw XProcException.xcNotAnElement(pattern, "text", location)
+    throw XProcException.xcInvalidSelection(pattern, "text", location)
   }
 
   override def comment(node: XdmNode): Unit = {
-    throw XProcException.xcNotAnElement(pattern, "comment", location)
+    throw XProcException.xcInvalidSelection(pattern, "comment", location)
   }
 
   override def pi(node: XdmNode): Unit = {
-    throw XProcException.xcNotAnElement(pattern, "processing-instruction",
+    throw XProcException.xcInvalidSelection(pattern, "processing-instruction",
       location)
   }
 }

@@ -1,5 +1,6 @@
 package com.xmlcalabash.steps.text
 
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.steps.DefaultXmlStep
 import net.sf.saxon.s9api.XdmNode
@@ -21,7 +22,8 @@ class TextLines() extends DefaultXmlStep {
         if (text.getStringValue != "") {
           lines ++= text.getStringValue.split('\n')
         }
-      case _ => throw new RuntimeException("non node to text?")
+      case _ =>
+        throw XProcException.xiUnexpectedItem(item.toString, location)
     }
     meta = metadata
   }

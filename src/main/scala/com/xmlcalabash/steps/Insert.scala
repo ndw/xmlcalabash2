@@ -1,6 +1,7 @@
 package com.xmlcalabash.steps
 
 import com.jafpl.steps.PortCardinality
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmNode, XdmNodeKind}
@@ -42,7 +43,14 @@ class Insert() extends DefaultXmlStep  with ProcessMatchingNodes {
   }
 
   override def startDocument(node: XdmNode): Boolean = {
-    throw new RuntimeException("Cannot insert here")
+    if (position == "before" || position == "after") {
+      throw XProcException.xcBadPosition(pattern, position, location)
+    }
+
+    if (position == "first-child") {
+      doInsert()
+    }
+    true
   }
 
   override def startElement(node: XdmNode): Boolean = {
@@ -74,11 +82,18 @@ class Insert() extends DefaultXmlStep  with ProcessMatchingNodes {
   }
 
   override def endDocument(node: XdmNode): Unit = {
-    matcher.addEndElement()
+    if (position == "before" || position == "after") {
+      throw XProcException.xcBadPosition(pattern, position, location)
+    }
+
+    if (position == "last-child") {
+      doInsert()
+    }
+    matcher.endDocument()
   }
 
   override def attribute(node: XdmNode): Unit = {
-    throw new RuntimeException("Cannot insert at an attribute")
+    throw XProcException.xcInvalidSelection(pattern, "attribute", location)
   }
 
   override def text(node: XdmNode): Unit = {
@@ -117,7 +132,7 @@ class Insert() extends DefaultXmlStep  with ProcessMatchingNodes {
     }
 
     if ("first-child" == position || "last-child" == position) {
-      throw new RuntimeException("Can't do that")
+      throw XProcException.xcBadChildPosition(pattern, position, location)
     }
   }
 

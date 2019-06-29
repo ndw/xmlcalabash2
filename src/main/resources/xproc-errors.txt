@@ -157,6 +157,12 @@ Text not allowed here. Found “$1”.
 XC0023
 Bad pattern: “$1”. Matches $2 node where it must only match elements.
 
+XC0024
+Bad child position; cannot specify “$2” with pattern “$1”.
+
+XC0025
+Bad position; cannot specify “$2” with pattern “$1”.
+
 XC0053
 Validity error in “$1” at line $2, column $3: $4
 

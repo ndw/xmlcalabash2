@@ -1,6 +1,7 @@
 package com.xmlcalabash.steps.text
 
 import com.jafpl.messages.Message
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmNodeItemMessage
 import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.steps.DefaultXmlStep
@@ -19,7 +20,8 @@ class Replace() extends DefaultXmlStep {
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     item match {
       case node: XdmNode => text = node
-      case _ => throw new RuntimeException("non node to text?")
+      case _ =>
+        throw XProcException.xiUnexpectedItem(item.toString, location)
     }
     meta = metadata
   }
