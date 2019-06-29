@@ -54,6 +54,9 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
   // Convenience methods
   def stepType: QName = staticContext.stepType
   def location: Option[Location] = staticContext.location
+  protected[xml] def location_=(loc: Location): Unit = {
+    staticContext.location = loc
+  }
   def baseURI: Option[URI] = staticContext.baseURI
 
   def expandText: Boolean = _expandText

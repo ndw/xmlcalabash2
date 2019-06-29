@@ -4,6 +4,7 @@ import com.jafpl.graph.Node
 import com.jafpl.steps.{Manifold, PortCardinality, PortSpecification}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.xml.containers.Otherwise
 import com.xmlcalabash.model.xml.datasource.{Empty, JoinGatewayEnable, Pipe}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 import com.xmlcalabash.steps.internal.GatedLoader
@@ -84,8 +85,20 @@ class PipelineStep(override val config: XMLCalabashRuntime,
                 in.addChild(gate)
               }
             } else {
-              valid = false
-              throw XProcException.xsUnconnectedPrimaryInputPort(name, port, location)
+              parent.get match {
+                case other: Otherwise =>
+                  // An implicit otherwise introduces a special case
+                  if (other.synthetic) {
+                    val empty = new Empty(config, Some(in))
+                    in.addChild(empty)
+                  } else {
+                    valid = false
+                    throw XProcException.xsUnconnectedPrimaryInputPort(name, port, location)
+                  }
+                case _ =>
+                  valid = false
+                  throw XProcException.xsUnconnectedPrimaryInputPort(name, port, location)
+              }
             }
           }
         } else {

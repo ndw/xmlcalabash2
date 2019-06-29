@@ -426,34 +426,6 @@ class Parser(val config: XMLCalabashConfig) {
     val art = new Choose(runtime, parent)
     art.parse(node)
     parseChildren(art, node)
-
-    var hasOtherwise = false
-    for (child <- art.children) {
-      child match {
-        case other: Otherwise =>
-          hasOtherwise = true
-        case _ => Unit
-      }
-    }
-
-    if (!hasOtherwise) {
-      val builder = new SaxonTreeBuilder(runtime)
-      builder.startDocument(node.getBaseURI)
-      builder.addStartElement(XProcConstants.p_otherwise)
-      builder.startContent()
-      builder.addPI("_xmlcalabash", nodeLocationPItext(node))
-      builder.addStartElement(XProcConstants.p_error)
-      builder.addNamespace("err", XProcConstants.ns_err)
-      builder.addAttribute(XProcConstants._code, "err:XD0004")
-      builder.startContent()
-      builder.addEndElement()
-      builder.addEndElement()
-      builder.endDocument()
-      val synthetic = builder.result
-      val other = parse(Some(art), synthetic).get
-      art.addChild(other)
-    }
-
     art
   }
 
@@ -498,6 +470,8 @@ class Parser(val config: XMLCalabashConfig) {
 
     when.parse(node)
     parseChildren(when, node)
+
+    art.location = when.location.get
 
     art.addChild(when)
     art

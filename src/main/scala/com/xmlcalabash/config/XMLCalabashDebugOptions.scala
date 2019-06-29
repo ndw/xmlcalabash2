@@ -87,11 +87,12 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
     pw.close()
 
     svgGraph(fn, baos)
-
+/*
     val xfn = baseName(decl, cx_graph, ".xml")
     pw = new PrintWriter(new File(xfn))
     pw.write(graph.asXML.toString)
     pw.close()
+*/
   }
 
   def dumpOpenGraph(graph: Graph, decl: DeclareStep): Unit = {

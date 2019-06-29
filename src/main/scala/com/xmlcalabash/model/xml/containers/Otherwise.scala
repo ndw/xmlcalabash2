@@ -8,7 +8,13 @@ import com.xmlcalabash.model.xml.{Artifact, Documentation, PipeInfo}
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcXPathExpression}
 
 class Otherwise(override val config: XMLCalabashRuntime,
-                override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_otherwise) {
+                override val parent: Option[Artifact],
+                val synthetic: Boolean) extends Container(config, parent, XProcConstants.p_otherwise) {
+
+  def this(config: XMLCalabashRuntime, parent: Option[Artifact]) {
+    this(config, parent, false)
+  }
+
   override def validate(): Boolean = {
     var valid = super.validate()
 

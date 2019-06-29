@@ -3,13 +3,15 @@ package com.xmlcalabash.model.xml.containers
 import com.jafpl.graph.{ContainerStart, Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.{Artifact, Documentation, Output, PipeInfo, Variable}
+import com.xmlcalabash.model.xml.{Artifact, AtomicStep, Documentation, Output, PipeInfo, Variable}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 
 import scala.collection.mutable
 
 class Choose(override val config: XMLCalabashRuntime,
              override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_choose) {
+  private var hasWhen = false
+  private var hasOtherwise = false
 
   override def validate(): Boolean = {
     var valid = super.validate()
@@ -19,36 +21,35 @@ class Choose(override val config: XMLCalabashRuntime,
       throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
     }
 
-    var relChildren = relevantChildren
-    var pos = 0
-    while (pos < relChildren.length && relChildren(pos).isInstanceOf[Variable]) {
-      valid = valid && relChildren(pos).validate()
-      pos += 1
-    }
-
-    var hasWhen = false
-    while (pos < relChildren.length && relChildren(pos).isInstanceOf[When]) {
-      valid = valid && relChildren(pos).validate()
-      hasWhen = true
-      pos += 1
-    }
-
-    var hasOtherwise = false
-    while (pos < relChildren.length && relChildren(pos).isInstanceOf[Otherwise]) {
-      if (hasOtherwise) {
-        throw new ModelException(ExceptionCode.DUPOTHERWISE, List.empty[String], relChildren(pos).location)
+    for (child <- relevantChildren) {
+      child match {
+        case variable: Variable =>
+          valid = valid && variable.validate()
+        case when: When =>
+          valid = valid && when.validate()
+          hasWhen = true
+        case otherwise: Otherwise =>
+          if (hasOtherwise) {
+            throw new ModelException(ExceptionCode.DUPOTHERWISE, List.empty[String], otherwise.location)
+          }
+          valid = valid && otherwise.validate()
+          hasOtherwise = true
+        case _ =>
+          throw new ModelException(ExceptionCode.BADCHOOSECHILD, child.name, child.location)
       }
-      valid = valid && relChildren(pos).validate()
-      hasOtherwise = true
-      pos += 1
-    }
-
-    if (pos < relChildren.length) {
-      throw new ModelException(ExceptionCode.BADCHOOSECHILD, relChildren(pos).name, relChildren(pos).location)
     }
 
     if (!hasWhen & !hasOtherwise) {
       throw new ModelException(ExceptionCode.MISSINGWHEN, List.empty[String], location)
+    }
+
+    if (!hasOtherwise) {
+      val other = new Otherwise(config, Some(this), true)
+      other.location = location.get
+      children += other
+      val ident = new AtomicStep(config, Some(other), XProcConstants.p_identity)
+      ident.location = location.get
+      other.children += ident
     }
 
     var primaryInputPort = Option.empty[String]

@@ -58,6 +58,8 @@ class ForEach(override val config: XMLCalabashRuntime,
   override def makeInputBindingsExplicit(): Boolean = {
     var valid = true
 
+    println("I DON'T THINK THIS EVER HAPPENS")
+
     val drp = defaultReadablePort
     if (drp.isDefined) {
       for (port <- inputPorts) {
