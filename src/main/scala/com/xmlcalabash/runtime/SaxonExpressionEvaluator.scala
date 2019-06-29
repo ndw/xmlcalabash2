@@ -152,7 +152,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
   }
 
   override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message]): Boolean = {
-    val xdmval = singletonValue(xpath, context, bindings).item.asInstanceOf[XdmValue]
+    val xdmval = value(xpath, context, bindings).item.asInstanceOf[XdmValue]
+
+    if (xdmval.size() == 0) {
+      return false
+    }
 
     if (xdmval.size() == 1) {
       xdmval.itemAt(0) match {
@@ -160,7 +164,6 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         case _ => true
       }
     } else {
-      // Is this right? Lists are always true?
       true
     }
   }
