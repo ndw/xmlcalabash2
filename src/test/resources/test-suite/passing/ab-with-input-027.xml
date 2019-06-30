@@ -1,4 +1,6 @@
-<t:test xmlns:t='http://xproc.org/ns/testsuite/3.0' expected="fail" code="err:XS0022">
+<t:test xmlns:t='http://xproc.org/ns/testsuite/3.0'
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        expected="fail" code="err:XS0022">
   <t:info>
     <t:title>with-input-027</t:title>
     <t:revision-history>
@@ -9,6 +11,16 @@
         </t:author>
         <t:description xmlns="http://www.w3.org/1999/xhtml">
           <p>Completing tests for p:with-input</p>
+        </t:description>
+      </t:revision>
+      <t:revision>
+        <t:date>2019-06-30T14:56:00Z</t:date>
+        <t:author>
+          <t:name>Norman Walsh</t:name>
+        </t:author>
+        <t:description xmlns="http://www.w3.org/1999/xhtml">
+          <p>Added missing namespace declaration for err: namespace; no
+          significant test changes.</p>
         </t:description>
       </t:revision>
     </t:revision-history>

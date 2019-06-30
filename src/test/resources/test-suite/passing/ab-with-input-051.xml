@@ -1,7 +1,16 @@
-<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0065">
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0079 err:XS0089">
    <t:info>
-      <t:title>with-input-002</t:title>
+      <t:title>with-input-051</t:title>
       <t:revision-history>
+         <t:revision>
+            <t:date>2018-07-09T18:16:30+02:00</t:date>
+            <t:author>
+               <t:name>Achim Berndzen</t:name>
+            </t:author>
+            <t:description xmlns="http://www.w3.org/1999/xhtml">
+               <p>Corrected tests and adapt to changes in the spec</p>
+            </t:description>
+         </t:revision>
          <t:revision>
             <t:date>2018-06-02T17:53:51-05:00</t:date>
             <t:author>
@@ -23,15 +32,19 @@
       </t:revision-history>
    </t:info>
    <t:description xmlns="http://www.w3.org/1999/xhtml">
-      <p>Tests p:with-input with missing @port on atomic step: XS0065 is raised because there is no primary input port.</p>
+      <p>Tests p:with-input: p:empty and implicit inline not allowed</p>
    </t:description>
    <t:pipeline>
       <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="3.0">
          <p:output port="result"/>
       
-         <p:load>
-            <p:with-input/>
-         </p:load>
+         <p:identity>
+            <p:with-input>
+               <p:empty/>
+               <doc/>
+            </p:with-input>
+         </p:identity>
+      
       </p:declare-step>
    </t:pipeline>
 </t:test>

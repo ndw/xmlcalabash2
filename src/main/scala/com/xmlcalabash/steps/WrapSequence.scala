@@ -21,7 +21,7 @@ class WrapSequence extends DefaultXmlStep {
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     item match {
       case xdm: XdmNode => inputs += xdm
-      case xdm: XdmItem => throw XProcException.xiWrapItems(location)
+      case xdm: XdmItem => inputs += xdm
       case _ => throw XProcException.xiWrapXML(location)
     }
   }
@@ -53,7 +53,10 @@ class WrapSequence extends DefaultXmlStep {
     builder.addStartElement(wrapper)
     builder.startContent()
     for (item <- inputs) {
-      builder.addSubtree(item.asInstanceOf[XdmNode])
+      item match {
+        case xdm: XdmNode => builder.addSubtree(item.asInstanceOf[XdmNode])
+        case xdm: XdmItem => builder.addText(xdm.getStringValue)
+      }
     }
     builder.addEndElement()
     builder.endDocument()

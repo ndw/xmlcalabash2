@@ -151,6 +151,18 @@ For p:inline “$1” content, only text is allowed. Found: “$2”.
 XS0077
 Invalid value specified: “$1”. Value must be $2.
 
+XS0079/1
+Text not allowed here. Found “$1”.
+
+XS0079/2
+Commentt not allowed here. Found “$1”.
+
+XS0079/3
+Processing instruction not allowed here. Found “$1”.
+
+XS0079/4
+Elements from the XProc namespace are not allowed here. Found “$1”.
+
 XS0080
 Duplicated option name: “$1”.
 
@@ -163,11 +175,14 @@ If a pipe attribute is present, no other data bindings may be specified.
 XS0085
 The pipe and href attributes may not both be specified.
 
+XS0089
+If a p:empty binding is used, it must be the only binding.
+
+XS0090
+Invalid pipe attribute value: “$1”; must be port, port@step, or @step.
+
 XS0096
 Invalid sequence type: “$1”. $2.
-
-XS0999
-Text not allowed here. Found “$1”.
 
 XC0023
 Bad pattern: “$1”. Matches $2 node where it must only match elements.

@@ -12,7 +12,7 @@ import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.util.{MediaType, TypeUtils}
-import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, XdmArray, XdmAtomicValue, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import org.apache.http.util.ByteArrayBuffer
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -302,7 +302,16 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
           tree.startDocument(node.getBaseURI)
           tree.addSubtree(node)
           tree.endDocument()
-          step.receive(port, tree.result, selected.metadata)
+
+          if (node.getNodeKind == XdmNodeKind.TEXT) {
+            step.receive(port, tree.result, XProcMetadata.TEXT)
+          } else {
+            step.receive(port, tree.result, selected.metadata)
+          }
+        case array: XdmArray =>
+          step.receive(port, array, XProcMetadata.JSON)
+        case map: XdmMap =>
+          step.receive(port, map, XProcMetadata.JSON)
         case _ =>
           step.receive(port, item, selected.metadata)
       }
@@ -488,29 +497,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
 
   private def assertXmlDocument(node: XdmNode): Unit = {
     assertDocument(node)
-
     // N.B. We don't assert that documents actually be well-formed XML.
     // This is on purpose; steps can produce any XdmNode tree.
-    /*
-    var count = 0
-    val iter = node.axisIterator(Axis.CHILD)
-    while (iter.hasNext) {
-      val child = iter.next().asInstanceOf[XdmNode]
-      child.getNodeKind match {
-        case XdmNodeKind.ELEMENT => count += 1
-        case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
-        case XdmNodeKind.COMMENT => Unit
-        case XdmNodeKind.TEXT =>
-          if (child.getStringValue.trim != "") {
-            throw XProcException.xiNotAnXmlDocument(None)
-          }
-        case _ =>
-          throw XProcException.xiNotAnXmlDocument(None)
-      }
-    }
-    if (count != 1) {
-      throw XProcException.xiNotAnXmlDocument(None)
-    }
-    */
   }
 }

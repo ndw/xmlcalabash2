@@ -186,24 +186,22 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
     }
 
     for (spec <- pipe.split("\\s+")) {
-      val pos = spec.indexOf("@")
-      if (pos >= 0) {
-        val port = spec.substring(0, pos)
-        val step = spec.substring(pos + 1)
-        val pipe = if (step == "") {
+      val PortAndStep = "^([^@]+)@(^[^@]+)$".r
+      val PortOnly = "^([^@]+)$".r
+      val StepOnly = "^@(^[^@]+)$".r
+
+      val pipe = spec match {
+        case PortAndStep(port, step) =>
+          new Pipe(config, this, Some(step), Some(port))
+        case PortOnly(port) =>
           new Pipe(config, this, None, Some(port))
-        } else {
-          if (port =="") {
-            new Pipe(config, this, Some(step), None)
-          } else {
-            new Pipe(config, this, Some(step), Some(port))
-          }
-        }
-        addChild(pipe)
-      } else {
-        val pipe = new Pipe(config, this, None, Some(spec))
-        addChild(pipe)
+        case StepOnly(step) =>
+          new Pipe(config, this, Some(step), None)
+        case _ =>
+          throw XProcException.xsInvalidPipeToken(spec, location)
       }
+
+      addChild(pipe)
     }
   }
 

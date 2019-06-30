@@ -657,6 +657,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
             try {
               val ns = mutable.HashMap.empty[String,String]
               ns.put("xqterr", "http://www.w3.org/2005/xqt-errors")
+              ns.put("err", "http://www.w3.org/2005/xqt-errors")
               ns ++= S9Api.inScopeNamespaces(node)
 
               val scontext = new StaticContext()

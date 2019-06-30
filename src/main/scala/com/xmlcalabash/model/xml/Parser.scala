@@ -232,7 +232,7 @@ class Parser(val config: XMLCalabashConfig) {
         }
       case XdmNodeKind.TEXT =>
         if (node.getStringValue.trim != "") {
-          throw XProcException.xsTextNotAllowed(Some(new NodeLocation(node)), node.getStringValue.trim)
+          throw XProcException.xsTextNotAllowed(node.getStringValue.trim, Some(new NodeLocation(node)))
         }
         None
       case _ => None
@@ -251,10 +251,68 @@ class Parser(val config: XMLCalabashConfig) {
   private def parseChildren(parent: Artifact, node: XdmNode): Unit = {
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
-      val child = iter.next().asInstanceOf[XdmNode]
+      val child = iter.next()
       val art = parse(Some(parent), child)
       if (art.isDefined) {
         parent.addChild(art.get)
+      }
+    }
+  }
+
+  private def parseDataSourceChildren(parent: Artifact, node: XdmNode): Unit = {
+    // Children here must be p:inline, p:empty, p:document, p:pipe, p:documentation, or p:pipeinfo.
+    // Any other element qualifies as an implicit inline.
+    var implicits = false
+    var iter = node.axisIterator(Axis.CHILD)
+    while (!implicits && iter.hasNext) {
+      val child = iter.next()
+      implicits = implicits || (child.getNodeKind == XdmNodeKind.ELEMENT
+        && child.getNodeName.getNamespaceURI != XProcConstants.ns_p)
+    }
+
+    var dscount = 0
+    iter = node.axisIterator(Axis.CHILD)
+    while (iter.hasNext) {
+      val child = iter.next()
+      child.getNodeKind match {
+        case XdmNodeKind.COMMENT =>
+          if (implicits) {
+            throw XProcException.xsCommentNotAllowed(child.toString, Some(new NodeLocation(child)))
+          }
+        case XdmNodeKind.PROCESSING_INSTRUCTION =>
+          if (implicits) {
+            throw XProcException.xsPiNotAllowed(child.toString, Some(new NodeLocation(child)))
+          }
+        case XdmNodeKind.TEXT =>
+          if (child.getStringValue.trim() != "") {
+            throw XProcException.xsTextNotAllowed(child.toString, Some(new NodeLocation(child)))
+          }
+        case XdmNodeKind.ELEMENT =>
+          if (child.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
+            if (child.getNodeName == XProcConstants.p_pipeinfo || child.getNodeName == XProcConstants.p_documentation) {
+              // nop
+            } else {
+              if (child.getNodeName == XProcConstants.p_empty && dscount > 0) {
+                throw XProcException.xsNoSiblingsOnEmpty(Some(new NodeLocation(child)))
+              }
+
+              if (implicits) {
+                throw XProcException.xsXProcElementNotAllowed(child.getNodeName.toString, Some(new NodeLocation(child)))
+              }
+
+              val art = parse(Some(parent), child)
+              if (art.isDefined) {
+                parent.addChild(art.get)
+                dscount += 1
+              }
+            }
+          } else {
+            val art = parseInline(Some(parent), child)
+            parent.addChild(art)
+            dscount += 1
+          }
+       case _ =>
+          throw new RuntimeException(s"Unexpected node kind: $child")
       }
     }
   }
@@ -314,14 +372,14 @@ class Parser(val config: XMLCalabashConfig) {
   private def parseOutput(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new Output(runtime, parent)
     art.parse(node)
-    parseChildren(art, node)
+    parseDataSourceChildren(art, node)
     art
   }
 
   private def parseInput(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new Input(runtime, parent)
     art.parse(node)
-    parseChildren(art, node)
+    parseDataSourceChildren(art, node)
     art.manageDefaultInputs()
     art
   }
@@ -329,7 +387,7 @@ class Parser(val config: XMLCalabashConfig) {
   private def parseWithInput(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new WithInput(runtime, parent)
     art.parse(node)
-    parseChildren(art, node)
+    parseDataSourceChildren(art, node)
     art
   }
 
@@ -344,20 +402,7 @@ class Parser(val config: XMLCalabashConfig) {
       }
     } else {
       exclPrefixes = node.getParent.getAttributeValue(XProcConstants._exclude_inline_prefixes)
-      val iter = node.getParent.axisIterator(Axis.CHILD)
-      while (iter.hasNext) {
-        val node = iter.next()
-        if (node.getNodeKind == XdmNodeKind.ELEMENT) {
-          if (node.getNodeName == XProcConstants.p_documentation
-            || node.getNodeName == XProcConstants.p_pipeinfo) {
-            // nop
-          } else {
-            nodes += node
-          }
-        } else {
-          nodes += node
-        }
-      }
+      nodes += node
     }
 
     // Find exclude-inline-prefixes
@@ -416,7 +461,7 @@ class Parser(val config: XMLCalabashConfig) {
   private def parseVariable(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new Variable(runtime, parent)
     art.parse(node)
-    parseChildren(art, node)
+    parseDataSourceChildren(art, node)
     varOptStack += art
     art
   }
@@ -424,7 +469,7 @@ class Parser(val config: XMLCalabashConfig) {
   private def parseWithOption(parent: Option[Artifact], node: XdmNode): Artifact = {
     val art = new WithOption(runtime, parent)
     art.parse(node)
-    parseChildren(art, node)
+    parseDataSourceChildren(art, node)
     art
   }
 

@@ -135,10 +135,11 @@ object XProcException {
   def xsPipeAndOtherSources(location: Option[Location]): XProcException = staticError(82, location)
   def xsPipeAndHref(location: Option[Location]): XProcException = staticError(85, location)
 
+  def xsInvalidPipeToken(token: String, location: Option[Location]): XProcException = staticError(90, token, location)
+
   def xsElementNotAllowed(location: Option[Location], element: QName, message: String): XProcException = staticError(100, List(element, message), location)
   def xsElementNotAllowed(location: Option[Location], element: QName): XProcException = staticError(100, List(element, "element is not allowed here"), location)
 
-  def xsTextNotAllowed(location: Option[Location], text: String): XProcException = staticError(999, text, location)
   def xsMissingRequiredInput(port: String, location: Option[Location]): XProcException = staticError(998, port, location)
 
   def xsUnsupportedEncoding(encoding: String, location: Option[Location]): XProcException = staticError(69, encoding, location)
@@ -146,6 +147,12 @@ object XProcException {
   def xsInvalidNodeType(nodeKind: String, location: Option[Location]): XProcException = staticError(56, nodeKind, location)
 
   def xsBadTypeValue(value: String, reqdType: String, location: Option[Location]): XProcException = staticError(77, List(value, reqdType), location)
+
+  def xsTextNotAllowed(text: String, location: Option[Location]): XProcException = staticError((79,1), text, location)
+  def xsCommentNotAllowed(comment: String, location: Option[Location]): XProcException = staticError((79,2), comment, location)
+  def xsPiNotAllowed(pi: String, location: Option[Location]): XProcException = staticError((79,3), pi, location)
+  def xsXProcElementNotAllowed(name: String, location: Option[Location]): XProcException = staticError((79,4), name, location)
+
   def xsDupWithOptionName(optName: QName, location: Option[Location]): XProcException = staticError(80, optName, location)
   def xsInlineExpandTextNotAllowed(location: Option[Location]): XProcException = staticError(84, location)
   def xsTvtForbidden(location: Option[Location]): XProcException = staticError(88, location)
