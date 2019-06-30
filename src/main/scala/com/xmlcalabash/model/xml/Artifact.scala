@@ -302,39 +302,6 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
     ValueParser.findVariableRefsInString(config, expr, staticContext)
   }
 
-  /*
-  def staticValue(vref: QName): Option[XdmValueItemMessage] = {
-    var msg: Option[XdmValueItemMessage] = None
-    if (parent.isDefined) {
-      var found = false
-      for (child <- parent.get.relevantChildren) {
-        found = found || (child == this)
-        //println(s"$child: $found")
-        if (!found) {
-          child match {
-            case vdef: Variable =>
-              if (vdef.static && vdef.variableName == vref) {
-                msg = vdef.staticValueMessage
-              }
-            case odef: OptionDecl =>
-              if (odef.static && odef.optionName == vref) {
-                msg = odef.staticValueMessage
-              }
-            case _ => Unit
-          }
-        }
-      }
-      if (msg.isDefined) {
-        msg
-      } else {
-        parent.get.staticValue(vref)
-      }
-    } else {
-      None
-    }
-  }
-  */
-
   def sequenceType(seqType: Option[String]): Option[SequenceType] = {
     if (seqType.isDefined) {
       try {
@@ -526,6 +493,18 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
     }
   }
 
+  def nearestContainer(): Artifact = {
+    parent.get.nearestContainerOrSelf()
+  }
+
+  private def nearestContainerOrSelf(): Artifact = {
+    this match {
+      case choose: Choose => parent.get.nearestContainerOrSelf()
+      case container: Container => container
+      case _ => parent.get.nearestContainerOrSelf()
+    }
+  }
+
   def findStep(stepName: String): Option[Artifact] = {
     if (name == stepName) {
       Some(this)
@@ -604,6 +583,10 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
             }
           }
         }
+      }
+
+      if (parent.get.isInstanceOf[When]) {
+        return parent.get.defaultReadablePort
       }
 
       if (parent.get.inputPorts.isEmpty) {
@@ -754,19 +737,25 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
           if (pipe.port.isEmpty) {
             val step = findStep(pipe.step.get)
             if (step.isDefined) {
-              step.get match {
-                case c: Container =>
-                  if (step.get.primaryInput.isDefined) {
-                    pipe.port = step.get.primaryInput.get.port.get
-                  } else {
-                    throw new ModelException(ExceptionCode.NODRP, List(), staticContext.location)
-                  }
-                case _ =>
-                  if (step.get.primaryOutput.isDefined) {
-                    pipe.port = step.get.primaryOutput.get.port.get
-                  } else {
-                    throw new ModelException(ExceptionCode.NODRP, List(), staticContext.location)
-                  }
+              var ancestor = false
+              var p: Option[Artifact] = Some(this)
+              while (p.isDefined && !ancestor) {
+                ancestor = (p.get == step.get)
+                p = p.get.parent
+              }
+
+              if (ancestor) {
+                if (step.get.primaryInput.isDefined) {
+                  pipe.port = step.get.primaryInput.get.port.get
+                } else {
+                  throw new ModelException(ExceptionCode.NODRP, List(), staticContext.location)
+                }
+              } else {
+                if (step.get.primaryOutput.isDefined) {
+                  pipe.port = step.get.primaryOutput.get.port.get
+                } else {
+                  throw new ModelException(ExceptionCode.NODRP, List(), staticContext.location)
+                }
               }
             } else {
               throw XProcException.xsPortNotReadable(pipe.toString, staticContext.location)

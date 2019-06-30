@@ -172,6 +172,9 @@ Validity error in “$1”: $2
 XS0100
 The element named “$1” is not allowed: $2.
 
+XS0108
+It is a static error if a p:if does not specify a primary output port.
+
 {http://xmlcalabash.com/ns/extensions}XI0016
 No input specified for pipeline port “$1”.
 

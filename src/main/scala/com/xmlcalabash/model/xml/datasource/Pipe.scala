@@ -3,8 +3,8 @@ package com.xmlcalabash.model.xml.datasource
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.containers.Catch
-import com.xmlcalabash.model.xml.{Artifact, IOPort, Variable, WithOption}
+import com.xmlcalabash.model.xml.containers.{Catch, When}
+import com.xmlcalabash.model.xml.{Artifact, IOPort, Output, Variable, WithInput, WithOption}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 
 import scala.collection.mutable.ListBuffer
@@ -116,6 +116,13 @@ class Pipe(override val config: XMLCalabashRuntime,
       case opt: WithOption =>
         toNode = opt._graphNode
         toPort = "source"
+      case wi: WithInput =>
+        toNode = parent.get.parent.get._graphNode
+        toPort = wi.port.get
+        if (wi.parent.get.isInstanceOf[When]) {
+          toNode = wi.parent.get._graphNode
+          toPort = "condition"
+        }
       case port: IOPort =>
         toNode = parent.get.parent.get._graphNode
         toPort = port.port.get

@@ -3,7 +3,8 @@ package com.xmlcalabash.model.xml.datasource
 import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, PipelineStep, Variable, WithInput}
+import com.xmlcalabash.model.xml.containers.When
+import com.xmlcalabash.model.xml.{Artifact, DeclareStep, IOPort, OptionDecl, Output, PipelineStep, Variable, WithInput, WithOption}
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcVtExpression, XProcXPathExpression}
 import com.xmlcalabash.steps.internal.{EmptyLoader, FileLoader}
 import com.xmlcalabash.util.MediaType
@@ -97,21 +98,31 @@ class Document(override val config: XMLCalabashRuntime,
   }
 
   override def makeGraph(graph: Graph, parent: Node) {
-    val container = this.parent.get.parent.get.parent.get
-    val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
-    val context = new ExpressionContext(staticContext)
-    val step = new FileLoader(context, _contentType, _docProps)
-    val docReader = cnode.addAtomic(step,"p:document " + name)
+    var container = nearestContainer()
 
-    val hrefBinding = cnode.addVariable("href", new XProcVtExpression(context, hrefAvt.get, true))
-    graph.addBindingEdge(hrefBinding, docReader)
-    if (paramsExpr.isDefined) {
-      val binding = cnode.addVariable("parameters", new XProcXPathExpression(context, paramsExpr.get))
-      graph.addBindingEdge(binding, docReader)
+    if (container.isInstanceOf[When] && this.parent.get.isInstanceOf[WithInput]) {
+      // An inline that serves as the context for a when must be outside of the when!
+      container = container.nearestContainer()
     }
 
-    _graphNode = Some(docReader)
-    config.addNode(docReader.id, this)
+    val cnode = container._graphNode.get.asInstanceOf[ContainerStart]
+
+    val context = new ExpressionContext(staticContext)
+    val produceDocument = new FileLoader(context, _contentType, _docProps)
+    if (location.isDefined) {
+      produceDocument.location = location.get
+    }
+    val docProducer = cnode.addAtomic(produceDocument,"p:document " + name)
+
+    val hrefBinding = cnode.addVariable("href", new XProcVtExpression(context, hrefAvt.get, true))
+    graph.addBindingEdge(hrefBinding, docProducer)
+    if (paramsExpr.isDefined) {
+      val binding = cnode.addVariable("parameters", new XProcXPathExpression(context, paramsExpr.get))
+      graph.addBindingEdge(binding, docProducer)
+    }
+
+    _graphNode = Some(docProducer)
+    config.addNode(docProducer.id, this)
 
     for (ref <- bindingRefs) {
       val bind = findBinding(ref)
@@ -147,17 +158,43 @@ class Document(override val config: XMLCalabashRuntime,
     }
   }
 
-  override def makeEdges(graph: Graph, parent: Node): Unit = {
-    val toStep = this.parent.get.parent
-    val toPort = this.parent.get.asInstanceOf[IOPort].port.get
-    graph.addOrderedEdge(_graphNode.get, "result", toStep.get._graphNode.get, toPort)
+  override def makeEdges(graph: Graph, parNode: Node): Unit = {
+    var toNode = Option.empty[Node]
+    var toPort = ""
+
+    parent.get match {
+      case opt: WithOption =>
+        toNode = opt._graphNode
+        toPort = "source"
+      case wi: WithInput =>
+        toNode = parent.get.parent.get._graphNode
+        toPort = wi.port.get
+        if (wi.parent.get.isInstanceOf[When]) {
+          toNode = wi.parent.get._graphNode
+          toPort = "condition"
+        }
+      case port: IOPort =>
+        toNode = parent.get.parent.get._graphNode
+        toPort = port.port.get
+      case variable: Variable =>
+        toNode = variable._graphNode
+        toPort = "source"
+      case _ =>
+        // It must be an explicit link from somewhere else; make an output to link from
+        val out = new Output(config, this, "result", primary=true, sequence=true)
+        addChild(out)
+    }
+
+    if (toNode.isDefined) {
+      graph.addOrderedEdge(_graphNode.get, "result", toNode.get, toPort)
+    }
 
     val docparent = this.parent.get
     val istep = docparent.parent.get
-    val container = if (istep.parent.isDefined) {
-      istep.parent.get
+    val container = if (docparent.isInstanceOf[WithInput] && istep.isInstanceOf[When]) {
+      istep.nearestContainer()
     } else {
-      istep
+      docparent.nearestContainer()
     }
 
     var emptyLatch = true

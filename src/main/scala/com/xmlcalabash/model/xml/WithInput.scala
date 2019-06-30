@@ -3,6 +3,7 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.xml.containers.When
 import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Inline}
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcXPathExpression}
 
@@ -41,6 +42,9 @@ class WithInput(override val config: XMLCalabashRuntime,
     _primary = None
 
     _port = attributes.get(XProcConstants._port)
+    if (_port.isEmpty && parent.get.isInstanceOf[When]) {
+      _port = Some("#source")
+    }
 
     _select = attributes.get(XProcConstants._select)
     if (_select.isDefined) {

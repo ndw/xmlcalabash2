@@ -11,6 +11,7 @@ import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class Parser(val config: XMLCalabashConfig) {
@@ -467,8 +468,14 @@ class Parser(val config: XMLCalabashConfig) {
   }
 
   private def parseIf(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Choose(runtime, parent)
+    val art = new Choose(runtime, parent, true)
     val when = new When(runtime, Some(art))
+
+    // Fake like we parsed the attributes of p:if on the p:choose
+    // FIXME: what about depends, etc.?
+    if (node.getAttributeValue(XProcConstants._name) != null) {
+      art.attributes.put(XProcConstants._name, node.getAttributeValue(XProcConstants._name))
+    }
 
     when.parse(node)
     parseChildren(when, node)

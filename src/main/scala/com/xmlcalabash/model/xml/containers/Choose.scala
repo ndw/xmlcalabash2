@@ -9,7 +9,13 @@ import com.xmlcalabash.runtime.XMLCalabashRuntime
 import scala.collection.mutable
 
 class Choose(override val config: XMLCalabashRuntime,
-             override val parent: Option[Artifact]) extends Container(config, parent, XProcConstants.p_choose) {
+             override val parent: Option[Artifact],
+             val p_if: Boolean) extends Container(config, parent, XProcConstants.p_choose) {
+
+  def this(config: XMLCalabashRuntime, parent: Option[Artifact]) {
+    this(config, parent, false)
+  }
+
   private var hasWhen = false
   private var hasOtherwise = false
 

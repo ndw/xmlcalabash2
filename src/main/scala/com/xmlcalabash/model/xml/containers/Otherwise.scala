@@ -7,8 +7,6 @@ import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.{Artifact, Documentation, Output, PipeInfo}
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcXPathExpression}
 
-import scala.collection.mutable
-
 class Otherwise(override val config: XMLCalabashRuntime,
                 override val parent: Option[Artifact],
                 val synthetic: Boolean) extends Container(config, parent, XProcConstants.p_otherwise) {
@@ -48,7 +46,10 @@ class Otherwise(override val config: XMLCalabashRuntime,
     }
 
     if (when.primaryOutput.isEmpty) {
-      throw XProcException.xsPrimaryOutputRequired(when.location)
+      val choose = parent.get.asInstanceOf[Choose]
+      if (choose.p_if) {
+        throw XProcException.xsPrimaryOutputRequired(when.location)
+      }
     }
 
     // lastChildStep is always p:identity

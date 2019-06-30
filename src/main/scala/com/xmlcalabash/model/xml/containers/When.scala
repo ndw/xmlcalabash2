@@ -4,7 +4,8 @@ import com.jafpl.graph.{Binding, ChooseStart, Graph, Node}
 import com.jafpl.steps.Manifold
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.{Artifact, Documentation, OptionDecl, PipeInfo, Variable}
+import com.xmlcalabash.model.xml.datasource.Inline
+import com.xmlcalabash.model.xml.{Artifact, Documentation, OptionDecl, PipeInfo, Variable, WithInput}
 import com.xmlcalabash.runtime.{ExpressionContext, SaxonExpressionOptions, XMLCalabashRuntime, XProcExpression, XProcXPathExpression}
 
 class When(override val config: XMLCalabashRuntime,
@@ -60,14 +61,26 @@ class When(override val config: XMLCalabashRuntime,
   }
 
   override def makeEdges(graph: Graph, parentNode: Node) {
-    val drp = parent.get.defaultReadablePort
-    if (drp.isDefined) {
-      val gnode = if (drp.get._graphNode.isDefined) {
-        drp.get._graphNode.get
-      } else {
-        drp.get.parent.get._graphNode.get
+    var conditionContext = false
+
+    for (child <- children) {
+      child match {
+        case wi: WithInput =>
+          conditionContext = true
+        case _ => Unit
       }
-      graph.addEdge(gnode, drp.get.port.get, _graphNode.get, "condition")
+    }
+
+    if (!conditionContext) {
+      val drp = parent.get.defaultReadablePort
+      if (drp.isDefined) {
+        val gnode = if (drp.get._graphNode.isDefined) {
+          drp.get._graphNode.get
+        } else {
+          drp.get.parent.get._graphNode.get
+        }
+        graph.addEdge(gnode, drp.get.port.get, _graphNode.get, "condition")
+      }
     }
 
     for (output <- outputPorts) {
@@ -91,23 +104,6 @@ class When(override val config: XMLCalabashRuntime,
       }
 
       bind.get match {
-          /*
-        case declStep: DeclareStep =>
-          var optDecl = Option.empty[OptionDecl]
-          for (child <- declStep.children) {
-            child match {
-              case opt: OptionDecl =>
-                if (opt.optionName == ref) {
-                  optDecl = Some(opt)
-                }
-              case _ => Unit
-            }
-          }
-          if (optDecl.isEmpty) {
-            throw new ModelException(ExceptionCode.NOBINDING, ref.toString, location)
-          }
-          graph.addBindingEdge(optDecl.get._graphNode.get.asInstanceOf[Binding], _graphNode.get)
-          */
         case optDecl: OptionDecl =>
           graph.addBindingEdge(optDecl._graphNode.get.asInstanceOf[Binding], graphNode)
         case varDecl: Variable =>
