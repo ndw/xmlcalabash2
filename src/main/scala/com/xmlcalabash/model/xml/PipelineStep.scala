@@ -7,7 +7,6 @@ import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.Otherwise
 import com.xmlcalabash.model.xml.datasource.{Empty, JoinGatewayEnable, Pipe}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
-import com.xmlcalabash.steps.internal.GatedLoader
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable

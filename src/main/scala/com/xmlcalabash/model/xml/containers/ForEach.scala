@@ -33,10 +33,15 @@ class ForEach(override val config: XMLCalabashRuntime,
     for (child <- children) {
       child match {
         case input: Input =>
-          input.port.get match {
-            case "source" => source = Some(input)
-            case "current" => current = Some(input)
-            case _ => throw XProcException.xiInvalidPort(input.port.get, location)
+          if (input.port.isEmpty || input.port.get == "source") {
+            if (source.isDefined) {
+              XProcException.xiInvalidPort(input.port.get, location)
+            }
+            source = Some(input)
+          } else if (input.port.get == "current'") {
+            current = Some(input)
+          } else {
+            XProcException.xiInvalidPort(input.port.get, location)
           }
         case _ => Unit
       }
@@ -57,8 +62,6 @@ class ForEach(override val config: XMLCalabashRuntime,
 
   override def makeInputBindingsExplicit(): Boolean = {
     var valid = true
-
-    println("I DON'T THINK THIS EVER HAPPENS")
 
     val drp = defaultReadablePort
     if (drp.isDefined) {

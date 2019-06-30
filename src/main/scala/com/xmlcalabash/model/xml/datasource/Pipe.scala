@@ -4,7 +4,7 @@ import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.containers.{Catch, When}
-import com.xmlcalabash.model.xml.{Artifact, IOPort, Output, Variable, WithInput, WithOption}
+import com.xmlcalabash.model.xml.{Artifact, IOPort, Variable, WithInput, WithOption}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 
 import scala.collection.mutable.ListBuffer

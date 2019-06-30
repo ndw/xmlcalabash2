@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{Graph, Node}
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.containers.When
+import com.xmlcalabash.model.xml.containers.{ForEach, When}
 import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Inline}
 import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcXPathExpression}
 
@@ -42,8 +42,13 @@ class WithInput(override val config: XMLCalabashRuntime,
     _primary = None
 
     _port = attributes.get(XProcConstants._port)
-    if (_port.isEmpty && parent.get.isInstanceOf[When]) {
-      _port = Some("#source")
+    if (_port.isEmpty) {
+      if (parent.get.isInstanceOf[When]) {
+        _port = Some("#source")
+      }
+      if (parent.get.isInstanceOf[ForEach]) {
+        _port = Some("source") // FIXME: should be anon?
+      }
     }
 
     _select = attributes.get(XProcConstants._select)

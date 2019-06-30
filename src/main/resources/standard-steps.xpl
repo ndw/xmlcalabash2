@@ -247,4 +247,9 @@
   <p:output port="result" sequence="true"/>
 </p:declare-step>
 
+<p:declare-step type="cx:filter">
+  <p:input port="source" sequence="true"/>
+  <p:output port="result" sequence="true"/>
+</p:declare-step>
+
 </p:library>
