@@ -186,9 +186,9 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
     }
 
     for (spec <- pipe.split("\\s+")) {
-      val PortAndStep = "^([^@]+)@(^[^@]+)$".r
+      val PortAndStep = "^([^@]+)@([^@]+)$".r
       val PortOnly = "^([^@]+)$".r
-      val StepOnly = "^@(^[^@]+)$".r
+      val StepOnly = "^@([^@]+)$".r
 
       val pipe = spec match {
         case PortAndStep(port, step) =>

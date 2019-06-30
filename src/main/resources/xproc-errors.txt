@@ -160,9 +160,6 @@ Commentt not allowed here. Found “$1”.
 XS0079/3
 Processing instruction not allowed here. Found “$1”.
 
-XS0079/4
-Elements from the XProc namespace are not allowed here. Found “$1”.
-
 XS0080
 Duplicated option name: “$1”.
 
@@ -183,6 +180,9 @@ Invalid pipe attribute value: “$1”; must be port, port@step, or @step.
 
 XS0096
 Invalid sequence type: “$1”. $2.
+
+XS0100
+XProc element not allowed here: “$1”
 
 XC0023
 Bad pattern: “$1”. Matches $2 node where it must only match elements.

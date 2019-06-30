@@ -1,4 +1,4 @@
-<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0079 err:XS0089">
+<t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" xmlns:err="http://www.w3.org/ns/xproc-error" expected="fail" code="err:XS0100 err:XS0089">
    <t:info>
       <t:title>with-input-051</t:title>
       <t:revision-history>

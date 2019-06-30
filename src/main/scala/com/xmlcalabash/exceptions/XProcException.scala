@@ -151,7 +151,6 @@ object XProcException {
   def xsTextNotAllowed(text: String, location: Option[Location]): XProcException = staticError((79,1), text, location)
   def xsCommentNotAllowed(comment: String, location: Option[Location]): XProcException = staticError((79,2), comment, location)
   def xsPiNotAllowed(pi: String, location: Option[Location]): XProcException = staticError((79,3), pi, location)
-  def xsXProcElementNotAllowed(name: String, location: Option[Location]): XProcException = staticError((79,4), name, location)
 
   def xsDupWithOptionName(optName: QName, location: Option[Location]): XProcException = staticError(80, optName, location)
   def xsInlineExpandTextNotAllowed(location: Option[Location]): XProcException = staticError(84, location)
@@ -160,6 +159,9 @@ object XProcException {
   def xsNoSelectOnStaticOption(location: Option[Location]): XProcException = staticError(93, None, location)
   def xsNoSelectOnVariable(location: Option[Location]): XProcException = staticError(94, None, location)
   def xsInvalidSequenceType(seqType: String, errMsg: String, location: Option[Location]): XProcException = staticError(96, List(seqType, errMsg), location)
+
+  def xsXProcElementNotAllowed(name: String, location: Option[Location]): XProcException = staticError(100, name, location)
+
   def xsNoBindingInExpression(name: String, location: Option[Location]): XProcException = staticError(107, name, location)
   def xsPrimaryOutputRequired(location: Option[Location]): XProcException = staticError(108, location)
   def xsUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = staticError(111, ctype, location)
