@@ -116,7 +116,7 @@ class Input(override val config: XMLCalabashRuntime,
 
     if (href.isDefined) {
       if (hasDataSources) {
-        throw XProcException.staticError(81, href.get, location)
+        throw XProcException.xsHrefAndOtherSources(location)
       }
       hasDataSources = true
 

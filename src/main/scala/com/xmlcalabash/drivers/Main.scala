@@ -116,7 +116,7 @@ object Main extends App {
           } else {
             code match {
               case qname: QName =>
-                config.errorExplanation.message(qname, xproc.details)
+                config.errorExplanation.message(qname, xproc.variant, xproc.details)
               case _ =>
                 s"Configuration error: code ($code) is not a QName"
             }
@@ -128,7 +128,7 @@ object Main extends App {
           }
 
           if (options.verbose && code.isInstanceOf[QName]) {
-            val explanation = config.errorExplanation.explanation(code.asInstanceOf[QName])
+            val explanation = config.errorExplanation.explanation(code.asInstanceOf[QName], xproc.variant)
             if (explanation != "") {
               println(explanation)
             }
@@ -138,12 +138,12 @@ object Main extends App {
           val message = if (step.message.isDefined) {
             step.message.get
           } else {
-            config.errorExplanation.message(code)
+            config.errorExplanation.message(code, 1)
           }
           println(s"ERROR $code $message")
 
           if (options.verbose) {
-            val explanation = config.errorExplanation.explanation(code)
+            val explanation = config.errorExplanation.explanation(code, 1)
             if (explanation != "") {
               println(explanation)
             }

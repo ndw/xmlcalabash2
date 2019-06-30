@@ -25,6 +25,8 @@ object StepException {
     XProcException.dynamicError(code, details, location)
   }
 
+  /*
+
   def staticError(code: Int): XProcException = {
     staticError(code, List.empty[String], None)
   }
@@ -43,6 +45,8 @@ object StepException {
   def staticError(code: Int, details: List[String], location: Option[Location]): XProcException = {
     XProcException.staticError(code, details, location)
   }
+
+   */
 }
 
 class StepException(val code: QName) extends RuntimeException with JafplExceptionCode {

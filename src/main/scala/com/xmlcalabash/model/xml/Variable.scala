@@ -98,7 +98,7 @@ class Variable(override val config: XMLCalabashRuntime,
 
     if (href.isDefined) {
       if (hasDataSources) {
-        throw XProcException.staticError(81, href.get, location)
+        throw XProcException.xsHrefAndOtherSources(location)
       }
       hasDataSources = true
 
@@ -111,7 +111,7 @@ class Variable(override val config: XMLCalabashRuntime,
 
     if (pipe.isDefined) {
       if (hasDataSources) {
-        throw XProcException.staticError(82, pipe.get, location)
+        throw XProcException.xsPipeAndOtherSources(location)
       }
       parsePipeAttribute(pipe.get)
     }

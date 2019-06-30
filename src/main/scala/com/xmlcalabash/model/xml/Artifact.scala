@@ -731,7 +731,7 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
             if (drp.isDefined) {
               pipe.step = drp.get.parent.get.name
             } else {
-              throw new ModelException(ExceptionCode.NODRP, List(), staticContext.location)
+              throw XProcException.xsPipeWithoutStepOrDrp(staticContext.location)
             }
           }
           if (pipe.port.isEmpty) {
@@ -748,7 +748,7 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
                 if (step.get.primaryInput.isDefined) {
                   pipe.port = step.get.primaryInput.get.port.get
                 } else {
-                  throw new ModelException(ExceptionCode.NODRP, List(), staticContext.location)
+                  throw XProcException.xsPipeWithoutPortOrPrimaryOutput(staticContext.location)
                 }
               } else {
                 if (step.get.primaryOutput.isDefined) {
@@ -758,7 +758,7 @@ abstract class Artifact(val config: XMLCalabashRuntime, val parent: Option[Artif
                 }
               }
             } else {
-              throw XProcException.xsPortNotReadable(pipe.toString, staticContext.location)
+              throw XProcException.xsPortNotReadable(pipe.step.get, pipe.toString, staticContext.location)
             }
           }
 

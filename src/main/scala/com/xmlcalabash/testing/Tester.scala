@@ -117,7 +117,7 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
         } else {
           code match {
             case qname: QName =>
-              runtimeConfig.errorExplanation.message(qname, xproc.details)
+              runtimeConfig.errorExplanation.message(qname, xproc.variant, xproc.details)
             case _ =>
               s"Configuration error: code ($code) is not a QName"
           }

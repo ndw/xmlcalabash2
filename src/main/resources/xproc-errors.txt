@@ -105,6 +105,9 @@ Step $1 has an unconnected output port: $2.
 XS0008
 Attribute not allowed here: “$1”.
 
+XS0010
+There is no port named “$2” on “$1” steps.
+
 XS0011
 Duplicate port name: ‘$1’
 
@@ -112,7 +115,7 @@ XS0018
 The option named “$1” is required, but no value was provided for it.
 
 XS0022
-The port “$1” is not readable from here.
+The port “$2” on “$1” is not readable from here.
 
 XS0030
 Attempt to make port ‘$1’ primary when ‘$2’ is already primary.
@@ -125,6 +128,15 @@ No connection provided for primary input port ‘$2’ on step ‘$1’ and no d
 
 XS0038
 Required attribute “$1” is missing.
+
+XS0065
+Port name omitted, but “$1” has no primary input port.
+
+XS0067/1
+Pipe has no step and there’s no default readable port
+
+XS0067/2
+Pipe has no port and step has no primary output port
 
 XS0069
 The encoding “$1” is not supported.
@@ -147,6 +159,9 @@ If an href attribute is present, no other data bindings may be specified.
 
 XS0082
 If a pipe attribute is present, no other data bindings may be specified.
+
+XS0085
+The pipe and href attributes may not both be specified.
 
 XS0096
 Invalid sequence type: “$1”. $2.

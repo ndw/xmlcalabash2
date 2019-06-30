@@ -13,6 +13,7 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
   private val messages = ListBuffer.empty[ErrorExplanationTemplate]
 
   private var code = Option.empty[QName]
+  private var variant = 1
   private var message = ""
   private var explanation = ""
   private val stream = getClass.getResourceAsStream("/xproc-errors.txt")
@@ -20,17 +21,32 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
   for (line <- Source.fromInputStream(stream, "UTF-8").getLines) {
     if (line == "") {
       if (code.isDefined) {
-        messages += new ErrorExplanationTemplate(code.get, message, explanation)
+        messages += new ErrorExplanationTemplate(code.get, variant, message, explanation)
         code = None
+        variant = 1
         message = ""
         explanation = ""
       }
     } else {
       if (code.isEmpty) {
-        if (line.startsWith("{")) {
-          code = Some(ValueParser.parseClarkName(line))
-        } else {
-          code = Some(new QName(XProcConstants.ns_err, line))
+        val BareCode = "(\\S+)".r
+        val BareCodeVar = "(\\S+)/(\\d+)".r
+        val ClarkCode = "(\\{.*\\})(\\S+)".r
+        val ClarkCodeVar = "(\\{.*\\})(\\S+)/(\\d+)".r
+
+        code = line match {
+          case BareCodeVar(code, vcode) =>
+            variant = vcode.toInt
+            Some(new QName(XProcConstants.ns_err, code))
+          case BareCode(code) =>
+            variant = 1
+            Some(new QName(XProcConstants.ns_err, code))
+          case ClarkCodeVar(namespace, localname, vcode) =>
+            variant = vcode.toInt
+            Some(new QName(namespace, localname))
+          case ClarkCode(namespace, localname) =>
+            variant = 1
+            Some(new QName(namespace, localname))
         }
       } else if (message == "") {
         message = line
@@ -41,34 +57,34 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
   }
 
   if (code.isDefined) {
-    messages += new ErrorExplanationTemplate(code.get, message, explanation)
+    messages += new ErrorExplanationTemplate(code.get, variant, message, explanation)
   }
 
-  override def message(code: QName): String = {
-    message(code, List.empty[Any])
+  override def message(code: QName, variant: Int): String = {
+    message(code, variant, List.empty[Any])
   }
 
-  override def message(code: QName, details: List[Any]): String = {
-    var message = template(code, details.length).message
+  override def message(code: QName, variant: Int, details: List[Any]): String = {
+    var message = template(code, variant, details.length).message
     substitute(message, details)
   }
 
-  override def explanation(code: QName): String = {
-    explanation(code, List.empty[Any])
+  override def explanation(code: QName, variant: Int): String = {
+    explanation(code, variant, List.empty[Any])
   }
 
-  override def explanation(code: QName, details: List[Any]): String = {
-    var message = template(code, details.length).explanation
+  override def explanation(code: QName, variant: Int, details: List[Any]): String = {
+    var message = template(code, variant, details.length).explanation
     substitute(message, details)
   }
 
-  private def template(code: QName, count: Integer): ErrorExplanationTemplate = {
-    // Find all the messages with a matching code, with a cardinality <= details.length
-    val templates = messages.filter(_.code == code).filter(_.cardinality <= count)
+  private def template(code: QName, variant: Int, count: Integer): ErrorExplanationTemplate = {
+    // Find all the messages with a matching code and variant, with a cardinality <= details.length
+    val templates = messages.filter(_.code == code).filter(_.variant == variant).filter(_.cardinality <= count)
 
     if (templates.isEmpty) {
       // Return a default template
-      new ErrorExplanationTemplate(code, "[No explanatory message for " + code + "]", "")
+      new ErrorExplanationTemplate(code, 1,"[No explanatory message for " + code + "]", "")
     } else {
       // Return the one with the highest cardinality.
       templates.maxBy(_.cardinality)
@@ -113,7 +129,7 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
     }
   }
 
-  private class ErrorExplanationTemplate(val code: QName, val message: String, val explanation: String) {
+  private class ErrorExplanationTemplate(val code: QName, val variant: Int, val message: String, val explanation: String) {
     def cardinality: Int = message.count(_=='$')
   }
 

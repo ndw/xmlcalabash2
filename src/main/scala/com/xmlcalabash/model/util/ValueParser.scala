@@ -148,9 +148,9 @@ object ValueParser {
         Some(value.get == "true")
       } else {
         if (static) {
-          throw XProcException.staticError(77, List(value.get, "boolean"), location)
+          throw XProcException.xsBadTypeValue(value.get, "boolean", location)
         } else {
-          throw XProcException.dynamicError(19, List(value.get, "boolean"), location)
+          throw XProcException.xdBadValue(value.get, "boolean", location)
         }
       }
     } else {

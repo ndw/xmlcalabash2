@@ -84,7 +84,11 @@ object XProcException {
   def xdSequenceNotAllowedAsContext(location: Option[Location]): XProcException = dynamicError(8, location)
   def xdDoesNotExist(href: String, location: Option[Location]): XProcException = dynamicError(11, href, location)
   def xdInvalidSelection(expr: String, selected: String, location: Option[Location]): XProcException = dynamicError(16, List(expr,selected), location)
-  def xdBadValue(value: String, vtype: String, message: String, location: Option[Location]): XProcException = dynamicError(19, List(value,vtype, message), location)
+
+  // FIXME: subtypes
+  def xdBadValue(value: String, vtype: String, location: Option[Location]): XProcException = dynamicError(19, List(value,vtype), location)
+  def xdBadMatchPattern(pattern: String, message: String, location: Option[Location]): XProcException = dynamicError(19, List(pattern, message), location)
+
   def xdNotAuthorized(href: String, message: String): XProcException = dynamicError(21, List(href, message))
   def xdGeneralError(message: String, location: Option[Location]): XProcException = dynamicError(30, message, location)
 
@@ -112,13 +116,22 @@ object XProcException {
   def xsDupOptionname(location: Option[Location], name: String): XProcException = staticError(4, name, location)
   def xsUnconnectedOutputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(6, List(step, port), location)
   def xsBadAttribute(name: QName, location: Option[Location]): XProcException = staticError(8, name, location)
+  def xsBadPortName(stepType: QName, port: String, location: Option[Location]): XProcException = staticError(10, List(stepType, port), location)
   def xsDupPortName(port: String, location: Option[Location]): XProcException = staticError(11, port, location)
   def xsMissingRequiredOption(optName: QName, location: Option[Location]): XProcException = staticError(18, optName, location)
-  def xsPortNotReadable(port: String, location: Option[Location]): XProcException = staticError(22, port, location)
+  def xsPortNotReadable(step: String, port: String, location: Option[Location]): XProcException = staticError(22, List(step, port), location)
   def xsDupPrimaryPort(port: String, primaryPort: String, location: Option[Location]): XProcException = staticError(30, List(port, primaryPort), location)
   def xsUndeclaredOption(stepType: QName, optName: QName, location: Option[Location]): XProcException = staticError(31, List(stepType,optName), location)
   def xsUnconnectedPrimaryInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(32, List(step,port), location)
   def xsMissingRequiredAttribute(attName: QName, location: Option[Location]): XProcException = staticError(38, attName, location)
+  def xsPrimaryInputPortRequired(stepType: QName, location: Option[Location]): XProcException = staticError(65, stepType, location)
+
+  def xsPipeWithoutStepOrDrp(location: Option[Location]): XProcException = staticError((67,1), location)
+  def xsPipeWithoutPortOrPrimaryOutput(location: Option[Location]): XProcException = staticError((67,2), location)
+
+  def xsHrefAndOtherSources(location: Option[Location]): XProcException = staticError(81, location)
+  def xsPipeAndOtherSources(location: Option[Location]): XProcException = staticError(82, location)
+  def xsPipeAndHref(location: Option[Location]): XProcException = staticError(85, location)
 
   def xsElementNotAllowed(location: Option[Location], element: QName, message: String): XProcException = staticError(100, List(element, message), location)
   def xsElementNotAllowed(location: Option[Location], element: QName): XProcException = staticError(100, List(element, "element is not allowed here"), location)
@@ -127,8 +140,10 @@ object XProcException {
   def xsMissingRequiredInput(port: String, location: Option[Location]): XProcException = staticError(998, port, location)
 
   def xsUnsupportedEncoding(encoding: String, location: Option[Location]): XProcException = staticError(69, encoding, location)
-  def xsInvalidNodeType(nodeKind: String, location: Option[Location]): XProcException = staticError(77, nodeKind, location)
-  def xsBadTypeValue(name: String, reqdType: String): XProcException = staticError(77, List(name, reqdType), None)
+
+  def xsInvalidNodeType(nodeKind: String, location: Option[Location]): XProcException = staticError(56, nodeKind, location)
+
+  def xsBadTypeValue(value: String, reqdType: String, location: Option[Location]): XProcException = staticError(77, List(value, reqdType), location)
   def xsDupWithOptionName(optName: QName, location: Option[Location]): XProcException = staticError(80, optName, location)
   def xsInlineExpandTextNotAllowed(location: Option[Location]): XProcException = staticError(84, location)
   def xsTvtForbidden(location: Option[Location]): XProcException = staticError(88, location)
@@ -160,7 +175,7 @@ object XProcException {
 
   private def internalError(code: Int, location: Option[Location], args: List[Any]): XProcException = {
     val qname = new QName("cx", XProcConstants.ns_cx, "XI%04d".format(code))
-    new XProcException(qname, None, location, args)
+    new XProcException(qname, 1, None, location, args)
   }
 
   def dynamicError(code: Int): XProcException = {
@@ -180,32 +195,41 @@ object XProcException {
   }
   def dynamicError(code: Int, details: List[Any], location: Option[Location]): XProcException = {
     val qname = dynamicErrorCode(code)
-    new XProcException(qname, None, location, details)
+    new XProcException(qname, 1, None, location, details)
   }
 
   def dynamicErrorCode(code: Int): QName = {
     new QName("err", XProcConstants.ns_err, "XD%04d".format(code))
   }
 
-  def staticError(code: Int): XProcException = {
-    staticError(code, List.empty[Any], None)
+  // ====================================================================================
+
+  private def staticError(code: (Int, Int), details: List[Any], location: Option[Location]): XProcException = {
+    val qname = staticErrorCode(code._1)
+    new XProcException(qname, code._2, None, location, details)
   }
-  def staticError(code: Int, details: Any): XProcException = {
-    staticError(code, List(details), None)
+
+  private def staticError(code: Int, details: List[Any], location: Option[Location]): XProcException = {
+    staticError((code, 1), details, location)
   }
-  def staticError(code: Int, details: List[Any]): XProcException = {
-    staticError(code, details, None)
-  }
-  def staticError(code: Int, location: Option[Location]): XProcException = {
-    staticError(code, List.empty[Any], location)
-  }
-  def staticError(code: Int, details: Any, location: Option[Location]): XProcException = {
+
+  private def staticError(code: (Int, Int), details: Any, location: Option[Location]): XProcException = {
     staticError(code, List(details), location)
   }
-  def staticError(code: Int, details: List[Any], location: Option[Location]): XProcException = {
-    val qname = staticErrorCode(code)
-    new XProcException(qname, None, location, details)
+
+  private def staticError(code: Int, details: Any, location: Option[Location]): XProcException = {
+    staticError((code, 1), List(details), location)
   }
+
+  private def staticError(code: (Int, Int), location: Option[Location]): XProcException = {
+    staticError(code, List(), location)
+  }
+
+  private def staticError(code: Int, location: Option[Location]): XProcException = {
+    staticError((code, 1), List(), location)
+  }
+
+  // ====================================================================================
 
   def staticErrorCode(code: Int): QName = {
     new QName("err", XProcConstants.ns_err, "XS%04d".format(code))
@@ -228,7 +252,7 @@ object XProcException {
   }
   def stepError(code: Int, details: List[Any], location: Option[Location]): XProcException = {
     val qname = new QName("err", XProcConstants.ns_err, "XC%04d".format(code))
-    new XProcException(qname, None, location, details)
+    new XProcException(qname, 1, None, location, details)
   }
 
   def mapPipelineException(ex: Exception): Exception = {
@@ -247,27 +271,27 @@ object XProcException {
   }
 }
 
-class XProcException(val code: QName, val message: Option[String], val location: Option[Location], val details: List[Any]) extends RuntimeException {
+class XProcException(val code: QName, val variant: Int, val message: Option[String], val location: Option[Location], val details: List[Any]) extends RuntimeException {
   private val _underlyingCauses = ListBuffer.empty[Exception]
 
   def this(code: QName) {
-    this(code, None, None, List.empty[String])
+    this(code, 1, None, None, List.empty[String])
   }
 
   def this(code: QName, message: String) {
-    this(code, Some(message), None, List.empty[String])
+    this(code, 1, Some(message), None, List.empty[String])
   }
 
   def this(code: QName, message: String, location: Location) {
-    this(code, Some(message), Some(location), List.empty[String])
+    this(code, 1, Some(message), Some(location), List.empty[String])
   }
 
   def this(code: QName, message: String, context: ExpressionContext) {
-    this(code, Some(message), context.location, List.empty[String])
+    this(code, 1, Some(message), context.location, List.empty[String])
   }
 
   def this(code: QName, context: ExpressionContext) {
-    this(code, None, context.location, List.empty[String])
+    this(code, 1, None, context.location, List.empty[String])
   }
 
   def underlyingCauses: List[Exception] = _underlyingCauses.toList

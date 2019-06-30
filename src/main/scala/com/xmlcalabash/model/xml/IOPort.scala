@@ -85,7 +85,7 @@ class IOPort(override val config: XMLCalabashRuntime,
       valid
     } catch {
       case sae: SaxonApiException =>
-        throw XProcException.xsBadTypeValue(_port.get, "NCName")
+        throw XProcException.xsBadTypeValue(_port.get, "NCName", location)
       case e: Exception =>
         throw e
     }

@@ -86,7 +86,7 @@ class FileLoader(private val context: ExpressionContext,
         case map: XdmMap =>
           ValueParser.parseDocumentProperties(map, location)
         case _ =>
-          throw XProcException.xsBadTypeValue("document-properties", "map")
+          throw XProcException.xsBadTypeValue("document-properties", "map", location)
       }
     }
 

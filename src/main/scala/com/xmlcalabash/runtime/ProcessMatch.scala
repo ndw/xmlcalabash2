@@ -36,7 +36,7 @@ class ProcessMatch(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes,
     try {
       matcher = xeval.createPattern(pattern)
     } catch {
-      case ex: XPathException =>  throw XProcException.xdBadValue(pattern, XProcConstants.pxs_XSLTMatchPattern.getLocalName, ex.getMessage, staticContext.location)
+      case ex: XPathException =>  throw XProcException.xdBadMatchPattern(pattern, ex.getMessage, staticContext.location)
       case t: Exception => throw t
     }
 

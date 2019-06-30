@@ -106,7 +106,7 @@ class Pipe(override val config: XMLCalabashRuntime,
     val fromPort = port.get
 
     if (fromStep.isEmpty) {
-      throw new ModelException(ExceptionCode.NOSTEP, step.get, location)
+      throw XProcException.xsPortNotReadable(step.get, port.get, location)
     }
 
     var toNode = Option.empty[Node]
@@ -152,7 +152,7 @@ class Pipe(override val config: XMLCalabashRuntime,
 
     } else {
       if (fromStep.get.output(fromPort).isEmpty) {
-        throw new ModelException(ExceptionCode.NOPORT, List(fromStep.get.name, fromPort), location)
+        throw XProcException.xsPortNotReadable(fromStep.get.name, fromPort, location)
       }
     }
 

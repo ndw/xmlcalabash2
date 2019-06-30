@@ -119,7 +119,7 @@ class AtomicStep(override val config: XMLCalabashRuntime,
     for (input <- inputs) {
       if (input.port.isEmpty) {
         if (primaryInput.isEmpty) {
-          throw new ModelException(ExceptionCode.NOPRIMARYINPUTPORT, List(staticContext.stepType.toString), staticContext.location)
+          throw XProcException.xsPrimaryInputPortRequired(staticContext.stepType, staticContext.location)
         } else {
           input.port = primaryInput.get
         }
@@ -150,7 +150,7 @@ class AtomicStep(override val config: XMLCalabashRuntime,
 
     for (port <- inputPorts) {
       if (!sig.inputPorts.contains(port)) {
-        throw new ModelException(ExceptionCode.BADATOMICINPUTPORT, List(staticContext.stepType.toString, port), staticContext.location)
+        throw XProcException.xsBadPortName(staticContext.stepType, port, staticContext.location)
       }
     }
 

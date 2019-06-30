@@ -58,7 +58,7 @@ class InlineLoader(private val baseURI: Option[URI],
         case map: XdmMap =>
           ValueParser.parseDocumentProperties(map, location)
         case _ =>
-          throw XProcException.xsBadTypeValue("document-properties", "map")
+          throw XProcException.xsBadTypeValue("document-properties", "map", location)
       }
     }
 
