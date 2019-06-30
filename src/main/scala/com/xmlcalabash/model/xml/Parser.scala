@@ -85,7 +85,7 @@ class Parser(val config: XMLCalabashConfig) {
     val root = parse(None, node)
     if (exception.isEmpty) {
       // This is complicated; we want to validate in a depth first mannner, but
-      // we must expose statics iin a breadth-first manner. So this code does both.
+      // we must expose statics in a breadth-first manner. So this code does both.
 
       root.get match {
         case dcontainer: DeclarationContainer =>
