@@ -287,7 +287,7 @@ class DeclareStep(override val config: XMLCalabashRuntime,
           if (option.allowedValues.isDefined) {
             optSig.tokenList = option.allowedValues.get
           }
-          if (option.select.isDefined) {
+          if (option.select.isDefined && !option.static) {
             // Evaluate it; no reference to context is allowed.
             val context = new ExpressionContext(new StaticContext()) // FIXME: what about namespaces!?
             val expr = new XProcXPathExpression(context, option.select.get)

@@ -184,6 +184,12 @@ Invalid sequence type: “$1”. $2.
 XS0100
 XProc element not allowed here: “$1”
 
+XS0107/1
+No binding in expression: “$1”
+
+XS0107/2
+Static error in expression “$1”: $2
+
 XC0023
 Bad pattern: “$1”. Matches $2 node where it must only match elements.
 

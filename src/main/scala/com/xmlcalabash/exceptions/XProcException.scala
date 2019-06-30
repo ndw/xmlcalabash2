@@ -162,7 +162,9 @@ object XProcException {
 
   def xsXProcElementNotAllowed(name: String, location: Option[Location]): XProcException = staticError(100, name, location)
 
-  def xsNoBindingInExpression(name: String, location: Option[Location]): XProcException = staticError(107, name, location)
+  def xsNoBindingInExpression(name: String, location: Option[Location]): XProcException = staticError((107,1), name, location)
+  def xsStaticErrorInExpression(expr: String, msg: String, location: Option[Location]): XProcException = staticError((107,2), List(expr, msg), location)
+
   def xsPrimaryOutputRequired(location: Option[Location]): XProcException = staticError(108, location)
   def xsUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = staticError(111, ctype, location)
 
