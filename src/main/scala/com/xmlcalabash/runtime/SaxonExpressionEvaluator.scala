@@ -215,7 +215,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
       }
 
       if (!matches) {
-        throw XProcException.dynamicError(36, List(xdmval, as.get), context.location)
+        throw XProcException.xdBadType(xdmval.toString, as.get.toString, context.location)
       }
     }
 
@@ -397,7 +397,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
       if (as.isDefined) {
         val matches = as.get.matches(value.getUnderlyingValue, config.getTypeHierarchy)
         if (!matches) {
-          throw XProcException.dynamicError(36, List(value, as.get), exprContext.location)
+          throw XProcException.xdBadType(value.toString, as.get.toString, exprContext.location)
         }
       }
 

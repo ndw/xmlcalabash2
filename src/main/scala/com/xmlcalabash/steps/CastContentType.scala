@@ -52,7 +52,7 @@ class CastContentType() extends DefaultXmlStep {
     } else if (castTo.textContentType) {
       castToText(context)
     } else {
-      throw XProcException.stepError(1003)
+      throw new RuntimeException("impossilbe content type cast")
     }
   }
 

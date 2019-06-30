@@ -178,6 +178,24 @@ Bad child position; cannot specify “$2” with pattern “$1”.
 XC0025
 Bad position; cannot specify “$2” with pattern “$1”.
 
+XC0036/1
+Bad CRC version in p:hash: “$1”.
+
+XC0036/2
+Bad MD version in p:hash: “$1”.
+
+XC0036/3
+Bad SHA version in p:hash: “$1”.
+
+XC0036/4
+Bad p:hash algorithim version: “$1”.
+
+XC0036/5
+Attempted p:hash failed: “$1”.
+
+XC0036/6
+The cx:hmac algorithm requires an ‘accessKey’ parameter.
+
 XC0053
 Validity error in “$1” at line $2, column $3: $4
 

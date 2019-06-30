@@ -60,16 +60,6 @@ class Output(override val config: XMLCalabashRuntime,
       val serAvt = new XProcXPathExpression(context, ser.get)
       val bindingRefs = lexicalVariables(ser.get)
       val staticVariableMap = mutable.HashMap.empty[String, XdmValueItemMessage]
-      /*
-      for (vref <- bindingRefs) {
-        val msg = staticValue(vref)
-        if (msg.isDefined) {
-          staticVariableMap.put(vref.getClarkName, msg.get)
-        } else {
-          throw new ModelException(ExceptionCode.NOBINDING, vref.toString, location)
-        }
-      }
-     */
       val eval = config.expressionEvaluator
       val message = eval.singletonValue(serAvt, List(), staticVariableMap.toMap)
       message match {
@@ -83,17 +73,17 @@ class Output(override val config: XMLCalabashRuntime,
                 val value = optvalue match {
                   case atomic: XdmAtomicValue =>
                     atomic
-                  case _ => throw XProcException.dynamicError(47, optvalue, location)
+                  case _ => throw new RuntimeException("Bad serialization value")
                 }
                 optkey match {
                   case str: String =>
                     opts.put(new QName("", str), value.getStringValue)
                   case qname: QName =>
                     opts.put(qname, value.getStringValue)
-                  case _ => throw XProcException.dynamicError(46, optkey, location)
+                  case _ => throw new RuntimeException("Bad serialization key")
                 }
               }
-            case _ => throw XProcException.dynamicError(48, item.item, location)
+            case _ => throw new RuntimeException("Bad serialization value")
           }
         case _ => throw XProcException.xiBadMessage(message, location)
       }

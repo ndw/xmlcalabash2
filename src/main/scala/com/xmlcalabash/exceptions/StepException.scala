@@ -6,6 +6,7 @@ import com.xmlcalabash.runtime.ExpressionContext
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 object StepException {
+  /*
   def dynamicError(code: Int): XProcException = {
     dynamicError(code, List.empty[String], None)
   }
@@ -24,7 +25,7 @@ object StepException {
   def dynamicError(code: Int, details: List[String], location: Option[Location]): XProcException = {
     XProcException.dynamicError(code, details, location)
   }
-
+  */
   /*
 
   def staticError(code: Int): XProcException = {

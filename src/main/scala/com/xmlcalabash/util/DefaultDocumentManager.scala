@@ -228,7 +228,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
           if (msg.contains("validation")) {
             throw validationError(request, sae, listener.exceptions)
           } else if (msg.contains("HTTP response code: 403 ")) {
-            throw XProcException.xdNotAuthorized(request.href.toASCIIString, msg)
+            throw XProcException.xdNotAuthorized(request.href.toASCIIString, msg, None)
           } else {
             // Let's try to do better about error locations.
             if (Option(sae.getCause).isDefined) {

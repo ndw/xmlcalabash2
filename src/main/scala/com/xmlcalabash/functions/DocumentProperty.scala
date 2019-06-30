@@ -25,7 +25,7 @@ class DocumentProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
       case sval: StringValue =>
         new QName("", sval.getStringValue)
       case _ =>
-        throw XProcException.dynamicError(44, arguments(1).head.toString, exprEval.dynContext.get.location)
+        throw new RuntimeException("Unexected arg to documet property")
     }
 
     if (msg.isEmpty) {

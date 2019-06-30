@@ -61,7 +61,7 @@ class ContentTypeChecker() extends XmlStep {
       }
 
       if (!allowed) {
-        throw XProcException.xdBadMediaType(metadata.contentType, allowedTypes)
+        throw XProcException.xdBadMediaType(metadata.contentType, allowedTypes, location)
       }
     }
     consumer.get.receive("result", item, metadata)

@@ -127,7 +127,7 @@ object ValueParser {
             if (staticContext.inScopeNS.contains(prefix)) {
               Some(new QName(prefix, staticContext.inScopeNS(prefix), local))
             } else {
-              throw XProcException.dynamicError(15, name.get, staticContext.location)
+              throw XProcException.xdCannotResolveQName(name.get, staticContext.location)
             }
           } else {
             Some(new QName("", name.get))
@@ -198,7 +198,7 @@ object ValueParser {
             case XProcConstants.xs_string =>
               new QName("", key.getStringValue)
             case _ =>
-              throw XProcException.dynamicError(45, List(key, "string or QName"), location)
+              throw XProcException.xdBadMapKey(key.getStringValue, location)
           }
 
           var count = 0

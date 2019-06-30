@@ -14,11 +14,13 @@ object XProcMetadata {
   private val _xml = new XProcMetadata(MediaType.XML)
   private val _json = new XProcMetadata(MediaType.JSON)
   private val _html = new XProcMetadata(MediaType.HTML)
+  private val _text = new XProcMetadata(MediaType.TEXT)
   private val _exception = new XProcMetadata(MediaType.OCTET_STREAM)
   def ANY: XProcMetadata = _any
   def XML: XProcMetadata = _xml
   def JSON: XProcMetadata = _json
   def HTML: XProcMetadata = _html
+  def TEXT: XProcMetadata = _text
   def EXCEPTION: XProcMetadata = _exception
 }
 

@@ -20,7 +20,7 @@ class Error extends DefaultXmlStep {
     val name = bindings(_code).getStringValue
     if (bindings.contains(_code_prefix) || bindings.contains(_code_namespace)) {
       if (name.contains(":")) {
-        throw StepException.dynamicError(34)
+        throw new RuntimeException("colon in error?")
       }
       if (bindings.contains(_code_prefix)) {
         code = new QName(bindings(_code_prefix).getStringValue, bindings(_code_namespace).getStringValue, name)

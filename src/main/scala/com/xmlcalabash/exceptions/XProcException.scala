@@ -83,21 +83,23 @@ object XProcException {
   def xdOutputSequenceNotAllowed(port: String, location: Option[Location]): XProcException = dynamicError(7, port, location)
   def xdSequenceNotAllowedAsContext(location: Option[Location]): XProcException = dynamicError(8, location)
   def xdDoesNotExist(href: String, location: Option[Location]): XProcException = dynamicError(11, href, location)
+  def xdCannotResolveQName(name: String, location: Option[Location]): XProcException = dynamicError(15, name, location)
   def xdInvalidSelection(expr: String, selected: String, location: Option[Location]): XProcException = dynamicError(16, List(expr,selected), location)
 
   // FIXME: subtypes
-  def xdBadValue(value: String, vtype: String, location: Option[Location]): XProcException = dynamicError(19, List(value,vtype), location)
-  def xdBadMatchPattern(pattern: String, message: String, location: Option[Location]): XProcException = dynamicError(19, List(pattern, message), location)
+  def xdBadValue(value: String, vtype: String, location: Option[Location]): XProcException = dynamicError((19, 1), List(value,vtype), location)
+  def xdBadMatchPattern(pattern: String, message: String, location: Option[Location]): XProcException = dynamicError((19, 2), List(pattern, message), location)
 
-  def xdNotAuthorized(href: String, message: String): XProcException = dynamicError(21, List(href, message))
+  def xdNotAuthorized(href: String, message: String, location: Option[Location]): XProcException = dynamicError(21, List(href, message), location)
   def xdGeneralError(message: String, location: Option[Location]): XProcException = dynamicError(30, message, location)
 
-  def xdNotValidXML(href: String, message: String, location: Option[Location]): XProcException = dynamicError(23, List(href, message, location))
+  def xdNotValidXML(href: String, message: String, location: Option[Location]): XProcException = dynamicError(23, List(href, message), location)
   def xdNotValidXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(23, List(href, line, col, message), location)
 
   def xdContextItemAbsent(expr: String, msg: String, location: Option[Location]): XProcException = dynamicError(26, List(expr, msg), location)
   def xdConflictingNamespaceDeclarations(msg: String, location: Option[Location]): XProcException = dynamicError(34, msg, location)
-  def xdBadMediaType(ctype: MediaType, allowed: List[MediaType]): XProcException = dynamicError(38, List(ctype, allowed))
+  def xdBadType(value: String, as: String, location: Option[Location]): XProcException = dynamicError(36, List(value, as), location)
+  def xdBadMediaType(ctype: MediaType, allowed: List[MediaType], location: Option[Location]): XProcException = dynamicError(38, List(ctype, allowed), location)
 
   def xdNotWFXML(href: String, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, message), location)
   def xdNotWFXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, line, col, message), location)
@@ -107,7 +109,7 @@ object XProcException {
   def xdInvalidJson(message: String, location: Option[Location]): XProcException = dynamicError(57, message, location)
   def xdUnsupportedEncoding(encoding: String, location: Option[Location]): XProcException = dynamicError(60, encoding, location)
   def xdMismatchedContentType(declType: MediaType, propType: MediaType, location: Option[Location]): XProcException = dynamicError(62, List(declType,propType), location)
-
+  def xdBadMapKey(key: String, location: Option[Location]): XProcException = dynamicError(70, key, location)
   def xdValueNotInList(value: String, location: Option[Location]): XProcException = dynamicError(101, value, location)
 
   def xsLoop(step: String, port: String, location: Option[Location]): XProcException = staticError(1, List(step, port), location)
@@ -159,11 +161,29 @@ object XProcException {
   def xcBadPosition(pattern: String, position: String, location: Option[Location]): XProcException = stepError(24, List(pattern, position), location)
   def xcBadChildPosition(pattern: String, position: String, location: Option[Location]): XProcException = stepError(25, List(pattern, position), location)
 
+  def xcBadCrcVersion(version: String, location: Option[Location]): XProcException = stepError((36,1), version, location)
+  def xcBadMdVersion(version: String, location: Option[Location]): XProcException = stepError((36,2), version, location)
+  def xcBadShaVersion(version: String, location: Option[Location]): XProcException = stepError((36,3), version, location)
+  def xcBadHashAlgorithm(algorithm: String, location: Option[Location]): XProcException = stepError((36,4), algorithm, location)
+  def xcHashFailed(message: String, location: Option[Location]): XProcException = stepError((36,5), message, location)
+  def xcMissingHmacKey(location: Option[Location]): XProcException = stepError((36,6), location)
+
   def xcCannotStore(href: URI, location: Option[Location]): XProcException = stepError(50, href, location)
   def xcNotSchemaValid(href: String, message: String, location: Option[Location]): XProcException = stepError(53, List(href, message), location)
   def xcNotSchemaValid(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = stepError(53, List(href, line, col, message), location)
   def xcUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = stepError(70, ctype, location)
 
+  def staticErrorCode(code: Int): QName = {
+    new QName("err", XProcConstants.ns_err, "XS%04d".format(code))
+  }
+
+  def dynamicErrorCode(code: Int): QName = {
+    new QName("err", XProcConstants.ns_err, "XD%04d".format(code))
+  }
+
+  def stepErrorCode(code: Int): QName = {
+    new QName("err", XProcConstants.ns_err, "XC%04d".format(code))
+  }
 
   private def internalError(code: Int, location: Option[Location]): XProcException = {
     internalError(code, location, List())
@@ -178,28 +198,31 @@ object XProcException {
     new XProcException(qname, 1, None, location, args)
   }
 
-  def dynamicError(code: Int): XProcException = {
-    dynamicError(code, List.empty[Any], None)
-  }
-  def dynamicError(code: Int, details: Any): XProcException = {
-    dynamicError(code, List(details), None)
-  }
-  def dynamicError(code: Int, details: List[Any]): XProcException = {
-    dynamicError(code, details, None)
-  }
-  def dynamicError(code: Int, location: Option[Location]): XProcException = {
-    dynamicError(code, List.empty[Any], location)
-  }
-  def dynamicError(code: Int, details: Any, location: Option[Location]): XProcException = {
-    dynamicError(code, List(details), location)
-  }
-  def dynamicError(code: Int, details: List[Any], location: Option[Location]): XProcException = {
-    val qname = dynamicErrorCode(code)
-    new XProcException(qname, 1, None, location, details)
+  // ====================================================================================
+
+  private def dynamicError(code: (Int, Int), details: List[Any], location: Option[Location]): XProcException = {
+    val qname = dynamicErrorCode(code._1)
+    new XProcException(qname, code._2, None, location, details)
   }
 
-  def dynamicErrorCode(code: Int): QName = {
-    new QName("err", XProcConstants.ns_err, "XD%04d".format(code))
+  private def dynamicError(code: Int, details: List[Any], location: Option[Location]): XProcException = {
+    dynamicError((code, 1), details, location)
+  }
+
+  private def dynamicError(code: (Int, Int), details: Any, location: Option[Location]): XProcException = {
+    dynamicError(code, List(details), location)
+  }
+
+  private def dynamicError(code: Int, details: Any, location: Option[Location]): XProcException = {
+    dynamicError((code, 1), List(details), location)
+  }
+
+  private def dynamicError(code: (Int, Int), location: Option[Location]): XProcException = {
+    dynamicError(code, List(), location)
+  }
+
+  private def dynamicError(code: Int, location: Option[Location]): XProcException = {
+    dynamicError((code, 1), List(), location)
   }
 
   // ====================================================================================
@@ -231,29 +254,32 @@ object XProcException {
 
   // ====================================================================================
 
-  def staticErrorCode(code: Int): QName = {
-    new QName("err", XProcConstants.ns_err, "XS%04d".format(code))
+  private def stepError(code: (Int, Int), details: List[Any], location: Option[Location]): XProcException = {
+    val qname = stepErrorCode(code._1)
+    new XProcException(qname, code._2, None, location, details)
   }
 
-  def stepError(code: Int): XProcException = {
-    stepError(code, List.empty[Any], None)
+  private def stepError(code: Int, details: List[Any], location: Option[Location]): XProcException = {
+    stepError((code, 1), details, location)
   }
-  def stepError(code: Int, details: Any): XProcException = {
-    stepError(code, List(details), None)
-  }
-  def stepError(code: Int, details: List[Any]): XProcException = {
-    stepError(code, details, None)
-  }
-  def stepError(code: Int, location: Option[Location]): XProcException = {
-    stepError(code, List.empty[Any], location)
-  }
-  def stepError(code: Int, details: Any, location: Option[Location]): XProcException = {
+
+  private def stepError(code: (Int, Int), details: Any, location: Option[Location]): XProcException = {
     stepError(code, List(details), location)
   }
-  def stepError(code: Int, details: List[Any], location: Option[Location]): XProcException = {
-    val qname = new QName("err", XProcConstants.ns_err, "XC%04d".format(code))
-    new XProcException(qname, 1, None, location, details)
+
+  private def stepError(code: Int, details: Any, location: Option[Location]): XProcException = {
+    stepError((code, 1), List(details), location)
   }
+
+  private def stepError(code: (Int, Int), location: Option[Location]): XProcException = {
+    stepError(code, List(), location)
+  }
+
+  private def stepError(code: Int, location: Option[Location]): XProcException = {
+    stepError((code, 1), List(), location)
+  }
+
+  // ====================================================================================
 
   def mapPipelineException(ex: Exception): Exception = {
     ex match {

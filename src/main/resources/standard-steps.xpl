@@ -52,6 +52,16 @@
   <p:option name="code-namespace" as="xs:anyURI"/>
 </p:declare-step>
 
+<p:declare-step type="p:hash">
+  <p:input port="source" primary="true" content-types="xml html"/>
+  <p:output port="result" content-types="text xml html"/>
+  <p:option name="parameters" as="map(*)"/>
+  <p:option name="value" required="true" as="xs:string"/>
+  <p:option name="algorithm" required="true" as="xs:QName"/>
+  <p:option name="match" as="xs:string" select="'/*/node()'" cx:as="XSLTSelectionPattern"/>
+  <p:option name="version" as="xs:string"/>
+</p:declare-step>
+
 <p:declare-step type="p:identity">
   <p:input port="source" content-types="*/*" sequence="true"/>
   <p:output port="result" content-types="*/*" sequence="true"/>
