@@ -92,15 +92,9 @@ class WithInput(override val config: XMLCalabashRuntime,
             throw XProcException.xsElementNotAllowed(child.location, child.nodeName, "cannot mix implicit inlines with elements in the XProc namespace")
           }
         case d: Documentation =>
-          hasExplicit = true
-          if (hasImplicit) {
-            throw XProcException.xsElementNotAllowed(child.location, child.nodeName, "cannot mix implicit inlines with elements in the XProc namespace")
-          }
+          Unit
         case p: PipeInfo =>
-          hasExplicit = true
-          if (hasImplicit) {
-            throw XProcException.xsElementNotAllowed(child.location, child.nodeName, "cannot mix implicit inlines with elements in the XProc namespace")
-          }
+          Unit
         case _ => throw XProcException.xsElementNotAllowed(location, child.nodeName)
       }
     }

@@ -346,7 +346,17 @@ class Parser(val config: XMLCalabashConfig) {
       exclPrefixes = node.getParent.getAttributeValue(XProcConstants._exclude_inline_prefixes)
       val iter = node.getParent.axisIterator(Axis.CHILD)
       while (iter.hasNext) {
-        nodes += iter.next()
+        val node = iter.next()
+        if (node.getNodeKind == XdmNodeKind.ELEMENT) {
+          if (node.getNodeName == XProcConstants.p_documentation
+            || node.getNodeName == XProcConstants.p_pipeinfo) {
+            // nop
+          } else {
+            nodes += node
+          }
+        } else {
+          nodes += node
+        }
       }
     }
 
