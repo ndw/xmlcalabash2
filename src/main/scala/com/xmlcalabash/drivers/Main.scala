@@ -24,6 +24,8 @@ object Main extends App {
     val parser = new Parser(config)
     val pipeline = parser.loadDeclareStep(new URI(options.pipeline))
 
+    //pipeline.dump()
+
     config.debugOptions.dumpGraph(pipeline)
 
     val runtime = pipeline.runtime()
