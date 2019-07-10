@@ -310,55 +310,6 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     }
   }
 
-  private def evalSelect(port: String, selectExpr: XProcExpression, message: Option[Message]): Unit = {
-    val expr = config.expressionEvaluator.newInstance()
-    val selected = if (message.isDefined) {
-      expr.value(selectExpr, List(message.get), bindingsMap.toMap, None)
-    } else {
-      expr.value(selectExpr, List(), bindingsMap.toMap, None)
-    }
-    val iter = selected.item.iterator()
-    while (iter.hasNext) {
-      val item = iter.next()
-      item match {
-        case node: XdmNode =>
-          if (node.getNodeKind == XdmNodeKind.ATTRIBUTE) {
-            throw XProcException.xdInvalidSelection(selectExpr.toString, "an attribute", staticContext.location)
-          }
-          if (message.isDefined) {
-            dynamicContext.addDocument(node, message.get)
-          } else {
-            // There's no message, so???
-            // This only happens in the case of applying the default input to p:input
-          }
-
-        case _ => Unit
-      }
-
-      item match {
-        case node: XdmNode =>
-          val tree = new SaxonTreeBuilder(config)
-          tree.startDocument(node.getBaseURI)
-          tree.addSubtree(node)
-          tree.endDocument()
-
-          if (node.getNodeKind == XdmNodeKind.TEXT) {
-            step.receive(port, tree.result, XProcMetadata.TEXT)
-          } else {
-            step.receive(port, tree.result, selected.metadata)
-          }
-        case array: XdmArray =>
-          step.receive(port, array, XProcMetadata.JSON)
-        case map: XdmMap =>
-          step.receive(port, map, XProcMetadata.JSON)
-        case _ =>
-          step.receive(port, item, selected.metadata)
-      }
-    }
-  }
-
-  // =======================================================================================
-
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     // Let's try to validate and normalize what just got sent out of the step.
     // If it claims to be XML, HTML, JSON, or text, we need to get it into an XDM.
