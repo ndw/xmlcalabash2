@@ -8,7 +8,9 @@ import com.xmlcalabash.runtime.params.XPathBindingParams
 import com.xmlcalabash.runtime.{ExprParams, XMLCalabashRuntime, XProcMetadata, XProcVtExpression, XProcXPathExpression}
 import com.xmlcalabash.util.TypeUtils
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmValue}
+import net.sf.saxon.om.Item
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmValue}
+import net.sf.saxon.value.{AtomicValue, EmptySequence}
 
 import scala.collection.mutable
 
@@ -49,14 +51,28 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
         if (!depends) {
           val expr = new XProcXPathExpression(staticContext, _select.get)
           var msg = config.expressionEvaluator.value(expr, List(), inScopeStatics, None)
-          // Ok, now we have a string value
-          val avalue = msg.item.getUnderlyingValue.getStringValue
-          var tvalue = typeUtils.castAtomicAs(XdmAtomicValue.makeAtomicValue(avalue), Some(declaredType), staticContext)
-          if (as.isDefined) {
-            tvalue = typeUtils.castAtomicAs(tvalue, as, staticContext)
+          val xvalue = msg.item.getUnderlyingValue.reduce()
+          if (xvalue.getLength == 0 && xvalue == EmptySequence.getInstance()) {
+            staticValue = msg
+          } else {
+            val avalue = xvalue match {
+              case atomic: XdmAtomicValue =>
+                atomic
+              case atomic: AtomicValue =>
+                XdmAtomicValue.makeAtomicValue(atomic)
+              case item: XdmItem =>
+                XdmAtomicValue.makeAtomicValue(item)
+              case _ =>
+                throw new RuntimeException("Impossible type for static value?")
+            }
+            //var tvalue = typeUtils.castAtomicAs(XdmAtomicValue.makeAtomicValue(avalue), Some(declaredType), staticContext)
+            var tvalue = typeUtils.castAtomicAs(avalue, Some(declaredType), staticContext)
+            if (as.isDefined) {
+              tvalue = typeUtils.castAtomicAs(tvalue, as, staticContext)
+            }
+            msg = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
+            staticValue = msg
           }
-          msg = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
-          staticValue = msg
         }
       }
     } else {
