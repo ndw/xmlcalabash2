@@ -11,10 +11,12 @@ class Signatures {
   private val _functions = mutable.HashMap.empty[QName, List[String]]
 
   def addStep(step: StepSignature): Unit = {
-    if (_steps.contains(step.stepType)) {
-      logger.warn(s"Duplicate definition of ${step.stepType}")
+    if (step.stepType.isDefined) {
+      if (_steps.contains(step.stepType.get)) {
+        logger.warn(s"Duplicate definition of ${step.stepType}")
+      }
+      _steps.put(step.stepType.get, step)
     }
-    _steps.put(step.stepType, step)
   }
 
   def stepTypes: Set[QName] = _steps.keySet.toSet

@@ -84,6 +84,15 @@
   <p:option name="document-properties" as="map(*)"/>
 </p:declare-step>
 
+<p:declare-step type="p:namespace-rename">
+  <p:input port="source" content-types="xml html"/>
+  <p:output port="result" content-types="xml html"/>
+  <p:option name="from" as="xs:anyURI"/>
+  <p:option name="to" as="xs:anyURI"/>
+  <p:option name="apply-to" as="xs:token" select="'all'"
+            values="('all','elements','attributes')"/>
+</p:declare-step>
+
 <p:declare-step type="p:parameters">
   <p:output port="result" content-types="application/xml"/>
   <p:option name="parameters" as="map(*)"/>
@@ -247,8 +256,22 @@
   <p:output port="result" sequence="true"/>
 </p:declare-step>
 
-<p:declare-step type="cx:filter">
+<p:declare-step type="cx:select-filter">
   <p:input port="source" sequence="true"/>
+  <p:output port="result" sequence="true"/>
+</p:declare-step>
+
+<p:declare-step type="cx:document-loader">
+  <p:input port="source" sequence="true"/>
+  <p:output port="result" sequence="true"/>
+</p:declare-step>
+
+<p:declare-step type="cx:inline-loader">
+  <p:input port="source" sequence="true"/>
+  <p:output port="result" sequence="true"/>
+</p:declare-step>
+
+<p:declare-step type="cx:empty-loader">
   <p:output port="result" sequence="true"/>
 </p:declare-step>
 

@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, ValueUtils, XProcCollectionFinder}
 import javax.xml.transform.{Result, SourceLocator}
 import net.sf.saxon.Controller
@@ -52,12 +52,12 @@ class Xslt extends DefaultXmlStep {
     }
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
+  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
     variable match {
-      case `_initial_mode` => initialMode = Some(ValueParser.parseQName(ValueUtils.singletonStringValue(value, context.location), context.staticContext))
-      case `_template_name` => templateName = Some(ValueParser.parseQName(ValueUtils.singletonStringValue(value, context.location), context.staticContext))
+      case `_initial_mode` => initialMode = Some(ValueParser.parseQName(ValueUtils.singletonStringValue(value, context.location), context))
+      case `_template_name` => templateName = Some(ValueParser.parseQName(ValueUtils.singletonStringValue(value, context.location), context))
       case `_output_base_uri` => outputBaseURI = Some(ValueUtils.singletonStringValue(value, context.location))
-      case `_parameters` => parameters = ValueParser.parseParameters(value, context.staticContext)
+      case `_parameters` => parameters = ValueParser.parseParameters(value, context)
       case `_version` => version = Some(ValueUtils.singletonStringValue(value, context.location))
       case _ =>
         logger.info("Ignoring unexpected option to p:xslt: " + variable)

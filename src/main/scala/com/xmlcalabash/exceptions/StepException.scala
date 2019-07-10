@@ -2,7 +2,7 @@ package com.xmlcalabash.exceptions
 
 import com.jafpl.exceptions.JafplExceptionCode
 import com.jafpl.graph.Location
-import com.xmlcalabash.runtime.ExpressionContext
+import com.xmlcalabash.runtime.StaticContext
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 object StepException {
@@ -79,13 +79,13 @@ class StepException(val code: QName) extends RuntimeException with JafplExceptio
     _location = location
   }
 
-  def this(code: QName, message: String, context: ExpressionContext) {
+  def this(code: QName, message: String, context: StaticContext) {
     this(code)
     _message = Some(message)
     _location = context.location
   }
 
-  def this(code: QName, context: ExpressionContext, errors: XdmNode) {
+  def this(code: QName, context: StaticContext, errors: XdmNode) {
     this(code)
     _location = context.location
     _errors = Some(errors)

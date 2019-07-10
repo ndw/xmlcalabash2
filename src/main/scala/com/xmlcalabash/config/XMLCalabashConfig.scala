@@ -6,17 +6,16 @@ import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode}
 import com.xmlcalabash.functions.{CwdShim, DocumentPropertiesDocumentShim, DocumentPropertiesShim, DocumentPropertyShim, ForceQNameKeysShim, InjElapsedShim, InjIdShim, InjNameShim, InjTypeShim, SystemPropertyShim}
+import com.xmlcalabash.model.xml.Library
 import com.xmlcalabash.model.util.{ExpressionParser, XProcConstants}
-import com.xmlcalabash.model.xml.containers.DeclarationContainer
-import com.xmlcalabash.model.xml.{DeclareStep, Library, Parser}
 import com.xmlcalabash.parsers.XPathParser
-import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XMLCalabashRuntime}
+import com.xmlcalabash.runtime.SaxonExpressionEvaluator
 import com.xmlcalabash.sbt.BuildInfo
-import com.xmlcalabash.util.{MediaType, S9Api, URIUtils}
+import com.xmlcalabash.util.{S9Api, URIUtils}
 import javax.xml.transform.URIResolver
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
-import net.sf.saxon.s9api.{Processor, QName, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Processor, QName, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.helpers.XMLReaderFactory
 import org.xml.sax.{EntityResolver, InputSource}
@@ -107,7 +106,8 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
     logger.debug(s"(release id: $productHash; episode: $episode; JAFPL version $jafplVersion)")
   }
 
-  def standardLibrary: Library = {
+  /*
+  def standardLibrary: ALibrary = {
     if (_standardLibrary.isEmpty) {
       val xmlbuilder = processor.newDocumentBuilder()
       val stream = getClass.getResourceAsStream("/standard-steps.xpl")
@@ -138,6 +138,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
       case _ => throw new RuntimeException(s"Don't know how to parse a $source")
     }
   }
+  */
 
   def debugOptions: XMLCalabashDebugOptions = _debugOptions
   def debugOptions_=(options: XMLCalabashDebugOptions): Unit = {

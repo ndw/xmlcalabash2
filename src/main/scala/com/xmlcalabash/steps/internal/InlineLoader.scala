@@ -4,80 +4,84 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.net.URI
 import java.util.Base64
 
-import com.jafpl.messages.{JoinGateMessage, Message}
-import com.jafpl.steps.PortCardinality
-import com.xmlcalabash.config.DocumentRequest
+import com.jafpl.messages.Message
+import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
+import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{BinaryNode, DynamicContext, ExpressionContext, SaxonExpressionEvaluator, XProcExpression, XProcMetadata, XProcVtExpression, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.runtime.params.InlineLoaderParams
+import com.xmlcalabash.runtime.{BinaryNode, ImplParams, StaticContext, XProcMetadata, XProcVtExpression, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api}
-import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class InlineLoader(private val baseURI: Option[URI],
-                   private val nodes: List[XdmNode],
-                   private val context: ExpressionContext,
-                   private val expandText: Boolean,
-                   private val excludeUriBindings: Set[String],
-                   private val declContentType: Option[MediaType],
-                   private val docPropsExpr: Option[String],
-                   private val encoding: Option[String]) extends DefaultStep {
-  private var docProps = Map.empty[QName, XdmItem]
+// N.B. This looks like a step, but it isn't really. It gets passed all of the variable bindings
+// and the context item and it evaluates its "options" directly. This is necessary because in
+// the case where this is a default binding, it must *not* evaluate its options if the default
+// is not used.
+
+class InlineLoader() extends AbstractLoader {
+  private var node: XdmNode = _
+  private var encoding = Option.empty[String]
+  private var exclude_inline_prefixes = Option.empty[String]
   private val excludeURIs = mutable.HashSet.empty[String]
-  private var latch = false
+  private var expandText = false
+  private var contextProvided = false
 
-  excludeURIs += XProcConstants.ns_p
-  for (uri <- excludeUriBindings) {
-    excludeURIs += uri
+  override def inputSpec: XmlPortSpecification = {
+    if (contextProvided) {
+      XmlPortSpecification.ANYSOURCESEQ
+    } else {
+      XmlPortSpecification.NONE
+    }
   }
-
-  override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
-    Map("latch"->PortCardinality.ZERO_OR_MORE),
-    Map("latch"->List("application/octet-stream")))
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULTSEQ
 
-  override def receive(port: String, message: Message): Unit = {
-    message match {
-      case msg: JoinGateMessage => Unit
-      case _ => latch = true
+  override def configure(config: XMLCalabashConfig, params: Option[ImplParams]): Unit = {
+    if (params.isEmpty) {
+      throw new RuntimeException("inline loader params required")
+    }
+
+    params.get match {
+      case doc: InlineLoaderParams =>
+        node = doc.document
+        content_type = doc.content_type
+        encoding = doc.encoding
+        _document_properties = doc.document_properties
+        exclude_inline_prefixes = doc.exclude_inline_prefixes
+        expandText = doc.expand_text
+        contextProvided = doc.context_provided
+        exprContext = doc.context
+      case _ =>
+        throw new RuntimeException("document loader params wrong type")
     }
   }
 
-  override def run(): Unit = {
-    if (latch) {
+  override def run(context: StaticContext): Unit = {
+    if (disabled) {
       return
     }
 
-    if (docPropsExpr.isDefined) {
-      val expr = new XProcXPathExpression(context, docPropsExpr.get)
-      val result = xpathValue(expr)
-      docProps = result match {
-        case map: XdmMap =>
-          ValueParser.parseDocumentProperties(map, location)
-        case _ =>
-          throw XProcException.xsBadTypeValue("document-properties", "map", location)
-      }
-    }
+    super.run(context)
 
-    var propContentType = if (docProps.contains(XProcConstants._content_type)) {
+    val propContentType = if (docProps.contains(XProcConstants._content_type)) {
       Some(MediaType.parse(docProps.get(XProcConstants._content_type).toString))
     } else {
       None
     }
 
-    val contentType = if (propContentType.isDefined) {
-      if (declContentType.isDefined) {
-        if (!declContentType.get.matches(propContentType.get)) {
-          throw XProcException.xdMismatchedContentType(declContentType.get, propContentType.get, location)
+    contentType = if (propContentType.isDefined) {
+      if (content_type.isDefined) {
+        if (!content_type.get.matches(propContentType.get)) {
+          throw XProcException.xdMismatchedContentType(content_type.get, propContentType.get, location)
         }
       }
       propContentType.get
     } else {
-      if (declContentType.isDefined) {
-        declContentType.get
+      if (content_type.isDefined) {
+        content_type.get
       } else {
         MediaType.XML
       }
@@ -94,100 +98,90 @@ class InlineLoader(private val baseURI: Option[URI],
 
     val props = mutable.HashMap.empty[QName, XdmItem]
     props ++= docProps
-
-    if (baseURI.isDefined) {
-      props.put(XProcConstants._base_uri, new XdmAtomicValue(baseURI.get))
-    }
+    props.put(XProcConstants._base_uri, new XdmAtomicValue(node.getBaseURI))
 
     // If it's not an XML content type, make sure it doesn't contain any elements
     if (!contentType.xmlContentType && !contentType.htmlContentType) {
-      for (node <- nodes.filter(_.getNodeKind != XdmNodeKind.TEXT)) {
-        throw XProcException.xdNoMarkupAllowed(location)
+      val iter = node.axisIterator(Axis.CHILD)
+      while (iter.hasNext) {
+        val child = iter.next()
+        child.getNodeKind match {
+          case XdmNodeKind.TEXT => Unit
+          case _ =>
+            throw XProcException.xdNoMarkupAllowed(location)
+        }
       }
     }
 
     if (encoding.isDefined) {
-      /* See https://github.com/xproc/3.0-specification/issues/561
-      if (expandText) {
-        throw XProcException.xsTvtForbidden(location)
-      }
-      */
+      // See https://github.com/xproc/3.0-specification/issues/561
       dealWithEncodedText(contentType, props)
       return
     }
 
     if (contentType.xmlContentType) {
-      val builder = new SaxonTreeBuilder(config.get)
-      builder.startDocument(baseURI)
+      val builder = new SaxonTreeBuilder(config)
+      builder.startDocument(node.getBaseURI)
       builder.startContent()
-      for (node <- trim(nodes)) {
-        expandTVT(node, builder, expandText)
-      }
+      // FIXME: trim whitespace
+      expandTVT(node, builder, expandText)
       builder.endDocument()
       val result = builder.result
       val metadata = new XProcMetadata(contentType, props.toMap)
-      val message = new XdmNodeItemMessage(result, metadata)
-      consumer.get.receive("result", message)
+      consumer.get.receive("result", result, metadata)
     } else if (contentType.htmlContentType) {
-      val builder = new SaxonTreeBuilder(config.get)
-      builder.startDocument(baseURI)
+      val builder = new SaxonTreeBuilder(config)
+      builder.startDocument(node.getBaseURI)
       builder.startContent()
-      for (node <- trim(nodes)) {
-        expandTVT(node, builder, expandText)
-      }
+      // FIXME: trim whitespace
+      expandTVT(node, builder, expandText)
       builder.endDocument()
       val result = builder.result
 
       val baos = new ByteArrayOutputStream()
-      val serializer = config.get.config.processor.newSerializer(baos)
-      S9Api.serialize(config.get.config, result, serializer)
+      val serializer = config.config.processor.newSerializer(baos)
+      S9Api.serialize(config.config, result, serializer)
       val stream = new ByteArrayInputStream(baos.toByteArray)
 
-      val request = new DocumentRequest(baseURI.getOrElse(new URI("")), contentType, location)
-      val response = config.get.documentManager.parse(request, stream)
+      val request = new DocumentRequest(node.getBaseURI, contentType, location)
+      val response = config.documentManager.parse(request, stream)
       val metadata = new XProcMetadata(response.contentType, response.props)
 
       response.value match {
         case node: XdmNode =>
-          consumer.get.receive("result", new XdmNodeItemMessage(node, metadata))
+          consumer.get.receive("result", node, metadata)
         case _ =>
           throw new RuntimeException("Unexpected node type from parseHtml")
       }
     } else {
       val text = if (expandText) {
-        val builder = new SaxonTreeBuilder(config.get)
-        builder.startDocument(baseURI)
+        val builder = new SaxonTreeBuilder(config)
+        builder.startDocument(node.getBaseURI)
         builder.startContent()
-        for (node <- nodes) {
-          expandTVT(node, builder, expandText)
-        }
+        expandTVT(node, builder, expandText)
         builder.endDocument()
         val result = builder.result
         // No sneaky poking an element in there!
         val iter = result.axisIterator(Axis.CHILD)
         while (iter.hasNext) {
-          val child = iter.next.asInstanceOf[XdmNode]
+          val child = iter.next()
           if (child.getNodeKind != XdmNodeKind.TEXT) {
             throw XProcException.xsInvalidNodeType(child.getNodeKind.toString, location)
           }
         }
         result.getStringValue
       } else {
-        var str = ""
-        for (node <- nodes) {
-          str += node.getStringValue
-        }
-        str
+        node.getStringValue
       }
 
       if (contentType.jsonContentType) {
-        val expr = new XProcXPathExpression(ExpressionContext.NONE, "parse-json($json)")
+        val expr = new XProcXPathExpression(context, "parse-json($json)")
         val bindingsMap = mutable.HashMap.empty[String, Message]
-        val vmsg = new XdmValueItemMessage(new XdmAtomicValue(text), XProcMetadata.JSON, ExpressionContext.NONE)
+        val vmsg = new XdmValueItemMessage(new XdmAtomicValue(text), XProcMetadata.JSON, context)
         bindingsMap.put("{}json", vmsg)
         try {
-          val smsg = config.get.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap)
-          consumer.get.receive("result", new XdmValueItemMessage(smsg.item, new XProcMetadata(contentType, props.toMap)))
+          val smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+          consumer.get.receive("result", smsg.item, new XProcMetadata(contentType, props.toMap))
         } catch {
           case ex: SaxonApiException =>
             if (ex.getMessage.contains("Invalid JSON")) {
@@ -201,21 +195,49 @@ class InlineLoader(private val baseURI: Option[URI],
       } else if (contentType.textContentType) {
         props.put(XProcConstants._content_length, new XdmAtomicValue(text.length))
 
-        val builder = new SaxonTreeBuilder(config.get)
-        builder.startDocument(baseURI)
+        val builder = new SaxonTreeBuilder(config)
+        builder.startDocument(node.getBaseURI)
         builder.startContent()
         builder.addText(text)
         builder.endDocument()
         val result = builder.result
-        consumer.get.receive("result", new XdmNodeItemMessage(result, new XProcMetadata(contentType, props.toMap)))
+        consumer.get.receive("result", result, new XProcMetadata(contentType, props.toMap))
       } else {
         throw new IllegalArgumentException(s"Unexected content type: $contentType")
       }
     }
   }
 
+  private def dealWithEncodedText(contentType: MediaType, props: mutable.HashMap[QName, XdmItem]): Unit = {
+    var str = node.getStringValue
+    val decoded = Base64.getMimeDecoder.decode(str)
+
+    val metadata = new XProcMetadata(contentType, props.toMap)
+
+    if (contentType.xmlContentType || contentType.htmlContentType || contentType.textContentType || contentType.jsonContentType) {
+      val req = new DocumentRequest(metadata.baseURI.getOrElse(new URI("")), contentType)
+      val result = config.documentManager.parse(req, new ByteArrayInputStream(decoded))
+      if (result.shadow.isDefined) {
+        val binary = new BinaryNode(config, result.shadow)
+        consumer.get.receive("result", binary, metadata)
+      } else {
+        result.value match {
+          case node: XdmNode =>
+            consumer.get.receive("result", node, metadata)
+          case _ =>
+            consumer.get.receive("result", result.value, metadata)
+        }
+      }
+    } else {
+      // Octet stream, I guess
+      props.put(XProcConstants._content_length, new XdmAtomicValue(decoded.length))
+      val binary = new BinaryNode(config, decoded)
+      consumer.get.receive("result", binary, new XProcMetadata(contentType, props.toMap))
+    }
+  }
+
   private def trim(nodes: List[XdmNode]): List[XdmNode] = {
-    if (config.get.trimInlineWhitespace) {
+    if (config.trimInlineWhitespace) {
       var count = 1
       var trimmed = ListBuffer.empty[XdmNode]
       trimmed ++= nodes
@@ -235,50 +257,19 @@ class InlineLoader(private val baseURI: Option[URI],
     }
   }
 
-  private def dealWithEncodedText(contentType: MediaType, props: mutable.HashMap[QName, XdmItem]): Unit = {
-    var str = ""
-    for (node <- nodes) {
-      str += node.getStringValue
-    }
-    val decoded = Base64.getMimeDecoder.decode(str)
-
-    val metadata = new XProcMetadata(contentType, props.toMap)
-
-    if (contentType.xmlContentType || contentType.htmlContentType || contentType.textContentType || contentType.jsonContentType) {
-      val req = new DocumentRequest(metadata.baseURI.getOrElse(new URI("")), contentType)
-      val result = config.get.documentManager.parse(req, new ByteArrayInputStream(decoded))
-      if (result.shadow.isDefined) {
-        val binary = new BinaryNode(config.get, result.shadow)
-        consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), binary, metadata))
-      } else {
-        result.value match {
-          case node: XdmNode =>
-            consumer.get.receive("result", new XdmNodeItemMessage(node, metadata))
-          case _ =>
-            consumer.get.receive("result", new XdmValueItemMessage(result.value, metadata))
-        }
-      }
-    } else {
-      // Octet stream, I guess
-      props.put(XProcConstants._content_length, new XdmAtomicValue(decoded.length))
-      val binary = new BinaryNode(config.get, decoded)
-      consumer.get.receive("result", new AnyItemMessage(S9Api.emptyDocument(config.get), binary, new XProcMetadata(contentType, props.toMap)))
-    }
-  }
-
   private def expandTVT(node: XdmNode, builder: SaxonTreeBuilder, expandText: Boolean): Unit = {
     node.getNodeKind match {
       case XdmNodeKind.DOCUMENT =>
         val iter = node.axisIterator(Axis.CHILD)
         while (iter.hasNext) {
-          val child = iter.next().asInstanceOf[XdmNode]
+          val child = iter.next()
           expandTVT(child, builder, expandText)
         }
       case XdmNodeKind.ELEMENT =>
         builder.addStartElement(node.getNodeName)
         var iter = node.axisIterator(Axis.NAMESPACE)
         while (iter.hasNext) {
-          val ns = iter.next().asInstanceOf[XdmNode]
+          val ns = iter.next()
           if (!excludeURIs.contains(ns.getStringValue)) {
             val prefix = if (Option(ns.getNodeName).isDefined) {
               ns.getNodeName.getLocalName
@@ -292,7 +283,7 @@ class InlineLoader(private val baseURI: Option[URI],
         iter = node.axisIterator(Axis.ATTRIBUTE)
         while (iter.hasNext) {
           var discardAttribute = false
-          val attr = iter.next().asInstanceOf[XdmNode]
+          val attr = iter.next()
           if (attr.getNodeName == XProcConstants.p_inline_expand_text) {
             if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
               throw XProcException.xsInlineExpandTextNotAllowed(location)
@@ -316,7 +307,7 @@ class InlineLoader(private val baseURI: Option[URI],
         }
         iter = node.axisIterator(Axis.CHILD)
         while (iter.hasNext) {
-          val child = iter.next().asInstanceOf[XdmNode]
+          val child = iter.next()
           expandTVT(child, builder, newExpand)
         }
         builder.addEndElement()
@@ -333,11 +324,11 @@ class InlineLoader(private val baseURI: Option[URI],
   }
 
   private def expandString(text: String): String = {
-    val evaluator = config.get.expressionEvaluator
-    val expr = new XProcVtExpression(context, text)
+    val evaluator = config.expressionEvaluator
+    val expr = new XProcVtExpression(exprContext, text)
     var s = ""
     var string = ""
-    val iter = evaluator.value(expr, List.empty[Message], config.get.runtimeBindings(bindings.toMap)).item.iterator()
+    val iter = evaluator.value(expr, contextItem.toList, config.runtimeBindings(msgBindings.toMap), None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
       string = string + s + next.getStringValue
@@ -347,10 +338,10 @@ class InlineLoader(private val baseURI: Option[URI],
   }
 
   private def expandNodes(text: String, builder: SaxonTreeBuilder): Unit = {
-    val evaluator = config.get.expressionEvaluator
-    val expr = new XProcVtExpression(context, text)
+    val evaluator = config.expressionEvaluator
+    val expr = new XProcVtExpression(exprContext, text)
 
-    val iter = evaluator.value(expr, List.empty[Message], config.get.runtimeBindings(bindings.toMap)).item.iterator()
+    val iter = evaluator.value(expr, List.empty[Message], config.runtimeBindings(msgBindings.toMap), None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
       next match {
@@ -358,12 +349,5 @@ class InlineLoader(private val baseURI: Option[URI],
         case _ => builder.addText(next.getStringValue)
       }
     }
-  }
-
-  def xpathValue(expr: XProcExpression): XdmValue = {
-    val eval = config.get.expressionEvaluator.asInstanceOf[SaxonExpressionEvaluator]
-    val dynContext = new DynamicContext()
-    val msg = eval.withContext(dynContext) { eval.singletonValue(expr, List.empty[Message], bindings.toMap) }
-    msg.asInstanceOf[XdmValueItemMessage].item
   }
 }

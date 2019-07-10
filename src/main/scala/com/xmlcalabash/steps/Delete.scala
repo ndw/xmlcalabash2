@@ -2,9 +2,7 @@ package com.xmlcalabash.steps
 
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
-import net.sf.saxon.s9api.{QName, XdmNode, XdmNodeKind}
-
-import scala.collection.mutable.ListBuffer
+import net.sf.saxon.s9api.{QName, XdmNode}
 
 class Delete() extends DefaultXmlStep  with ProcessMatchingNodes {
   private val _position = new QName("", "position")

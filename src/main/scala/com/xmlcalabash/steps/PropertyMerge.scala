@@ -3,6 +3,7 @@ package com.xmlcalabash.steps
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
+import com.xmlcalabash.model.xml.XMLContext
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmNode, XdmNodeKind, XdmValue}
@@ -40,7 +41,7 @@ class PropertyMerge extends DefaultXmlStep {
           pnode.getNodeKind match {
             case XdmNodeKind.ELEMENT =>
               if (pnode.getNodeName == XProcConstants.c_document_properties) {
-                prop = Some(extractProperties(pnode))
+                prop = Some(extractProperties(staticContext, pnode))
               } else {
                 throw XProcException.xiMergeBadRoot(pnode.getNodeName, location)
               }
@@ -59,7 +60,7 @@ class PropertyMerge extends DefaultXmlStep {
     consumer.get.receive("result", sourceDoc.get, newmeta)
   }
 
-  private def extractProperties(node: XdmNode): Map[QName,XdmValue] = {
+  private def extractProperties(context: StaticContext, node: XdmNode): Map[QName,XdmValue] = {
     val prop = mutable.HashMap.empty[QName,XdmValue]
 
    val piter = node.axisIterator(Axis.CHILD)
@@ -75,8 +76,8 @@ class PropertyMerge extends DefaultXmlStep {
           val vtypestr = Option(pnode.getAttributeValue(XProcConstants.xsi_type))
           val vtype = if (vtypestr.isDefined) {
             val ns = S9Api.inScopeNamespaces(pnode)
-            val scontext = new StaticContext()
-            scontext.inScopeNS = ns
+            val scontext = new XMLContext(config.config)
+            scontext.nsBindings = ns
             if (location.isDefined) {
               scontext.location = location.get
             }
@@ -136,8 +137,8 @@ class PropertyMerge extends DefaultXmlStep {
                 case XProcConstants.xs_anyURI =>
                   prop.put(name, new XdmAtomicValue(strvalue))
                 case XProcConstants.xs_QName =>
-                  val scontext = new StaticContext()
-                  scontext.inScopeNS = S9Api.inScopeNamespaces(node)
+                  val scontext = new XMLContext(config.config)
+                  scontext.nsBindings = S9Api.inScopeNamespaces(node)
                   if (location.isDefined) {
                     scontext.location = location.get
                   }

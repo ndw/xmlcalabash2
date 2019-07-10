@@ -1,15 +1,14 @@
 package com.xmlcalabash.steps
 
-import java.io.{File, FileOutputStream, InputStream}
+import java.io.{FileOutputStream, InputStream}
 import java.net.URI
-import java.util.Base64
 
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.ma.map.MapItem
-import net.sf.saxon.s9api.{QName, Serializer, XdmMap, XdmNode}
+import net.sf.saxon.s9api.{QName, Serializer, XdmNode}
 
 import scala.collection.mutable
 

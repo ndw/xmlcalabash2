@@ -6,6 +6,9 @@ for which the `test` condition returns true. If no p:when alternatives are
 selected, a p:otherwise must be present. This error is raised if the
 p:choose does not contain a selected p:when or a p:otherwise.
 
+XD0001
+No context item for “$1”. $2.
+
 XD0006
 A sequence of documents is not allowed on the “$1” input port.
 
@@ -21,8 +24,14 @@ There is no in-scope namespace for the QName “$1”.
 XD0016
 Invalid selection, “$1” selects $2.
 
-XD0019
+XD0019/1
 Invalid value specified: “$1”. Value must be of type “$2”: $3.
+
+XD0019/2
+Invalid match pattern “$1”: $2
+
+XD0019/3
+Invalid visibility: “$1” (Must be “public” or “private”.)
 
 XD0011
 File not found: “$1”
@@ -114,7 +123,16 @@ Duplicate port name: ‘$1’
 XS0018
 The option named “$1” is required, but no value was provided for it.
 
-XS0022
+XS0022/1
+There’s no step named “$1” visible from here.
+
+XS0022/2
+There’s no primary output port on the step named “$1”.
+
+XS0022/3
+There’s no primary input port on the containing step named “$1”.
+
+XS0022/4
 The port “$2” on “$1” is not readable from here.
 
 XS0030
@@ -141,6 +159,15 @@ Pipe has no port and step has no primary output port
 XS0069
 The encoding “$1” is not supported.
 The only encoding supported is “base64”.
+
+XS0060
+Unacceptable version; XProc version “$1” is not supported.
+
+XS0062
+The version attribute is required on the root element.
+
+XS0063
+Invalid version, “$1” is not a decimal number.
 
 XS0070
 It is an error to specify an encoding, “$1”, if the content type is an XML media type: “$2”.
@@ -172,6 +199,9 @@ If a pipe attribute is present, no other data bindings may be specified.
 XS0085
 The pipe and href attributes may not both be specified.
 
+XS0086
+More than one p:with-input for the same port: “$1”
+
 XS0089
 If a p:empty binding is used, it must be the only binding.
 
@@ -181,7 +211,10 @@ Invalid pipe attribute value: “$1”; must be port, port@step, or @step.
 XS0096
 Invalid sequence type: “$1”. $2.
 
-XS0100
+XS0100/1
+Invalid pipeline: $1.
+
+XS0100/2
 XProc element not allowed here: “$1”
 
 XS0107/1
@@ -189,6 +222,9 @@ No binding in expression: “$1”
 
 XS0107/2
 Static error in expression “$1”: $2
+
+XS0108
+It is a static error if a p:if does not specify a primary output port.
 
 XC0023
 Bad pattern: “$1”. Matches $2 node where it must only match elements.
@@ -223,11 +259,8 @@ Validity error in “$1” at line $2, column $3: $4
 XC0053
 Validity error in “$1”: $2
 
-XS0100
-The element named “$1” is not allowed: $2.
-
-XS0108
-It is a static error if a p:if does not specify a primary output port.
+XC0092
+Attribute name collision: “$1”
 
 {http://xmlcalabash.com/ns/extensions}XI0016
 No input specified for pipeline port “$1”.

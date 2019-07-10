@@ -2,6 +2,7 @@ package com.xmlcalabash.steps
 
 import java.io.ByteArrayInputStream
 
+import com.xmlcalabash.model.xml.XMLContext
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType

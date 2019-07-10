@@ -1,6 +1,6 @@
 package com.xmlcalabash.steps
 
-import com.xmlcalabash.exceptions.{StepException, XProcException}
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
@@ -40,8 +40,8 @@ class WrapSequence extends DefaultXmlStep {
         wrapper = new QName(bindings(_wrapper_namespace).getStringValue, name)
       }
     } else {
-      val scontext = new StaticContext()
-      scontext.inScopeNS = bindings(_wrapper).context.nsBindings
+      val scontext = new StaticContext(staticContext)
+      scontext.nsBindings = bindings(_wrapper).context.nsBindings
       if (location.isDefined) {
         scontext.location = location.get
       }

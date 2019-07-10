@@ -4,8 +4,9 @@ import com.jafpl.messages.Message
 import com.xmlcalabash.config.{XMLCalabashConfig, XMLCalabashDebugOptions}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
+import com.xmlcalabash.model.xml.XMLContext
 import com.xmlcalabash.model.util.ValueParser
-import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XProcXPathExpression}
 import net.sf.saxon.lib.NamespaceConstant
 import net.sf.saxon.s9api.{ItemTypeFactory, QName, XdmAtomicValue}
 
@@ -53,7 +54,8 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
     // -jinjectable | --inject injectable
     // --raw
     // -G | --graph output.xml
-    // --graph-before output.xml
+    // --graph-step qname
+    // --graph-type pipeline|graph|opengraph
     // --norun
     // -D | --debug
     // param=string value
@@ -76,9 +78,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
           }
           pos += 2
         case paramRegex(kind, name, value) =>
-          val scontext = new StaticContext()
-          scontext.inScopeNS = _nsbindings.toMap
-          val context = new ExpressionContext(scontext)
+          val scontext = new XMLContext(xmlCalabash, None, _nsbindings.toMap, None)
           val qname = ValueParser.parseQName(name, scontext)
           if (_params.contains(qname)) {
             throw XProcException.xiArgBundleRedefined(qname)
@@ -87,7 +87,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
           kind match {
             case "+" =>
               val node = xmlCalabash.parse(value, URIUtils.cwdAsURI)
-              _params.put(qname, new XProcVarValue(node, context))
+              _params.put(qname, new XProcVarValue(node, scontext))
             case "?" =>
               val paramBind = mutable.HashMap.empty[String, Message]
               for ((qname, value) <- _params) {
@@ -96,16 +96,16 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
                 paramBind.put(clark, msg)
               }
 
-              val expr = new XProcXPathExpression(context, value)
-              val msg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), paramBind.toMap)
+              val expr = new XProcXPathExpression(scontext, value)
+              val msg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), paramBind.toMap, None)
               val eval = msg.asInstanceOf[XdmValueItemMessage].item
 
-              _params.put(qname, new XProcVarValue(eval, context))
+              _params.put(qname, new XProcVarValue(eval, scontext))
             case null =>
               // Ordinary parameters are created as 'untypedAtomic' values so that numbers
               // can be treated as numbers, etc.
               val untypedValue = new XdmAtomicValue(value, untypedAtomic)
-              _params.put(qname, new XProcVarValue(untypedValue, context))
+              _params.put(qname, new XProcVarValue(untypedValue, scontext))
             case _ =>
               throw XProcException.xiArgBundlePfxChar(kind)
           }
@@ -116,9 +116,22 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
               case "verbose" => _verbose = true
               case "norun" => _debugOptions.norun = true
               case "debug" => _debugOptions.debug = true
-              case "graph" => _debugOptions.dumpGraph = true
-              case "graph-before" => _debugOptions.dumpOpenGraph = true
-              case "dump-xml" => xmlCalabash.debugOptions.dumpXml = true
+              case "graph" =>
+                _debugOptions.dumpGraph = Some(args(pos + 1))
+                pos += 1
+              case "graph-step" =>
+                throw new RuntimeException("Not implemented yet")
+                pos += 1
+              case "graph-type" =>
+                val rest = args(pos+1)
+                rest match {
+                  case "pipeline" => _debugOptions.dumpGraphType = rest
+                  case "graph" => _debugOptions.dumpGraphType = rest
+                  case "jafpl" => _debugOptions.dumpGraphType = rest
+                  case "jafplopen" => _debugOptions.dumpGraphType = rest
+                  case _ => throw XProcException.xiArgBundleCannotParseGraphType(s"--graph-type $rest")
+                }
+                pos += 1
               case "inject" =>
                 _injectables += args(pos+1)
                 pos += 1
@@ -177,7 +190,9 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
                 ch match {
                   case 'v' => _verbose = true
                   case 'D' => _debugOptions.debug = true
-                  case 'G' => _debugOptions.dumpGraph = true
+                  case 'G' =>
+                    _debugOptions.dumpGraph = Some(args(pos + 1))
+                    pos += 1
                   case 'i' =>
                     val rest = chars.substring(chpos + 1)
                     val eqpos = rest.indexOf("=")

@@ -11,7 +11,7 @@ import com.xmlcalabash.config.{DocumentManager, DocumentRequest, DocumentRespons
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XProcXPathExpression}
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmValue}
@@ -262,11 +262,12 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       val encoding = contentType.charset.getOrElse("UTF-8") // FIXME: What should the default be?
       val bytes = streamToByteArray(stream)
 
-      val expr = new XProcXPathExpression(ExpressionContext.NONE, "parse-json($json)")
+      val context = new StaticContext(xmlCalabash)
+      val expr = new XProcXPathExpression(context, "parse-json($json)")
       val bindingsMap = mutable.HashMap.empty[String, Message]
-      val vmsg = new XdmValueItemMessage(new XdmAtomicValue(new String(bytes, encoding)), XProcMetadata.JSON, ExpressionContext.NONE)
+      val vmsg = new XdmValueItemMessage(new XdmAtomicValue(new String(bytes, encoding)), XProcMetadata.JSON, context)
       bindingsMap.put("{}json", vmsg)
-      val smsg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap)
+      val smsg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
       new DocumentResponse(smsg.item, contentType, props)
 
     } else if (contentType.textContentType) {

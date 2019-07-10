@@ -3,8 +3,8 @@ package com.xmlcalabash.config
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileOutputStream, PrintStream, PrintWriter}
 
 import com.jafpl.graph.Graph
-import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.DeclareStep
+import com.xmlcalabash.model.util.XProcConstants
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{QName, XdmDestination}
 import org.slf4j.{Logger, LoggerFactory}
@@ -23,10 +23,9 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
   private val filenames = mutable.HashSet.empty[String]
   private val _injectables = ListBuffer.empty[String]
 
-  var dumpXml = false
-  var dumpOpenGraph = false
-  var dumpGraph = false
-  var dumpRaw = false
+  var dumpGraphStep = Option.empty[QName]
+  var dumpGraphType = "graph"
+  var dumpGraph = Option.empty[String]
   var norun: Boolean = false
   var debug: Boolean = false
   var _graphviz_dot = Option.empty[String]
@@ -44,71 +43,73 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
 
   // ===========================================================================================
 
-  private def baseName(decl: DeclareStep, kind: QName, ext: String): String = {
-    val dumpFn = decl.extensionAttribute(kind)
-    val baseName = if (dumpFn.isDefined) {
-      dumpFn.get
-    } else {
-      var fn = if (decl.name.startsWith("!")) {
-        decl.name.substring(1).replace(".", "_")
-      } else {
-        decl.name
-      }
+  def dumpGraph(decl: DeclareStep): Unit = {
+    if (dumpGraph.isDefined)
+      dumpGraphType match {
+        case "graph" =>
+          graphPipeline(decl, dumpGraph.get)
+        case "pipeline" =>
+          dumpPipeline(decl, dumpGraph.get)
+        case _ => Unit
+    }
+  }
 
-      fn = fn + "-" + kind
-
-      if (filenames.contains(fn)) {
-        fn + "-" + decl.hashCode().toHexString
-      } else {
-        filenames += fn
-        fn
-      }
+  def dumpGraph(graph: Graph, open: Boolean): Unit = {
+    if (dumpGraph.isEmpty) {
+      return
     }
 
-    if (baseName.endsWith(ext)) {
+    if (open) {
+      if (dumpGraphType == "opengraph") {
+        graphGraph(graph, dumpGraph.get)
+      }
+    } else {
+      if (dumpGraphType == "graph") {
+        graphGraph(graph, dumpGraph.get)
+      }
+    }
+  }
+
+  private def dumpPipeline(decl: DeclareStep, baseName: String): Unit = {
+    val fn = if (baseName.contains(".")) {
       baseName
     } else {
-      baseName + ext
+      baseName + ".xml"
     }
+
+    val fos = new FileOutputStream(new File(fn))
+    var pw = new PrintWriter(fos)
+    pw.write(decl.xdump.toString)
+    pw.close()
+    fos.close()
   }
 
-  def dumpGraph(graph: Graph, decl: DeclareStep): Unit = {
-    if (!dumpGraph) {
-      return
+  private def graphGraph(graph: Graph, baseName: String): Unit = {
+    val fn = if (baseName.contains(".")) {
+      baseName
+    } else {
+      baseName + ".svg"
     }
-
-
-    val fn = baseName(decl, cx_graph, ".svg")
-    logger.debug("Dumping graph of " + decl.name + " to: " + fn)
 
     val baos = new ByteArrayOutputStream()
     var pw = new PrintWriter(baos)
     pw.write(graph.asXML.toString)
     pw.close()
-
     svgGraph(fn, baos)
-/*
-    val xfn = baseName(decl, cx_graph, ".xml")
-    pw = new PrintWriter(new File(xfn))
-    pw.write(graph.asXML.toString)
-    pw.close()
-*/
   }
 
-  def dumpOpenGraph(graph: Graph, decl: DeclareStep): Unit = {
-    if (!dumpOpenGraph) {
-      return
+  private def graphPipeline(decl: DeclareStep, baseName: String): Unit = {
+    val fn = if (baseName.contains(".")) {
+      baseName
+    } else {
+      baseName + ".svg"
     }
-
-    val fn = baseName(decl, cx_open_graph, ".svg")
-    logger.debug("Dumping open graph of " + decl.name + " to: " + fn)
 
     val baos = new ByteArrayOutputStream()
     var pw = new PrintWriter(baos)
-    pw.write(graph.asXML.toString)
+    pw.write(decl.xdump.toString)
     pw.close()
-
-    svgGraph(fn, baos)
+    svgPipeline(fn, baos)
   }
 
   private def svgGraph(fn: String, xmlBaos: ByteArrayOutputStream): Unit = {
@@ -155,25 +156,74 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
     temp.delete()
   }
 
-  def dumpXml(decl: DeclareStep): Unit = {
-    if (!dumpXml) {
+  private def svgPipeline(fn: String, xmlBaos: ByteArrayOutputStream): Unit = {
+    if (config.debugOptions.graphviz_dot.isEmpty) {
+      logger.error(s"GraphViz dot not configured, cannot dump $fn.")
       return
     }
 
-    val fn = baseName(decl, cx_xml, ".xml")
-    logger.debug("Dumping XML of " + decl.name + " to: " + fn)
-    val pw = new PrintWriter(new File(fn))
-    pw.write(decl.asXML.toString)
+    // FIXME: Make this into a pipeline!
+
+    val processor = config.processor
+
+    // Get the source node
+    val bais = new ByteArrayInputStream(xmlBaos.toByteArray)
+    val builder = processor.newDocumentBuilder()
+    val graphdoc = builder.build(new SAXSource(new InputSource(bais)))
+
+    // Get the first stylesheet
+    var stylesheet = getClass.getResourceAsStream("/com/xmlcalabash/stylesheets/pl2dot.xsl")
+    var compiler = processor.newXsltCompiler()
+    compiler.setSchemaAware(processor.isSchemaAware)
+    var exec = compiler.compile(new SAXSource(new InputSource(stylesheet)))
+
+    // Transform to dot: XML
+    var transformer = exec.load()
+    transformer.setInitialContextNode(graphdoc)
+    var result = new XdmDestination()
+    transformer.setDestination(result)
+    transformer.transform()
+    var xformed = result.getXdmNode
+
+    // Get the second stylesheet
+    stylesheet = getClass.getResourceAsStream("/com/xmlcalabash/stylesheets/dot2txt.xsl")
+    compiler = processor.newXsltCompiler()
+    compiler.setSchemaAware(processor.isSchemaAware)
+    exec = compiler.compile(new SAXSource(new InputSource(stylesheet)))
+
+    // Transform to dot
+    transformer = exec.load()
+    transformer.setInitialContextNode(xformed)
+    result = new XdmDestination()
+    transformer.setDestination(result)
+    transformer.transform()
+    xformed = result.getXdmNode
+
+    // Write the DOT file to a temp file
+    val temp = File.createTempFile("calabash", ".dot")
+    temp.deleteOnExit()
+    val dot = new FileOutputStream(temp)
+    val pw = new PrintWriter(dot)
+    pw.println(xformed.getStringValue)
     pw.close()
+
+    // Transform it into SVG
+    val rt = Runtime.getRuntime
+    val args = Array("/usr/local/bin/dot", "-Tsvg", temp.getAbsolutePath, "-o", fn)
+    val p = rt.exec(args)
+    p.waitFor()
+
+    temp.delete()
   }
 
+  /*
   def dumpRaw(graph: Graph, decl: DeclareStep): Unit = {
     if (!dumpRaw) {
       return
     }
 
     val fn = baseName(decl, cx_raw, ".xml")
-    logger.debug("Dumping raw graph of " + decl.name + " to: " + fn)
+    logger.debug("Dumping raw graph of " + decl.stepName + " to: " + fn)
 
     val stdout = new FileOutputStream(new File(fn))
     val psout = new PrintStream(stdout)
@@ -181,4 +231,5 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
       graph.dump()
     }
   }
+   */
 }

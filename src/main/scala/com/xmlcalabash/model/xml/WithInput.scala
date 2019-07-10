@@ -1,170 +1,153 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{Graph, Node}
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
+import com.jafpl.graph.Node
+import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.model.xml.containers.{ForEach, When}
-import com.xmlcalabash.model.xml.datasource.{DataSource, Document, Empty, Inline}
-import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime, XProcXPathExpression}
+import com.xmlcalabash.runtime.params.SelectFilterParams
+import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime}
+import com.xmlcalabash.util.xc.ElaboratedPipeline
+import net.sf.saxon.s9api.XdmNode
 
-import scala.collection.mutable.ListBuffer
+class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
+  private var _exclude_inline_prefixes = List.empty[String]
+  private var _context: StaticContext = _
 
-class WithInput(override val config: XMLCalabashRuntime,
-                override val parent: Option[Artifact]) extends Input(config, parent) {
+  def exclude_inline_prefixes: List[String] = _exclude_inline_prefixes
 
-  protected[xml] def this(config: XMLCalabashRuntime, parent: Artifact, port: String) {
-    this(config, Some(parent))
-    _port = Some(port)
-  }
+  override def parse(node: XdmNode): Unit = {
+    super.parse(node)
 
-  override def validate(): Boolean = {
-    // Not super.validate() because Input has more attributes than WithInput
-    var valid = true
-
-    // Repeat what Artifact.validate() does.
-    if (attributes.contains(XProcConstants._expand_text)) {
-      expandText = lexicalBoolean(attributes.get(XProcConstants._expand_text)).get
-    } else {
-      if (parent.isDefined) {
-        expandText = parent.get.expandText
-      } else {
-        expandText = true
-      }
+    if (attributes.contains(XProcConstants._port)) {
+      _port = staticContext.parseNCName(attr(XProcConstants._port)).get
     }
+    _context = new StaticContext(config, node)
+    _select = attr(XProcConstants._select)
 
-    // The contents of p:inline are never parsed as Artifacts, so we can check this here
-    if ((nodeName.getNamespaceURI == XProcConstants.ns_p && attributes.contains(XProcConstants._inline_expand_text))
-      || (nodeName.getNamespaceURI != XProcConstants.ns_p && attributes.contains(XProcConstants.p_inline_expand_text))) {
-      throw XProcException.xsInlineExpandTextNotAllowed(location)
-    }
-
-    _sequence = None
-    _primary = None
-
-    _port = attributes.get(XProcConstants._port)
-    if (_port.isEmpty) {
-      if (parent.get.isInstanceOf[When]) {
-        _port = Some("#source")
-      }
-      if (parent.get.isInstanceOf[ForEach]) {
-        _port = Some("source") // FIXME: should be anon?
-      }
-    }
-
-    _select = attributes.get(XProcConstants._select)
-    if (_select.isDefined) {
-      val context = new ExpressionContext(staticContext)
-      _expression = Some(new XProcXPathExpression(context, _select.get))
-    }
-
-    val href = attributes.get(XProcConstants._href)
-    val pipe = attributes.get(XProcConstants._pipe)
-
-    for (key <- List(XProcConstants._port, XProcConstants._select, XProcConstants._pipe, XProcConstants._href)) {
-      if (attributes.contains(key)) {
-        attributes.remove(key)
-      }
-    }
+    _href = attr(XProcConstants._href)
+    _pipe = attr(XProcConstants._pipe)
 
     if (attributes.nonEmpty) {
-      val key = attributes.keySet.head
-      throw new ModelException(ExceptionCode.BADATTR, key.toString, location)
+      val badattr = attributes.keySet.head
+      throw XProcException.xsBadAttribute(badattr, location)
     }
+  }
 
-    var hasDataSources = false
-    var emptyCount = 0
-    var nonEmptyCount = 0
-    var hasImplicit = false
-    var hasExplicit = false
-    for (child <- children) {
-      child match {
-        case ds: DataSource =>
-          hasDataSources = true
-          valid = valid && child.validate()
-          child match {
-            case inline: Inline =>
-              hasImplicit = hasImplicit || inline.isImplicit
-              hasExplicit = hasExplicit || !inline.isImplicit
-              nonEmptyCount += 1
-            case empty: Empty =>
-              emptyCount += 1
-              hasExplicit = true
+  override protected[model] def makeBindingsExplicit(env: Environment, drp: Option[Port]): Unit = {
+    super.makeBindingsExplicit(env, drp)
+
+    if (allChildren.isEmpty) {
+      if (drp.isDefined) {
+        val pipe = new Pipe(config)
+        pipe.port = drp.get.port
+        pipe.step = drp.get.step.stepName
+        pipe.link = drp.get
+        addChild(pipe)
+      } else {
+        // This is err:XS0032 unless it's a special case
+        var raiseError = true
+
+        if (synthetic) {
+          // All the special cases involve synthetic elements
+
+          parent.get match {
+            case choose: Choose => raiseError = false
+            case when: When => raiseError = false
+            case otherwise: Otherwise => raiseError = false
             case _ =>
-              nonEmptyCount += 1
-              hasExplicit = true
+              if (parent.get.parent.isDefined
+                && parent.get.parent.get.synthetic
+                && parent.get.parent.get.isInstanceOf[Otherwise]) {
+                raiseError = false
+              }
           }
-          if (hasImplicit && hasExplicit) {
-            throw XProcException.xsElementNotAllowed(child.location, child.nodeName, "cannot mix implicit inlines with elements in the XProc namespace")
+        }
+
+        if (raiseError) {
+          if (primary) {
+            throw XProcException.xsUnconnectedPrimaryInputPort(step.stepName, port, location)
+          } else {
+            throw XProcException.xsUnconnectedInputPort(step.stepName, port, location)
           }
-        case d: Documentation =>
-          Unit
-        case p: PipeInfo =>
-          Unit
-        case _ => throw XProcException.xsElementNotAllowed(location, child.nodeName)
+        }
       }
     }
-
-    if ((emptyCount > 0) && ((emptyCount != 1) || (nonEmptyCount != 0))) {
-      throw XProcException.xsNoSiblingsOnEmpty(location)
-    }
-
-    if (href.isDefined) {
-      if (hasDataSources) {
-        throw XProcException.xsHrefAndOtherSources(location)
-      }
-      hasDataSources = true
-
-      for (uri <- href.get.split("\\s+")) {
-        val ruri = baseURI.get.resolve(uri)
-        val doc = new Document(config, this, ruri.toASCIIString)
-        addChild(doc)
-      }
-    }
-
-    if (pipe.isDefined && href.isDefined) {
-      throw XProcException.xsPipeAndHref(location)
-    }
-
-    if (pipe.isDefined) {
-      if (hasDataSources) {
-        throw XProcException.xsPipeAndOtherSources(location)
-      }
-      parsePipeAttribute(pipe.get)
-    }
-
-    valid
   }
 
-  override def defaultReadablePort: Option[IOPort] = {
-    // From the point of view of a p:with-input, the DRP is not relative to "me",
-    // it's relative to the step that contains me.
-    if (parent.isDefined) {
-      parent.get.defaultReadablePort
+  override protected[model] def addFilters(): Unit = {
+    super.addFilters()
+    if (select.isEmpty) {
+      return
+    }
+
+    val context = staticContext.withStatics(inScopeStatics)
+    val params = new SelectFilterParams(context, select.get)
+    val filter = new AtomicStep(config, params)
+    filter.stepType = XProcConstants.cx_select_filter
+    filter._drp = defaultReadablePort
+
+    val finput = new WithInput(config)
+    finput.port = "source"
+    finput.primary = true
+
+    val foutput = new WithOutput(config)
+    foutput.port = "result"
+    foutput.primary = true
+
+    filter.addChild(finput)
+    filter.addChild(foutput)
+
+    for (name <- staticContext.findVariableRefsInString(_select.get)) {
+      var binding = _inScopeDynamics.get(name)
+      if (binding.isDefined) {
+        val npipe = new NamePipe(config, name,"???", binding.get)
+        filter.addChild(npipe)
+      } else {
+        binding = _inScopeStatics.get(name.getClarkName)
+        if (binding.isEmpty) {
+          throw new RuntimeException(s"Reference to variable not in scope: $name")
+        }
+      }
+    }
+
+    val step = parent.get
+    val container = step.parent.get.asInstanceOf[Container]
+    container.addChild(filter, step)
+
+    for (child <- allChildren) {
+      child match {
+        case pipe: Pipe =>
+          finput.addChild(pipe)
+      }
+    }
+    removeChildren()
+
+    val pipe = new Pipe(config)
+    pipe.step = filter.stepName
+    pipe.port = "result"
+    pipe.link = foutput
+    addChild(pipe)
+  }
+
+  override def graphEdges(runtime: XMLCalabashRuntime, parNode: Node) {
+    for (child <- allChildren) {
+      child.graphEdges(runtime, parNode)
+    }
+  }
+
+  override def xdump(xml: ElaboratedPipeline): Unit = {
+    xml.startWithInput(tumble_id, tumble_id, port)
+    for (child <- rawChildren) {
+      child.xdump(xml)
+    }
+    xml.endWithInput()
+  }
+
+  override def toString: String = {
+    if (tumble_id.startsWith("!syn")) {
+      s"p:with-input $port"
     } else {
-      None
+      s"p:with-input $port $tumble_id"
     }
-  }
-
-  override def makeGraph(graph: Graph, parent: Node) {
-    // Process the children in the context of our parent
-    for (child <- children) {
-      child.makeGraph(graph, parent)
-    }
-  }
-
-  override def asXML: xml.Elem = {
-    dumpAttr("port", _port)
-    dumpAttr("id", id.toString)
-
-    val nodes = ListBuffer.empty[xml.Node]
-    if (children.nonEmpty) {
-      nodes += xml.Text("\n")
-    }
-    for (child <- children) {
-      nodes += child.asXML
-      nodes += xml.Text("\n")
-    }
-    new xml.Elem("p", "with-input", dump_attr.getOrElse(xml.Null),
-      namespaceScope, false, nodes:_*)
   }
 }

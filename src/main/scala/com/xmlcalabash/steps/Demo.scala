@@ -3,7 +3,7 @@ package com.xmlcalabash.steps
 import java.net.URI
 
 import com.xmlcalabash.model.util.SaxonTreeBuilder
-import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmValue}
 
@@ -14,7 +14,7 @@ class Demo() extends DefaultXmlStep {
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.XMLSOURCESEQ
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
+  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
     if (variable == _number) {
       number = value.getUnderlyingValue.head.getStringValue.toInt
     }

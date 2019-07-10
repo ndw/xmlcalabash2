@@ -1,717 +1,492 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.config.{Signatures, XMLCalabashConfig}
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, UniqueId, XProcConstants}
-import com.xmlcalabash.model.xml.containers.{Catch, Choose, DeclarationContainer, Finally, ForEach, Group, Otherwise, Try, When}
-import com.xmlcalabash.model.xml.datasource.{Document, Empty, Inline, Pipe}
-import com.xmlcalabash.runtime.injection.{XProcPortInjectable, XProcStepInjectable}
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, StaticContext, XMLCalabashRuntime, XProcVtExpression, XProcXPathExpression}
-import com.xmlcalabash.util.S9Api
-import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
-import org.slf4j.{Logger, LoggerFactory}
+import java.net.URI
 
-import scala.collection.mutable
+import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
+import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
+import com.xmlcalabash.runtime.NodeLocation
+import com.xmlcalabash.util.{MediaType, S9Api}
+import javax.xml.transform.sax.SAXSource
+import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
+import org.xml.sax.InputSource
+
 import scala.collection.mutable.ListBuffer
 
-class Parser(val config: XMLCalabashConfig) {
-  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  private var exception: Option[Throwable] = None
-  private val injectables = ListBuffer.empty[Injectable]
-  private var varOptStack = ListBuffer.empty[Artifact]
-  private var runtime: XMLCalabashRuntime = _
-  private var loadingStandardLibrary = false
+class Parser(config: XMLCalabashConfig) {
+  private var _builtInSteps = Option.empty[Library]
 
-  def loadLibrary(node: XdmNode): Library = {
-    val pipeline = parsePipeline(node)
-    pipeline match {
-      case library: Library => library
-      case _ => throw new RuntimeException(s"$node wasn't a library")
+  // Someone has to load the default steps; feels like here's as good a place as any.
+  // It doesn't feel like something the user should have to do explicitly.
+  init_builtins()
+
+  def builtInSteps: Option[Library] = _builtInSteps
+
+  def loadLibrary(root: XdmNode): Library = {
+    val node = if (root.getNodeKind == XdmNodeKind.DOCUMENT) {
+      S9Api.documentElement(root).get
+    } else {
+      root
+    }
+
+    if (node.getNodeKind != XdmNodeKind.ELEMENT || node.getNodeName != XProcConstants.p_library) {
+      throw new RuntimeException(s"Not a library: ${root.getNodeName}")
+    }
+
+    parseLibrary(node)
+  }
+
+  def loadDeclareStep(uri: URI): DeclareStep = {
+    val request = new DocumentRequest(uri, MediaType.XML)
+    val response = config.documentManager.parse(request)
+    loadDeclareStep(response.value.asInstanceOf[XdmNode])
+  }
+
+  def loadDeclareStep(root: XdmNode): DeclareStep = {
+    val node = if (root.getNodeKind == XdmNodeKind.DOCUMENT) {
+      S9Api.documentElement(root).get
+    } else {
+      root
+    }
+
+    if (node.getNodeKind != XdmNodeKind.ELEMENT || node.getNodeName != XProcConstants.p_declare_step) {
+      throw new RuntimeException(s"Not a declare-step: ${root.getNodeName}")
+    }
+
+    parseDeclareStep(node)
+  }
+
+  private def parseContainer[T <: Container](node: XdmNode, container: T): T = {
+    container match {
+      case cont: DeclareStep =>
+        parseContainer(node, container, List(), List(XProcConstants.p_with_input))
+      case cont: If =>
+        parseContainer(node, container, List(), List(XProcConstants.p_input, XProcConstants.p_declare_step,
+          XProcConstants.p_import, XProcConstants.p_import_functions))
+      case cont: Choose =>
+        parseContainer(node, container, List(XProcConstants.p_with_input, XProcConstants.p_when, XProcConstants.p_otherwise), List())
+      case _ =>
+        parseContainer(node, container, List(), List(XProcConstants.p_input, XProcConstants.p_declare_step,
+          XProcConstants.p_import, XProcConstants.p_import_functions))
     }
   }
 
-  def loadDeclareStep(node: XdmNode): DeclareStep = {
-    val pipeline = parsePipeline(node)
-    pipeline match {
-      case decl: DeclareStep => decl
-      case _ => throw new RuntimeException(s"$node wasn't a library")
+  private def parseContainer[T <: Container](node: XdmNode, container: T, allowed: List[QName], forbidden: List[QName]): T = {
+    container.parse(node)
+
+    for (child <- children(node)) {
+      child.getNodeKind match {
+        case XdmNodeKind.ELEMENT =>
+          if (allowed.nonEmpty && !allowed.contains(child.getNodeName)) {
+            throw new RuntimeException(s"Not allowed here: ${child.getNodeName}")
+          }
+          if (forbidden.nonEmpty && forbidden.contains(child.getNodeName)) {
+            throw new RuntimeException(s"Not allowed here: ${child.getNodeName}")
+          }
+
+          child.getNodeName match {
+            case XProcConstants.p_input =>
+              container.addChild(parseInput(child))
+            case XProcConstants.p_with_input =>
+              container.addChild(parseWithInput(child))
+            case XProcConstants.p_output =>
+              container.addChild(parseOutput(child))
+            case XProcConstants.p_option =>
+              container.addChild(parseOption(child))
+            case XProcConstants.p_variable =>
+              container.addChild(parseVariable(child))
+            case XProcConstants.p_declare_step =>
+              container.addChild(parseDeclareStep(child))
+            case XProcConstants.p_choose =>
+              container.addChild(parseChoose(child))
+            case XProcConstants.p_when =>
+              container.addChild(parseWhen(child))
+            case XProcConstants.p_otherwise =>
+              container.addChild(parseOtherwise(child))
+            case XProcConstants.p_if =>
+              container.addChild(parseIf(child))
+            case XProcConstants.p_for_each =>
+              container.addChild(parseForEach(child))
+            case XProcConstants.p_viewport =>
+              container.addChild(parseViewport(child))
+            case XProcConstants.p_group =>
+              container.addChild(parseGroup(child))
+            case XProcConstants.p_try =>
+              container.addChild(parseTry(child))
+            case XProcConstants.p_catch =>
+              container.addChild(parseCatch(child))
+            case XProcConstants.p_finally =>
+              container.addChild(parseFinally(child))
+            case XProcConstants.p_import =>
+              throw new RuntimeException("Don't handle import yet")
+            case XProcConstants.p_import_functions =>
+              throw new RuntimeException("Don't handle import-functions yet")
+            case XProcConstants.p_documentation =>
+              container.addChild(parseDocumentation(child))
+            case XProcConstants.p_pipeinfo =>
+              container.addChild(parsePipeInfo(child))
+            case _ =>
+              // If we don't recognize it, assume it's an atomic step
+              container.addChild(parseAtomicStep(child))
+          }
+        case XdmNodeKind.COMMENT => Unit
+        case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
+        case XdmNodeKind.TEXT =>
+          throw new RuntimeException("Non-ws text")
+        case _ =>
+          throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
+      }
     }
+
+    container
   }
 
-  protected[xmlcalabash] def loadStandardLibrary(node: XdmNode): Library = {
-    loadingStandardLibrary = true
-    val library = loadLibrary(node)
-    loadingStandardLibrary = false
+  private def parseLibrary(node: XdmNode): Library = {
+    val library = new Library(config)
+    library.parse(node)
+
+    for (child <- children(node)) {
+      child.getNodeKind match {
+        case XdmNodeKind.ELEMENT =>
+          child.getNodeName match {
+            case XProcConstants.p_declare_step =>
+              library.addChild(parseDeclareStep(child))
+            case XProcConstants.p_variable =>
+              library.addChild(parseVariable(child))
+            case XProcConstants.p_option =>
+              library.addChild(parseOption(child))
+            case XProcConstants.p_function =>
+              library.addChild(parseFunction(child))
+            case XProcConstants.p_import =>
+              throw new RuntimeException("Don't handle import yet")
+            case XProcConstants.p_import_functions =>
+              throw new RuntimeException("Don't handle import-functions yet")
+            case XProcConstants.p_documentation =>
+              library.addChild(parseDocumentation(child))
+            case XProcConstants.p_pipeinfo =>
+              library.addChild(parsePipeInfo(child))
+            case _ =>
+              throw new RuntimeException(s"Unexpected element: ${child.getNodeName}")
+          }
+        case XdmNodeKind.COMMENT => Unit
+        case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
+        case XdmNodeKind.TEXT =>
+          throw new RuntimeException("Non-ws text")
+        case _ =>
+          throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
+      }
+    }
+
+    var env = new Environment()
+    library.makeStructureExplicit(env)
+
+    env = new Environment()
+    library.makeBindingsExplicit(env)
+    library.validateStructure()
+
     library
   }
 
-  def parsePipeline(node: XdmNode): DeclarationContainer = {
-    for (injectable <- injectables) {
-      injectable.findSteps(node)
+  private def parseDeclareStep(node: XdmNode): DeclareStep = {
+    val decl = new DeclareStep(config)
+    if (builtInSteps.isDefined) {
+      for (step <- builtInSteps.get.inScopeDeclarations) {
+        decl.addDeclaration(step)
+      }
+    }
+    parseContainer(node, decl)
+
+    var env = new Environment()
+    // env.addStep(decl)
+    decl.makeStructureExplicit(env)
+
+    //env = new Environment()
+    decl.makeBindingsExplicit(env)
+    decl.validateStructure()
+
+    if (!decl.atomic) {
+      decl.normalizeToPipes()
+      decl.addContentTypeCheckers()
+      decl.addFilters()
     }
 
-    val art = parse(node)
-    if (exception.nonEmpty) {
-      throw exception.get
-    }
+    decl
+  }
 
-    if (art.isEmpty) {
-      exception = Some(new ModelException(ExceptionCode.INTERNAL, "This can't happen", node))
-      config.errorListener.error(exception.get)
-      throw exception.get
-    }
+  private def parseChoose(node: XdmNode): Choose = {
+    parseContainer(node, new Choose(config))
+  }
 
-    val step = art.get match {
-      case decl: DeclareStep => decl
-      case lib: Library => lib
+  private def parseWhen(node: XdmNode): When = {
+    parseContainer(node, new When(config))
+  }
+
+  private def parseOtherwise(node: XdmNode): Otherwise = {
+    parseContainer(node, new Otherwise(config))
+  }
+
+  private def parseIf(node: XdmNode): If = {
+    parseContainer(node, new If(config))
+  }
+
+  private def parseForEach(node: XdmNode): ForEach = {
+    parseContainer(node, new ForEach(config))
+  }
+
+  private def parseViewport(node: XdmNode): Viewport = {
+    parseContainer(node, new Viewport(config))
+  }
+
+  private def parseGroup(node: XdmNode): Group = {
+    parseContainer(node, new Group(config))
+  }
+
+  private def parseTry(node: XdmNode): Try = {
+    parseContainer(node, new Try(config))
+  }
+
+  private def parseCatch(node: XdmNode): Catch = {
+    parseContainer(node, new Catch(config))
+  }
+
+  private def parseFinally(node: XdmNode): Finally = {
+    parseContainer(node, new Finally(config))
+  }
+
+  private def parseConnections[T <: Artifact](node: XdmNode, art: T): T = {
+    art match {
+      case input: DeclareInput =>
+        parseConnections(node, art, List(XProcConstants.p_pipe))
       case _ =>
-        exception = Some(new ModelException(ExceptionCode.BADPIPELINEROOT, node.toString, node))
-        config.errorListener.error(exception.get)
-        throw exception.get
+        parseConnections(node, art, List())
     }
-
-    for (injectable <- injectables) {
-      if (!injectable.matched) {
-        if (injectable.nodes.nonEmpty) {
-          logger.warn(s"XPath expression did not match any steps: ${injectable.stepXPath.expr}")
-        }
-      }
-    }
-
-    step
   }
 
-  private def parse(node: XdmNode): Option[Artifact] = {
-    val root = parse(None, node)
-    if (exception.isEmpty) {
-      // This is complicated; we want to validate in a depth first mannner, but
-      // we must expose statics in a breadth-first manner. So this code does both.
+  private def parseConnections[T <: Artifact](node: XdmNode, art: T, forbidden: List[QName]): T = {
+    art.parse(node)
 
-      root.get match {
-        case dcontainer: DeclarationContainer =>
-          for (decl <- dcontainer.declarations) {
-            decl match {
-              case decl: DeclareStep =>
-                decl._init()
-              case library: Library =>
-                // nop? We'll already have done this when we parsed the library, right?
-                Unit
-              case func: Function =>
-                func.validate()
-              case _ => throw new RuntimeException("This isn't possible: not a decl")
-            }
-          }
-
-          dcontainer match {
-            case decl: DeclareStep =>
-              decl._init()
-              decl.exposeStatics()
-            case _ => Unit
-          }
-
-          for (decl <- dcontainer.declarations) {
-            decl match {
-              case decl: DeclareStep =>
-                decl.exposeStatics()
-              case library: Library =>
-                // FIXME: we're going to need to do this part here, right?
-                Unit
-              case func: Function =>
-                Unit
-              case _ => throw new RuntimeException("This isn't possible: not a decl")
-            }
-          }
-
-
+    for (child <- children(node)) {
+      if (forbidden.nonEmpty && forbidden.contains(child.getNodeName)) {
+        throw XProcException.xsElementNotAllowed(child.getNodeName, Some(new NodeLocation(child)))
       }
-    }
 
-    root
-  }
-
-  private def parse(parent: Option[Artifact], node: XdmNode): Option[Artifact] = {
-    node.getNodeKind match {
-      case XdmNodeKind.DOCUMENT =>
-        var art: Option[Artifact] = None
-        val iter = node.axisIterator(Axis.CHILD)
-        while (iter.hasNext) {
-          val child = iter.next()
-          if (child.getNodeKind == XdmNodeKind.ELEMENT) {
-            art = parse(None, child)
-          }
-        }
-        art
-
-      case XdmNodeKind.ELEMENT =>
-        try {
-          val art: Option[Artifact] = node.getNodeName match {
-            case XProcConstants.p_declare_step => Some(parseDeclareStep(parent, node))
-            case XProcConstants.p_serialization => Some(parseSerialization(parent, node))
-            case XProcConstants.p_output => Some(parseOutput(parent, node))
-            case XProcConstants.p_input => Some(parseInput(parent, node))
-            case XProcConstants.p_with_input => Some(parseWithInput(parent, node))
-            case XProcConstants.p_option => Some(parseOption(parent, node))
-            case XProcConstants.p_variable => Some(parseVariable(parent, node))
-            case XProcConstants.p_inline => Some(parseInline(parent, node))
-            case XProcConstants.p_empty => Some(parseEmpty(parent, node))
-            case XProcConstants.p_pipe => Some(parsePipe(parent, node))
-            case XProcConstants.p_document => Some(parseDocument(parent, node))
-            case XProcConstants.p_with_option => Some(parseWithOption(parent, node))
-            case XProcConstants.p_group => Some(parseGroup(parent, node))
-            case XProcConstants.p_choose => Some(parseChoose(parent, node))
-            case XProcConstants.p_when => Some(parseWhen(parent, node))
-            case XProcConstants.p_otherwise => Some(parseOtherwise(parent, node))
-            case XProcConstants.p_if => Some(parseIf(parent, node))
-            case XProcConstants.p_try => Some(parseTry(parent, node))
-            case XProcConstants.p_catch => Some(parseCatch(parent, node))
-            case XProcConstants.p_finally => Some(parseFinally(parent, node))
-            case XProcConstants.p_for_each => Some(parseForEach(parent, node))
-            case XProcConstants.p_documentation => Some(parseDocumentation(parent, node))
-            case XProcConstants.p_pipeinfo => Some(parsePipeInfo(parent, node))
-            case XProcConstants.p_library => Some(parseLibrary(parent, node))
-            case XProcConstants.p_function => Some(parseFunction(parent, node))
+      child.getNodeKind match {
+        case XdmNodeKind.ELEMENT =>
+          child.getNodeName match {
+            case XProcConstants.p_empty =>
+              art.addChild(parseEmpty(child))
+            case XProcConstants.p_document =>
+              art.addChild(parseDocument(child))
+            case XProcConstants.p_inline =>
+              art.addChild(parseInline(child))
+            case XProcConstants.p_pipe =>
+              art.addChild(parsePipe(child))
+            case XProcConstants.p_documentation =>
+              art.addChild(parseDocumentation(child))
+            case XProcConstants.p_pipeinfo =>
+              art.addChild(parsePipeInfo(child))
             case _ =>
-              if (parent.isDefined) {
-                if (knownStep(parent.get, node.getNodeName)) {
-                  Some(parseAtomicStep(parent, node))
-                } else {
-                  parent.get match {
-                    case input: WithInput =>
-                      Some(parseInline(parent, node))
-                    case input: Input =>
-                      Some(parseInline(parent, node))
-                    case output: Output =>
-                      Some(parseInline(parent, node))
-                    case variable: Variable =>
-                      Some(parseInline(parent, node))
-                    case _ =>
-                      throw XProcException.xsElementNotAllowed(Some(new NodeLocation(node)), node.getNodeName)
-                  }
-                }
-              } else {
-                throw new ModelException(ExceptionCode.NOTASTEP, node.getNodeName.toString, node)
-              }
+              art.addChild(parseSyntheticInline(child))
           }
-
-          if (art.isDefined) {
-            art.get match {
-              case step: PipelineStep =>
-                for (injectable <- injectables) {
-                  if (injectable.matches(node)) {
-                    for (ref <- injectable.findVariableRefs) {
-                      step.addVariableRef(ref)
-                    }
-                    injectable.itype match {
-                      case XProcConstants.p_input =>
-                        val inj = new XProcPortInjectable(injectable)
-                        step.addInputInjectable(inj)
-                      case XProcConstants.p_output =>
-                        val inj = new XProcPortInjectable(injectable)
-                        step.addOutputInjectable(inj)
-                      case XProcConstants.p_start =>
-                        val inj = new XProcStepInjectable(injectable)
-                        step.addStepInjectable(inj)
-                      case XProcConstants.p_end =>
-                        val inj = new XProcStepInjectable(injectable)
-                        step.addStepInjectable(inj)
-                    }
-                  }
-                }
-              case _ => Unit
-            }
-          }
-
-          art
-        } catch {
-          case t: Throwable =>
-            if (exception.isEmpty) {
-              exception = Some(t)
-            }
-            runtime.errorListener.error(t)
-            None
-        }
-      case XdmNodeKind.TEXT =>
-        if (node.getStringValue.trim != "") {
-          throw XProcException.xsTextNotAllowed(node.getStringValue.trim, Some(new NodeLocation(node)))
-        }
-        None
-      case _ => None
+        case XdmNodeKind.COMMENT => Unit
+        case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
+        case XdmNodeKind.TEXT =>
+          throw new RuntimeException("Non-ws text")
+        case _ =>
+          throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
+      }
     }
+
+    art
   }
 
-  private def knownStep(parent: Artifact, stepType: QName): Boolean = {
-    val decl = parent.stepDeclaration(stepType)
-    if (decl.isDefined) {
-      true
-    } else {
-      runtime.signatures.stepTypes.contains(stepType)
-    }
+  private def parseInput(node: XdmNode): DeclareInput = {
+    parseConnections(node, new DeclareInput(config))
   }
 
-  private def parseChildren(parent: Artifact, node: XdmNode): Unit = {
+  private def parseOutput(node: XdmNode): DeclareOutput = {
+    parseConnections(node, new DeclareOutput(config))
+  }
+
+  private def parseOption(node: XdmNode): DeclareOption = {
+    parseNoChildrenAllowed(node, new DeclareOption(config))
+  }
+
+  private def parseVariable(node: XdmNode): Variable = {
+    parseConnections(node, new Variable(config))
+  }
+
+  private def parseAtomicStep(node: XdmNode): AtomicStep = {
+    val atomic = new AtomicStep(config)
+    atomic.parse(node)
+
+    for (child <- children(node)) {
+      child.getNodeKind match {
+        case XdmNodeKind.ELEMENT =>
+          child.getNodeName match {
+            case XProcConstants.p_with_input =>
+              atomic.addChild(parseWithInput(child))
+            case XProcConstants.p_with_option =>
+              atomic.addChild(parseWithOption(child))
+            case XProcConstants.p_documentation =>
+              atomic.addChild(parseDocumentation(child))
+            case XProcConstants.p_pipeinfo =>
+              atomic.addChild(parsePipeInfo(child))
+            case _ =>
+              throw new RuntimeException(s"Unexpected element: ${child.getNodeName}")
+          }
+        case XdmNodeKind.COMMENT => Unit
+        case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
+        case XdmNodeKind.TEXT =>
+          throw new RuntimeException("Non-ws text")
+        case _ =>
+          throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
+      }
+    }
+
+    atomic
+  }
+
+  private def parseWithInput(node: XdmNode): WithInput = {
+    parseConnections(node, new WithInput(config))
+  }
+
+  private def parseWithOption(node: XdmNode): WithOption = {
+    parseConnections(node, new WithOption(config))
+  }
+
+  private def parseNoChildrenAllowed[T <: Artifact](node: XdmNode, empty: T): T = {
+    empty.parse(node)
+
+    for (child <- children(node)) {
+      child.getNodeKind match {
+        case XdmNodeKind.ELEMENT =>
+          child.getNodeName match {
+            case XProcConstants.p_documentation =>
+              empty.addChild(parseDocumentation(child))
+            case XProcConstants.p_pipeinfo =>
+              empty.addChild(parsePipeInfo(child))
+            case _ =>
+              throw new RuntimeException("no elements allowed")
+          }
+        case XdmNodeKind.COMMENT => Unit
+        case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
+        case XdmNodeKind.TEXT =>
+          throw new RuntimeException("Non-ws text")
+        case _ =>
+          throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
+      }
+    }
+
+    empty
+  }
+
+  private def parseEmpty(node: XdmNode): Empty = {
+    parseNoChildrenAllowed(node, new Empty(config))
+  }
+
+  private def parseDocument(node: XdmNode): Document = {
+    parseNoChildrenAllowed(node, new Document(config))
+  }
+
+  private def parsePipe(node: XdmNode): Pipe = {
+    parseNoChildrenAllowed(node, new Pipe(config))
+  }
+
+  private def parseFunction(node: XdmNode): DeclareFunction = {
+    parseNoChildrenAllowed(node, new DeclareFunction(config))
+  }
+
+  private def parseInline(node: XdmNode): Inline = {
+    val builder = new SaxonTreeBuilder(config)
+    builder.startDocument(node.getBaseURI)
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
       val child = iter.next()
-      val art = parse(Some(parent), child)
-      if (art.isDefined) {
-        parent.addChild(art.get)
-      }
+      builder.addSubtree(child)
     }
+    builder.endDocument()
+
+    val inline = new Inline(config, builder.result)
+    inline.parse(node)
+    inline
   }
 
-  private def parseDataSourceChildren(parent: Artifact, node: XdmNode): Unit = {
-    // Children here must be p:inline, p:empty, p:document, p:pipe, p:documentation, or p:pipeinfo.
-    // Any other element qualifies as an implicit inline.
-    var implicits = false
-    var iter = node.axisIterator(Axis.CHILD)
-    while (!implicits && iter.hasNext) {
-      val child = iter.next()
-      implicits = implicits || (child.getNodeKind == XdmNodeKind.ELEMENT
-        && child.getNodeName.getNamespaceURI != XProcConstants.ns_p)
+  private def parseSyntheticInline(node: XdmNode): Inline = {
+    val builder = new SaxonTreeBuilder(config)
+    builder.startDocument(node.getBaseURI)
+    builder.addSubtree(node)
+    builder.endDocument()
+
+    if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
+      throw new RuntimeException("Elements in the XProc namespace cannot be synthetic inlines")
     }
 
-    var dscount = 0
-    iter = node.axisIterator(Axis.CHILD)
+    val inline = new Inline(config, builder.result, true)
+    inline.parse(node)
+    inline
+  }
+
+  private def parseDocumentation(node: XdmNode): Documentation = {
+    val builder = new SaxonTreeBuilder(config)
+    builder.startDocument(node.getBaseURI)
+    val iter = node.axisIterator(Axis.CHILD)
+    while (iter.hasNext) {
+      val child = iter.next()
+      builder.addSubtree(child)
+    }
+    builder.endDocument()
+
+    val docs = new Documentation(config, builder.result)
+    docs.parse(node)
+    docs
+  }
+
+  private def parsePipeInfo(node: XdmNode): PipeInfo = {
+    val builder = new SaxonTreeBuilder(config)
+    builder.startDocument(node.getBaseURI)
+    val iter = node.axisIterator(Axis.CHILD)
+    while (iter.hasNext) {
+      val child = iter.next()
+      builder.addSubtree(child)
+    }
+    builder.endDocument()
+
+    val info = new PipeInfo(config, builder.result)
+    info.parse(node)
+    info
+  }
+
+  def init_builtins(): Unit = {
+    val xmlbuilder = config.processor.newDocumentBuilder()
+    val stream = getClass.getResourceAsStream("/standard-steps.xpl")
+    val source = new SAXSource(new InputSource(stream))
+    xmlbuilder.setDTDValidation(false)
+    xmlbuilder.setLineNumbering(true)
+    val libnode = xmlbuilder.build(source)
+    val library = loadLibrary(libnode)
+    _builtInSteps = Some(library)
+  }
+
+  // ============================================================================
+
+  private def children(node: XdmNode): List[XdmNode] = {
+    children(node, true)
+  }
+
+  private def children(node: XdmNode, ignoreWS: Boolean): List[XdmNode] = {
+    val list = ListBuffer.empty[XdmNode]
+    val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
       val child = iter.next()
       child.getNodeKind match {
-        case XdmNodeKind.COMMENT =>
-          if (implicits) {
-            throw XProcException.xsCommentNotAllowed(child.toString, Some(new NodeLocation(child)))
-          }
-        case XdmNodeKind.PROCESSING_INSTRUCTION =>
-          if (implicits) {
-            throw XProcException.xsPiNotAllowed(child.toString, Some(new NodeLocation(child)))
-          }
         case XdmNodeKind.TEXT =>
-          if (child.getStringValue.trim() != "") {
-            throw XProcException.xsTextNotAllowed(child.toString, Some(new NodeLocation(child)))
+          if (!ignoreWS || child.getStringValue.trim() != "") {
+            list += child
           }
-        case XdmNodeKind.ELEMENT =>
-          if (child.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
-            if (child.getNodeName == XProcConstants.p_pipeinfo || child.getNodeName == XProcConstants.p_documentation) {
-              // nop
-            } else {
-              if (child.getNodeName == XProcConstants.p_empty && dscount > 0) {
-                throw XProcException.xsNoSiblingsOnEmpty(Some(new NodeLocation(child)))
-              }
-
-              if (implicits) {
-                throw XProcException.xsXProcElementNotAllowed(child.getNodeName.toString, Some(new NodeLocation(child)))
-              }
-
-              val art = parse(Some(parent), child)
-              if (art.isDefined) {
-                parent.addChild(art.get)
-                dscount += 1
-              }
-            }
-          } else {
-            val art = parseInline(Some(parent), child)
-            parent.addChild(art)
-            dscount += 1
-          }
-       case _ =>
-          throw new RuntimeException(s"Unexpected node kind: $child")
+        case _ => list += child
       }
     }
-  }
-
-  // ==========================================================================================
-
-  private def parseDeclareStep(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val saveConfig = runtime
-    runtime = new XMLCalabashRuntime(config)
-    if (!loadingStandardLibrary) {
-      runtime.signatures = signatures(config.standardLibrary)
-    }
-    val art = new DeclareStep(runtime, parent)
-    runtime.setDeclaration(art)
-
-    val head = varOptStack.size
-    for (varopt <- varOptStack) {
-      art.addVarOpt(varopt)
-    }
-
-    art.parse(node)
-    parseChildren(art, node)
-
-    varOptStack = varOptStack.take(head)
-
-    runtime = saveConfig
-    art
-  }
-
-  private def parseLibrary(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val saveConfig = runtime
-    runtime = new XMLCalabashRuntime(config)
-    if (!loadingStandardLibrary) {
-      runtime.signatures = signatures(config.standardLibrary)
-    }
-    val art = new Library(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    runtime = saveConfig
-    art
-  }
-
-  private def parseAtomicStep(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new AtomicStep(runtime, parent, node.getNodeName)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parseSerialization(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Serialization(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parseOutput(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Output(runtime, parent)
-    art.parse(node)
-    parseDataSourceChildren(art, node)
-    art
-  }
-
-  private def parseInput(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Input(runtime, parent)
-    art.parse(node)
-    parseDataSourceChildren(art, node)
-    art.manageDefaultInputs()
-    art
-  }
-
-  private def parseWithInput(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new WithInput(runtime, parent)
-    art.parse(node)
-    parseDataSourceChildren(art, node)
-    art
-  }
-
-  private def parseInline(parent: Option[Artifact], node: XdmNode): Artifact = {
-    var exclPrefixes: String = null
-    val nodes = ListBuffer.empty[XdmNode]
-    if (node.getNodeName == XProcConstants.p_inline) {
-      exclPrefixes = node.getAttributeValue(XProcConstants._exclude_inline_prefixes)
-      val iter = node.axisIterator(Axis.CHILD)
-      while (iter.hasNext) {
-        nodes += iter.next()
-      }
-    } else {
-      exclPrefixes = node.getParent.getAttributeValue(XProcConstants._exclude_inline_prefixes)
-      nodes += node
-    }
-
-    // Find exclude-inline-prefixes
-    var contextNode = node
-    while (contextNode != null && contextNode.getNodeKind == XdmNodeKind.ELEMENT && exclPrefixes == null) {
-      contextNode = contextNode.getParent
-      if (contextNode != null && contextNode.getNodeKind == XdmNodeKind.ELEMENT) {
-        if (contextNode.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
-          exclPrefixes = contextNode.getAttributeValue(XProcConstants._exclude_inline_prefixes)
-        } else {
-          exclPrefixes = contextNode.getAttributeValue(XProcConstants.p_exclude_inline_prefixes)
-        }
-      }
-    }
-
-    var excludeUriBindings = Set.empty[String]
-    if (exclPrefixes != null) {
-      val prefixes = exclPrefixes.split("\\s+").toList
-      excludeUriBindings = S9Api.urisForPrefixes(contextNode, prefixes)
-    }
-
-    val art = new Inline(runtime, parent, node.getNodeName != XProcConstants.p_inline, excludeUriBindings, nodes.toList)
-    art.parse(node)
-    art
-  }
-
-  private def parseEmpty(parent: Option[Artifact], node: XdmNode): Artifact = {
-    // FIXME: check that p:empty is empty!
-    val art = new Empty(runtime, parent)
-    art.parse(node)
-    art
-  }
-
-  private def parseDocument(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Document(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parsePipe(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Pipe(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parseOption(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new OptionDecl(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    varOptStack += art
-    art
-  }
-
-  private def parseVariable(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Variable(runtime, parent)
-    art.parse(node)
-    parseDataSourceChildren(art, node)
-    varOptStack += art
-    art
-  }
-
-  private def parseWithOption(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new WithOption(runtime, parent)
-    art.parse(node)
-    parseDataSourceChildren(art, node)
-    art
-  }
-
-  private def parseGroup(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Group(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parseChoose(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Choose(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parseWhen(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new When(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parseOtherwise(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Otherwise(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parseTry(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Try(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parseCatch(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Catch(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parseFinally(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Finally(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parseIf(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Choose(runtime, parent, true)
-    val when = new When(runtime, Some(art))
-
-    // Fake like we parsed the attributes of p:if on the p:choose
-    // FIXME: what about depends, etc.?
-    if (node.getAttributeValue(XProcConstants._name) != null) {
-      art.attributes.put(XProcConstants._name, node.getAttributeValue(XProcConstants._name))
-    }
-
-    when.parse(node)
-    parseChildren(when, node)
-
-    art.location = when.location.get
-
-    art.addChild(when)
-    art
-  }
-
-  private def parseForEach(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new ForEach(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  private def parseDocumentation(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val nodes = ListBuffer.empty[XdmNode]
-    val iter = node.axisIterator(Axis.CHILD)
-    while (iter.hasNext) {
-      val child = iter.next().asInstanceOf[XdmNode]
-      nodes += child
-    }
-    val art = new Documentation(runtime, parent, nodes.toList)
-    art.parse(node)
-    art
-  }
-
-  private def parsePipeInfo(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val nodes = ListBuffer.empty[XdmNode]
-    val iter = node.axisIterator(Axis.CHILD)
-    while (iter.hasNext) {
-      val child = iter.next().asInstanceOf[XdmNode]
-      nodes += child
-    }
-    val art = new PipeInfo(runtime, parent,nodes.toList)
-    art.parse(node)
-    art
-  }
-
-  private def parseFunction(parent: Option[Artifact], node: XdmNode): Artifact = {
-    val art = new Function(runtime, parent)
-    art.parse(node)
-    parseChildren(art, node)
-    art
-  }
-
-  // =====================================================================================
-
-  private def signatures(library: Library): Signatures = {
-    val signatures = new Signatures()
-    for (child <- library.declarations) {
-      child match {
-        case fdef: Function =>
-          signatures.addFunction(fdef.functionName, fdef.functionClass)
-        case sdef: DeclareStep =>
-          signatures.addStep(sdef.signature)
-        case _ =>
-          Unit
-      }
-    }
-
-    signatures
-  }
-  // =====================================================================================
-
-  private def nodeLocationPItext(node: XdmNode): String = {
-    var str = "uri=\"" + node.getBaseURI + "\""
-    if (node.getLineNumber > 0) {
-      str += " line=\"" + node.getLineNumber + "\""
-    }
-    if (node.getColumnNumber > 0) {
-      str += " column=\"" + node.getColumnNumber + "\""
-    }
-    str
-  }
-
-  def parseInjectables(doc: XdmNode): Unit = {
-    val root = S9Api.documentElement(doc)
-    if (root.get.getNodeName != XProcConstants.p_injectable) {
-      logger.warn(s"Ignoring ${root.get.getNodeName} in injectable")
-      return
-    }
-
-    val iter = root.get.axisIterator(Axis.CHILD)
-    while (iter.hasNext) {
-      val node = iter.next().asInstanceOf[XdmNode]
-      node.getNodeKind match {
-        case XdmNodeKind.ELEMENT =>
-          parseInjectable(node)
-        case XdmNodeKind.TEXT =>
-          if (node.getStringValue.trim != "") {
-            logger.warn("Ignoring non-empty text node in injectables")
-          }
-        case _ => Unit
-      }
-    }
-  }
-
-  private def parseInjectable(node: XdmNode): Unit = {
-    if (!List(XProcConstants.p_input, XProcConstants.p_output, XProcConstants.p_start, XProcConstants.p_end).contains(node.getNodeName)) {
-      logger.warn(s"Ignoring ${node.getNodeName} in injectable")
-      return
-    }
-
-    val step = Option(node.getAttributeValue(XProcConstants._step))
-    val message = Option(node.getAttributeValue(XProcConstants._message))
-    val uriStr = Option(node.getAttributeValue(XProcConstants._base_uri))
-    val condition = Option(node.getAttributeValue(XProcConstants._condition))
-    var messageNodes = Option.empty[ListBuffer[XdmNode]]
-    val baseURI = if (uriStr.isDefined) {
-      val uri = node.getBaseURI.resolve(uriStr.get)
-      Some(uri)
-    } else {
-      None
-    }
-
-    val scontext = new StaticContext()
-    scontext.baseURI = node.getBaseURI
-    scontext.inScopeNS = S9Api.inScopeNamespaces(node)
-    scontext.location = new NodeLocation(node)
-
-    val context = new ExpressionContext(scontext)
-    val stepExpr = new XProcXPathExpression(context, step.getOrElse("/p:declare-step/p:*"))
-    val conditionExpr = new XProcXPathExpression(context, condition.getOrElse("true()"))
-
-    if (message.isEmpty) {
-      val nodes = ListBuffer.empty[XdmNode]
-      val iter = node.axisIterator(Axis.CHILD)
-      var onlySeenWhitespace = true
-      while (iter.hasNext) {
-        val node = iter.next().asInstanceOf[XdmNode]
-        if (onlySeenWhitespace && (node.getNodeKind == XdmNodeKind.TEXT)) {
-          if (node.getStringValue.trim == "") {
-            // drop leading whitespace on the floor
-          } else {
-            onlySeenWhitespace = false
-            nodes += node
-          }
-        } else {
-          onlySeenWhitespace = false
-          nodes += node
-        }
-      }
-
-      onlySeenWhitespace = true
-      while (onlySeenWhitespace) {
-        onlySeenWhitespace = false
-        if (nodes.nonEmpty && (nodes.last.getNodeKind == XdmNodeKind.TEXT)
-          && (nodes.last.getStringValue.trim == "")) {
-          onlySeenWhitespace = true
-          nodes.remove(nodes.length - 1)
-        }
-      }
-
-      messageNodes= Some(nodes)
-    }
-
-    val xmlId = Option(node.getAttributeValue(XProcConstants.xml_id))
-    val id = if (xmlId.isDefined) {
-      xmlId.get
-    } else {
-      "inj-" + UniqueId.nextId
-    }
-
-    val injectable = new Injectable(runtime, id, node.getNodeName, stepExpr ,conditionExpr, baseURI, new NodeLocation(node))
-    if ((node.getNodeName == XProcConstants.p_input) || (node.getNodeName == XProcConstants.p_output)) {
-      val port = Option(node.getAttributeValue(XProcConstants._port))
-      if (port.isDefined) {
-        injectable.port = port.get
-      }
-    }
-
-    if (message.isDefined) {
-      val messageExpr = new XProcVtExpression(context, message.get, true)
-      injectable.messageXPath = messageExpr
-    } else {
-      injectable.messageNodes = messageNodes.get.toList
-    }
-
-    injectables += injectable
+    list.toList
   }
 }

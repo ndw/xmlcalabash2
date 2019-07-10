@@ -1,11 +1,11 @@
 package com.xmlcalabash.config
 
-class PortSignature(val name: String) {
+class PortSignature(val port: String) {
   private var _cardinality = "1"
   private var _primary = Option.empty[Boolean]
 
-  def this(name: String, primary: Boolean, sequence: Boolean) {
-    this(name)
+  def this(port: String, primary: Boolean, sequence: Boolean) {
+    this(port)
     _primary = Some(primary)
     if (sequence) {
       _cardinality = "*"

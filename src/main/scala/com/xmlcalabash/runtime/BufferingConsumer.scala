@@ -4,7 +4,6 @@ import com.jafpl.messages.Message
 import com.jafpl.steps.DataConsumer
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XProcItemMessage
-import com.xmlcalabash.model.util.UniqueId
 
 import scala.collection.mutable.ListBuffer
 

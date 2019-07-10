@@ -5,8 +5,8 @@ import java.io.InputStream
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api}
-import javax.xml.transform.{Source, URIResolver}
 import javax.xml.transform.sax.SAXSource
+import javax.xml.transform.{Source, URIResolver}
 import net.sf.saxon.om.StructuredQName
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmDestination, XdmNode}
 import org.xml.sax.InputSource

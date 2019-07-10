@@ -5,7 +5,7 @@ import java.net.URI
 import java.util.Base64
 
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils}
 import net.sf.saxon.s9api.{QName, Serializer, XdmNode, XdmValue}
 
@@ -19,7 +19,7 @@ class B64Encode extends DefaultXmlStep {
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
+  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
     if (variable == XProcConstants._serialization) {
       val opts = TypeUtils.castAsScala(value).asInstanceOf[Map[Any,Any]]
       for (opt <- opts.keySet) {

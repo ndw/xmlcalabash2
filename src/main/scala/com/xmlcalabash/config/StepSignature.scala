@@ -2,30 +2,32 @@ package com.xmlcalabash.config
 
 import com.jafpl.graph.Location
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.model.xml.DeclareStep
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class StepSignature(val stepType: QName) {
+class StepSignature(val stepType: Option[QName]) {
   private var _inputPorts = mutable.HashMap.empty[String, PortSignature]
   private var _outputPorts = mutable.HashMap.empty[String, PortSignature]
   private var _options = mutable.HashMap.empty[QName, OptionSignature]
   private var _implementation = ListBuffer.empty[String]
+  private var _declaration = Option.empty[DeclareStep]
 
   def addInput(port: PortSignature, location: Location): Unit = {
-    if (_inputPorts.contains(port.name)) {
-      throw new ModelException(ExceptionCode.DUPINPUTSIG, port.name, location)
+    if (_inputPorts.contains(port.port)) {
+      throw new ModelException(ExceptionCode.DUPINPUTSIG, port.port, location)
     } else {
-      _inputPorts.put(port.name, port)
+      _inputPorts.put(port.port, port)
     }
   }
 
   def addOutput(port: PortSignature, location: Location): Unit = {
-    if (_outputPorts.contains(port.name)) {
-      throw new ModelException(ExceptionCode.DUPOUTPUTSIG, port.name, location)
+    if (_outputPorts.contains(port.port)) {
+      throw new ModelException(ExceptionCode.DUPOUTPUTSIG, port.port, location)
     } else {
-      _outputPorts.put(port.name, port)
+      _outputPorts.put(port.port, port)
     }
   }
 
@@ -38,16 +40,33 @@ class StepSignature(val stepType: QName) {
   }
 
   def implementation_=(className: String) {
+    if (_declaration.isDefined) {
+      throw new RuntimeException("Cannot have an atomic step with the same name as a non-atomic step")
+    }
     _implementation += className
+  }
+
+  def declaration: Option[DeclareStep] = _declaration
+  def declaration_=(decl: DeclareStep): Unit = {
+    if (_implementation.nonEmpty) {
+      throw new RuntimeException("Cannot have an atomic step with the same name as a non-atomic step")
+    }
+    if (_declaration.isDefined) {
+      throw new RuntimeException("Cannot redefine a step")
+    }
+    _declaration = Some(decl)
   }
 
   def implementation: List[String] = _implementation.toList
 
   def inputPorts: Set[String] = _inputPorts.keySet.toSet
+  def inputs: Set[PortSignature] = _inputPorts.values.toSet
 
   def outputPorts: Set[String] = _outputPorts.keySet.toSet
+  def outputs: Set[PortSignature] = _outputPorts.values.toSet
 
-  def options: Set[QName] = _options.keySet.toSet
+  def optionNames: Set[QName] = _options.keySet.toSet
+  def options: Set[OptionSignature] = _options.values.toSet
 
   def input(port: String, location: Location): PortSignature = {
     if (_inputPorts.contains(port)) {
@@ -65,12 +84,30 @@ class StepSignature(val stepType: QName) {
     }
   }
 
-  def option(name: QName, location: Location): OptionSignature = {
+  def option(name: QName, location: Option[Location]): OptionSignature = {
     if (_options.contains(name)) {
       _options(name)
     } else {
       throw new ModelException(ExceptionCode.BADOPTSIG, List(stepType.toString, name.toString), location)
     }
+  }
+
+  def primaryInput: Option[PortSignature] = {
+    for ((name, sig) <- _inputPorts) {
+      if (sig.primary) {
+        return Some(sig)
+      }
+    }
+    None
+  }
+
+  def primaryOutput: Option[PortSignature] = {
+    for ((name, sig) <- _outputPorts) {
+      if (sig.primary) {
+        return Some(sig)
+      }
+    }
+    None
   }
 }
 

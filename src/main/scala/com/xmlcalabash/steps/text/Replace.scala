@@ -3,7 +3,7 @@ package com.xmlcalabash.steps.text
 import com.jafpl.messages.Message
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmNodeItemMessage
-import com.xmlcalabash.runtime.{ExpressionContext, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.steps.DefaultXmlStep
 import net.sf.saxon.s9api.{QName, XdmNode}
 
@@ -41,10 +41,10 @@ class Replace() extends DefaultXmlStep {
     } else {
       s"replace(., '$pattern', '$replacement')"
     }
-    val expr = new XProcXPathExpression(ExpressionContext.NONE, replexpr)
-    val context = new XdmNodeItemMessage(text, meta)
+    val expr = new XProcXPathExpression(context, replexpr)
+    val contextItem = new XdmNodeItemMessage(text, meta, context)
 
-    val repl = evaluator.singletonValue(expr, List(context), Map.empty[String,Message])
+    val repl = evaluator.singletonValue(expr, List(contextItem), Map.empty[String,Message], None)
 
     consumer.get.receive("result", repl.item, meta)
   }

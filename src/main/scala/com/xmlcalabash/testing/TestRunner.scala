@@ -9,8 +9,9 @@ import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.TestException
 import com.xmlcalabash.messages.XdmNodeItemMessage
+import com.xmlcalabash.model.xml.XMLContext
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
-import com.xmlcalabash.runtime.{ExpressionContext, NodeLocation, SaxonExpressionEvaluator, StaticContext, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.runtime.{NodeLocation, SaxonExpressionEvaluator, StaticContext, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.{MediaType, S9Api, URIUtils}
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind, XdmValue}
@@ -65,6 +66,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
   private val testFiles = ListBuffer.empty[String]
   private val fnregex = "^.*.xml".r
 
+  private val context = new StaticContext(runtimeConfig)
   private val processor = runtimeConfig.processor
   private val builder = processor.newDocumentBuilder()
   builder.setDTDValidation(false)
@@ -398,8 +400,8 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
     val when = node.getAttributeValue(_when)
     if (when != null) {
       val evaluator = new SaxonExpressionEvaluator(runtimeConfig)
-      val expr = new XProcXPathExpression(ExpressionContext.NONE, when)
-      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message])
+      val expr = new XProcXPathExpression(context, when)
+      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message], None)
       if (!run) {
         val result = new TestResult(true, "Skipped test suite")
         result.skipped = s"When '$when' evaluated to false"
@@ -453,8 +455,8 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
     val when = node.getAttributeValue(_when)
     if (when != null) {
       val evaluator = new SaxonExpressionEvaluator(runtimeConfig)
-      val expr = new XProcXPathExpression(ExpressionContext.NONE, when)
-      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message])
+      val expr = new XProcXPathExpression(context, when)
+      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message], None)
       if (!run) {
         logger.info("Skipping test-div")
         val result = new TestResult(true, "Skipped test-div")
@@ -505,8 +507,8 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
     val when = node.getAttributeValue(_when)
     if (when != null) {
       val evaluator = new SaxonExpressionEvaluator(runtimeConfig)
-      val expr = new XProcXPathExpression(ExpressionContext.NONE, when)
-      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message])
+      val expr = new XProcXPathExpression(context, when)
+      val run = evaluator.booleanValue(expr, List.empty[Message], Map.empty[String,Message], None)
       if (!run) {
         val result = new TestResult(true) // skipped counts as a pass...
         result.baseURI = node.getBaseURI
@@ -660,8 +662,8 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
               ns.put("err", "http://www.w3.org/2005/xqt-errors")
               ns ++= S9Api.inScopeNamespaces(node)
 
-              val scontext = new StaticContext()
-              scontext.inScopeNS = ns.toMap
+              val scontext = new XMLContext(runtimeConfig)
+              scontext.nsBindings = ns.toMap
               scontext.location = new NodeLocation(node)
               val qcode = ValueParser.parseQName(ecode, scontext)
               if (result.errQName.isDefined) {
@@ -711,16 +713,12 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
 
     val src = node.getAttributeValue(_src)
     if ((src == null) && children.isEmpty) {
-      val scontext = new StaticContext()
-      scontext.baseURI = node.getBaseURI
-      scontext.inScopeNS = S9Api.inScopeNamespaces(node)
-      scontext.location = new NodeLocation(node)
-      val exprContext = new ExpressionContext(scontext)
+      val scontext = new XMLContext(runtimeConfig, Some(node.getBaseURI), S9Api.inScopeNamespaces(node), Some(new NodeLocation(node)))
       val value = node.getAttributeValue(_select)
       val eval = runtimeConfig.expressionEvaluator
-      val context = inlineDocument(node)
-      val message = new XdmNodeItemMessage(context.get, new XProcMetadata(MediaType.XML))
-      val result = eval.singletonValue(new XProcXPathExpression(exprContext, value), List(message), Map.empty[String,Message])
+      val contextItem = inlineDocument(node)
+      val message = new XdmNodeItemMessage(contextItem.get, new XProcMetadata(MediaType.XML), scontext)
+      val result = eval.singletonValue(new XProcXPathExpression(scontext, value), List(message), Map.empty[String,Message], None)
       Some(result.item)
     } else {
       loadResource(node)

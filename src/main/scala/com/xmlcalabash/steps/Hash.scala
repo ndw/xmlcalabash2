@@ -1,14 +1,11 @@
 package com.xmlcalabash.steps
 
-import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.{HashUtils, TypeUtils, ValueUtils}
-import net.sf.saxon.s9api.{QName, XdmNode, XdmNodeKind}
+import com.xmlcalabash.util.{HashUtils, TypeUtils}
+import net.sf.saxon.s9api.{QName, XdmNode}
 import net.sf.saxon.value.QNameValue
-
-import scala.collection.mutable.ListBuffer
 
 /*
 <p:declare-step type="p:hash">

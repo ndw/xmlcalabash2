@@ -3,8 +3,9 @@ package com.xmlcalabash.steps
 import com.jafpl.graph.Location
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.BindingSpecification
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, XMLCalabashRuntime, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
+import com.xmlcalabash.runtime.{ImplParams, StaticContext, XMLCalabashRuntime, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
 import com.xmlcalabash.util.XProcVarValue
 import net.sf.saxon.s9api.{QName, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
@@ -29,7 +30,7 @@ class DefaultXmlStep extends XmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def bindingSpec: BindingSpecification = BindingSpecification.ANY
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
+  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
     bindings.put(variable, new XProcVarValue(value, context))
   }
 
@@ -41,7 +42,11 @@ class DefaultXmlStep extends XmlStep {
     // nop
   }
 
-  override def initialize(config: RuntimeConfiguration, params: Option[ImplParams]): Unit = {
+  override def configure(config: XMLCalabashConfig, params: Option[ImplParams]): Unit = {
+    // nop
+  }
+
+  override def initialize(config: RuntimeConfiguration): Unit = {
     config match {
       case xmlCalabash: XMLCalabashRuntime =>
         this.config = xmlCalabash
@@ -91,7 +96,7 @@ class DefaultXmlStep extends XmlStep {
 
   override def toString: String = {
     val defStr = super.toString
-    if (defStr.startsWith("com.xmlcalabash.steps")) {
+    if (defStr.startsWith("XXX com.xmlcalabash.steps")) {
       val objstr = ".*\\.([^\\.]+)@[0-9a-f]+$".r
       defStr match {
         case objstr(name) => name

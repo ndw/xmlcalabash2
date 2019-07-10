@@ -2,13 +2,14 @@ package com.xmlcalabash.runtime
 
 import java.net.URI
 
+import com.jafpl.config.Jafpl
 import com.jafpl.graph.Graph
-import com.jafpl.messages.{JoinGateMessage, Message}
+import com.jafpl.messages.Message
 import com.jafpl.runtime.{GraphRuntime, RuntimeConfiguration}
 import com.jafpl.steps.DataConsumer
 import com.jafpl.util.{ErrorListener, TraceEventManager}
-import com.xmlcalabash.config.{DocumentManager, Signatures, XMLCalabashConfig, XMLCalabashDebugOptions, XProcConfigurer}
-import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException, XProcException}
+import com.xmlcalabash.config.{DocumentManager, Signatures, XMLCalabashConfig, XProcConfigurer}
+import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException}
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{ExpressionParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep}
@@ -21,7 +22,9 @@ import org.xml.sax.EntityResolver
 
 import scala.collection.mutable
 
-class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig) extends RuntimeConfiguration {
+class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends RuntimeConfiguration {
+  val config: XMLCalabashConfig = decl.config
+
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected[runtime] val joinGateMarker = new XdmAtomicValue(new QName(XProcConstants.ns_cx, "JOIN-GATE-MARKER"))
 
@@ -42,21 +45,18 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig) 
   private val idMap = mutable.HashMap.empty[String,Artifact]
   private var ran = false
   private var _signatures: Signatures = _
-  private var decl: DeclareStep = _
-  private var graph: Graph = _
   private var runtime: GraphRuntime = _
 
-  protected[xmlcalabash] def setDeclaration(decl: DeclareStep): Unit = {
-    this.decl = decl
-  }
+  val jafpl: Jafpl = Jafpl.newInstance()
+  val graph: Graph = jafpl.newGraph()
 
   protected[xmlcalabash] def init(): Unit = {
-    config.debugOptions.dumpXml(decl)
-    graph = decl.pipelineGraph()
-    config.debugOptions.dumpOpenGraph(graph, decl)
-    graph.close()
-    config.debugOptions.dumpGraph(graph, decl)
+    config.debugOptions.dumpGraph(graph, true)
+
     runtime = new GraphRuntime(graph, this)
+
+    config.debugOptions.dumpGraph(graph, false)
+
     runtime.traceEventManager = _traceEventManager
   }
 
@@ -71,40 +71,49 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig) 
 
   def input(port: String, item: XdmValue, metadata: XProcMetadata): Unit = {
     if (runtime.inputs.contains(port)) {
+      if (inputSet.isEmpty) {
+        // If there are any defaults for this input port, disable them
+        decl.input(port).disableDefaults()
+      }
       inputSet += port
-      runtime.inputs(port).send(new XdmValueItemMessage(item, metadata, ExpressionContext.NONE))
+      runtime.inputs(port).send(new XdmValueItemMessage(item, metadata, new StaticContext(this)))
     }
   }
 
   def input(port: String, message: Message): Unit = {
     if (runtime.inputs.contains(port)) {
+      if (inputSet.isEmpty) {
+        // If there are any defaults for this input port, disable them
+        decl.input(port).disableDefaults()
+      }
       inputSet += port
       runtime.inputs(port).send(message)
     }
   }
 
   def output(port: String, consumer: DataConsumer): Unit = {
-    runtime.outputs(port).setConsumer(consumer)
+    val dcp = runtime.outputs(port)
+    dcp.setConsumer(consumer)
   }
 
   def serializationOptions(port: String): Map[QName,String] = {
-    decl.output(port).get.serialization
+    decl.output(port).serialization
   }
 
   def option(name: QName, value: String): Unit = {
-    option(name, new XProcVarValue(new XdmAtomicValue(value), ExpressionContext.NONE))
+    option(name, new XProcVarValue(new XdmAtomicValue(value), new StaticContext(this)))
   }
 
   def option(name: QName, value: Integer): Unit = {
-    option(name, new XProcVarValue(new XdmAtomicValue(value), ExpressionContext.NONE))
+    option(name, new XProcVarValue(new XdmAtomicValue(value), new StaticContext(this)))
   }
 
   def option(name: QName, value: Float): Unit = {
-    option(name, new XProcVarValue(new XdmAtomicValue(value), ExpressionContext.NONE))
+    option(name, new XProcVarValue(new XdmAtomicValue(value), new StaticContext(this)))
   }
 
   def option(name: QName, value: URI): Unit = {
-    option(name, new XProcVarValue(new XdmAtomicValue(value), ExpressionContext.NONE))
+    option(name, new XProcVarValue(new XdmAtomicValue(value), new StaticContext(this)))
   }
 
   def option(name: QName, value: XProcVarValue): Unit = {
@@ -116,33 +125,9 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig) 
     }
   }
 
-  protected[runtime] def runAsStep(): Unit = {
-    if (ran) {
-      throw new RuntimeException("You must call reset() before running a pipeline a second time.")
-    }
-
-    runCommon()
-  }
-
   def run(): Unit = {
     if (ran) {
       throw new RuntimeException("You must call reset() before running a pipeline a second time.")
-    }
-
-    for (input <- decl.inputs) {
-      if (!inputSet.contains(input.port.get)) {
-        if (input.defaultInputs.isEmpty) {
-          if (!input.sequence) {
-            throw XProcException.xsMissingRequiredInput(input.port.get, input.location)
-          }
-        } else {
-          runtime.inputs(input.port.get).send(new JoinGateMessage())
-        }
-      }
-
-      if (!inputSet.contains(input.port.get) && input.defaultInputs.isEmpty && !input.sequence) {
-        throw XProcException.xsMissingRequiredInput(input.port.get, input.location)
-      }
     }
 
     runCommon()
@@ -150,27 +135,6 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig) 
 
   private def runCommon(): Unit = {
     ran = true
-
-    for (bind <- decl.bindings) {
-      val jcbind = bind.getClarkName
-      val bdecl = decl.bindingDeclaration(bind).get
-      if (bindingsMap.contains(jcbind)) {
-        bdecl.externalValue = bindingsMap(jcbind)
-      } else {
-        bdecl.externalValue = None
-      }
-
-      if (bindingsMap.contains(jcbind)) {
-        runtime.setOption(jcbind, new XProcVarValue(bindingsMap(jcbind), new ExpressionContext(new StaticContext())))
-      } else {
-        if (bdecl.required) {
-          throw XProcException.xsMissingRequiredOption(bind, decl.location)
-        }
-      }
-    }
-
-    decl.evaluateStaticBindings(runtime)
-    decl.propagateStaticBindings()
 
     try {
       runtime.run()
@@ -180,16 +144,18 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig) 
   }
 
   def reset(): Unit = {
+    /*
     //_staticOptionBindings.clear()
     inputSet.clear()
     outputSet.clear()
     bindingsMap.clear()
 
-    graph = decl.pipelineGraph()
-    graph.close()
-    runtime = new GraphRuntime(graph, this)
+    _graph = decl.pipelineGraph()
+    _graph.close()
+    runtime = new GraphRuntime(_graph, this)
     runtime.traceEventManager = _traceEventManager
     ran = false
+     */
   }
 
   def stop(): Unit = {
@@ -297,12 +263,11 @@ class XMLCalabashRuntime protected[xmlcalabash] (val config: XMLCalabashConfig) 
 
   // ==============================================================================================
 
-  def stepImplementation(staticContext: StaticContext): StepWrapper = {
-    stepImplementation(staticContext, None)
+  def stepImplementation(stepType: QName, staticContext: StaticContext): StepWrapper = {
+    stepImplementation(stepType, staticContext, None)
   }
 
-  def stepImplementation(staticContext: StaticContext, implParams: Option[ImplParams]): StepWrapper = {
-    val stepType = staticContext.stepType
+  def stepImplementation(stepType: QName, staticContext: StaticContext, implParams: Option[ImplParams]): StepWrapper = {
     val location = staticContext.location
 
     if (!_signatures.stepTypes.contains(stepType)) {

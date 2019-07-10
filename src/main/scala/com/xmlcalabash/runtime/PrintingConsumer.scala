@@ -1,6 +1,6 @@
 package com.xmlcalabash.runtime
 
-import java.io.{ByteArrayOutputStream, File, FileOutputStream, InputStream, PrintStream}
+import java.io.{ByteArrayOutputStream, File, FileOutputStream, PrintStream}
 
 import com.jafpl.messages.Message
 import com.jafpl.steps.DataConsumer

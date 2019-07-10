@@ -15,6 +15,7 @@ class DocumentPropertiesDocument(runtime: XMLCalabashConfig) extends FunctionImp
       throw XProcException.xiExtFunctionNotAllowed()
     }
 
+    val dyn = exprEval.dynContext
     val msg = getMessage(arguments(0).head.asInstanceOf[Item[_]], exprEval)
 
     val builder = new SaxonTreeBuilder(runtime)

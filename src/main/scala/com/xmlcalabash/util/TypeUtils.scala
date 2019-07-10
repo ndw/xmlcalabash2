@@ -2,12 +2,13 @@ package com.xmlcalabash.util
 
 import java.util
 
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.parsers.SequenceBuilder
-import com.xmlcalabash.runtime.{ExpressionContext, XMLCalabashRuntime}
+import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime}
 import jdk.nashorn.api.scripting.ScriptObjectMirror
-import net.sf.saxon.s9api._
+import net.sf.saxon.s9api.{ItemType, ItemTypeFactory, Processor, QName, SequenceType, XdmArray, XdmAtomicValue, XdmEmptySequence, XdmMap, XdmNode, XdmValue}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -120,36 +121,47 @@ object TypeUtils {
   }
 }
 
-class TypeUtils(val config: XMLCalabashRuntime) {
-  val typeFactory = new ItemTypeFactory(config.processor)
+class TypeUtils(val processor: Processor) {
+  def this(config: XMLCalabashConfig) = {
+    this(config.processor)
+  }
+  def this(config: XMLCalabashRuntime) = {
+    this(config.processor)
+  }
 
-  def castAtomicAs(value: XdmAtomicValue, xsdtype: Option[QName], context: ExpressionContext): XdmAtomicValue = {
-    if (xsdtype.isEmpty) {
+  val typeFactory = new ItemTypeFactory(processor)
+
+  def castAtomicAs(value: XdmAtomicValue, seqType: Option[SequenceType], context: StaticContext): XdmAtomicValue = {
+    if (seqType.isEmpty) {
       return value
     }
 
-    if ((xsdtype.get == XProcConstants.xs_untypedAtomic) || (xsdtype.get == XProcConstants.xs_string)) {
+    castAtomicAs(value, seqType.get.getItemType, context)
+  }
+
+  def castAtomicAs(value: XdmAtomicValue, xsdtype: ItemType, context: StaticContext): XdmAtomicValue = {
+    if ((xsdtype == ItemType.UNTYPED_ATOMIC) || (xsdtype == ItemType.STRING)) {
       return value
     }
 
-    if (xsdtype.get == XProcConstants.xs_QName) {
-      return new XdmAtomicValue(ValueParser.parseQName(value.getStringValue, context.staticContext))
+    if (xsdtype == ItemType.QNAME) {
+      val qnamev = value.getPrimitiveTypeName match {
+        case XProcConstants.xs_string => new XdmAtomicValue(ValueParser.parseQName(value.getStringValue, context))
+        case XProcConstants.xs_QName => value
+        case _ =>
+          throw new RuntimeException(s"Don't know how to convert $value to an xs:QName")
+      }
+      return qnamev
     }
 
-    // FIXME: deal with the psuedo-types in some more rational way
-    if (xsdtype.get == XProcConstants.pxs_XSLTMatchPattern) {
-      return value
-    }
-
-    val itype = typeFactory.getAtomicType(xsdtype.get)
-    new XdmAtomicValue(value.getStringValue, itype)
+    new XdmAtomicValue(value.getStringValue, xsdtype)
   }
 
   // This was added experimentally to handle lists in literal values for include-filter and exclude-filter.
   // It was subsequently decided that literal values shouldn't be lists, so this is no longer being used.
   // I'm leaving it around for the time being (19 Aug 2018) in case it turns out to be useful somewhere
   // else.
-  def castSequenceAs(value: XdmAtomicValue, xsdtype: Option[QName], occurrence: String, context: ExpressionContext): XdmValue = {
+  def castSequenceAs(value: XdmAtomicValue, xsdtype: Option[QName], occurrence: String, context: StaticContext): XdmValue = {
     // Today, we only need to handle a sequence of strings
     if (xsdtype.isEmpty || xsdtype.get != XProcConstants.xs_string) {
       throw new IllegalArgumentException("Only lists of strings are supported")

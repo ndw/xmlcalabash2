@@ -3,7 +3,8 @@ package com.xmlcalabash.testing
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ModelException, TestException, XProcException}
 import com.xmlcalabash.messages.XdmNodeItemMessage
-import com.xmlcalabash.runtime.{BufferingConsumer, ExpressionContext, XMLCalabashRuntime, XProcMetadata}
+import com.xmlcalabash.model.xml.Parser
+import com.xmlcalabash.runtime.{BufferingConsumer, StaticContext, XMLCalabashRuntime, XProcMetadata}
 import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
@@ -19,6 +20,8 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
   private var _bindings = mutable.HashMap.empty[QName, XdmValue]
   private var _tests    = Option.empty[String]
   private val _test     = new QName("", "test")
+  private val _parser   = new Parser(runtimeConfig)
+  private val context   = new StaticContext(runtimeConfig)
 
   def pipeline: Option[XdmNode] = _pipeline
   def pipeline_=(pipe: XdmNode): Unit = {
@@ -59,20 +62,21 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
 
     var runtime: XMLCalabashRuntime = null
     try {
-      val decl = runtimeConfig.load(_pipeline.get)
-      runtime = decl.config
+      val decl = _parser.loadDeclareStep(_pipeline.get)
+      decl.xdump()
+      runtime = decl.runtime()
       val result = new BufferingConsumer()
 
       for (port <- _inputs.keySet) {
         for (item <- _inputs(port)) {
-          runtime.input(port, new XdmNodeItemMessage(item, new XProcMetadata(MediaType.XML)))
+          runtime.input(port, new XdmNodeItemMessage(item, new XProcMetadata(MediaType.XML), context))
         }
       }
 
       runtime.output("result", result)
 
       for (bind <- _bindings.keySet) {
-        runtime.option(bind, new XProcVarValue(_bindings(bind), ExpressionContext.NONE))
+        runtime.option(bind, new XProcVarValue(_bindings(bind), context))
       }
 
       runtime.run()

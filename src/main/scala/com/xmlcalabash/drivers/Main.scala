@@ -1,33 +1,32 @@
 package com.xmlcalabash.drivers
 
-import java.io.{File, PrintWriter}
 import java.net.URI
 
 import com.jafpl.exceptions.{JafplException, JafplLoopDetected}
-import com.jafpl.graph.{Binding, Graph, Node}
-import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig, XMLCalabashDebugOptions}
+import com.jafpl.graph.{Binding, Node}
+import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.{ModelException, ParseException, StepException, XProcException}
-import com.xmlcalabash.model.xml.DeclareStep
+import com.xmlcalabash.model.xml.Parser
 import com.xmlcalabash.runtime.{PrintingConsumer, XProcMetadata}
-import com.xmlcalabash.util.{ArgBundle, MediaType, URIUtils}
-import net.sf.saxon.s9api.{QName, XdmNode}
+import com.xmlcalabash.util.{ArgBundle, URIUtils}
+import net.sf.saxon.s9api.QName
 
 object Main extends App {
   type OptionMap = Map[Symbol, Any]
 
-  private val config = XMLCalabashConfig.newInstance()
-
+  val config = XMLCalabashConfig.newInstance()
   val options = new ArgBundle(config, args.toList)
-
-  config.debugOptions.injectables = options.injectables
 
   var errored = false
   try {
-    val request = new DocumentRequest(new URI(options.pipeline), MediaType.XML)
-    val response = config.documentManager.parse(request)
+    config.debugOptions.injectables = options.injectables
 
-    val decl = config.load(response.value)
-    val runtime = decl.config
+    val parser = new Parser(config)
+    val pipeline = parser.loadDeclareStep(new URI(options.pipeline))
+
+    config.debugOptions.dumpGraph(pipeline)
+
+    val runtime = pipeline.runtime()
 
     if (config.debugOptions.norun) {
       System.exit(0)
@@ -50,10 +49,6 @@ object Main extends App {
         new PrintingConsumer(runtime, serOpt)
       }
       runtime.output(port, pc)
-    }
-
-    for (bind <- options.params.keySet) {
-      runtime.option(bind, options.params(bind))
     }
 
     runtime.run()
@@ -156,23 +151,5 @@ object Main extends App {
 
   if (errored) {
     System.exit(1)
-  }
-
-  // ===========================================================================================
-
-  private def dumpGraph(graph: Graph, fn: String): Unit = {
-    val pw = new PrintWriter(new File(fn))
-    pw.write(graph.asXML.toString)
-    pw.close()
-  }
-
-  private def dumpXML(pipeline: DeclareStep, fn: String): Unit = {
-    val pw = new PrintWriter(new File(fn))
-    pw.write(pipeline.asXML.toString)
-    pw.close()
-  }
-
-  private def dumpRaw(graph: Graph): Unit = {
-    graph.dump()
   }
 }

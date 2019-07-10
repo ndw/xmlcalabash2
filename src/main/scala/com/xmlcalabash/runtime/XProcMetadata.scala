@@ -5,7 +5,7 @@ import java.net.URI
 import com.jafpl.messages.Metadata
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.util.MediaType
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode, XdmValue}
 
 import scala.collection.mutable
 
@@ -22,6 +22,11 @@ object XProcMetadata {
   def HTML: XProcMetadata = _html
   def TEXT: XProcMetadata = _text
   def EXCEPTION: XProcMetadata = _exception
+  def xml(node: XdmNode): XProcMetadata = {
+    val prop = mutable.HashMap.empty[QName,XdmValue]
+    prop.put(XProcConstants._base_uri, new XdmAtomicValue(node.getBaseURI))
+    new XProcMetadata(MediaType.XML, prop.toMap)
+  }
 }
 
 class XProcMetadata(private val initialContentType: Option[MediaType],

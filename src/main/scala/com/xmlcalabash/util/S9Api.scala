@@ -3,19 +3,21 @@ package com.xmlcalabash.util
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.net.URI
 
+import com.jafpl.graph.Location
 import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.XMLCalabashRuntime
+import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime, XProcMetadata}
 import net.sf.saxon.`type`.BuiltInAtomicType
-import net.sf.saxon.functions.ConstantFunction.False
 import net.sf.saxon.ma.map.MapItem
-import net.sf.saxon.om.{InscopeNamespaceResolver, NodeInfo}
-import net.sf.saxon.s9api.{Axis, QName, Serializer, XdmArray, XdmAtomicValue, XdmEmptySequence, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.om.InscopeNamespaceResolver
+import net.sf.saxon.s9api.{Axis, QName, Serializer, XdmArray, XdmAtomicValue, XdmEmptySequence, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.value.QNameValue
 import org.xml.sax.InputSource
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 object S9Api {
   val OPEN_BRACE = new XdmAtomicValue("{")
@@ -235,55 +237,4 @@ object S9Api {
 
     uriList.toSet
   }
-
-  /*
-  def serialize(xproc: XMLCalabash, nodes: List[XdmValue], serializer: Serializer): Unit = {
-    val qtproc = xproc.processor
-    val xqcomp = qtproc.newXQueryCompiler
-    xqcomp.setModuleURIResolver(xproc.moduleURIResolver)
-    // Patch suggested by oXygen to avoid errors that result from attempting to serialize
-    // a schema-valid document with a schema-naive query
-    xqcomp.getUnderlyingStaticContext.setSchemaAware(xqcomp.getProcessor.getUnderlyingConfiguration.isLicensedFeature(Configuration.LicenseFeature.ENTERPRISE_XQUERY))
-    val xqexec = xqcomp.compile(".")
-    val xqeval = xqexec.load
-    if (xproc.htmlSerializer && "html" == serializer.getOutputProperty(Serializer.Property.METHOD)) {
-      var ch: ContentHandler = null
-      val outputDest = serializer.getOutputDestination
-      if (outputDest == null) {
-        // ???
-        xqeval.setDestination(serializer)
-      } else {
-        outputDest match {
-          case out: OutputStream =>
-            ch = new HtmlSerializer(out)
-            xqeval.setDestination(new SAXDestination(ch))
-          case out: Writer =>
-            ch = new HtmlSerializer(out)
-            xqeval.setDestination(new SAXDestination(ch))
-          case out: File =>
-            try {
-              val fos = new FileOutputStream(out)
-              ch = new HtmlSerializer(fos)
-              xqeval.setDestination(new SAXDestination(ch))
-            } catch {
-              case fnfe: FileNotFoundException =>
-                xqeval.setDestination(serializer)
-              case t: Throwable => throw t
-            }
-          case _ =>
-            xqeval.setDestination(serializer)
-        }
-      }
-    } else {
-      xqeval.setDestination(serializer)
-    }
-
-    for (node <- nodes) {
-      xqeval.setContextItem(node)
-      xqeval.run()
-      // Even if we output an XML decl before the first node, we must not do it before any others!
-      serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
-    }
-  }
-  */
 }

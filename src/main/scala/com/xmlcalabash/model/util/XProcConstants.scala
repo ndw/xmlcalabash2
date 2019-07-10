@@ -33,6 +33,7 @@ object XProcConstants {
   val p_group = new QName("p", ns_p, "group")
   val p_if = new QName("p", ns_p, "if")
   val p_import = new QName("p", ns_p, "import")
+  val p_import_functions = new QName("p", ns_p, "import-functions")
   val p_inline = new QName("p", ns_p, "inline")
   val p_input = new QName("p", ns_p, "input")
   val p_library = new QName("p", ns_p, "library")
@@ -51,6 +52,7 @@ object XProcConstants {
   val p_when = new QName("p", ns_p, "when")
   val p_with_input = new QName("p", ns_p, "with-input")
   val p_with_option = new QName("p", ns_p, "with-option")
+  val p_with_output = new QName("p", ns_p, "with-output")
 
   val p_injectable = new QName("p", ns_p, "injectable")
   val p_start = new QName("p", ns_p, "start")
@@ -136,6 +138,10 @@ object XProcConstants {
   val cx_document = new QName("cx", ns_cx, "document")
   val cx_class = new QName("cx", ns_cx, "class")
   val cx_unknown = new QName("cx", ns_cx, "unknown")
+  val cx_select_filter = new QName("cx", ns_cx, "select-filter")
+  val cx_inline_loader = new QName("cx", ns_cx, "inline-loader")
+  val cx_document_loader = new QName("cx", ns_cx, "document-loader")
+  val cx_empty_loader = new QName("cx", ns_cx, "empty-loader")
 
   val _as = new QName("", "as")
   val _byte_order_mark = new QName("", "byte-order-mark")
@@ -180,6 +186,7 @@ object XProcConstants {
   val _value = new QName("", "value")
   val _values = new QName("", "values")
   val _version = new QName("", "version")
+  val _visibility = new QName("", "visibility")
   val _xpath_version = new QName("", "xpath-version")
 
   val _base_uri = new QName("", "base-uri")

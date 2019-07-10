@@ -110,4 +110,8 @@ class XmlPortSpecification(spec: immutable.Map[String,PortCardinality],
     }
   }
 
+  override def toString: String = {
+    s"XmlPortSpecification $spec"
+  }
+
 }

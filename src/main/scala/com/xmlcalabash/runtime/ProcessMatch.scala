@@ -3,9 +3,9 @@ package com.xmlcalabash.runtime
 import java.net.URI
 import java.util
 
-import com.jafpl.graph.Location
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
+import com.xmlcalabash.model.util.SaxonTreeBuilder
 import net.sf.saxon.om.NamespaceResolver
 import net.sf.saxon.s9api.{Axis, XdmDestination, XdmNode, XdmNodeKind}
 import net.sf.saxon.serialize.SerializationProperties
@@ -16,7 +16,11 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.ListBuffer
 
-class ProcessMatch(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes, staticContext: StaticContext) extends SaxonTreeBuilder(runtime) {
+class ProcessMatch(config: XMLCalabashConfig, processor: ProcessMatchingNodes, context: StaticContext) extends SaxonTreeBuilder(config) {
+  def this(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes, context: StaticContext) {
+    this(runtime.config, processor, context)
+  }
+
   private val SAW_ELEMENT = 1
   private val SAW_WHITESPACE = 2
   private val SAW_TEXT = 4
@@ -28,15 +32,15 @@ class ProcessMatch(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes,
   private var saw = 0
 
   def process(doc: XdmNode, pattern: String): Unit = {
-    val xeval = new XPathEvaluator(config)
-    val resolver = new MatchingNamespaceResolver(staticContext.inScopeNS)
+    val xeval = new XPathEvaluator(config.processor.getUnderlyingConfiguration)
+    val resolver = new MatchingNamespaceResolver(context.nsBindings)
 
     xeval.getStaticContext.setNamespaceResolver(resolver)
 
     try {
       matcher = xeval.createPattern(pattern)
     } catch {
-      case ex: XPathException =>  throw XProcException.xdBadMatchPattern(pattern, ex.getMessage, staticContext.location)
+      case ex: XPathException =>  throw XProcException.xdBadMatchPattern(pattern, ex.getMessage, context.location)
       case t: Exception => throw t
     }
 
@@ -72,7 +76,7 @@ class ProcessMatch(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes,
   def count(doc: XdmNode, pattern: String, deep: Boolean): Integer = {
     nodeCount = 0
 
-    val xeval = new XPathEvaluator(config)
+    val xeval = new XPathEvaluator(config.processor.getUnderlyingConfiguration)
     val resolver = new MatchingNamespaceResolver(nsBindings(doc))
     xeval.getStaticContext.setNamespaceResolver(resolver)
     matcher = xeval.createPattern(pattern)

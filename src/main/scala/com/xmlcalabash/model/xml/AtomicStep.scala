@@ -1,303 +1,259 @@
 package com.xmlcalabash.model.xml
 
-import com.jafpl.graph.{Binding, ContainerStart, Graph, Node}
+import com.jafpl.graph.{ContainerStart, Node}
+import com.jafpl.messages.Message
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
-import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{ExpressionContext, ImplParams, StaticContext, StepExecutable, StepProxy, StepRunner, StepWrapper, XMLCalabashRuntime, XProcExpression, XProcVtExpression, XProcXPathExpression, XmlStep}
-import net.sf.saxon.s9api.QName
+import com.xmlcalabash.runtime.params.StepParams
+import com.xmlcalabash.runtime.{ImplParams, StepExecutable, StepProxy, StepRunner, StepWrapper, XMLCalabashRuntime, XmlStep}
+import com.xmlcalabash.steps.internal.{DocumentLoader, InlineLoader}
+import com.xmlcalabash.util.xc.ElaboratedPipeline
+import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
-class AtomicStep(override val config: XMLCalabashRuntime,
-                 override val parent: Option[Artifact],
-                 override val stepType: QName,
-                 params: Option[ImplParams]) extends PipelineStep(config, parent) {
-  protected[xml] val options = mutable.HashMap.empty[QName, XProcExpression]
-  staticContext.stepType = stepType
-
-  def this(config: XMLCalabashRuntime, parent: Option[Artifact], stepType: QName) = {
-    this(config, parent, stepType, None)
+class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplParams]) extends Step(config) with NamedArtifact {
+  def this(config: XMLCalabashConfig) {
+    this(config, None)
   }
 
-  override def validate(): Boolean = {
-    var valid = super.validate()
-    val stepType = staticContext.stepType
+  def this(config: XMLCalabashConfig, params: ImplParams) {
+    this(config, Some(params))
+  }
 
-    val sig = if (parent.isDefined) {
-      parent.get.stepSignature(stepType).getOrElse(config.signatures.step(stepType))
-    } else {
-      config.signatures.step(stepType)
+  def this(config: XMLCalabashConfig, params: ImplParams, context: Artifact) {
+    this(config, Some(params))
+    _inScopeStatics = context._inScopeStatics
+    _inScopeDynamics = context._inScopeDynamics
+  }
+
+  private var _stepType: QName = _
+  private var _stepImplementation: StepExecutable = _
+
+  def stepType: QName = _stepType
+  protected[model] def stepType_=(stype: QName): Unit = {
+    _stepType = stype
+  }
+
+  override def parse(node: XdmNode): Unit = {
+    super.parse(node)
+    _stepType = node.getNodeName
+  }
+
+  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+    if (declaration(stepType).isEmpty) {
+      throw new RuntimeException(s"No declaration for $stepType")
     }
 
-    val seenOptions = mutable.HashSet.empty[QName]
-    for (key <- attributes.keySet) {
-      if ((stepType.getNamespaceURI == XProcConstants.ns_p && key == XProcConstants._message)
-        || (stepType.getNamespaceURI != XProcConstants.ns_p && key == XProcConstants.p_message)) {
-        // This is the message pseudo-option
-        val avt = ValueParser.parseAvt(attributes(key))
-        val context = new ExpressionContext(staticContext)
-        options.put(key, new XProcVtExpression(context, avt.get, true))
-      } else if (key.getNamespaceURI == "") {
-        if (sig.options.contains(key)) {
-          val opt = sig.option(key, staticContext.location.get)
-          val context = new ExpressionContext(staticContext)
-          seenOptions += key
+    val decl = declaration(stepType).get
 
-          if (opt.declaredType.getOrElse("") == "map(*)") {
-            options.put(key, new XProcXPathExpression(context, attributes(key)))
-          } else {
-            val avt = ValueParser.parseAvt(attributes(key))
-            if (avt.isDefined) {
-              options.put(key, new XProcVtExpression(context, avt.get, true))
-            } else {
-              throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), staticContext.location)
+    for (item <- allChildren) {
+      item match {
+        case winput: WithInput =>
+          winput.makeStructureExplicit(environment)
+          if (winput.port == "") {
+            if (decl.primaryInput.isDefined) {
+              winput.port = decl.primaryInput.get.port
             }
           }
-        } else {
-          throw XProcException.xsUndeclaredOption(stepType, key, staticContext.location)
-        }
-      } else {
-        val avt = ValueParser.parseAvt(attributes(key))
-        if (avt.isDefined) {
-          val context = new ExpressionContext(staticContext)
-          options.put(key, new XProcVtExpression(context, avt.get, true))
-        } else {
-          throw new ModelException(ExceptionCode.BADAVT, List(key.toString, attributes(key)), staticContext.location)
-        }
+        case _ =>
+          item.makeStructureExplicit(environment)
       }
     }
 
-    val okChildren = List(classOf[WithInput], classOf[WithOption])
-    for (child <- relevantChildren) {
-      if (!okChildren.contains(child.getClass)) {
-        throw XProcException.xsElementNotAllowed(staticContext.location, child.nodeName)
+    // Make sure there are with-{input/output/option} elements
+    for (dinput <- decl.inputs) {
+      var found = Option.empty[WithInput]
+      for (winput <- children[WithInput]) {
+        if (dinput.port == winput.port) {
+          found = Some(winput)
+        }
       }
-      valid = valid && child.validate()
+      if (found.isEmpty) {
+        val newwi = new WithInput(config)
+        newwi.port = dinput.port
+        addChild(newwi)
+      }
+    }
 
-      child match {
-        case wo: WithOption =>
-          if (seenOptions.contains(wo.optionName)) {
-            throw XProcException.xsDupWithOptionName(wo.optionName, wo.staticContext.location)
+    for (doutput <- decl.outputs) {
+      val newwo = new WithOutput(config)
+      newwo.port = doutput.port
+      newwo.primary = doutput.primary
+      addChild(newwo)
+    }
+
+    for (doption <- decl.options) {
+      var found = Option.empty[WithOption]
+      for (woption <- children[WithOption]) {
+        if (woption.name == doption.name) {
+          found = Some(woption)
+        }
+      }
+      if (found.isEmpty) {
+        if (attributes.contains(doption.name)) {
+          val woption = new WithOption(config, doption.name)
+          woption.staticContext = staticContext
+          woption.avt = attributes(doption.name)
+          found = Some(woption)
+          addChild(woption)
+        } else {
+          if (doption.required) {
+            throw new RuntimeException("Option value is required")
           } else {
-            seenOptions += wo.optionName
+            val woption = new WithOption(config, doption.name)
+            woption.staticContext = staticContext
+            woption.select = doption.defaultSelect.getOrElse("()")
+            found = Some(woption)
+            addChild(woption)
           }
-
-          if (!sig.options.contains(wo.optionName)) {
-            throw XProcException.xsUndeclaredOption(sig.stepType, wo.optionName, wo.staticContext.location)
-          }
-        case _ => Unit
-      }
-    }
-
-    for (optName <- sig.options) {
-      val opt = sig.option(optName, staticContext.location.get)
-      if (opt.required) {
-        if (!seenOptions.contains(optName)) {
-          throw XProcException.xsMissingRequiredOption(optName, staticContext.location)
         }
       }
 
+      if (found.isDefined && doption.declaredType.isDefined) {
+        found.get.declaredType = doption.declaredType.get
+      }
     }
 
-    valid
+    // Now make sure there are no extras!
+    val seenInput = mutable.HashSet.empty[String]
+    for (winput <- children[WithInput]) {
+      if (!decl.inputPorts.contains(winput.port)) {
+        throw new RuntimeException(s"No port named ${winput.port} on this step")
+      }
+      if (seenInput.contains(winput.port)) {
+        throw XProcException.xsDupWithInputPort(winput.port, location)
+      }
+      seenInput += winput.port
+    }
+
+    val seenOption = mutable.HashSet.empty[QName]
+    for (woption <- children[WithOption]) {
+      if (!decl.optionNames.contains(woption.name)) {
+        throw XProcException.xsUndeclaredOption(stepType, woption.name, location)
+      }
+      if (seenOption.contains(woption.name)) {
+        throw XProcException.xsDupWithOptionName(woption.name, location)
+      }
+      seenOption += woption.name
+    }
   }
 
-  override def makeInputPortsExplicit(): Boolean = {
-    val sig = stepSignature(staticContext.stepType).get
+  override protected[model] def validateStructure(): Unit = {
+    val iport = mutable.HashSet.empty[String]
 
-    // Work out which input port is primary
-    var primaryInput = Option.empty[String]
-    for (port <- sig.inputPorts) {
-      val siginput = sig.input(port, staticContext.location.get)
-      if (siginput.primary) {
-        primaryInput = Some(siginput.name)
+    for (child <- allChildren) {
+      child.validateStructure()
+      child match {
+        case art: WithInput =>
+          if (iport.contains(art.port)) {
+            throw XProcException.xsDupWithInputPort(art.port, location)
+          }
+          iport += art.port
+        case art: WithOutput => Unit
+        case art: WithOption => Unit
+        case _ =>
+          throw new RuntimeException(s"Invalid content in atomic $this")
       }
     }
-
-    // If the port has been omitted, it refers to the primary port
-    for (input <- inputs) {
-      if (input.port.isEmpty) {
-        if (primaryInput.isEmpty) {
-          throw XProcException.xsPrimaryInputPortRequired(staticContext.stepType, staticContext.location)
-        } else {
-          input.port = primaryInput.get
-        }
-      }
-    }
-
-    // It's an error to have two bindings for the same port name
-    val seenPorts = mutable.HashSet.empty[String]
-    for (input <- inputs) {
-      val port = input.port.get
-      if (seenPorts.contains(port)) {
-        throw new ModelException(ExceptionCode.DUPINPUTPORT, List(port), staticContext.location)
-      }
-      seenPorts += port
-    }
-
-    for (port <- sig.inputPorts) {
-      val siginput = sig.input(port, staticContext.location.get)
-      if (input(port).isEmpty) {
-        val in = new Input(config, this, port, primary=siginput.primary, sequence=siginput.sequence)
-        addChild(in)
-      } else {
-        val in = input(port).get
-        in.primary = siginput.primary
-        in.sequence = siginput.sequence
-      }
-    }
-
-    for (port <- inputPorts) {
-      if (!sig.inputPorts.contains(port)) {
-        throw XProcException.xsBadPortName(staticContext.stepType, port, staticContext.location)
-      }
-    }
-
-    true
   }
 
-  override def makeOutputPortsExplicit(): Boolean = {
-    val sig = stepSignature(staticContext.stepType).get
-
-    for (port <- sig.outputPorts) {
-      val sigoutput = sig.output(port, staticContext.location.get)
-      if (output(port).isEmpty) {
-        val out = new Output(config, this, port, primary=sigoutput.primary, sequence=sigoutput.sequence)
-        addChild(out)
-      } else {
-        val out = output(port).get
-        out.primary = sigoutput.primary
-        out.sequence = sigoutput.sequence
-      }
-    }
-
-    for (port <- outputPorts) {
-      if (!sig.outputPorts.contains(port)) {
-        throw new ModelException(ExceptionCode.BADATOMICINPUTPORT, List(staticContext.stepType.toString, port), staticContext.location)
-      }
-    }
-
-    true
-  }
-
-  def stepImplementation(staticContext: StaticContext): StepExecutable = {
+  def stepImplementation(staticContext: XMLContext): StepExecutable = {
     stepImplementation(staticContext, None)
   }
 
-  def stepImplementation(staticContext: StaticContext, implParams: Option[ImplParams]): StepExecutable = {
-    val stepType = staticContext.stepType
+  def stepImplementation(staticContext: XMLContext, implParams: Option[ImplParams]): StepExecutable = {
     val location = staticContext.location
 
-    val sig = stepSignature(stepType)
-    if (sig.isEmpty) {
-      config.stepImplementation(staticContext, implParams)
-    } else {
-      val implClass = sig.get.implementation
-      if (implClass.isEmpty) {
-        val declStep = parentDeclareStep()
-        if (declStep.isDefined) {
-          val decl = declStep.get.stepDeclaration(stepType)
-          new StepRunner(config, decl.get, sig.get)
-        } else {
-          throw new ModelException(ExceptionCode.NOIMPL, stepType.toString, location)
-        }
+    val sig = declaration(stepType).get
+    val implClass = sig.implementation
+    if (implClass.isEmpty) {
+      val declStep = sig.declaration
+      if (declStep.isDefined) {
+        new StepRunner(config, declStep.get, sig)
       } else {
-        val klass = Class.forName(implClass.head).newInstance()
-        klass match {
-          case step: XmlStep =>
-            new StepWrapper(step, sig.get)
-          case _ =>
-            throw new ModelException(ExceptionCode.IMPLNOTSTEP, stepType.toString, location)
-        }
+        throw new ModelException(ExceptionCode.NOIMPL, stepType.toString, location)
+      }
+    } else {
+      val klass = Class.forName(implClass.head).newInstance()
+      klass match {
+        case step: XmlStep =>
+          new StepWrapper(step, sig)
+        case _ =>
+          throw new ModelException(ExceptionCode.IMPLNOTSTEP, stepType.toString, location)
       }
     }
   }
 
-  override def makeGraph(graph: Graph, parent: Node) {
-    for (opt <- options.keySet) {
-      val withOpt = new WithOption(config, this, opt, options(opt))
-      addChild(withOpt)
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+    val start = parent.asInstanceOf[ContainerStart]
+    _stepImplementation = stepImplementation(staticContext)
+    _stepImplementation.configure(config, params)
+
+    var proxyParams: Option[ImplParams] = params
+
+    // Handle any with-option values for this step that have been computed statically
+    val staticallyComputed = mutable.HashMap.empty[String, Message]
+    for (woption <- children[WithOption]) {
+      if (woption.staticValue.isDefined) {
+        staticallyComputed.put(woption.name.getClarkName, woption.staticValue.get)
+      }
+    }
+    if (staticallyComputed.nonEmpty) {
+      if (proxyParams.isDefined) {
+        throw new RuntimeException("static options and constructed params?")
+      }
+      proxyParams = Some(new StepParams(staticallyComputed.toMap))
     }
 
-    var proxy: StepProxy = null
-    val node = parent match {
-      case start: ContainerStart =>
-        val impl = stepImplementation(staticContext)
-        proxy = new StepProxy(config, staticContext.stepType, impl, params, staticContext)
-
-        for (port <- inputPorts) {
-          val in = input(port)
-          if (in.get.select.isDefined) {
-            proxy.setDefaultSelect(port, in.get.selectExpression)
-          }
-        }
-
-        start.addAtomic(proxy, stepType + " " + name)
-      case _ =>
-        throw new ModelException(ExceptionCode.INTERNAL, "Atomic step parent isn't a container???", staticContext.location)
-    }
+    val pcontext = staticContext.withStatics(inScopeStatics)
+    val proxy = new StepProxy(runtime, stepType, _stepImplementation, proxyParams, pcontext)
+    val node = start.addAtomic(proxy, stepType + " " + stepName)
     _graphNode = Some(node)
-    proxy.nodeId = node.id
-    config.addNode(node.id, this)
 
-    for (child <- children) {
-      child.makeGraph(graph, node)
-    }
-  }
-
-  override def makeEdges(graph: Graph, parent: Node) {
-    for (child <- children) {
+    for (child <- allChildren) {
       child match {
-        case doc: Documentation => Unit
-        case pipe: PipeInfo => Unit
-        case _ =>
-          child.makeEdges(graph, parent)
-      }
-    }
-
-    for (ref <- variableRefs) {
-      val bind = findBinding(ref)
-      if (bind.isEmpty) {
-        throw new ModelException(ExceptionCode.NOBINDING, ref.toString, staticContext.location)
-      }
-
-      bind.get match {
-        case optDecl: OptionDecl =>
-          graph.addBindingEdge(optDecl._graphNode.get.asInstanceOf[Binding], graphNode)
-        case varDecl: Variable =>
-          graph.addBindingEdge(varDecl._graphNode.get.asInstanceOf[Binding], graphNode)
-        case _ =>
-          throw new ModelException(ExceptionCode.INTERNAL, s"Unexpected $ref binding: ${bind.get}", staticContext.location)
+        case woption: WithOption =>
+          woption.graphNodes(runtime, _graphNode.get)
+        case _ => Unit
       }
     }
   }
 
-  override protected[xmlcalabash] def exposeStatics(): Boolean = {
-    val statics = collectStatics(Map.empty[QName,Artifact])
-    for (child <- children) {
-      child.exposeStatics()
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+    for (child <- allChildren) {
+      child.graphEdges(runtime, _graphNode.get)
     }
-    true
   }
 
-  override def asXML: xml.Elem = {
-    dumpAttr("name", _name.getOrElse(name))
-    dumpAttr("id", id.toString)
-    dumpAttr(attributes.toMap)
-
-    val nodes = ListBuffer.empty[xml.Node]
-    if (children.nonEmpty) {
-      nodes += xml.Text("\n")
+  // This is not (yet?) a generalized mechanism; this is a hack to disable default inputs
+  def disable(): Unit = {
+    _stepImplementation match {
+      case wrapper: StepWrapper =>
+        wrapper.step match {
+          case inline: InlineLoader =>
+            inline.disable()
+          case document: DocumentLoader =>
+            document.disable()
+          case _ =>
+            throw new RuntimeException("Attempt to disable something that's not an inline or document?")
+        }
+      case _ =>
+        throw new RuntimeException("Attempt to disable something that's not a stepwrapper?")
     }
-    for (child <- children) {
-      nodes += child.asXML
-      nodes += xml.Text("\n")
-    }
-
-    val stepType = staticContext.stepType
-    new xml.Elem(stepType.getPrefix, stepType.getLocalName,
-      dump_attr.getOrElse(xml.Null), namespaceScope, false, nodes:_*)
   }
 
+  override def xdump(xml: ElaboratedPipeline): Unit = {
+    xml.startAtomic(tumble_id, stepName, stepType)
+    for (child <- rawChildren) {
+      child.xdump(xml)
+    }
+    xml.endAtomic()
+  }
+
+
+
+  override def toString: String = {
+    s"$stepType $stepName"
+  }
 }

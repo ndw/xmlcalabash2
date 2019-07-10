@@ -1,6 +1,6 @@
 package com.xmlcalabash.steps
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, FileOutputStream, InputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.net.URI
 import java.util.Base64
 
@@ -9,9 +9,9 @@ import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.{BinaryNode, ExpressionContext, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils, ValueUtils}
-import net.sf.saxon.s9api.{QName, Serializer, XdmItem, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmItem, XdmNode, XdmValue}
 import org.apache.http.util.ByteArrayBuffer
 
 import scala.collection.mutable
@@ -30,7 +30,7 @@ class CastContentType() extends DefaultXmlStep {
     this.metadata = Some(metadata)
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
+  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
     variable match {
       case XProcConstants._content_type =>
         castTo = MediaType.parse(ValueUtils.singletonStringValue(value, context.location))
@@ -73,18 +73,18 @@ class CastContentType() extends DefaultXmlStep {
         consumer.get.receive("result", resp.value, new XProcMetadata(castTo, metadata.get.properties))
       case MediaType.JSON =>
         // Step 1, convert the map into a JSON text string
-        var expr = new XProcXPathExpression(ExpressionContext.NONE, "serialize($map, map {\"method\": \"json\"})")
+        var expr = new XProcXPathExpression(context, "serialize($map, map {\"method\": \"json\"})")
         val bindingsMap = mutable.HashMap.empty[String, Message]
-        var vmsg = new XdmValueItemMessage(item.get.asInstanceOf[XdmItem], XProcMetadata.XML, ExpressionContext.NONE)
+        var vmsg = new XdmValueItemMessage(item.get.asInstanceOf[XdmItem], XProcMetadata.XML, context)
         bindingsMap.put("{}map", vmsg)
-        var smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap)
+        var smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
 
         // Step 2, convert the JSON to XML
-        expr = new XProcXPathExpression(ExpressionContext.NONE, "json-to-xml($json)")
+        expr = new XProcXPathExpression(context, "json-to-xml($json)")
         bindingsMap.clear()
-        vmsg = new XdmValueItemMessage(smsg.item, XProcMetadata.XML, ExpressionContext.NONE)
+        vmsg = new XdmValueItemMessage(smsg.item, XProcMetadata.XML, context)
         bindingsMap.put("{}json", vmsg)
-        smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap)
+        smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
 
         consumer.get.receive("result", smsg.item, new XProcMetadata(castTo, metadata.get.properties))
       case MediaType.OCTET_STREAM =>
@@ -147,11 +147,11 @@ class CastContentType() extends DefaultXmlStep {
         serializeNodes(item.asInstanceOf[XdmNode], contentType)
 
       case MediaType.JSON =>
-        var expr = new XProcXPathExpression(ExpressionContext.NONE, "serialize($map, map {\"method\": \"json\"})")
+        var expr = new XProcXPathExpression(context, "serialize($map, map {\"method\": \"json\"})")
         val bindingsMap = mutable.HashMap.empty[String, Message]
-        var vmsg = new XdmValueItemMessage(item.get.asInstanceOf[XdmValue], XProcMetadata.XML, ExpressionContext.NONE)
+        var vmsg = new XdmValueItemMessage(item.get.asInstanceOf[XdmValue], XProcMetadata.XML, context)
         bindingsMap.put("{}map", vmsg)
-        var smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap)
+        var smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
 
         val builder = new SaxonTreeBuilder(config)
         builder.startDocument(metadata.get.baseURI)

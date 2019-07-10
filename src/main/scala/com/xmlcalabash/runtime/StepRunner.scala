@@ -1,9 +1,9 @@
 package com.xmlcalabash.runtime
-import com.jafpl.graph.{Binding, Location}
-import com.jafpl.messages.{ExceptionMessage, JoinGateMessage, Message}
+import com.jafpl.graph.Location
+import com.jafpl.messages.{ExceptionMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality}
-import com.xmlcalabash.config.StepSignature
+import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.{AnyItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.xml.DeclareStep
@@ -12,8 +12,9 @@ import net.sf.saxon.s9api.{QName, XdmItem, XdmValue}
 
 import scala.collection.mutable
 
-class StepRunner(private val pruntime: XMLCalabashRuntime, val decl: DeclareStep, val signature: StepSignature) extends StepExecutable {
-  private val runtime = decl.config
+class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep, val signature: StepSignature) extends StepExecutable {
+  private var runtime: XMLCalabashRuntime = _
+  private var _location = Option.empty[Location]
   private val consumers = mutable.HashMap.empty[String, ConsumerMap]
 
   private val cardMap = mutable.HashMap.empty[String,PortCardinality]
@@ -21,12 +22,12 @@ class StepRunner(private val pruntime: XMLCalabashRuntime, val decl: DeclareStep
   for (port <- signature.inputPorts) {
     val portSig = signature.input(port, decl.location.get)
     portSig.cardinality match {
-      case "1" => cardMap.put(portSig.name, new PortCardinality(1,1))
-      case "*" => cardMap.put(portSig.name, new PortCardinality(0))
-      case "+" => cardMap.put(portSig.name, new PortCardinality(1))
+      case "1" => cardMap.put(portSig.port, new PortCardinality(1,1))
+      case "*" => cardMap.put(portSig.port, new PortCardinality(0))
+      case "+" => cardMap.put(portSig.port, new PortCardinality(1))
       case _ => throw new RuntimeException("WTF? Cardinality=" + portSig.cardinality)
     }
-    typeMap.put(portSig.name, List("application/octet-stream")) // FIXME: THIS IS A LIE
+    typeMap.put(portSig.port, List("application/octet-stream")) // FIXME: THIS IS A LIE
   }
 
   private val iSpec = new XmlPortSpecification(cardMap.toMap, typeMap.toMap)
@@ -35,12 +36,12 @@ class StepRunner(private val pruntime: XMLCalabashRuntime, val decl: DeclareStep
   for (port <- signature.outputPorts) {
     val portSig = signature.output(port, decl.location.get)
     portSig.cardinality match {
-      case "1" => cardMap.put(portSig.name, new PortCardinality(1,1))
-      case "*" => cardMap.put(portSig.name, new PortCardinality(0))
-      case "+" => cardMap.put(portSig.name, new PortCardinality(1))
+      case "1" => cardMap.put(portSig.port, new PortCardinality(1,1))
+      case "*" => cardMap.put(portSig.port, new PortCardinality(0))
+      case "+" => cardMap.put(portSig.port, new PortCardinality(1))
       case _ => throw new RuntimeException("WTF? Cardinality=" + portSig.cardinality)
     }
-    typeMap.put(portSig.name, List("application/octet-stream")) // FIXME: THIS IS A LIE
+    typeMap.put(portSig.port, List("application/octet-stream")) // FIXME: THIS IS A LIE
   }
   private val oSpec = new XmlPortSpecification(cardMap.toMap, typeMap.toMap)
 
@@ -58,35 +59,35 @@ class StepRunner(private val pruntime: XMLCalabashRuntime, val decl: DeclareStep
   }
 
   override def setLocation(location: Location): Unit = {
-    // nop
+    _location = Some(location)
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: ExpressionContext): Unit = {
-    runtime.option(variable, new XProcVarValue(value, ExpressionContext.NONE))
+  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
+    runtime.option(variable, new XProcVarValue(value, new StaticContext(context)))
   }
 
   // Input to the pipeline
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
-    if (item == runtime.joinGateMarker) {
-      // This is a hack to tunnel the JoinGateMessage through...
-      runtime.inputMessage(port, new JoinGateMessage())
-      return
-    }
-
     item match {
       case value: XdmItem => runtime.input(port, value, metadata)
       case _ => throw new RuntimeException("Unexpected value sent to StepRunner")
     }
   }
 
-  override def initialize(config: RuntimeConfiguration, params: Option[ImplParams]): Unit = {
+  override def configure(config: XMLCalabashConfig, params: Option[ImplParams]): Unit = {
+    // nop
+  }
+
+  override def initialize(config: RuntimeConfiguration): Unit = {
+    //decl.dump()
+    runtime = decl.runtime()
     for ((port, consumer) <- consumers) {
       runtime.output(port, consumer)
     }
   }
 
   override def run(context: StaticContext): Unit = {
-    runtime.runAsStep()
+    runtime.run()
   }
 
   override def reset(): Unit = {
@@ -103,9 +104,10 @@ class StepRunner(private val pruntime: XMLCalabashRuntime, val decl: DeclareStep
 
   class ConsumerMap(val result_port: String, val consumer: XProcDataConsumer) extends DataConsumer {
     override def receive(port: String, message: Message): Unit = {
-      // I'm not sure why port is incorrect here. Because it's the output from the consumer, maybe?
-      // Anyway, we construct these mapping objects so that result_port is the correct output
-      // port name.
+      // The data consumer always receives input on its "source" port. We have to construct
+      // this consumer so that it knows what output port to deliver to.
+
+      //println(s"RECEIVE: $result_port: $message")
 
       // Get exceptions out of the way
       message match {
