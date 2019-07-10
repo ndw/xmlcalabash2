@@ -98,7 +98,9 @@ class InlineLoader() extends AbstractLoader {
 
     val props = mutable.HashMap.empty[QName, XdmItem]
     props ++= docProps
-    props.put(XProcConstants._base_uri, new XdmAtomicValue(node.getBaseURI))
+    if (!props.contains(XProcConstants._base_uri)) {
+      props.put(XProcConstants._base_uri, new XdmAtomicValue(node.getBaseURI))
+    }
 
     // If it's not an XML content type, make sure it doesn't contain any elements
     if (!contentType.xmlContentType && !contentType.htmlContentType) {
@@ -341,7 +343,7 @@ class InlineLoader() extends AbstractLoader {
     val evaluator = config.expressionEvaluator
     val expr = new XProcVtExpression(exprContext, text)
 
-    val iter = evaluator.value(expr, List.empty[Message], config.runtimeBindings(msgBindings.toMap), None).item.iterator()
+    val iter = evaluator.value(expr, contextItem.toList, config.runtimeBindings(msgBindings.toMap), None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
       next match {
