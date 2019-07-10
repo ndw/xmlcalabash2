@@ -3,6 +3,7 @@ package com.xmlcalabash.steps
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.util.S9Api
 import net.sf.saxon.`type`.SimpleType
 import net.sf.saxon.om.{FingerprintedQName, NameOfNode, NamespaceBinding, NodeInfo, NodeName}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
@@ -52,7 +53,11 @@ class NamespaceRename() extends DefaultXmlStep with ProcessMatchingNodes {
     val inscopeNS = inode.getDeclaredNamespaces(null)
     var newNS = null
 
+    val nsbindings = mutable.HashMap.empty[String, String]
     if (applyTo == "attributes") {
+      if (node.getNodeName.getPrefix != "") {
+        nsbindings.put(node.getNodeName.getPrefix, node.getNodeName.getNamespaceURI)
+      }
       matcher.addStartElement(NameOfNode.makeName(inode), inode.getSchemaType, inscopeNS.toList)
     } else {
       val newNS = ListBuffer.empty[NamespaceBinding]
@@ -82,6 +87,9 @@ class NamespaceRename() extends DefaultXmlStep with ProcessMatchingNodes {
         nameCode = new FingerprintedQName(pfx, to, nameCode.getLocalPart)
       }
 
+      if (nameCode.getPrefix != "") {
+        nsbindings.put(nameCode.getPrefix, nameCode.getURI)
+      }
       matcher.addStartElement(nameCode, inode.getSchemaType, newNS.toList)
     }
 
@@ -92,6 +100,9 @@ class NamespaceRename() extends DefaultXmlStep with ProcessMatchingNodes {
         val attr = iter.next()
         if (attr.getNodeName.getNamespaceURI != from) {
           curAttr += attr.getNodeName
+          if (attr.getNodeName.getPrefix != "") {
+            nsbindings.put(attr.getNodeName.getPrefix, attr.getNodeName.getNamespaceURI)
+          }
         }
       }
 
@@ -105,7 +116,7 @@ class NamespaceRename() extends DefaultXmlStep with ProcessMatchingNodes {
         val uri = nameCode.getURI
         if (from == uri) {
           if (pfx == "") {
-            pfx = "_1"
+            pfx = S9Api.uniquePrefix(nsbindings.keySet.toSet)
           }
 
           nameCode = new FingerprintedQName(pfx, to, nameCode.getLocalPart)

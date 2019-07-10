@@ -237,4 +237,17 @@ object S9Api {
 
     uriList.toSet
   }
+
+  def uniquePrefix(prefixes: Set[String]): String = {
+    var acount = 0
+    var aprefix = "_0"
+    var done = false
+    while (!done) {
+      acount += 1
+      aprefix = s"_$acount"
+      done = !prefixes.contains(aprefix)
+    }
+
+    aprefix
+  }
 }

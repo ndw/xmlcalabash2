@@ -3,6 +3,7 @@ package com.xmlcalabash.steps
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 import net.sf.saxon.value.QNameValue
 
@@ -44,7 +45,7 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
       || (attrName.getPrefix != "xml" && attrName.getNamespaceURI == XProcConstants.ns_xml)
       || (attrName.getPrefix == "xml" && attrName.getNamespaceURI != XProcConstants.ns_xml)
     ) {
-      throw new IllegalArgumentException("Bad attribute name")
+      throw XProcException.xcCannotAddNamespaces(attrName, location)
     }
 
     matcher = new ProcessMatch(config, this, context)
@@ -60,12 +61,20 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
   override def startElement(node: XdmNode): Boolean = {
     // We're going to loop through the attributes several times, so let's grab them.
     // If the element has an attribute named attrName, skip it because we're going to replace it.
+    val nsbindings = mutable.HashMap.empty[String, String]
+    if (node.getNodeName.getPrefix != "") {
+      nsbindings.put(node.getNodeName.getPrefix, node.getNodeName.getNamespaceURI)
+    }
+
     val attrs = mutable.HashMap.empty[QName, String]
     val iter = node.axisIterator(Axis.ATTRIBUTE)
     while (iter.hasNext) {
       val attr = iter.next
       if (attr.getNodeName != attrName) {
         attrs.put(attr.getNodeName, attr.getStringValue)
+        if (attr.getNodeName.getPrefix != "") {
+          nsbindings.put(attr.getNodeName.getPrefix, attr.getNodeName.getNamespaceURI)
+        }
       }
     }
 
@@ -77,32 +86,15 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
       var prefix = attrName.getPrefix
       val ns = attrName.getNamespaceURI
       // If the requested prefix is bound to something else, drop it.
-      for (attr <- attrs.keySet) {
-        if (prefix == attr.getPrefix && attr.getNamespaceURI != ns) {
-          prefix = ""
-        }
+      if (nsbindings.contains(prefix) && ns != nsbindings(prefix)) {
+        prefix = ""
       }
 
       // If there isn't a prefix, invent one
       if (prefix == "") {
-        var acount = 0
-        var aprefix = "_0"
-        var done = false
-        while (!done) {
-          acount += 1
-          aprefix = s"_$acount"
-          done = true
-
-          for (attr <- attrs.keySet) {
-            if (aprefix == attr.getPrefix) {
-              done = false
-            }
-          }
-        }
-
-        matcher.addNamespace(aprefix, attrName.getNamespaceURI)
-
-        instanceAttrName = new QName(aprefix, attrName.getNamespaceURI, attrName.getLocalName)
+        val prefix = S9Api.uniquePrefix(nsbindings.keySet.toSet)
+        matcher.addNamespace(prefix, attrName.getNamespaceURI)
+        instanceAttrName = new QName(prefix, attrName.getNamespaceURI, attrName.getLocalName)
       }
     }
 
