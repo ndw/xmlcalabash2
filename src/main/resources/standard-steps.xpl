@@ -12,8 +12,6 @@
   <p:output port="result" content-types="application/xml"/>
   <p:option name="match" cx:as="XSLTMatchPattern" select="'/*'"/>
   <p:option name="attribute-name" required="true" as="xs:QName"/>
-  <p:option name="attribute-prefix" as="xs:NCName"/>
-  <p:option name="attribute-namespace" as="xs:anyURI"/>
   <p:option name="attribute-value" required="true" as="xs:string"/>
 </p:declare-step>
 
@@ -48,8 +46,6 @@
   <p:input port="source" sequence="true" content-types="*/*"/>
   <p:output port="result" sequence="true" content-types="*/*"/>
   <p:option name="code" required="true" as="xs:QName"/>
-  <p:option name="code-prefix" as="xs:NCName"/>
-  <p:option name="code-namespace" as="xs:anyURI"/>
 </p:declare-step>
 
 <p:declare-step type="p:hash">
@@ -192,8 +188,6 @@
   <p:input port="source" content-types="application/xml */*+xml text/*" sequence="true"/>
   <p:output port="result" sequence="true" content-types="application/xml"/>
   <p:option name="wrapper" required="true" as="xs:QName"/>
-  <p:option name="wrapper-prefix" as="xs:NCName"/>
-  <p:option name="wrapper-namespace" as="xs:anyURI"/>
   <p:option name="group-adjacent" as="xs:string" cx:as="XPathExpression"/>
 </p:declare-step>
 
