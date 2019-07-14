@@ -5,7 +5,7 @@ import com.jafpl.steps.{ViewportComposer, ViewportItem}
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XProcVtExpression}
+import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XProcVtExpression, XProcXPathExpression}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode, XdmValue}
 
 import scala.collection.mutable
@@ -37,20 +37,19 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
         throw new RuntimeException("viewport expects an xml document")
     }
 
-    val patternAvt = ValueParser.parseAvt(patternString)
-    if (patternAvt.isDefined && patternAvt.get.size > 1) {
-      val bindings = mutable.HashMap.empty[String,Message] ++ context.statics
-      for ((name, message) <- dynBindings) {
-        bindings.put(name,message)
-      }
-
-      val expr = new XProcVtExpression(context, patternAvt.get)
-      var msg = config.expressionEvaluator.singletonValue(expr, List(), bindings.toMap, None)
-      // Ok, now we have a string value
-      pattern = msg.item.getUnderlyingValue.getStringValue
+    val bindings = mutable.HashMap.empty[String,Message] ++ context.statics
+    for ((name, message) <- dynBindings) {
+      bindings.put(name,message)
     }
 
-    matcher = new ProcessMatch(config, new Decomposer(), context)
+    /*
+    val expr = new XProcXPathExpression(context, patternString)
+    var msg = config.expressionEvaluator.singletonValue(expr, List(), bindings.toMap, None)
+    // Ok, now we have a string value
+    pattern = msg.item.getUnderlyingValue.getStringValue
+    */
+
+    matcher = new ProcessMatch(config, new Decomposer(), context, bindings.toMap)
     matcher.process(source, pattern)
     decomposed = matcher.result
     items.toList

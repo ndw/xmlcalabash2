@@ -13,6 +13,16 @@ class DataSource(override val config: XMLCalabashConfig) extends Artifact(config
   }
 
   protected[model] def normalizeDataSourceToPipes(stepType: QName, params: ImplParams): Unit = {
+    if (parent.isDefined && parent.get.parent.isDefined) {
+      parent.get.parent.get match {
+        case binding: NameBinding =>
+          if (binding.static) {
+            return // this all has to be resolved statically
+          }
+        case _ => Unit
+      }
+    }
+
     val loader = new AtomicStep(config, params, this)
     loader.stepType = stepType
     loader._drp = defaultReadablePort

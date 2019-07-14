@@ -21,7 +21,8 @@ class EmptyLoader() extends AbstractLoader {
     }
 
     params.get match {
-      case doc: EmptyLoaderParams => Unit
+      case doc: EmptyLoaderParams =>
+        exprContext = doc.context
       case _ =>
         throw new RuntimeException("document loader params wrong type")
     }

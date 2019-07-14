@@ -3,22 +3,32 @@ package com.xmlcalabash.runtime
 import java.net.URI
 import java.util
 
+import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util.SaxonTreeBuilder
+import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
 import net.sf.saxon.om.NamespaceResolver
-import net.sf.saxon.s9api.{Axis, XdmDestination, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api._
 import net.sf.saxon.serialize.SerializationProperties
-import net.sf.saxon.sxpath.{XPathEvaluator, XPathExpression}
 import net.sf.saxon.trans.XPathException
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.ListBuffer
 
-class ProcessMatch(config: XMLCalabashConfig, processor: ProcessMatchingNodes, context: StaticContext) extends SaxonTreeBuilder(config) {
+class ProcessMatch(config: XMLCalabashConfig,
+                   processor: ProcessMatchingNodes,
+                   context: StaticContext,
+                   bindings: Option[Map[String,Message]]) extends SaxonTreeBuilder(config) {
   def this(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes, context: StaticContext) {
-    this(runtime.config, processor, context)
+    this(runtime.config, processor, context, None)
+  }
+  def this(runtime: XMLCalabashConfig, processor: ProcessMatchingNodes, context: StaticContext) {
+    this(runtime, processor, context, None)
+  }
+  def this(config: XMLCalabashConfig, processor: ProcessMatchingNodes, context: StaticContext, bindings: Map[String,Message]) {
+    this(config, processor, context, Some(bindings))
   }
 
   private val SAW_ELEMENT = 1
@@ -27,23 +37,12 @@ class ProcessMatch(config: XMLCalabashConfig, processor: ProcessMatchingNodes, c
   private val SAW_PI = 8
   private val SAW_COMMENT = 16
 
-  var matcher: XPathExpression = _
+  var selector: XPathSelector = _
   var nodeCount: Integer = _
   private var saw = 0
 
   def process(doc: XdmNode, pattern: String): Unit = {
-    val xeval = new XPathEvaluator(config.processor.getUnderlyingConfiguration)
-    val resolver = new MatchingNamespaceResolver(context.nsBindings)
-
-    xeval.getStaticContext.setNamespaceResolver(resolver)
-
-    try {
-      matcher = xeval.createPattern(pattern)
-    } catch {
-      case ex: XPathException =>  throw XProcException.xdBadMatchPattern(pattern, ex.getMessage, context.location)
-      case t: Exception => throw t
-    }
-
+    selector = compilePattern(pattern)
     destination = new XdmDestination()
     val pipe = controller.makePipelineConfiguration()
     receiver = destination.getReceiver(pipe, new SerializationProperties())
@@ -74,12 +73,10 @@ class ProcessMatch(config: XMLCalabashConfig, processor: ProcessMatchingNodes, c
   }
 
   def count(doc: XdmNode, pattern: String, deep: Boolean): Integer = {
+    selector = compilePattern(pattern)
+
     nodeCount = 0
 
-    val xeval = new XPathEvaluator(config.processor.getUnderlyingConfiguration)
-    val resolver = new MatchingNamespaceResolver(nsBindings(doc))
-    xeval.getStaticContext.setNamespaceResolver(resolver)
-    matcher = xeval.createPattern(pattern)
     traverse(doc, deep)
 
     nodeCount
@@ -89,8 +86,8 @@ class ProcessMatch(config: XMLCalabashConfig, processor: ProcessMatchingNodes, c
 
   def matches(node: XdmNode): Boolean = {
     try {
-      val context = matcher.createDynamicContext(node.getUnderlyingNode)
-      matcher.effectiveBooleanValue(context)
+      selector.setContextItem(node)
+      selector.effectiveBooleanValue()
     } catch {
       case sae: XPathException => false
       case t: Exception => throw t
@@ -149,7 +146,7 @@ class ProcessMatch(config: XMLCalabashConfig, processor: ProcessMatchingNodes, c
           // attribute with the same name.
           var iter = node.axisIterator(Axis.ATTRIBUTE)
           while (iter.hasNext) {
-            val child = iter.next.asInstanceOf[XdmNode]
+            val child = iter.next
             if (!matches(child)) {
               traverse(child)
             }
@@ -157,7 +154,7 @@ class ProcessMatch(config: XMLCalabashConfig, processor: ProcessMatchingNodes, c
 
           iter = node.axisIterator(Axis.ATTRIBUTE)
           while (iter.hasNext) {
-            val child = iter.next.asInstanceOf[XdmNode]
+            val child = iter.next
             if (matches(child)) {
               traverse(child)
             }
@@ -237,7 +234,7 @@ class ProcessMatch(config: XMLCalabashConfig, processor: ProcessMatchingNodes, c
   private def traverseChildren(node: XdmNode): Unit = {
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
-      val child = iter.next.asInstanceOf[XdmNode]
+      val child = iter.next
       traverse(child)
     }
   }
@@ -245,7 +242,7 @@ class ProcessMatch(config: XMLCalabashConfig, processor: ProcessMatchingNodes, c
   private def traverseDeepChildren(node: XdmNode, deep: Boolean, axis: Axis): Unit = {
     val iter = node.axisIterator(axis)
     while (iter.hasNext) {
-      val child = iter.next.asInstanceOf[XdmNode]
+      val child = iter.next
       traverse(child, deep)
     }
   }
@@ -254,7 +251,7 @@ class ProcessMatch(config: XMLCalabashConfig, processor: ProcessMatchingNodes, c
     var bindings = HashMap.empty[String,String]
     val nsIter = node.axisIterator(Axis.NAMESPACE)
     while (nsIter.hasNext) {
-      val ns = nsIter.next.asInstanceOf[XdmNode]
+      val ns = nsIter.next
       val nodeName = ns.getNodeName
       val uri = ns.getStringValue
       if (nodeName == null) {
@@ -264,7 +261,52 @@ class ProcessMatch(config: XMLCalabashConfig, processor: ProcessMatchingNodes, c
         bindings += (nodeName.getLocalName -> uri)
       }
     }
-    bindings.toMap
+    bindings
+  }
+
+  private def compilePattern(pattern: String): XPathSelector = {
+    val xcomp = config.processor.newXPathCompiler()
+
+    if (bindings.isDefined) {
+      for (varname <- bindings.get.keySet) {
+        val qname = ValueParser.parseClarkName(varname)
+        xcomp.declareVariable(qname)
+      }
+    }
+
+    for ((prefix, uri) <- context.nsBindings) {
+      xcomp.declareNamespace(prefix, uri)
+    }
+
+    try {
+      val matcher = xcomp.compilePattern(pattern)
+      val selector = matcher.load()
+
+      if (bindings.isDefined) {
+        for ((varname, varvalue) <- bindings.get) {
+          val qname = ValueParser.parseClarkName(varname)
+          varvalue match {
+            case value: XdmValueItemMessage =>
+              selector.setVariable(qname, value.item)
+          }
+        }
+      }
+
+      selector
+    } catch {
+      case sae: SaxonApiException =>
+        sae.getCause match {
+          case xpe: XPathException =>
+            if (xpe.getMessage.contains("Undeclared variable")) {
+              throw XProcException.xsStaticErrorInExpression(pattern, sae.getMessage, context.location)
+            } else {
+              throw sae
+            }
+          case _ => throw sae
+        }
+      case other: Throwable =>
+        throw other
+    }
   }
 
   private class MatchingNamespaceResolver(ns: Map[String, String]) extends NamespaceResolver {

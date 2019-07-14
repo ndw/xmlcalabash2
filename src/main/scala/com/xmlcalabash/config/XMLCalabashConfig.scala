@@ -6,12 +6,12 @@ import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode}
 import com.xmlcalabash.functions.{CwdShim, DocumentPropertiesDocumentShim, DocumentPropertiesShim, DocumentPropertyShim, ForceQNameKeysShim, InjElapsedShim, InjIdShim, InjNameShim, InjTypeShim, SystemPropertyShim}
-import com.xmlcalabash.model.xml.Library
-import com.xmlcalabash.model.util.{ExpressionParser, XProcConstants}
+import com.xmlcalabash.model.util.ExpressionParser
+import com.xmlcalabash.model.xml.{Container, DeclContainer, Library}
 import com.xmlcalabash.parsers.XPathParser
 import com.xmlcalabash.runtime.SaxonExpressionEvaluator
 import com.xmlcalabash.sbt.BuildInfo
-import com.xmlcalabash.util.{S9Api, URIUtils}
+import com.xmlcalabash.util.URIUtils
 import javax.xml.transform.URIResolver
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
@@ -53,8 +53,8 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
   private var closed = false
   private var _processor: Processor = _
   private var _errorListener: ErrorListener = _
-  private var _stepImplClasses = mutable.HashMap.empty[QName,String]
-  private var _funcImplClasses = mutable.HashMap.empty[QName,String]
+  private val _stepImplClasses = mutable.HashMap.empty[QName,String]
+  private val _funcImplClasses = mutable.HashMap.empty[QName,String]
   private var _traceEventManager: TraceEventManager = _
   private var _uriResolver: URIResolver = _
   private var _entityResolver: EntityResolver = _
@@ -68,8 +68,9 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
   private var _staticBaseURI = URIUtils.cwdAsURI
   private var _language = defaultLocale
   private var _episode = computeEpisode
+  private var _builtinSteps = Option.empty[Library]
   private var _defaultSerializationOptions = Map.empty[String,Map[QName,String]]
-  private var _standardLibrary = Option.empty[Library]
+  private val _importedURIs = mutable.HashMap.empty[URI, DeclContainer]
 
   def productName: String = BuildInfo.name
   def productVersion: String = BuildInfo.version
@@ -106,39 +107,27 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
     logger.debug(s"(release id: $productHash; episode: $episode; JAFPL version $jafplVersion)")
   }
 
-  /*
-  def standardLibrary: ALibrary = {
-    if (_standardLibrary.isEmpty) {
-      val xmlbuilder = processor.newDocumentBuilder()
-      val stream = getClass.getResourceAsStream("/standard-steps.xpl")
-      val source = new SAXSource(new InputSource(stream))
-      xmlbuilder.setDTDValidation(false)
-      xmlbuilder.setLineNumbering(true)
-      val standardSteps = xmlbuilder.build(source)
-      val parser = new Parser(this)
-      _standardLibrary = Some(parser.loadStandardLibrary(standardSteps))
+  protected[xmlcalabash] def builtinSteps: Option[Library] = _builtinSteps
+  protected[xmlcalabash] def builtinSteps_=(lib: Library): Unit = {
+    if (_builtinSteps.isDefined) {
+      throw new RuntimeException("Attempt to redefine builtin steps")
     }
-    _standardLibrary.get
+    _builtinSteps = Some(lib)
   }
 
-  def load(source: Any): DeclarationContainer = {
-    source match {
-      case node: XdmNode =>
-        val parser = new Parser(this)
-        var xdm = S9Api.documentElement(node)
-        if (xdm.isDefined) {
-          xdm.get.getNodeName match {
-            case XProcConstants.p_library => parser.loadLibrary(xdm.get)
-            case XProcConstants.p_declare_step => parser.loadDeclareStep(xdm.get)
-            case _ => throw new RuntimeException(s"Don't know how to parse a ${xdm.get}")
-          }
-        } else {
-          throw new RuntimeException(s"Don't know how to parse a $xdm")
-        }
-      case _ => throw new RuntimeException(s"Don't know how to parse a $source")
-    }
+  protected[xmlcalabash] def importedURIs: Set[URI] = _importedURIs.keySet.toSet
+  protected[xmlcalabash] def importedURI(href: URI): Option[DeclContainer] = {
+    _importedURIs.get(href)
   }
-  */
+  protected[xmlcalabash] def addImportedURI(href: URI, container: DeclContainer): Unit = {
+    if (_importedURIs.contains(href)) {
+      throw new RuntimeException(s"Attempt to redefine imported uri: $href")
+    }
+    _importedURIs.put(href, container)
+  }
+  protected[xmlcalabash] def clearImportedURIs(): Unit = {
+    _importedURIs.clear()
+  }
 
   def debugOptions: XMLCalabashDebugOptions = _debugOptions
   def debugOptions_=(options: XMLCalabashDebugOptions): Unit = {

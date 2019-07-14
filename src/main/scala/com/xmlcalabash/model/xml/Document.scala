@@ -19,6 +19,7 @@ class Document(override val config: XMLCalabashConfig) extends DataSource(config
   private var _context_provided = false
 
   def href: String = _href
+  protected[model] def hrefAvt: List[String] = _hrefAvt
   protected[model] def href_=(href: String): Unit = {
     _href = href
     _hrefAvt = staticContext.parseAvt(_href)

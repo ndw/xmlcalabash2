@@ -14,11 +14,14 @@ import org.xml.sax.InputSource
 import scala.collection.mutable.ListBuffer
 
 class Parser(config: XMLCalabashConfig) {
-  private var _builtInSteps = Option.empty[Library]
+  private var _builtInSteps: Option[Library] = config.builtinSteps
 
   // Someone has to load the default steps; feels like here's as good a place as any.
   // It doesn't feel like something the user should have to do explicitly.
-  init_builtins()
+  if (_builtInSteps.isEmpty) {
+    config.builtinSteps = init_builtins()
+    _builtInSteps = config.builtinSteps
+  }
 
   def builtInSteps: Option[Library] = _builtInSteps
 
@@ -53,7 +56,31 @@ class Parser(config: XMLCalabashConfig) {
       throw new RuntimeException(s"Not a declare-step: ${root.getNodeName}")
     }
 
-    parseDeclareStep(node)
+    val decl = parseDeclareStep(node)
+
+    if (node.getParent.getNodeKind == XdmNodeKind.DOCUMENT) {
+      decl.loadImports()
+      decl.updateInScopeSteps()
+      decl.parseDeclarationSignature()
+
+      val toElaborate = ListBuffer.empty[DeclContainer]
+      toElaborate += config.builtinSteps.get
+      for (uri <- config.importedURIs) {
+        toElaborate += config.importedURI(uri).get
+      }
+      toElaborate += decl
+
+      for (root <- toElaborate) {
+        var env = new Environment()
+        root.makeStructureExplicit(env)
+        root.makeBindingsExplicit(env, None)
+        root.validateStructure()
+      }
+    }
+
+    config.clearImportedURIs()
+
+    decl
   }
 
   private def parseContainer[T <: Container](node: XdmNode, container: T): T = {
@@ -118,9 +145,9 @@ class Parser(config: XMLCalabashConfig) {
             case XProcConstants.p_finally =>
               container.addChild(parseFinally(child))
             case XProcConstants.p_import =>
-              throw new RuntimeException("Don't handle import yet")
+              container.addChild(parseImport(child))
             case XProcConstants.p_import_functions =>
-              throw new RuntimeException("Don't handle import-functions yet")
+              container.addChild(parseImportFunctions(child))
             case XProcConstants.p_documentation =>
               container.addChild(parseDocumentation(child))
             case XProcConstants.p_pipeinfo =>
@@ -141,7 +168,7 @@ class Parser(config: XMLCalabashConfig) {
     container
   }
 
-  private def parseLibrary(node: XdmNode): Library = {
+  protected[model] def parseLibrary(node: XdmNode): Library = {
     val library = new Library(config)
     library.parse(node)
 
@@ -153,14 +180,12 @@ class Parser(config: XMLCalabashConfig) {
               library.addChild(parseDeclareStep(child))
             case XProcConstants.p_variable =>
               library.addChild(parseVariable(child))
-            case XProcConstants.p_option =>
-              library.addChild(parseOption(child))
             case XProcConstants.p_function =>
               library.addChild(parseFunction(child))
             case XProcConstants.p_import =>
-              throw new RuntimeException("Don't handle import yet")
+              library.addChild(parseImport(child))
             case XProcConstants.p_import_functions =>
-              throw new RuntimeException("Don't handle import-functions yet")
+              library.addChild(parseImportFunctions(child))
             case XProcConstants.p_documentation =>
               library.addChild(parseDocumentation(child))
             case XProcConstants.p_pipeinfo =>
@@ -177,41 +202,81 @@ class Parser(config: XMLCalabashConfig) {
       }
     }
 
+    //library.loadImports()
+    /*
     var env = new Environment()
     library.makeStructureExplicit(env)
-
-    env = new Environment()
-    library.makeBindingsExplicit(env)
-    library.validateStructure()
-
+*/
     library
   }
 
-  private def parseDeclareStep(node: XdmNode): DeclareStep = {
+  protected[model] def parseDeclareStep(node: XdmNode): DeclareStep = {
     val decl = new DeclareStep(config)
-    if (builtInSteps.isDefined) {
-      for (step <- builtInSteps.get.inScopeDeclarations) {
-        decl.addDeclaration(step)
-      }
-    }
     parseContainer(node, decl)
-
-    var env = new Environment()
-    // env.addStep(decl)
-    decl.makeStructureExplicit(env)
-
-    //env = new Environment()
-    decl.makeBindingsExplicit(env)
-    decl.validateStructure()
-
-    if (!decl.atomic) {
-      decl.normalizeToPipes()
-      decl.addContentTypeCheckers()
-      decl.addFilters()
-    }
-
     decl
   }
+
+  private def parseImport(node: XdmNode): Import = {
+    parseNoChildrenAllowed(node, new Import(config))
+  }
+
+  private def parseImportFunctions(node: XdmNode): ImportFunctions = {
+    parseNoChildrenAllowed(node, new ImportFunctions(config))
+  }
+
+  /*
+  private def x_parseImport(node: XdmNode): Option[Container] = {
+    val attr = node.getAttributeValue(XProcConstants._href)
+    if (attr == null) {
+      throw new RuntimeException("href attribute is required")
+    }
+    val href = node.getBaseURI.resolve(attr)
+
+    if (parsedURIs.contains(href)) {
+      return parsedURIs.get(href)
+    }
+
+    val request = new DocumentRequest(href, MediaType.XML)
+    val response = config.documentManager.parse(request)
+
+    val root = S9Api.documentElement(response.value.asInstanceOf[XdmNode])
+    if (root.isEmpty) {
+      throw new RuntimeException("nothing to import?")
+    }
+
+    val declContainer = root.get.getNodeName match {
+      case XProcConstants.p_declare_step =>
+        parseDeclareStep(root.get)
+      case XProcConstants.p_library =>
+        parseLibrary(root.get)
+      case _ =>
+        throw new RuntimeException("p:declare-step or p:library expected")
+    }
+
+    declContainer match {
+      case library: Library =>
+        if (!parsedURIs.contains(href)) {
+          parsedURIs.put(href, library)
+
+          val env = new Environment()
+          library.makeBindingsExplicit(env)
+          library.validateStructure()
+
+          for (decl <- library.children[DeclareStep]) {
+            if (!decl.atomic) {
+              decl.normalizeToPipes()
+              decl.addContentTypeCheckers()
+              decl.addFilters()
+            }
+          }
+        }
+      case _ => Unit
+    }
+
+    Some(declContainer)
+  }
+
+   */
 
   private def parseChoose(node: XdmNode): Choose = {
     parseContainer(node, new Choose(config))
@@ -457,7 +522,7 @@ class Parser(config: XMLCalabashConfig) {
     info
   }
 
-  def init_builtins(): Unit = {
+  def init_builtins(): Library = {
     val xmlbuilder = config.processor.newDocumentBuilder()
     val stream = getClass.getResourceAsStream("/standard-steps.xpl")
     val source = new SAXSource(new InputSource(stream))
@@ -465,7 +530,9 @@ class Parser(config: XMLCalabashConfig) {
     xmlbuilder.setLineNumbering(true)
     val libnode = xmlbuilder.build(source)
     val library = loadLibrary(libnode)
-    _builtInSteps = Some(library)
+    library.loadImports()
+    library.updateInScopeSteps()
+    library
   }
 
   // ============================================================================

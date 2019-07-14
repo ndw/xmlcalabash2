@@ -127,10 +127,10 @@ XS0022/1
 There’s no step named “$1” visible from here.
 
 XS0022/2
-There’s no primary output port on the step named “$1”.
+There’s no primary input port on the containing step named “$1”.
 
 XS0022/3
-There’s no primary input port on the containing step named “$1”.
+There’s no primary output port on the step named “$1”.
 
 XS0022/4
 The port “$2” on “$1” is not readable from here.
@@ -144,8 +144,23 @@ The option named ‘$2’ is not allowed on a ‘$1’ step.
 XS0032
 No connection provided for primary input port ‘$2’ on step ‘$1’ and no default readable port exists.
 
+XS0036
+Cannot redefine steps; “$1” is already in scope.
+
 XS0038
 Required attribute “$1” is missing.
+
+XS0044
+There’s no in-scope declaration for steps of type “$1”.
+
+XS0052/1
+Failed to import “$1”.
+
+XS0052/2
+Error p:import cannot import a “$1”.
+
+XS0053
+An imported pipeline must have a type.
 
 XS0065
 Port name omitted, but “$1” has no primary input port.
@@ -222,6 +237,12 @@ No binding in expression: “$1”
 
 XS0107/2
 Static error in expression “$1”: $2
+
+XS0107/3
+Static expression references context item.
+
+XS0107/4
+Static expression references non-static variable “$1”
 
 XS0108
 It is a static error if a p:if does not specify a primary output port.

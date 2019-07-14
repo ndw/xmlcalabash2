@@ -35,12 +35,12 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
         val ClarkCodeVar = "(\\{.*\\})(\\S+)/(\\d+)".r
 
         code = line match {
-          case BareCodeVar(code, vcode) =>
+          case BareCodeVar(bcode, vcode) =>
             variant = vcode.toInt
-            Some(new QName(XProcConstants.ns_err, code))
-          case BareCode(code) =>
+            Some(new QName(XProcConstants.ns_err, bcode))
+          case BareCode(bcode) =>
             variant = 1
-            Some(new QName(XProcConstants.ns_err, code))
+            Some(new QName(XProcConstants.ns_err, bcode))
           case ClarkCodeVar(namespace, localname, vcode) =>
             variant = vcode.toInt
             Some(new QName(namespace, localname))

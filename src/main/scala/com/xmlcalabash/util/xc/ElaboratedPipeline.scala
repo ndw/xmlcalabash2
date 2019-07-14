@@ -316,6 +316,20 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
     end()
   }
 
+  def startGroup(tumble_id: String,
+                   stepName: String): Unit = {
+    val element = XProcConstants.p_group
+    builder.addStartElement(element)
+    tid(tumble_id)
+    builder.addAttribute(XProcConstants._name, stepName)
+    builder.startContent()
+    openStack.push(element)
+  }
+
+  def endGroup(): Unit = {
+    end()
+  }
+
   def startTry(tumble_id: String,
                stepName: String): Unit = {
     val element = XProcConstants.p_try

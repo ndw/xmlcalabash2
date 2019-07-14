@@ -14,4 +14,8 @@ class DeclareFunction(override val config: XMLCalabashConfig) extends Artifact(c
       child.validateStructure()
     }
   }
+
+  override def toString: String = {
+    s"p:declare-function $tumble_id"
+  }
 }

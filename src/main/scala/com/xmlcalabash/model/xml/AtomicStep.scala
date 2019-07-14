@@ -42,7 +42,7 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
 
   override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
     if (declaration(stepType).isEmpty) {
-      throw new RuntimeException(s"No declaration for $stepType")
+      throw XProcException.xsMissingDeclaration(stepType, location)
     }
 
     val decl = declaration(stepType).get
@@ -99,7 +99,7 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
           addChild(woption)
         } else {
           if (doption.required) {
-            throw new RuntimeException("Option value is required")
+            throw XProcException.xsMissingRequiredOption(doption.name, location)
           } else {
             val woption = new WithOption(config, doption.name)
             woption.staticContext = staticContext
@@ -150,8 +150,8 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
             throw XProcException.xsDupWithInputPort(art.port, location)
           }
           iport += art.port
-        case art: WithOutput => Unit
-        case art: WithOption => Unit
+        case _: WithOutput => Unit
+        case _: WithOption => Unit
         case _ =>
           throw new RuntimeException(s"Invalid content in atomic $this")
       }

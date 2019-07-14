@@ -13,14 +13,12 @@ import scala.collection.mutable
 
 class Viewport(override val config: XMLCalabashConfig) extends Container(config) with NamedArtifact {
   private var _match: String = _
-  private var _matchAvt = List.empty[String]
 
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
 
     if (attributes.contains(XProcConstants._match)) {
       _match = attr(XProcConstants._match).get
-      _matchAvt = staticContext.parseAvt(_match)
     } else {
       throw new RuntimeException("Viewport must have match")
     }
@@ -52,7 +50,7 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
     super.makeBindingsExplicit(env, drp)
 
     val bindings = mutable.HashSet.empty[QName]
-    bindings ++= staticContext.findVariableRefsInAvt(_matchAvt)
+    bindings ++= staticContext.findVariableRefsInString(_match)
 
     if (bindings.nonEmpty) {
       var winput = firstWithInput
@@ -94,7 +92,6 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
         child match {
           case pipe: Pipe =>
             pipe.graphEdges(runtime, _graphNode.get)
-          //runtime.graph.addEdge(pipe.link.get.parent.get._graphNode.get, pipe.port, _graphNode.get, "source")
           case pipe: NamePipe =>
             pipe.graphEdges(runtime, _graphNode.get)
           case _ => Unit

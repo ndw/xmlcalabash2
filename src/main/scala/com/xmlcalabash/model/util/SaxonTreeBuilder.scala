@@ -6,11 +6,11 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 import com.xmlcalabash.util.{DefaultLocation, S9Api}
-import net.sf.saxon.Controller
+import net.sf.saxon.{Configuration, Controller}
 import net.sf.saxon.`type`.{BuiltInType, SchemaType, SimpleType}
 import net.sf.saxon.event.{NamespaceReducer, Receiver}
 import net.sf.saxon.expr.instruct.Executable
-import net.sf.saxon.om.{FingerprintedQName, NamespaceBinding, NodeName, StandardNames}
+import net.sf.saxon.om.{FingerprintedQName, NamePool, NamespaceBinding, NodeName, StandardNames}
 import net.sf.saxon.s9api.{Axis, QName, XdmDestination, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.tree.util.NamespaceIterator
@@ -18,9 +18,9 @@ import net.sf.saxon.tree.util.NamespaceIterator
 import scala.collection.mutable.ListBuffer
 
 class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
-  protected val config = runtime.processor.getUnderlyingConfiguration
-  protected val pool = config.getNamePool
-  protected val controller = new Controller(config)
+  protected val config: Configuration = runtime.processor.getUnderlyingConfiguration
+  protected val pool: NamePool = config.getNamePool
+  protected val controller: Controller = new Controller(config)
 
   protected var exec: Executable = _
   protected var destination: XdmDestination = _
@@ -94,7 +94,7 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
         addStartElement(node)
         val iter = node.axisIterator(Axis.ATTRIBUTE)
         while (iter.hasNext) {
-          val child = iter.next().asInstanceOf[XdmNode]
+          val child = iter.next()
           addAttribute(child, child.getStringValue)
         }
         try {
@@ -122,7 +122,7 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   protected def writeChildren(node: XdmNode): Unit = {
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
-      addSubtree(iter.next().asInstanceOf[XdmNode])
+      addSubtree(iter.next())
     }
   }
 
@@ -184,7 +184,7 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   }
 
   def addStartElement(elemName: NodeName, typeCode: SchemaType, nscodes: List[NamespaceBinding]): Unit = {
-    trace(s"addStartElement: ${elemName}")
+    trace(s"addStartElement: $elemName")
     val loc = if (receiver.getSystemId == null) {
       DefaultLocation.voidLocation
     } else {
@@ -210,7 +210,7 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   def addAttributes(element: XdmNode) {
     val iter = element.axisIterator(Axis.ATTRIBUTE)
     while (iter.hasNext) {
-      addAttribute(iter.next.asInstanceOf[XdmNode])
+      addAttribute(iter.next)
     }
   }
 

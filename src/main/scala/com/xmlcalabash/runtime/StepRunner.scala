@@ -11,11 +11,14 @@ import com.xmlcalabash.util.XProcVarValue
 import net.sf.saxon.s9api.{QName, XdmItem, XdmValue}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep, val signature: StepSignature) extends StepExecutable {
   private var runtime: XMLCalabashRuntime = _
   private var _location = Option.empty[Location]
   private val consumers = mutable.HashMap.empty[String, ConsumerMap]
+  private val bindings = mutable.HashMap.empty[QName, XProcVarValue]
+  private val inputs = mutable.HashMap.empty[String,ListBuffer[(XdmItem, XProcMetadata)]]
 
   private val cardMap = mutable.HashMap.empty[String,PortCardinality]
   private val typeMap = mutable.HashMap.empty[String,List[String]]
@@ -63,13 +66,23 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
   }
 
   override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    runtime.option(variable, new XProcVarValue(value, new StaticContext(context)))
+    // It's too early to set in the runtime, save for later
+    bindings.put(variable, new XProcVarValue(value, new StaticContext(context)))
   }
 
   // Input to the pipeline
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
+    // It's too early to set in the runtime, save for later
     item match {
-      case value: XdmItem => runtime.input(port, value, metadata)
+      case value: XdmItem =>
+        if (inputs.contains(port)) {
+          val lb = inputs(port)
+          lb += ((value, metadata))
+        } else {
+          val lb = new ListBuffer[(XdmItem, XProcMetadata)]
+          lb += ((value, metadata))
+          inputs.put(port, lb)
+        }
       case _ => throw new RuntimeException("Unexpected value sent to StepRunner")
     }
   }
@@ -79,14 +92,32 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
   }
 
   override def initialize(config: RuntimeConfiguration): Unit = {
-    //decl.dump()
-    runtime = decl.runtime()
-    for ((port, consumer) <- consumers) {
-      runtime.output(port, consumer)
-    }
+    // nop
   }
 
   override def run(context: StaticContext): Unit = {
+    //println("=======================================")
+    //decl.dump()
+
+    // If values have been passed in, they override defaults in the pipeline
+    decl.patchOptions(bindings.toMap)
+
+    runtime = decl.runtime()
+
+    for ((port,lb) <- inputs) {
+      for ((value,metadata) <- lb) {
+        runtime.input(port, value, metadata)
+      }
+    }
+
+    for ((name, value) <- bindings) {
+      runtime.option(name, value)
+    }
+
+    for ((port, consumer) <- consumers) {
+      runtime.output(port, consumer)
+    }
+
     runtime.run()
   }
 
@@ -106,8 +137,6 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
     override def receive(port: String, message: Message): Unit = {
       // The data consumer always receives input on its "source" port. We have to construct
       // this consumer so that it knows what output port to deliver to.
-
-      //println(s"RECEIVE: $result_port: $message")
 
       // Get exceptions out of the way
       message match {

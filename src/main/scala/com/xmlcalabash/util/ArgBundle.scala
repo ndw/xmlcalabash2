@@ -121,7 +121,6 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
                 pos += 1
               case "graph-step" =>
                 throw new RuntimeException("Not implemented yet")
-                pos += 1
               case "graph-type" =>
                 val rest = args(pos+1)
                 rest match {
@@ -174,7 +173,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
               case _ => throw XProcException.xiArgBundleUnexpectedOption(optname)
             }
           } catch {
-            case iobe: IndexOutOfBoundsException =>
+            case _: IndexOutOfBoundsException =>
               throw XProcException.xiArgBundleIndexOOB(optname)
             case t: Throwable => throw t
           }

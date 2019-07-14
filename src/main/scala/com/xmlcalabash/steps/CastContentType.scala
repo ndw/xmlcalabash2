@@ -41,8 +41,6 @@ class CastContentType() extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
-    val contentType = metadata.get.contentType
-
     if (castTo.xmlContentType) {
       castToXML(context)
     } else if (castTo.jsonContentType) {
@@ -109,7 +107,6 @@ class CastContentType() extends DefaultXmlStep {
             val bos = new ByteArrayOutputStream()
             var totBytes = 0L
             val pagesize = 4096
-            val buffer = new ByteArrayBuffer(pagesize)
             val tmp = new Array[Byte](4096)
             var length = 0
             length = is.read(tmp)
@@ -171,7 +168,6 @@ class CastContentType() extends DefaultXmlStep {
         val bos = new ByteArrayOutputStream()
         var totBytes = 0L
         val pagesize = 4096
-        val buffer = new ByteArrayBuffer(pagesize)
         val tmp = new Array[Byte](4096)
         var length = 0
         length = stream.read(tmp)
@@ -200,7 +196,6 @@ class CastContentType() extends DefaultXmlStep {
     if (parameters.isDefined) {
       val opts = TypeUtils.castAsScala(parameters.get).asInstanceOf[Map[Any, Any]]
       for (opt <- opts.keySet) {
-        val value = opts(opt)
         opt match {
           case name: QName =>
             serialOpts.put(name, opt.toString)
@@ -228,12 +223,10 @@ class CastContentType() extends DefaultXmlStep {
   }
 
   def castToJSON(context: StaticContext): Unit = {
-    val contentType = metadata.get.contentType
     throw new UnsupportedOperationException("Casting to JSON hasn't been implemented")
   }
 
   def castToHTML(context: StaticContext): Unit = {
-    val contentType = metadata.get.contentType
     throw new UnsupportedOperationException("Casting to HTML hasn't been implemented")
   }
 }

@@ -99,7 +99,7 @@ class XMLCalabashConfiguration {
   private def parse(node: XdmNode): Unit = {
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
-      val child = iter.next().asInstanceOf[XdmNode]
+      val child = iter.next()
       child.getNodeKind match {
         case XdmNodeKind.ELEMENT => config(child)
         case XdmNodeKind.TEXT =>
@@ -196,7 +196,7 @@ class XMLCalabashConfiguration {
       val map = _serialization.getOrElse(ctype, new mutable.HashMap[QName, String])
       val iter = node.axisIterator(Axis.ATTRIBUTE)
       while (iter.hasNext) {
-        val attr = iter.next().asInstanceOf[XdmNode]
+        val attr = iter.next()
         if (attr.getNodeName != XProcConstants._content_type) {
           map.put(attr.getNodeName, attr.getStringValue)
         }

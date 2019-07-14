@@ -1,11 +1,13 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.Node
-import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.runtime.{XMLCalabashRuntime, XProcXPathExpression}
+import net.sf.saxon.s9api.SaxonApiException
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class Container(override val config: XMLCalabashConfig) extends Step(config) with NamedArtifact {
   protected var _outputs = mutable.HashMap.empty[String, DeclareOutput]
@@ -13,8 +15,8 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
   def atomic: Boolean = {
     for (child <- allChildren) {
       child match {
-        case atomic: AtomicStep => return false
-        case compound: Container => return false
+        case _: AtomicStep => return false
+        case _: Container => return false
         case _ => Unit
       }
     }
@@ -160,9 +162,12 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
 
     for (child <- allChildren) {
       child match {
+        case library: Library =>
+          val newenvironment = containerEnvironment.declareStep()
+          library.makeBindingsExplicit(newenvironment)
         case decl: DeclareStep =>
           val newenvironment = containerEnvironment.declareStep()
-          decl.makeBindingsExplicit(newenvironment)
+          decl.makeBindingsExplicit(newenvironment, None)
         case step: Step =>
           step.makeBindingsExplicit(containerEnvironment, drp)
           drp = step.primaryOutput
@@ -175,11 +180,16 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
             // Evaluate it; no reference to context is allowed.
             val exprContext = staticContext.withStatics(inScopeStatics)
             val expr = new XProcXPathExpression(staticContext, option.select.get)
-            val msg = config.expressionEvaluator.value(expr, List(), exprContext.statics, None)
-            option.staticValue = msg
+            try {
+              val msg = config.expressionEvaluator.value(expr, List(), exprContext.statics, None)
+              option.staticValue = msg
+            } catch {
+              case sae: SaxonApiException =>
+                throw XProcException.xsStaticErrorInExpression(option.select.get, sae.getMessage, exprContext.location)
+            }
           }
           containerEnvironment.addVariable(option)
-        case input: WithInput =>
+        case _: WithInput =>
           Unit // we did this above
         case _ =>
           child.makeBindingsExplicit(containerEnvironment, drp)
@@ -191,12 +201,12 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
     for (child <- allChildren) {
       child.validateStructure()
       child match {
-        case art: WithInput => Unit
-        case art: WithOutput => Unit
-        case art: DeclareInput => Unit
-        case art: DeclareOutput => Unit
-        case art: Step => Unit
-        case art: NamePipe => Unit // For Viweport
+        case _: WithInput => Unit
+        case _: WithOutput => Unit
+        case _: DeclareInput => Unit
+        case _: DeclareOutput => Unit
+        case _: Step => Unit
+        case _: NamePipe => Unit // For Viweport
         case _ =>
           throw new RuntimeException(s"Unexpected content in $this: $child")
       }

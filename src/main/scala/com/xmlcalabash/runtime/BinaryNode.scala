@@ -43,7 +43,6 @@ class BinaryNode(config: XMLCalabashRuntime, private val rawValue: Any) {
     val fos = new FileOutputStream(tempFile)
     var totBytes = 0L
     val pagesize = 4096
-    val buffer = new ByteArrayBuffer(pagesize)
     val tmp = new Array[Byte](4096)
     var length = 0
     length = stream.read(tmp)

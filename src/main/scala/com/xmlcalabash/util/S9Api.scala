@@ -36,7 +36,7 @@ object S9Api {
       case XdmNodeKind.DOCUMENT =>
         val iter = doc.axisIterator(Axis.CHILD)
         while (iter.hasNext) {
-          val node = iter.next.asInstanceOf[XdmNode]
+          val node = iter.next
           if (node.getNodeKind == XdmNodeKind.ELEMENT) {
             return Some(node)
           }
@@ -53,7 +53,7 @@ object S9Api {
     val nsiter = node.axisIterator(Axis.NAMESPACE)
     val ns = mutable.HashMap.empty[String,String]
     while (nsiter.hasNext) {
-      val attr = nsiter.next().asInstanceOf[XdmNode]
+      val attr = nsiter.next()
       val prefix = if (attr.getNodeName == null) {
         ""
       } else {

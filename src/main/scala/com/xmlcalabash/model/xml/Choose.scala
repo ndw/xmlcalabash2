@@ -134,10 +134,10 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
     super.validateStructure()
     for (child <- allChildren) {
       child match {
-        case art: WithInput => Unit
-        case art: WithOutput => Unit
-        case art: When => Unit
-        case art: Otherwise => Unit
+        case _: WithInput => Unit
+        case _: WithOutput => Unit
+        case _: When => Unit
+        case _: Otherwise => Unit
         case _ =>
           throw new RuntimeException(s"Invalid content in $this")
       }

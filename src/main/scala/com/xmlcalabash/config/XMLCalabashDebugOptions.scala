@@ -61,11 +61,11 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
 
     if (open) {
       if (dumpGraphType == "opengraph") {
-        graphGraph(graph, dumpGraph.get)
+        graphGraph(graph, dumpGraph.get + graph.uid.toString)
       }
     } else {
-      if (dumpGraphType == "graph") {
-        graphGraph(graph, dumpGraph.get)
+      if (dumpGraphType == "jafpl") {
+        graphGraph(graph, dumpGraph.get + graph.uid.toString)
       }
     }
   }

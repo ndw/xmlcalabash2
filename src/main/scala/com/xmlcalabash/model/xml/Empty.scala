@@ -7,7 +7,7 @@ import com.xmlcalabash.runtime.params.EmptyLoaderParams
 class Empty(override val config: XMLCalabashConfig) extends DataSource(config) {
 
   override protected[model] def normalizeToPipes(): Unit = {
-    val params = new EmptyLoaderParams()
+    val params = new EmptyLoaderParams(staticContext)
     normalizeDataSourceToPipes(XProcConstants.cx_empty_loader, params)
   }
 

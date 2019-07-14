@@ -260,7 +260,7 @@ object ValueParser {
         var newExpand = expandText
         var iter = node.axisIterator(Axis.ATTRIBUTE)
         while (iter.hasNext) {
-          val attr = iter.next().asInstanceOf[XdmNode]
+          val attr = iter.next()
           if (expandText) {
             variableRefs ++= ValueParser.findVariableRefsInTvt(config, attr.getStringValue, location)
           }
@@ -270,7 +270,7 @@ object ValueParser {
         }
         iter = node.axisIterator(Axis.CHILD)
         while (iter.hasNext) {
-          val child = iter.next().asInstanceOf[XdmNode]
+          val child = iter.next()
           variableRefs ++= ValueParser.findVariableRefs(config, child, newExpand, location)
         }
       case XdmNodeKind.TEXT =>

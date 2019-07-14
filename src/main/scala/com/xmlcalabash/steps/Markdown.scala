@@ -42,7 +42,7 @@ class Markdown() extends DefaultXmlStep {
     val markup = "<body xmlns='http://www.w3.org/1999/xhtml'>" + renderer.render(document) + "</body>"
 
     val request = new DocumentRequest(markdown.get.getBaseURI, Some(MediaType.HTML), location, false)
-    request.params = parameters.toMap
+    request.params = parameters
 
     val stream = new ByteArrayInputStream(markup.getBytes)
 

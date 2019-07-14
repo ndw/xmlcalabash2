@@ -12,7 +12,7 @@ import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
 
-class Inline(override val config: XMLCalabashConfig, node: XdmNode, val implied: Boolean) extends DataSource(config) {
+class Inline(override val config: XMLCalabashConfig, val node: XdmNode, val implied: Boolean) extends DataSource(config) {
   def this(config: XMLCalabashConfig, node: XdmNode) {
     this(config, node, false)
   }
@@ -62,7 +62,7 @@ class Inline(override val config: XMLCalabashConfig, node: XdmNode, val implied:
       for (ref <- nameBindings) {
         val binding = env.variable(ref)
         if (binding.isEmpty) {
-          throw new RuntimeException("Reference to undefined variable")
+          throw XProcException.xsNoBindingInExpression(ref, location)
         }
         if (binding.get.static) {
           _statics.put(ref.getClarkName, binding.get.staticValue.get)

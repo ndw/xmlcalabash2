@@ -1,12 +1,14 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.Node
-import com.xmlcalabash.config.XMLCalabashConfig
+import com.jafpl.messages.Message
+import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.messages.XdmValueItemMessage
+import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.{XMLCalabashRuntime, XProcXPathExpression}
-import net.sf.saxon.s9api.{QName, SequenceType, XdmAtomicValue, XdmNode}
+import com.xmlcalabash.runtime.{XMLCalabashRuntime, XProcMetadata, XProcVtExpression, XProcXPathExpression}
+import com.xmlcalabash.util.TvtExpander
+import net.sf.saxon.s9api.{QName, SaxonApiException, SequenceType, XdmAtomicValue, XdmNode}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -24,6 +26,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   protected var _allowedValues = Option.empty[List[XdmAtomicValue]]
   protected var _staticValue = Option.empty[XdmValueItemMessage]
   protected var collection = false
+  private var resolvedStatically = false
 
   protected var _href = Option.empty[String]
   protected var _pipe = Option.empty[String]
@@ -148,10 +151,12 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
     val ds = ListBuffer.empty[DataSource]
     for (child <- allChildren) {
       child match {
-        case source: DataSource =>
+        case pipe: Pipe =>
           if (static) {
-            throw new RuntimeException("Statics cannot rely on the context")
+            throw XProcException.xsStaticRefsContext("Static variables cannot refer to the context.", location)
           }
+          ds += pipe
+        case source: DataSource =>
           ds += source
         case _ =>
           throw new RuntimeException(s"Unexpected child: $child")
@@ -180,17 +185,68 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
     }
 
     if (static) {
+      val context = ListBuffer.empty[Message]
+      for (child <- ds) {
+        child match {
+          case inline: Inline =>
+            val exprContext = staticContext.withStatics(inScopeStatics)
+            val expander = new TvtExpander(config, None, exprContext, Map(), location)
+
+            try {
+              // FIXME: what should the defaults for initiallyExpand and exludeURIs be?
+              val result = expander.expand(inline.node, true, Set())
+              context += new XdmNodeItemMessage(result, XProcMetadata.XML, inline.staticContext)
+            } catch {
+              case ex: XProcException =>
+                if (ex.code == XProcException.xs0107 && ex.details(1).toString().contains("Undeclared variable")) {
+                  throw XProcException.xsStaticRefsNonStaticStr(ex.details.head.toString, location)
+                }
+                throw ex
+            }
+
+          case doc: Document =>
+            for (ref <- staticContext.findVariableRefsInAvt(doc.hrefAvt)) {
+              if (!inScopeStatics.contains(ref.getClarkName)) {
+                throw XProcException.xsStaticRefsNonStatic(ref, location)
+              }
+            }
+            val econtext = staticContext.withStatics(inScopeStatics)
+            val exprEval = config.expressionEvaluator.newInstance()
+            val vtexpr = new XProcVtExpression(econtext, doc.hrefAvt)
+            val value = exprEval.singletonValue(vtexpr, List(), inScopeStatics, None)
+            val parts = ListBuffer.empty[String]
+            val viter = value.item.iterator()
+            while (viter.hasNext) {
+              parts += viter.next().getStringValue
+            }
+
+            val href = staticContext.baseURI.get.resolve(parts.mkString(""))
+
+            val request = new DocumentRequest(href, None, location, false)
+            val response = config.documentManager.parse(request)
+            context += new XdmValueItemMessage(response.value, XProcMetadata.XML, doc.staticContext)
+          case empty: Empty =>
+            Unit
+        }
+      }
+
+
       val expr = new XProcXPathExpression(staticContext, select.get)
-      val msg = config.expressionEvaluator.value(expr, List(), inScopeStatics, None)
+      val msg = config.expressionEvaluator.value(expr, context.toList, inScopeStatics, None)
       staticValue = msg
+      resolvedStatically = true
     }
 
     if (_select.isDefined) {
       val bindings = mutable.HashSet.empty[QName]
       bindings ++= staticContext.findVariableRefsInString(_select.get)
       if (bindings.isEmpty) {
-        val depends = staticContext.dependsOnContextString(_select.get)
-        // FIXME: if depends is false, we can resolve this statically
+        try {
+          val depends = staticContext.dependsOnContextString(_select.get)
+          // FIXME: if depends is false, we can resolve this statically
+        } catch {
+          case sax: SaxonApiException => Unit
+        }
       } else {
         for (ref <- bindings) {
           val binding = env.variable(ref)
@@ -226,6 +282,10 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   }
 
   override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+    if (resolvedStatically) {
+      return
+    }
+
     for (child <- allChildren) {
       child.graphEdges(runtime, _graphNode.get)
     }

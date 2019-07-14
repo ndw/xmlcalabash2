@@ -11,8 +11,6 @@ import scala.collection.mutable
 
 class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
   private val _attribute_name = new QName("", "attribute-name")
-  private val _attribute_prefix = new QName("", "attribute-prefix")
-  private val _attribute_namespace = new QName("", "attribute-namespace")
   private val _attribute_value = new QName("", "attribute-value")
   private var pattern: String = _
   private var matcher: ProcessMatch = _

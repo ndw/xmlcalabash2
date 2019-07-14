@@ -275,6 +275,9 @@ class XMLContext(override val config: XMLCalabashConfig) extends StaticContext(c
   def dependsOnContextString(expr: String): Boolean = {
     if (findVariableRefsInString(expr).isEmpty) {
       val xcomp = config.processor.newXPathCompiler()
+      for ((prefix, uri) <- nsBindings) {
+        xcomp.declareNamespace(prefix, uri)
+      }
       val xexec = xcomp.compile(expr)
       val xexpr = xexec.getUnderlyingExpression.getInternalExpression
       ExpressionTool.dependsOnFocus(xexpr)

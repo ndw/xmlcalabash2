@@ -23,7 +23,6 @@ class B64Encode extends DefaultXmlStep {
     if (variable == XProcConstants._serialization) {
       val opts = TypeUtils.castAsScala(value).asInstanceOf[Map[Any,Any]]
       for (opt <- opts.keySet) {
-        val value = opts(opt)
         opt match {
           case name: QName =>
             serialOpts.put(name, opt.toString)

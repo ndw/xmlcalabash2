@@ -14,7 +14,7 @@ class NodeLocation(private val node: XdmNode) extends Location {
   private var found = false
   private val iter = node.axisIterator(Axis.PRECEDING_SIBLING)
   while (iter.hasNext) {
-    val pnode = iter.next().asInstanceOf[XdmNode]
+    val pnode = iter.next()
     if (!found) {
       pnode.getNodeKind match {
         case XdmNodeKind.TEXT =>

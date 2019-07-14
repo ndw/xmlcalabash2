@@ -154,7 +154,6 @@ class Pipe(override val config: XMLCalabashConfig, shortcut: Option[String]) ext
     val toPort = parent.get.asInstanceOf[Port].port
     val fromNode = link.get.parent.get._graphNode.get
     val fromPort = link.get.port
-    //println(s"  EDGE: $fromNode/$fromPort => $toNode/$toPort")
     runtime.graph.addOrderedEdge(fromNode, fromPort, toNode, toPort)
   }
 

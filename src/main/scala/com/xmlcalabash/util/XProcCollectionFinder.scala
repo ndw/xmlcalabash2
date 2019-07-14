@@ -71,7 +71,7 @@ class XProcCollectionFinder(config: XMLCalabashConfig, docs: List[XdmNode], chai
 
     override def getItem(context: XPathContext): Item[_ <: Item[_]] = doc.getUnderlyingValue.head
 
-    override def getContentType = null
+    override def getContentType: String = null
   }
 
 

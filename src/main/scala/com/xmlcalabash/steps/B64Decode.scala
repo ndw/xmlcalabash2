@@ -32,11 +32,6 @@ class B64Decode extends DefaultXmlStep {
     } else {
       None
     }
-    val baseURI = if (baseValue.isDefined) {
-      Some(new URI(baseValue.get.toString))
-    } else {
-      None
-    }
 
     val decoded = source.get match {
       case is: InputStream =>

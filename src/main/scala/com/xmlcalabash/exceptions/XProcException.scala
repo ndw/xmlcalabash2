@@ -14,7 +14,9 @@ import net.sf.saxon.s9api.{QName, XdmNode}
 import scala.collection.mutable.ListBuffer
 
 object XProcException {
+  val xd0011 = new QName("err", XProcConstants.ns_err, "XD0011")
   val xc0070 = new QName("err", XProcConstants.ns_err, "XC0070")
+  val xs0107 = new QName("err", XProcConstants.ns_err, "XS0107")
 
   def xiUnkExprType(location: Option[Location]): XProcException = internalError(1, location)
   def xiInvalidMessage(location: Option[Location], message: Message): XProcException = internalError(2, location, message)
@@ -132,8 +134,13 @@ object XProcException {
   def xsDupPrimaryPort(port: String, primaryPort: String, location: Option[Location]): XProcException = staticError(30, List(port, primaryPort), location)
   def xsUndeclaredOption(stepType: QName, optName: QName, location: Option[Location]): XProcException = staticError(31, List(stepType,optName), location)
   def xsUnconnectedPrimaryInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(32, List(step,port), location)
+  def xsDupStepType(stepType: QName, location: Option[Location]): XProcException = staticError(36, stepType, location)
   def xsMissingRequiredAttribute(attName: QName, location: Option[Location]): XProcException = staticError(38, attName, location)
+  def xsMissingDeclaration(name: QName, location: Option[Location]): XProcException = staticError(44, name, location)
 
+  def xsImportFailed(href: URI, location: Option[Location]): XProcException = staticError((52,1), href, location)
+  def xsBadImport(name: QName, location: Option[Location]): XProcException = staticError((52,2), name, location)
+  def xsStepTypeRequired(location: Option[Location]): XProcException = staticError(53, List(), location)
   def xsInvalidNodeType(nodeKind: String, location: Option[Location]): XProcException = staticError(56, nodeKind, location)
   def xsInvalidVersion(version: Double, location: Option[Location]): XProcException = staticError(60, version, location)
   def xsVersionRequired(location: Option[Location]): XProcException = staticError(62, location)
@@ -181,8 +188,11 @@ object XProcException {
 
   def xsXProcElementNotAllowed(name: String, location: Option[Location]): XProcException = staticError(100, name, location)
 
-  def xsNoBindingInExpression(name: String, location: Option[Location]): XProcException = staticError((107,1), name, location)
+  def xsNoBindingInExpression(name: QName, location: Option[Location]): XProcException = staticError((107,1), name, location)
   def xsStaticErrorInExpression(expr: String, msg: String, location: Option[Location]): XProcException = staticError((107,2), List(expr, msg), location)
+  def xsStaticRefsContext(msg: String, location: Option[Location]): XProcException = staticError((107,3), msg, location)
+  def xsStaticRefsNonStatic(name: QName, location: Option[Location]): XProcException = staticError((107,4), name, location)
+  def xsStaticRefsNonStaticStr(name: String, location: Option[Location]): XProcException = staticError((107,4), name, location)
 
   def xsPrimaryOutputRequired(location: Option[Location]): XProcException = staticError(108, location)
   def xsUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = staticError(111, ctype, location)

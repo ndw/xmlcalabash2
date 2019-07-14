@@ -369,7 +369,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
 
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
-      val child = iter.next().asInstanceOf[XdmNode]
+      val child = iter.next()
       child.getNodeKind match {
         case XdmNodeKind.ELEMENT =>
           if (child.getNodeName == t_test_suite) {
@@ -422,7 +422,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
 
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
-      val child = iter.next().asInstanceOf[XdmNode]
+      val child = iter.next()
       child.getNodeKind match {
         case XdmNodeKind.ELEMENT =>
           if (child.getNodeName == t_div) {
@@ -478,7 +478,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
 
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
-      val child = iter.next().asInstanceOf[XdmNode]
+      val child = iter.next()
       child.getNodeKind match {
         case XdmNodeKind.ELEMENT =>
           if (child.getNodeName == t_test) {
@@ -557,7 +557,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
 
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
-      val child = iter.next().asInstanceOf[XdmNode]
+      val child = iter.next()
       child.getNodeKind match {
         case XdmNodeKind.ELEMENT =>
           if (child.getNodeName == t_pipeline) {
@@ -686,7 +686,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
     val children = ListBuffer.empty[XdmNode]
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
-      children += iter.next.asInstanceOf[XdmNode]
+      children += iter.next
     }
 
     val src = node.getAttributeValue(_src)
@@ -708,7 +708,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
     val children = ListBuffer.empty[XdmNode]
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {
-      children += iter.next.asInstanceOf[XdmNode]
+      children += iter.next
     }
 
     val src = node.getAttributeValue(_src)
@@ -731,7 +731,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
 
     builder.startDocument(node.getBaseURI)
     while (iter.hasNext) {
-      builder.addSubtree(iter.next().asInstanceOf[XdmNode])
+      builder.addSubtree(iter.next())
     }
     builder.endDocument()
 

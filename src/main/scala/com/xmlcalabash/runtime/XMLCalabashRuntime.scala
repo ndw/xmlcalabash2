@@ -210,20 +210,6 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   override def expressionEvaluator: SaxonExpressionEvaluator = config.expressionEvaluator
   def expressionParser: ExpressionParser = config.expressionParser
 
-  // Combine the specified bindings with any external, global bindings
-  def runtimeBindings(bindings: Map[String, Message]): Map[String,Message] = {
-    val runtimeBindings = mutable.HashMap.empty[String,Message]
-    /*
-    for ((name, message) <- globalContext.externalStatics) {
-      runtimeBindings.put(name, message)
-    }
-    */
-    for ((name, message) <- bindings) {
-      runtimeBindings.put(name, message)
-    }
-    runtimeBindings.toMap
-  }
-
   // ====================================================================================
 
   def addNode(id: String, artifact: Artifact): Unit = {

@@ -109,5 +109,9 @@ class StepSignature(val stepType: Option[QName]) {
     }
     None
   }
+
+  override def toString: String = {
+    stepType.toString
+  }
 }
 

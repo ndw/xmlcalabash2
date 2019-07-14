@@ -7,24 +7,30 @@ import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 import com.xmlcalabash.runtime.params.ContentTypeCheckerParams
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import com.xmlcalabash.util.{S9Api, TypeUtils}
+import com.xmlcalabash.util.{S9Api, TypeUtils, XProcVarValue}
 import net.sf.saxon.s9api.{ItemType, QName, SaxonApiException, XdmAtomicValue, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class DeclareStep(override val config: XMLCalabashConfig) extends Container(config) with DeclContainer {
+class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(config) {
   private var _type = Option.empty[QName]
   private var _psvi_required = Option.empty[Boolean]
   private var _xpath_version = Option.empty[Double]
   private var _exclude_inline_prefixes = Option.empty[String]
   private var _version = Option.empty[Double]
   private var _visibility = Option.empty[String]
-  private var _inScopeDeclarations = ListBuffer.empty[StepSignature]
   private var _signature = Option.empty[StepSignature]
   private var _inputs = mutable.HashMap.empty[String, DeclareInput]
   private var _bindings = mutable.HashMap.empty[QName, DeclareOption]
   private var _excludeUriBindings = Set.empty[String]
+
+  // These are a bit of a hack. It's very hard to tell the difference
+  // between an inline declare-step and an imported declare-step.
+  // We have to process them, but we have to not process them twice.
+  private var madeStructureExplicit = false
+  private var madeBindingsExplicit = false
+  private var didValidateStructure = false
 
   def stepType: Option[QName] = _type
   def psvi_required: Option[Boolean] = _psvi_required
@@ -33,8 +39,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends Container(conf
   def exclude_uri_bindings: Set[String] = _excludeUriBindings
   def version: Double = _version.getOrElse(3.0)
   def visiblity: String = _visibility.getOrElse("public")
-  def inScopeDeclarations: List[StepSignature] = _inScopeDeclarations.toList
-  def signature: StepSignature = _signature.get
+  def signature: Option[StepSignature] = _signature
 
   def inputPorts: List[String] = _inputs.keySet.toList
   def outputPorts: List[String] = _outputs.keySet.toList
@@ -46,10 +51,6 @@ class DeclareStep(override val config: XMLCalabashConfig) extends Container(conf
   def outputs: List[DeclareOutput] = _outputs.values.toList
 
   def bindings: Map[QName,DeclareOption] = _bindings.toMap
-
-  override def addDeclaration(decl: StepSignature): Unit = {
-    _inScopeDeclarations += decl
-  }
 
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
@@ -109,7 +110,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends Container(conf
     }
   }
 
-  private def parseDeclarationSignature(env: Environment): Unit = {
+  protected[xml] def parseDeclarationSignature(): Unit = {
     // If there's only one input and it doesn't have a declared primary status, make it primary
     var count = 0
     var pinput = Option.empty[DeclareInput]
@@ -227,31 +228,13 @@ class DeclareStep(override val config: XMLCalabashConfig) extends Container(conf
     }
 
     _signature = Some(stepSig)
-    env.addStep(this)
-
-    if (stepType.isDefined && declaration(stepType.get).isDefined) {
-      throw new RuntimeException(s"Attempt to redefine ${stepType.get}")
-    }
-    _inScopeDeclarations += stepSig
-
-    val buf = ListBuffer.empty[DeclareStep]
-    for (decl <- children[DeclareStep]) {
-      //decl.parseDeclarationSignature()
-      if (decl.stepType.isDefined && declaration(decl.stepType.get).isDefined) {
-        throw new RuntimeException(s"Attempt to redefine ${stepType.get}")
-      }
-      _inScopeDeclarations += decl.signature
-      buf += decl
-    }
-    for (decl <- buf) {
-      removeChild(decl)
-    }
   }
 
   override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
-    if (_signature.isEmpty) {
-      parseDeclarationSignature(environment)
+    if (madeStructureExplicit) {
+      return
     }
+    madeStructureExplicit = true
 
     for (child <- allChildren) {
       child match {
@@ -260,8 +243,9 @@ class DeclareStep(override val config: XMLCalabashConfig) extends Container(conf
         case decl: DeclareStep =>
           val newenvironment = environment.declareStep()
           decl.makeStructureExplicit(newenvironment)
-        case compound: Container =>
-          compound.makeStructureExplicit(environment)
+        case library: Library =>
+          val newenvironment = environment.declareStep()
+          library.makeStructureExplicit(environment)
         case variable: Variable =>
           variable.makeStructureExplicit(environment)
           environment.addVariable(variable)
@@ -274,14 +258,42 @@ class DeclareStep(override val config: XMLCalabashConfig) extends Container(conf
     }
   }
 
-  override protected[model] def validateStructure(): Unit = {
-    for (child <- allChildren) {
-      child.validateStructure()
+  override protected[model] def makeBindingsExplicit(env: Environment, drp: Option[Port]): Unit = {
+    if (madeBindingsExplicit) {
+      return
     }
+    madeBindingsExplicit = true
+
+    env.addStep(this)
+    super.makeBindingsExplicit(env, drp)
   }
 
-  protected[model] def makeBindingsExplicit(env: Environment): Unit = {
-    makeBindingsExplicit(env, None)
+  override protected[model] def validateStructure(): Unit = {
+    if (didValidateStructure) {
+      return
+    }
+    didValidateStructure = true
+
+    val buf = ListBuffer.empty[Artifact]
+
+    for (child <- allChildren) {
+      child.validateStructure()
+      child match {
+        case decl: DeclareStep =>
+          buf += decl
+        case _ => Unit
+      }
+    }
+
+    for (decl <- buf) {
+      removeChild(decl)
+    }
+
+    if (!atomic) {
+      normalizeToPipes()
+      addContentTypeCheckers()
+      addFilters()
+    }
   }
 
   def runtime(): XMLCalabashRuntime = {
@@ -331,22 +343,6 @@ class DeclareStep(override val config: XMLCalabashConfig) extends Container(conf
       }
     }
     new Manifold(new PortSpecification(inputMap.toMap), new PortSpecification(outputMap.toMap))
-  }
-
-  override def declaration(stepType: QName): Option[StepSignature] = {
-    var found = Option.empty[StepSignature]
-
-    for (sig <- _inScopeDeclarations) {
-      if (sig.stepType.isDefined && sig.stepType.get == stepType) {
-        found = Some(sig)
-      }
-    }
-
-    if (found.isEmpty && parent.isDefined) {
-      found = parent.get.declaration(stepType)
-    }
-
-    found
   }
 
   def addContentTypeCheckers(): Unit = {
@@ -401,6 +397,12 @@ class DeclareStep(override val config: XMLCalabashConfig) extends Container(conf
       for (pipe <- pipes) {
         winput.addChild(pipe)
       }
+    }
+  }
+
+  def patchOptions(bindings: Map[QName,XProcVarValue]): Unit = {
+    for (child <- children[DeclareOption]) {
+      child.runtimeBindings(bindings)
     }
   }
 

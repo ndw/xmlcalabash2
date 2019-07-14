@@ -18,6 +18,18 @@ class Environment(val parent: Option[Environment]) {
   private val _inScopePorts = mutable.HashMap.empty[String, Port]
   private val _inScopeVariables = mutable.HashMap.empty[QName,NameBinding]
 
+  if (parent.isDefined) {
+    for ((name,step) <- parent.get._inScopeSteps) {
+      _inScopeSteps.put(name,step)
+    }
+    for ((name,port) <- parent.get._inScopePorts) {
+      _inScopePorts.put(name,port)
+    }
+    for ((name,binding) <- _inScopeVariables) {
+      _inScopeVariables.put(name,binding)
+    }
+  }
+
   def declareStep(): Environment = {
     // If this is an environment for a declare step; the only
     // thing that should be inherited are the static variables.
@@ -105,9 +117,11 @@ class Environment(val parent: Option[Environment]) {
 
   def staticVariables: List[NameBinding] = {
     val lb = ListBuffer.empty[NameBinding]
+    /* unnecessary because we now copy them?
     if (parent.isDefined) {
       lb ++= parent.get.staticVariables
     }
+     */
     for ((name, variable) <- _inScopeVariables) {
       if (variable.static) {
         lb += variable

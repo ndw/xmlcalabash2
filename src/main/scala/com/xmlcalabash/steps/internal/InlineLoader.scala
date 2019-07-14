@@ -330,7 +330,7 @@ class InlineLoader() extends AbstractLoader {
     val expr = new XProcVtExpression(exprContext, text)
     var s = ""
     var string = ""
-    val iter = evaluator.value(expr, contextItem.toList, config.runtimeBindings(msgBindings.toMap), None).item.iterator()
+    val iter = evaluator.value(expr, contextItem.toList, msgBindings.toMap, None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
       string = string + s + next.getStringValue
@@ -343,7 +343,7 @@ class InlineLoader() extends AbstractLoader {
     val evaluator = config.expressionEvaluator
     val expr = new XProcVtExpression(exprContext, text)
 
-    val iter = evaluator.value(expr, contextItem.toList, config.runtimeBindings(msgBindings.toMap), None).item.iterator()
+    val iter = evaluator.value(expr, contextItem.toList, msgBindings.toMap, None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
       next match {

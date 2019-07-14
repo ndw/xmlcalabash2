@@ -3,11 +3,14 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{ContainerStart, Node}
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.runtime.{ExprParams, XMLCalabashRuntime, XProcXPathExpression}
+import com.xmlcalabash.runtime.{ExprParams, XMLCalabashRuntime, XProcExpression, XProcXPathExpression, XProcXPathValue}
+import com.xmlcalabash.util.XProcVarValue
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import net.sf.saxon.s9api.SequenceType
+import net.sf.saxon.s9api.{QName, SequenceType}
 
 class DeclareOption(override val config: XMLCalabashConfig) extends NameBinding(config) {
+  private var _runtimeBindings = Map.empty[QName,XProcVarValue]
+
   override def toString: String = {
     s"p:option $name $tumble_id"
   }
@@ -24,14 +27,18 @@ class DeclareOption(override val config: XMLCalabashConfig) extends NameBinding(
   override protected[model] def validateStructure(): Unit = {
     for (child <- allChildren) {
       child match {
-        case art: WithInput => Unit
+        case _: WithInput => Unit
         case _ =>
           throw new RuntimeException(s"Invalid content in $this")
       }
     }
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  def runtimeBindings(bindings: Map[QName, XProcVarValue]): Unit = {
+    _runtimeBindings = bindings
+  }
+
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     if (static) {
       // Statics have already been evaluated, they don't appear in the graph
       return
@@ -44,7 +51,12 @@ class DeclareOption(override val config: XMLCalabashConfig) extends NameBinding(
     }
 
     val params = new ExprParams(collection)
-    val init = new XProcXPathExpression(staticContext, _select.getOrElse("()"), as, _allowedValues, params)
+    var init = if (_runtimeBindings.contains(name)) {
+      new XProcXPathValue(staticContext, _runtimeBindings(name), as, _allowedValues, params)
+    } else {
+      new XProcXPathExpression(staticContext, _select.getOrElse("()"), as, _allowedValues, params)
+    }
+
     val node = runtime.graph.addOption(_name.getClarkName, init, xpathBindingParams())
     _graphNode = Some(node)
   }

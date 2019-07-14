@@ -1,25 +1,14 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
+import com.xmlcalabash.config.XMLCalabashConfig
 
-import scala.collection.mutable.ListBuffer
-
-class Library(override val config: XMLCalabashConfig) extends Artifact(config) with DeclContainer {
-  private var _signatures = ListBuffer.empty[StepSignature]
-
-  def inScopeDeclarations: List[StepSignature] = _signatures.toList
-
-  override def addDeclaration(decl: StepSignature): Unit = {
-    _signatures += decl
-  }
-
+class Library(override val config: XMLCalabashConfig) extends DeclContainer(config) {
   override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
     for (child <- allChildren) {
       child match {
         case decl: DeclareStep =>
           val newenvironment = environment.declareStep()
           decl.makeStructureExplicit(newenvironment)
-          _signatures += decl.signature
         case variable: Variable =>
           variable.makeStructureExplicit(environment)
           environment.addVariable(variable)
@@ -35,15 +24,20 @@ class Library(override val config: XMLCalabashConfig) extends Artifact(config) w
     makeBindingsExplicit(env, None)
   }
 
-  override protected[model] def makeBindingsExplicit(environment: Environment, initialDrp: Option[Port]): Unit = {
+  override protected[model] def makeBindingsExplicit(initialEnvironment: Environment, initialDrp: Option[Port]): Unit = {
+    val containerEnvironment = configureContainerEnvironment(initialEnvironment)
+
     for (child <- allChildren) {
       child match {
         case decl: DeclareStep =>
-          val newenvironment = environment.declareStep()
-          decl.makeBindingsExplicit(newenvironment)
+          val newenvironment = containerEnvironment.declareStep()
+          decl.makeBindingsExplicit(newenvironment, None)
         case variable: Variable =>
-          variable.makeBindingsExplicit(environment, None)
-          environment.addVariable(variable)
+          if (!variable.static) {
+            throw new RuntimeException("Variables in libraries must be static")
+          }
+          variable.makeBindingsExplicit(containerEnvironment, None)
+          containerEnvironment.addVariable(variable)
         case function: DeclareFunction =>
           Unit
       }
@@ -58,21 +52,15 @@ class Library(override val config: XMLCalabashConfig) extends Artifact(config) w
           if (!variable.static) {
             throw new RuntimeException("Only static variables are allowed in a p:library")
           }
-        case option: DeclareOption =>
-          if (!option.static) {
-            throw new RuntimeException("Only static options are allowed in a p:library")
-          }
         case step: DeclareStep => Unit
         case function: DeclareFunction => Unit
         case _ =>
           throw new RuntimeException(s"Child not allowed: $child")
       }
     }
-
-    if (children.nonEmpty) {
-      throw new RuntimeException("Invalid content in p:option")
-    }
   }
 
-
+  override def toString: String = {
+    s"p:library $location $tumble_id"
+  }
 }

@@ -117,6 +117,8 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
     }
     */
 
+    var xdmvalue = Option.empty[XdmValue]
+
     xpath match {
       case xpath: XProcXPathExpression =>
         if (xpath.context.location.isDefined) {
@@ -126,27 +128,31 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         if (xpath.context.location.isDefined) {
           newContext.location = xpath.context.location.get
         }
+      case xpath: XProcXPathValue =>
+        xdmvalue = Some(xpath.value.value)
       case _ =>
         throw XProcException.xiNotAnXPathExpression(xpath, None)
     }
 
-    for ((str, value) <- bindings) {
-      value match {
-        case msg: XdmValueItemMessage =>
-          msg.item match {
-            case item: XdmItem =>
-              checkDocument(newContext, item, value)
-            case _ =>
-              Unit // Whatever this is, it isn't a document
-          }
-        case _ =>
-          throw XProcException.xiInvalidMessage(newContext.location, value)
+    if (xdmvalue.isEmpty) {
+      for ((str, value) <- bindings) {
+        value match {
+          case msg: XdmValueItemMessage =>
+            msg.item match {
+              case item: XdmItem =>
+                checkDocument(newContext, item, value)
+              case _ =>
+                Unit // Whatever this is, it isn't a document
+            }
+          case _ =>
+            throw XProcException.xiInvalidMessage(newContext.location, value)
+        }
       }
+
+      xdmvalue = Some(withContext(newContext) { compute(xpath.asInstanceOf[XProcExpression], context, bindings, proxies.toMap, options) })
     }
 
-    val xdmvalue = withContext(newContext) { compute(xpath.asInstanceOf[XProcExpression], context, bindings, proxies.toMap, options) }
-
-    val metadata = xdmvalue match {
+    val metadata = xdmvalue.get match {
       case node: XdmNode =>
         val baseURI = new XdmAtomicValue(node.getBaseURI)
         val pmap = mutable.Map.empty[QName,XdmItem]
@@ -157,7 +163,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         XProcMetadata.XML
     }
 
-    new XdmValueItemMessage(xdmvalue, metadata, xpath.asInstanceOf[XProcExpression].context)
+    new XdmValueItemMessage(xdmvalue.get, metadata, xpath.asInstanceOf[XProcExpression].context)
   }
 
   override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message], params: Option[BindingParams]): Boolean = {
@@ -314,9 +320,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
             case xpe: XPathException =>
               if (xpe.getMessage.contains("Undeclared variable")) {
                 throw XProcException.xsStaticErrorInExpression(xpath, sae.getMessage, exprContext.location)
-              } else {
-                throw sae
               }
+              if (xpe.getMessage.contains("argument function named")) {
+                throw XProcException.xsStaticErrorInExpression(xpath, sae.getMessage, exprContext.location)
+              }
+              throw sae
             case _ => throw sae
           }
         case other: Throwable =>

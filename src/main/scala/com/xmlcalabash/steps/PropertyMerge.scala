@@ -37,7 +37,7 @@ class PropertyMerge extends DefaultXmlStep {
       case node: XdmNode =>
         val piter = node.axisIterator(Axis.CHILD)
         while (piter.hasNext) {
-          val pnode = piter.next().asInstanceOf[XdmNode]
+          val pnode = piter.next()
           pnode.getNodeKind match {
             case XdmNodeKind.ELEMENT =>
               if (pnode.getNodeName == XProcConstants.c_document_properties) {
@@ -65,7 +65,7 @@ class PropertyMerge extends DefaultXmlStep {
 
    val piter = node.axisIterator(Axis.CHILD)
     while (piter.hasNext) {
-      val pnode = piter.next().asInstanceOf[XdmNode]
+      val pnode = piter.next()
       pnode.getNodeKind match {
         case XdmNodeKind.ELEMENT =>
           val name = pnode.getNodeName
@@ -91,7 +91,7 @@ class PropertyMerge extends DefaultXmlStep {
           var atomic = true
           var viter = pnode.axisIterator(Axis.CHILD)
           while (viter.hasNext) {
-            val vnode = viter.next().asInstanceOf[XdmNode]
+            val vnode = viter.next()
             if (vnode.getNodeKind == XdmNodeKind.TEXT) {
               strvalue = vnode.getStringValue
             } else {
@@ -211,7 +211,7 @@ class PropertyMerge extends DefaultXmlStep {
             builder.startDocument(node.getBaseURI)
             viter = node.axisIterator(Axis.CHILD)
             while (viter.hasNext) {
-              val vnode = viter.next().asInstanceOf[XdmNode]
+              val vnode = viter.next()
               builder.addSubtree(vnode)
             }
             builder.endDocument()

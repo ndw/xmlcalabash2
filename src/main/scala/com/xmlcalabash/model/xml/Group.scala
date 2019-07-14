@@ -5,6 +5,7 @@ import com.jafpl.steps.Manifold
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.runtime.XMLCalabashRuntime
+import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.XdmNode
 
 class Group(override val config: XMLCalabashConfig) extends Container(config) with NamedArtifact {
@@ -46,6 +47,14 @@ class Group(override val config: XMLCalabashConfig) extends Container(config) wi
     for (child <- children[Step]) {
       child.graphEdges(runtime, _graphNode.get)
     }
+  }
+
+  override def xdump(xml: ElaboratedPipeline): Unit = {
+    xml.startGroup(tumble_id, stepName)
+    for (child <- rawChildren) {
+      child.xdump(xml)
+    }
+    xml.endGroup()
   }
 
   override def toString: String = {

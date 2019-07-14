@@ -72,9 +72,9 @@ class Artifact(val config: XMLCalabashConfig) {
 
   protected[model] def allChildren: List[Artifact] = {
     _children.toList.flatMap {
-      case docs: Documentation => None
-      case info: PipeInfo => None
-      case art: Artifact => Some(art)
+      case _: Documentation => None
+      case _: PipeInfo => None
+      case art:Artifact => Some(art)
     }
   }
 
@@ -380,7 +380,7 @@ class Artifact(val config: XMLCalabashConfig) {
     println(s"$indent$this")
     for (child <- allChildren) {
       child match {
-        case step: Step =>
+        case _: Step =>
           println("")
         case _ => Unit
       }
