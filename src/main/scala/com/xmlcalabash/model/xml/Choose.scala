@@ -80,13 +80,7 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
       for (child <- branch.children[DeclareOutput]) {
         outputSet += child.port
         if (child.primary) {
-          if (primaryOutput.isDefined) {
-            if (primaryOutput.get != child.port) {
-              throw XProcException.xsBadChooseOutputs(primaryOutput.get, child.port, location)
-            }
-          } else {
-            primaryOutput = Some(child.port)
-          }
+          primaryOutput = Some(child.port)
         }
       }
     }
@@ -132,11 +126,39 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
 
   override protected[model] def validateStructure(): Unit = {
     super.validateStructure()
+
+    var first = true
+    var primaryOutput = Option.empty[DeclareOutput]
     for (child <- allChildren) {
       child match {
         case _: WithInput => Unit
         case _: WithOutput => Unit
-        case _: When => Unit
+        case when: When =>
+          if (first) {
+            for (child <- when.children[DeclareOutput]) {
+              if (child.primary) {
+                primaryOutput = Some(child)
+              }
+            }
+            first = false
+          }
+
+          var foundPrimary = false
+          for (child <- when.children[DeclareOutput]) {
+            if (child.primary) {
+              foundPrimary = true
+              if (primaryOutput.isEmpty) {
+                throw XProcException.xsBadChooseOutputs("#NONE", child.port, location)
+              }
+              if (primaryOutput.isDefined && primaryOutput.get.port != child.port) {
+                throw XProcException.xsBadChooseOutputs(primaryOutput.get.port, child.port, location)
+              }
+            }
+            if (!foundPrimary && primaryOutput.isDefined) {
+              throw XProcException.xsBadChooseOutputs(primaryOutput.get.port, "#NONE", location)
+            }
+          }
+
         case _: Otherwise => Unit
         case _ =>
           throw new RuntimeException(s"Invalid content in $this")

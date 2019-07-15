@@ -20,19 +20,21 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
   config.load()
 
   override def configure(configuration: XMLCalabashConfig): Unit = {
-    try {
-      configuration.processor = if (config.saxon_configuration_file.isDefined) {
-        new Processor(new SAXSource(new InputSource(config.saxon_configuration_file.get)))
-      } else {
-        new Processor(config.schema_aware)
+    if (configuration.processorRequired) {
+      try {
+        configuration.processor = if (config.saxon_configuration_file.isDefined) {
+          new Processor(new SAXSource(new InputSource(config.saxon_configuration_file.get)))
+        } else {
+          new Processor(config.schema_aware)
+        }
+      } catch {
+        case ex: RuntimeException =>
+          throw XProcException.xiNoSaxon()
       }
-    } catch {
-      case ex: RuntimeException =>
-        throw XProcException.xiNoSaxon()
-    }
 
-    for (key <- config.saxon_configuration_properties.keySet) {
-      configuration.processor.setConfigurationProperty(key, config.saxon_configuration_properties(key))
+      for (key <- config.saxon_configuration_properties.keySet) {
+        configuration.processor.setConfigurationProperty(key, config.saxon_configuration_properties(key))
+      }
     }
 
     configuration.traceEventManager = new DefaultTraceEventManager()

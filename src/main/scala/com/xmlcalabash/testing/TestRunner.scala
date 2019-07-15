@@ -616,7 +616,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
       throw new TestException("No pipeline for test")
     }
 
-    val tester = new Tester(runtimeConfig)
+    val tester = new Tester(XMLCalabashConfig.newInstance(runtimeConfig))
 
     tester.pipeline = pipeline.get
 

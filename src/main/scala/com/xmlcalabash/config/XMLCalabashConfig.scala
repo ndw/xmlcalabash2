@@ -9,7 +9,7 @@ import com.xmlcalabash.functions.{CwdShim, DocumentPropertiesDocumentShim, Docum
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.{Container, DeclContainer, Library}
 import com.xmlcalabash.parsers.XPathParser
-import com.xmlcalabash.runtime.SaxonExpressionEvaluator
+import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XMLCalabashRuntime}
 import com.xmlcalabash.sbt.BuildInfo
 import com.xmlcalabash.util.URIUtils
 import javax.xml.transform.URIResolver
@@ -28,8 +28,20 @@ object XMLCalabashConfig {
   var loggedPI = false
 
   def newInstance(): XMLCalabashConfig = {
+    newInstance(None)
+  }
+
+  def newInstance(processor: Processor): XMLCalabashConfig = {
+    newInstance(Some(processor))
+  }
+
+  def newInstance(config: XMLCalabashConfig): XMLCalabashConfig = {
+    newInstance(Some(config.processor))
+  }
+
+  private def newInstance(processor: Option[Processor]): XMLCalabashConfig = {
     val configurer = Class.forName(configClass).newInstance().asInstanceOf[XProcConfigurer]
-    val config = new XMLCalabashConfig(configurer)
+    val config = new XMLCalabashConfig(configurer, processor)
     configurer.xmlCalabashConfigurer.configure(config)
     config.close()
 
@@ -44,7 +56,7 @@ object XMLCalabashConfig {
   private def configClass: String = Option(System.getProperty(_configProperty)).getOrElse(_configClass)
 }
 
-class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeConfiguration {
+class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Option[Processor]) extends RuntimeConfiguration {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val _expressionEvaluator = new SaxonExpressionEvaluator(this)
   private val _collections = mutable.HashMap.empty[String, List[XdmNode]]
@@ -72,6 +84,17 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
   private var _defaultSerializationOptions = Map.empty[String,Map[QName,String]]
   private val _importedURIs = mutable.HashMap.empty[URI, DeclContainer]
 
+  def this(xprocConfig: XProcConfigurer) {
+    this(xprocConfig, None)
+  }
+  def this(xprocConfig: XProcConfigurer, processor: Processor) {
+    this(xprocConfig, Some(processor))
+  }
+
+  if (saxonProcessor.isDefined) {
+    _processor = saxonProcessor.get
+  }
+
   def productName: String = BuildInfo.name
   def productVersion: String = BuildInfo.version
   def productHash: String = BuildInfo.gitHash.substring(0,6)
@@ -90,6 +113,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer) extends RuntimeCon
   def xpathVersion: String = "3.1"
   def psviSupported: Boolean = processor.isSchemaAware
 
+  def processorRequired: Boolean = _processor == null
   def processor: Processor = {
     if (_processor == null) {
       throw new ConfigurationException(ExceptionCode.CFGINCOMPLETE, "processor")

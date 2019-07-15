@@ -8,6 +8,11 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class DeclContainer(override val config: XMLCalabashConfig) extends Container(config) {
+  protected var _psvi_required = Option.empty[Boolean]
+  protected var _xpath_version = Option.empty[Double]
+  protected var _exclude_inline_prefixes = Option.empty[String]
+  protected var _version = Option.empty[Double]
+
   protected var _signatures: ListBuffer[StepSignature] = ListBuffer.empty[StepSignature]
   private var processed = mutable.HashSet.empty[DeclContainer]
 

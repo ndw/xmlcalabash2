@@ -15,10 +15,6 @@ import scala.collection.mutable.ListBuffer
 
 class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(config) {
   private var _type = Option.empty[QName]
-  private var _psvi_required = Option.empty[Boolean]
-  private var _xpath_version = Option.empty[Double]
-  private var _exclude_inline_prefixes = Option.empty[String]
-  private var _version = Option.empty[Double]
   private var _visibility = Option.empty[String]
   private var _signature = Option.empty[StepSignature]
   private var _inputs = mutable.HashMap.empty[String, DeclareInput]
