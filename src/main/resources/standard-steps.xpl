@@ -72,6 +72,15 @@
           cx:as="first-child|last-child|before|after"/>
 </p:declare-step>
 
+<p:declare-step type="p:label-elements">
+  <p:input port="source" content-types="xml html"/>
+  <p:output port="result" content-types="xml html"/>
+  <p:option name="attribute" as="xs:QName" select="'xml:id'"/>
+  <p:option name="label" as="xs:string" select="'concat(''_'',$p:index)'"/>
+  <p:option name="match" as="xs:string" select="'*'"/>
+  <p:option name="replace" as="xs:boolean" select="true()"/>
+</p:declare-step>
+
 <p:declare-step type="p:load">
   <p:output port="result" sequence="true" content-types="*/*"/>
   <p:option name="href" required="true" as="xs:anyURI"/>
