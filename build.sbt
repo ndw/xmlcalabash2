@@ -25,7 +25,7 @@ buildInfoKeys ++= Seq[BuildInfoKey](
         )
         new BufferedReader(extracted).readLine
       } catch {
-        case Exception => "FAILED"
+        case _: Exception => "FAILED"
       }
     }}.toString()
 )
