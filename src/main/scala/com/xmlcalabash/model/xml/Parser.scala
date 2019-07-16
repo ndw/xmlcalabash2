@@ -472,7 +472,10 @@ class Parser(config: XMLCalabashConfig) {
     }
     builder.endDocument()
 
-    val inline = new Inline(config, builder.result)
+    val excludeURIs = S9Api.excludeInlineURIs(node)
+    val inlineNode = S9Api.removeNamespaces(config, builder.result, excludeURIs, true)
+
+    val inline = new Inline(config, inlineNode)
     inline.parse(node)
     inline
   }
@@ -483,11 +486,14 @@ class Parser(config: XMLCalabashConfig) {
     builder.addSubtree(node)
     builder.endDocument()
 
+    val excludeURIs = S9Api.excludeInlineURIs(node)
+    val inlineNode = S9Api.removeNamespaces(config, builder.result, excludeURIs, true)
+
     if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
       throw new RuntimeException("Elements in the XProc namespace cannot be synthetic inlines")
     }
 
-    val inline = new Inline(config, builder.result, true)
+    val inline = new Inline(config, inlineNode,true)
     inline.parse(node)
     inline
   }

@@ -90,7 +90,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
     _exclude_inline_prefixes = attr(XProcConstants._exclude_inline_prefixes)
     if (_exclude_inline_prefixes.isDefined) {
       val prefixes = _exclude_inline_prefixes.get.split("\\s+").toList
-      _excludeUriBindings = S9Api.urisForPrefixes(node, prefixes)
+      _excludeUriBindings = S9Api.urisForPrefixes(node, prefixes.toSet)
     }
 
     _visibility = attr(XProcConstants._visibility)
