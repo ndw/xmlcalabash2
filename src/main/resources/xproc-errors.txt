@@ -253,6 +253,9 @@ Static expression references non-static variable “$1”
 XS0108
 It is a static error if a p:if does not specify a primary output port.
 
+XC0013
+Cannot rename PI to a name with a namespace: “$1”.
+
 XC0023
 Bad pattern: “$1”. Matches $2 node where it must only match elements.
 

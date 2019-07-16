@@ -103,6 +103,13 @@
   <p:option name="parameters" as="map(*)"/>
 </p:declare-step>
 
+<p:declare-step type="p:rename">
+   <p:input port="source" content-types="xml html"/>
+   <p:output port="result" content-types="xml html"/>
+   <p:option name="match" as="xs:string" select="'/*'"/>
+   <p:option name="new-name" required="true" as="xs:QName"/>
+</p:declare-step>
+
 <p:declare-step type="p:sink">
   <p:input port="source" content-types="any" sequence="true"/>
 </p:declare-step>

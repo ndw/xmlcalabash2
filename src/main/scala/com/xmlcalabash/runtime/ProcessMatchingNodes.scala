@@ -8,6 +8,7 @@ trait ProcessMatchingNodes {
   def endElement(node: XdmNode): Unit
   def endDocument(node: XdmNode): Unit
 
+  def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean
   def attribute(node: XdmNode): Unit
   def text(node: XdmNode): Unit
   def comment(node: XdmNode): Unit

@@ -115,6 +115,8 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
     throw XProcException.xcInvalidSelection(pattern, "document", location)
   }
 
+  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
+
   override def attribute(node: XdmNode): Unit = {
     throw XProcException.xcInvalidSelection(pattern, "attribute", location)
   }

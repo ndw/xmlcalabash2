@@ -141,22 +141,26 @@ class ProcessMatch(config: XMLCalabashConfig,
         }
 
         if (!nmatch) {
-          // Walk through the attributes twice, processing all the *NON* matches first.
-          // That way if a matching node renames an attribute, it can replace any non-matching
-          // attribute with the same name.
+          // First, we check to see if any attributes will match
+          val found = ListBuffer.empty[XdmNode]
           var iter = node.axisIterator(Axis.ATTRIBUTE)
           while (iter.hasNext) {
             val child = iter.next
-            if (!matches(child)) {
-              traverse(child)
+            if (matches(child)) {
+              found += child
             }
           }
 
-          iter = node.axisIterator(Axis.ATTRIBUTE)
-          while (iter.hasNext) {
-            val child = iter.next
-            if (matches(child)) {
-              traverse(child)
+          val doAttributes = if (found.nonEmpty) {
+            processor.allAttributes(node, found.toList)
+          } else {
+            true
+          }
+
+          if (doAttributes) {
+            iter = node.axisIterator(Axis.ATTRIBUTE)
+            while (iter.hasNext) {
+              traverse(iter.next)
             }
           }
 

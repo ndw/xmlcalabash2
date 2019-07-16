@@ -7,21 +7,15 @@ import com.xmlcalabash.runtime._
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmNode}
 import net.sf.saxon.value.QNameValue
 
-class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
-  private val _attribute = new QName("attribute")
-  private val _label = new QName("label")
-  private val _replace = new QName("replace")
-  private val p_index = new QName("p", XProcConstants.ns_p, "index")
+class Rename() extends DefaultXmlStep with ProcessMatchingNodes {
+  private val _new_name = new QName("new-name")
 
   private var context: StaticContext = _
-  private var attribute: QName = _
-  private var label: String = _
+  private var newName: QName = _
   private var pattern: String = _
-  private var replace = true
   private var matcher: ProcessMatch = _
   private var source: XdmNode = _
   private var metadata: XProcMetadata = _
-  private var p_count = 1L
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.XMLSOURCE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
@@ -32,11 +26,11 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
-    val qn = bindings(_attribute).value.getUnderlyingValue.asInstanceOf[QNameValue]
-    attribute = new QName(qn.getPrefix, qn.getNamespaceURI, qn.getLocalName)
-    label = bindings(_label).getStringValue
+    super.run(context)
+
+    val qn = bindings(_new_name).value.getUnderlyingValue.asInstanceOf[QNameValue]
+    newName = new QName(qn.getPrefix, qn.getNamespaceURI, qn.getLocalName)
     pattern = bindings(XProcConstants._match).getStringValue
-    replace = bindings(_replace).getStringValue == "true"
     this.context = context
 
     matcher = new ProcessMatch(config, this, context)
@@ -50,33 +44,8 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
   }
 
   override def startElement(node: XdmNode): Boolean = {
-    val exprEval = config.expressionEvaluator.newInstance()
-    val expr = new XProcXPathExpression(context, label, None, None, None)
-    val msg = new XdmNodeItemMessage(node, metadata, context)
-    val countmsg = new XdmValueItemMessage(new XdmAtomicValue(p_count), XProcMetadata.XML, context)
-    val result = exprEval.value(expr, List(msg), Map(p_index.getClarkName -> countmsg), None)
-    val index = result.item.getUnderlyingValue.getStringValue
-
-    var dup = false
-    matcher.addStartElement(node)
-    val iter = node.axisIterator(Axis.ATTRIBUTE)
-    while (iter.hasNext) {
-      val attr = iter.next()
-      if (attr.getNodeName == attribute) {
-        dup = true
-        if (!replace) {
-          matcher.addAttribute(attr)
-        }
-      } else {
-        matcher.addAttribute(attr)
-      }
-    }
-
-    if (!dup || replace) {
-      matcher.addAttribute(attribute, index)
-      p_count += 1
-    }
-
+    matcher.addStartElement(newName)
+    matcher.addAttributes(node)
     matcher.startContent()
     true
   }
@@ -89,10 +58,28 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
     throw XProcException.xcInvalidSelection(pattern, "document", location)
   }
 
-  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
+  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = {
+    val iter = node.axisIterator(Axis.ATTRIBUTE)
+    while (iter.hasNext) {
+      val attr = iter.next()
+
+      // If we're renaming A to B,
+      // 1. Don't output A
+      // 2. Don't output any existing attribute named B
+      if (matching.contains(attr) || attr.getNodeName == newName) {
+        // nop
+      } else {
+        matcher.addAttribute(attr)
+      }
+    }
+
+    matcher.addAttribute(newName, matching.head.getStringValue)
+
+    false
+  }
 
   override def attribute(node: XdmNode): Unit = {
-    throw XProcException.xcInvalidSelection(pattern, "attribute", location)
+    throw new RuntimeException("attribute called in rename")
   }
 
   override def text(node: XdmNode): Unit = {
@@ -104,6 +91,9 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
   }
 
   override def pi(node: XdmNode): Unit = {
-    throw XProcException.xcInvalidSelection(pattern, "processing-instruction", location)
+    if (newName.getNamespaceURI != "") {
+      throw XProcException.xcBadRenamePI(newName, location)
+    }
+    matcher.addPI(newName.getLocalName, node.getStringValue)
   }
 }

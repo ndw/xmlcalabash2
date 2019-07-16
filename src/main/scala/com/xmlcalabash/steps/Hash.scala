@@ -108,6 +108,8 @@ class Hash() extends DefaultXmlStep  with ProcessMatchingNodes {
     matcher.endDocument()
   }
 
+  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
+
   override def attribute(node: XdmNode): Unit = {
     matcher.addAttribute(node, hash)
   }

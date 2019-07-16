@@ -44,6 +44,8 @@ class Delete() extends DefaultXmlStep  with ProcessMatchingNodes {
     // nop, deleted
   }
 
+  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
+
   override def attribute(node: XdmNode): Unit = {
     // nop, deleted
   }

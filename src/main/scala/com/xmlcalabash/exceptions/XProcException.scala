@@ -198,6 +198,7 @@ object XProcException {
   def xsPrimaryOutputRequired(location: Option[Location]): XProcException = staticError(108, location)
   def xsUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = staticError(111, ctype, location)
 
+  def xcBadRenamePI(name: QName, location: Option[Location]): XProcException = stepError(13, name, location)
   def xcInvalidSelection(pattern: String, nodeType: String, location: Option[Location]): XProcException = stepError(23, List(pattern, nodeType), location)
   def xcBadPosition(pattern: String, position: String, location: Option[Location]): XProcException = stepError(24, List(pattern, position), location)
   def xcBadChildPosition(pattern: String, position: String, location: Option[Location]): XProcException = stepError(25, List(pattern, position), location)

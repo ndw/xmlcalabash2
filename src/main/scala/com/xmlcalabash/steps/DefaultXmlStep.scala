@@ -55,7 +55,9 @@ class DefaultXmlStep extends XmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
-    // nop
+    if (_location.isEmpty) {
+      _location = context.location
+    }
   }
 
   override def reset(): Unit = {

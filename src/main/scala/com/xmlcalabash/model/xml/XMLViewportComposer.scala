@@ -91,6 +91,8 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
       matcher.endDocument()
     }
 
+    override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
+
     override def attribute(node: XdmNode): Unit = {
       throw new RuntimeException("viewport cannot process attributes")
     }
@@ -144,6 +146,8 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
     override def endDocument(node: XdmNode): Unit = {
       matcher.endDocument()
     }
+
+    override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
 
     override def attribute(node: XdmNode): Unit = {
       throw new RuntimeException("this will never happen")
