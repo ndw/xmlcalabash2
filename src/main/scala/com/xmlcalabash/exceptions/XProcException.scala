@@ -89,6 +89,8 @@ object XProcException {
   def xdCannotResolveQName(name: String, location: Option[Location]): XProcException = dynamicError(15, name, location)
   def xdInvalidSelection(expr: String, selected: String, location: Option[Location]): XProcException = dynamicError(16, List(expr,selected), location)
 
+  def xdContextItemAbsent(expr: String, msg: String, location: Option[Location]): XProcException = dynamicError(1, List(expr, msg), location)
+
   // FIXME: subtypes
   def xdBadValue(value: String, vtype: String, location: Option[Location]): XProcException = dynamicError((19, 1), List(value,vtype), location)
   def xdBadMatchPattern(pattern: String, message: String, location: Option[Location]): XProcException = dynamicError((19, 2), List(pattern, message), location)
@@ -100,7 +102,6 @@ object XProcException {
   def xdNotValidXML(href: String, message: String, location: Option[Location]): XProcException = dynamicError(23, List(href, message), location)
   def xdNotValidXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(23, List(href, line, col, message), location)
 
-  def xdContextItemAbsent(expr: String, msg: String, location: Option[Location]): XProcException = dynamicError(26, List(expr, msg), location)
   def xdConflictingNamespaceDeclarations(msg: String, location: Option[Location]): XProcException = dynamicError(34, msg, location)
   def xdBadType(value: String, as: String, location: Option[Location]): XProcException = dynamicError(36, List(value, as), location)
   def xdBadMediaType(ctype: MediaType, allowed: List[MediaType], location: Option[Location]): XProcException = dynamicError(38, List(ctype, allowed), location)

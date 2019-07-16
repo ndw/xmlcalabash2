@@ -133,7 +133,7 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
       child match {
         case _: WithInput => Unit
         case _: WithOutput => Unit
-        case when: When =>
+        case when: ChooseBranch =>  // When or Otherwise
           if (first) {
             for (child <- when.children[DeclareOutput]) {
               if (child.primary) {
@@ -154,12 +154,11 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
                 throw XProcException.xsBadChooseOutputs(primaryOutput.get.port, child.port, location)
               }
             }
-            if (!foundPrimary && primaryOutput.isDefined) {
-              throw XProcException.xsBadChooseOutputs(primaryOutput.get.port, "#NONE", location)
-            }
           }
 
-        case _: Otherwise => Unit
+          if (!foundPrimary && primaryOutput.isDefined) {
+            throw XProcException.xsBadChooseOutputs(primaryOutput.get.port, "#NONE", location)
+          }
         case _ =>
           throw new RuntimeException(s"Invalid content in $this")
       }

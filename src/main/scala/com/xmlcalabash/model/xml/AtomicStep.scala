@@ -72,6 +72,8 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
       if (found.isEmpty) {
         val newwi = new WithInput(config)
         newwi.port = dinput.port
+        newwi.primary = dinput.primary
+        newwi.sequence = dinput.sequence
         addChild(newwi)
       }
     }
