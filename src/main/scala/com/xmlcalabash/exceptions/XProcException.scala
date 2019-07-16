@@ -215,6 +215,7 @@ object XProcException {
   def xcNotSchemaValid(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = stepError(53, List(href, line, col, message), location)
   def xcCannotAddNamespaces(name: QName, location: Option[Location]): XProcException = stepError(59, name, location)
   def xcUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = stepError(70, ctype, location)
+  def xcMultipleTopLevelElements(location: Option[Location]): XProcException = stepError(91, location)
   def xcAttributeNameCollision(qname: QName, location: Option[Location]): XProcException = stepError(92, qname, location)
 
   def staticErrorCode(code: Int): QName = {

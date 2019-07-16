@@ -5,11 +5,12 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime.params.XPathBindingParams
-import com.xmlcalabash.runtime.{ExprParams, XMLCalabashRuntime, XProcMetadata, XProcVtExpression, XProcXPathExpression}
+import com.xmlcalabash.runtime._
 import com.xmlcalabash.util.TypeUtils
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import net.sf.saxon.om.Item
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmValue}
+import net.sf.saxon.ma.arrays.ArrayItem
+import net.sf.saxon.ma.map.{HashTrieMap, MapItem, SingleEntryMap}
+import net.sf.saxon.s9api.{QName, XdmArray, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
 import net.sf.saxon.value.{AtomicValue, EmptySequence}
 
 import scala.collection.mutable
@@ -55,23 +56,30 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
           if (xvalue.getLength == 0 && xvalue == EmptySequence.getInstance()) {
             staticValue = msg
           } else {
-            val avalue = xvalue match {
+            xvalue match {
               case atomic: XdmAtomicValue =>
-                atomic
+                var tvalue = typeUtils.castAtomicAs(atomic, Some(declaredType), staticContext)
+                tvalue = typeUtils.castAtomicAs(tvalue, as, staticContext)
+                staticValue = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
               case atomic: AtomicValue =>
-                XdmAtomicValue.makeAtomicValue(atomic)
+                var tvalue = typeUtils.castAtomicAs(XdmAtomicValue.makeAtomicValue(atomic), Some(declaredType), staticContext)
+                tvalue = typeUtils.castAtomicAs(tvalue, as, staticContext)
+                staticValue = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
               case item: XdmItem =>
-                XdmAtomicValue.makeAtomicValue(item)
+                var tvalue = typeUtils.castAtomicAs(XdmAtomicValue.makeAtomicValue(item), Some(declaredType), staticContext)
+                tvalue = typeUtils.castAtomicAs(tvalue, as, staticContext)
+                staticValue = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
+              case map: MapItem =>
+                val tvalue = new XdmMap(map)
+                // FIXME: validation on map types?
+                staticValue = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
+              case array: ArrayItem =>
+                val tvalue = new XdmArray(array)
+                // FIXME: validation on map types?
+                staticValue = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
               case _ =>
-                throw new RuntimeException("Impossible type for static value?")
+                throw new RuntimeException("Unexpected item type")
             }
-            //var tvalue = typeUtils.castAtomicAs(XdmAtomicValue.makeAtomicValue(avalue), Some(declaredType), staticContext)
-            var tvalue = typeUtils.castAtomicAs(avalue, Some(declaredType), staticContext)
-            if (as.isDefined) {
-              tvalue = typeUtils.castAtomicAs(tvalue, as, staticContext)
-            }
-            msg = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
-            staticValue = msg
           }
         }
       }

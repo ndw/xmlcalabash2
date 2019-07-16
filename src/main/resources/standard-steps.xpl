@@ -48,6 +48,13 @@
   <p:option name="code" required="true" as="xs:QName"/>
 </p:declare-step>
 
+<p:declare-step type="p:escape-markup">
+  <p:input port="source" content-types="xml html"/>
+  <p:output port="result" content-types="xml html"/>
+  <p:option name="serialization" as="map(xs:QName,item()*)?"
+            select="map { }"/>
+</p:declare-step>
+
 <p:declare-step type="p:hash">
   <p:input port="source" primary="true" content-types="xml html"/>
   <p:output port="result" content-types="text xml html"/>

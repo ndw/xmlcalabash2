@@ -292,6 +292,9 @@ Validity error in “$1”: $2
 XC0059
 Cannot add namespaces, “$1” is invalid.
 
+XC0091
+Multiple top-level elements are not allowed in p:escape-markup.
+
 XC0092
 Attribute name collision: “$1”
 

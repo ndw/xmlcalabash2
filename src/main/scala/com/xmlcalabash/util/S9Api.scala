@@ -31,6 +31,15 @@ object S9Api {
   val SPACE = new XdmAtomicValue(" ")
   val NULL = new XdmAtomicValue("null")
 
+  def axis(node: XdmNode, axis: Axis): List[XdmNode] = {
+    val lb = ListBuffer.empty[XdmNode]
+    val iter = node.axisIterator(axis)
+    while (iter.hasNext) {
+      lb += iter.next()
+    }
+    lb.toList
+  }
+
   def documentElement(doc: XdmNode): Option[XdmNode] = {
     doc.getNodeKind match {
       case XdmNodeKind.DOCUMENT =>

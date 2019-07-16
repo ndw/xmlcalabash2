@@ -8,8 +8,10 @@ import com.xmlcalabash.runtime.params.StepParams
 import com.xmlcalabash.runtime.{ImplParams, StepExecutable, StepProxy, StepRunner, StepWrapper, XMLCalabashRuntime, XmlStep}
 import com.xmlcalabash.steps.internal.{DocumentLoader, InlineLoader}
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import net.sf.saxon.s9api.{QName, XdmNode}
+import net.sf.saxon.ma.map.{MapItem, SingleEntryMap}
+import net.sf.saxon.s9api.{ItemType, QName, XdmNode}
 
+import scala.collection.immutable.HashMap.HashTrieMap
 import scala.collection.mutable
 
 class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplParams]) extends Step(config) with NamedArtifact {
@@ -82,6 +84,7 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
       val newwo = new WithOutput(config)
       newwo.port = doutput.port
       newwo.primary = doutput.primary
+      newwo.sequence = doutput.sequence
       addChild(newwo)
     }
 
@@ -96,7 +99,20 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
         if (attributes.contains(doption.name)) {
           val woption = new WithOption(config, doption.name)
           woption.staticContext = staticContext
-          woption.avt = attributes(doption.name)
+
+          if (doption.declaredType.isDefined) {
+            val dtype = doption.declaredType.get
+            woption.as = dtype
+
+            if (dtype.getItemType == ItemType.ANY_MAP) {
+              woption.select = attributes(doption.name)
+            } else {
+              woption.avt = attributes(doption.name)
+            }
+          } else {
+            woption.avt = attributes(doption.name)
+          }
+
           found = Some(woption)
           addChild(woption)
         } else {
