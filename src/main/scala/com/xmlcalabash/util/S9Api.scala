@@ -3,15 +3,13 @@ package com.xmlcalabash.util
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.net.URI
 
-import com.jafpl.graph.Location
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime, XProcMetadata}
+import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.`type`.BuiltInAtomicType
 import net.sf.saxon.ma.map.MapItem
 import net.sf.saxon.om.{FingerprintedQName, InscopeNamespaceResolver, NameOfNode, NamespaceBinding}
-import net.sf.saxon.s9api.{Axis, QName, Serializer, XdmArray, XdmAtomicValue, XdmEmptySequence, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api._
 import net.sf.saxon.tree.util.NamespaceIterator
 import net.sf.saxon.value.QNameValue
 import org.xml.sax.InputSource
