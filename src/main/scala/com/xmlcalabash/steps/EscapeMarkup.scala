@@ -6,7 +6,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.S9Api
-import net.sf.saxon.s9api.{Axis, XdmMap, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api.{Axis, Serializer, XdmAtomicValue, XdmMap, XdmNode, XdmNodeKind}
 
 class EscapeMarkup() extends DefaultXmlStep {
   private var source: XdmNode = _
@@ -34,6 +34,13 @@ class EscapeMarkup() extends DefaultXmlStep {
     tree.startDocument(source.getBaseURI)
 
     val serializer = makeSerializer(options)
+    val komit = new XdmAtomicValue(XProcConstants._omit_xml_declaration)
+    val ksa   = new XdmAtomicValue(XProcConstants._standalone)
+    if (!options.containsKey(komit) && !options.containsKey(ksa)) {
+      serializer.setOutputProperty(XProcConstants._omit_xml_declaration, "yes")
+    }
+
+    // It might be nice to make omit-xml-declaration the default here
 
     var topLevelElement = false
     val iter = source.axisIterator(Axis.CHILD)
@@ -60,11 +67,8 @@ class EscapeMarkup() extends DefaultXmlStep {
             S9Api.serialize(config.config, cnode, serializer)
           }
 
-          var data = sw.toString
-          data = data.replaceAll("^<.*?>", "")     // Strip off the start tag...
-          data = data.replaceAll("<[^<>]*?>$", "") // Strip off the end tag
 
-          tree.addText(data)
+          tree.addText(sw.toString)
           tree.addEndElement()
       }
     }
