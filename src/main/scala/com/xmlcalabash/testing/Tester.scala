@@ -5,7 +5,7 @@ import com.xmlcalabash.exceptions.{ModelException, TestException, XProcException
 import com.xmlcalabash.messages.XdmNodeItemMessage
 import com.xmlcalabash.model.xml.Parser
 import com.xmlcalabash.runtime.{BufferingConsumer, StaticContext, XMLCalabashRuntime, XProcMetadata}
-import com.xmlcalabash.util.{MediaType, XProcVarValue}
+import com.xmlcalabash.util.{MediaType, S9Api, XProcVarValue}
 import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -24,8 +24,9 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
   private val context   = new StaticContext(runtimeConfig)
 
   def pipeline: Option[XdmNode] = _pipeline
-  def pipeline_=(pipe: XdmNode): Unit = {
+  def pipeline_=(tpipe: XdmNode): Unit = {
     if (_pipeline.isEmpty) {
+      val pipe = S9Api.removeNamespaces(runtimeConfig, tpipe, Set("http://xproc.org/ns/testsuite/3.0"), true)
       _pipeline = Some(pipe)
     } else {
       throw new TestException("Cannot reset pipeline in test")
