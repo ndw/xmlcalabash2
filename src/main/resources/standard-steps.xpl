@@ -177,6 +177,15 @@
   <p:option name="count" required="true" as="xs:integer"/>
 </p:declare-step>
 
+<p:declare-step type="p:unescape-markup">
+  <p:input port="source" content-types="xml html"/>
+  <p:output port="result" content-types="xml html"/>
+  <p:option name="namespace" as="xs:anyURI?"/>
+  <p:option name="content-type" as="xs:string" select="'application/xml'"/>
+  <p:option name="encoding" as="xs:string?"/>
+  <p:option name="charset" as="xs:string?"/>
+</p:declare-step>
+
 <p:declare-step type="p:validate-with-relax-ng">
   <p:input port="source" primary="true" content-types="application/xml text/xml */*+xml"/>
   <p:input port="schema" content-types="application/xml */*+xml"/>
