@@ -12,7 +12,8 @@ import com.xmlcalabash.exceptions.{StepException, XProcException}
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.params.StepParams
-import com.xmlcalabash.util.{MediaType, TypeUtils}
+import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils}
+import net.sf.saxon.ma.map.MapItem
 import net.sf.saxon.s9api.{Axis, QName, SequenceType, XdmArray, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import org.apache.http.util.ByteArrayBuffer
 import org.slf4j.{Logger, LoggerFactory}
@@ -155,7 +156,19 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
           }
           step.receiveBinding(qname, value, valuemsg.context)
         case _ => Unit
-          step.receiveBinding(qname, valuemsg.item, valuemsg.context)
+          val xvalue = valuemsg.item.getUnderlyingValue
+          xvalue match {
+            case map: MapItem =>
+              // All maps are Map(*), see bug in XMLContext.parseSequenceType()
+              if (optsig.name == XProcConstants._serialization) {
+                val qmap = S9Api.forceQNameKeys(map)
+                step.receiveBinding(qname, qmap, valuemsg.context)
+              } else {
+                step.receiveBinding(qname, valuemsg.item, valuemsg.context)
+              }
+            case _ =>
+              step.receiveBinding(qname, valuemsg.item, valuemsg.context)
+          }
       }
     } else {
       // These are special steps; they get all of the in-scope variables not just their declared options

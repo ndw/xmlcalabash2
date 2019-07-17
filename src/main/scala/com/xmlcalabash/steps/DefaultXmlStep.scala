@@ -161,6 +161,9 @@ class DefaultXmlStep extends XmlStep {
         case "true" => serializer.setOutputProperty(Serializer.Property.STANDALONE, "yes")
         case "false" => serializer.setOutputProperty(Serializer.Property.STANDALONE, "no")
         case "omit" => serializer.setOutputProperty(Serializer.Property.STANDALONE, "omit")
+        // Just in case...
+        case "yes" => serializer.setOutputProperty(Serializer.Property.STANDALONE, "yes")
+        case "no" => serializer.setOutputProperty(Serializer.Property.STANDALONE, "no")
       }
     }
 
@@ -186,8 +189,7 @@ class DefaultXmlStep extends XmlStep {
 
     // FIXME: serialization map should be automatically converted to qnames
     for (entry <- map.entrySet().asScala) {
-      val akey = entry.getKey.getStringValue
-      val qname = new QName(akey)
+      val qname = entry.getKey.getQNameValue
       options.put(qname, entry.getValue)
     }
 
