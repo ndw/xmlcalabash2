@@ -32,11 +32,10 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
-    val qn = bindings(_attribute).value.getUnderlyingValue.asInstanceOf[QNameValue]
-    attribute = new QName(qn.getPrefix, qn.getNamespaceURI, qn.getLocalName)
-    label = bindings(_label).getStringValue
-    pattern = bindings(XProcConstants._match).getStringValue
-    replace = bindings(_replace).getStringValue == "true"
+    attribute = qnameBinding(_attribute).get
+    label = stringBinding(_label)
+    pattern = stringBinding(XProcConstants._match)
+    replace = booleanBinding(_replace).getOrElse(false)
     this.context = context
 
     matcher = new ProcessMatch(config, this, context)

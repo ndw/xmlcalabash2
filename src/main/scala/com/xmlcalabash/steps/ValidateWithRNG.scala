@@ -58,7 +58,7 @@ class ValidateWithRNG() extends DefaultXmlStep {
     super.run(context)
 
     if (bindings.contains(_dtd_id_idref_warnings)) {
-      dtd_id_idref_warnings = bindings(_dtd_id_idref_warnings).getStringValue == "true"
+      dtd_id_idref_warnings = booleanBinding(_dtd_id_idref_warnings).getOrElse(false)
     }
 
     val listener = new CachingErrorListener()

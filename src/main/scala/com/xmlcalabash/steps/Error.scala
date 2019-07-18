@@ -16,16 +16,15 @@ class Error extends DefaultXmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULTSEQ
 
   override def run(context: StaticContext) {
-    val qn = bindings(_code).value.getUnderlyingValue.asInstanceOf[QNameValue]
-    val code = new QName(qn.getPrefix, qn.getNamespaceURI, qn.getLocalName)
+    val code = qnameBinding(_code).get
 
     val errors = new StepErrors(config)
     val errout = if (bindings.contains(_message)) {
-      errors.error(code, bindings(_message).getStringValue)
+      errors.error(code, stringBinding(_message))
     } else {
       errors.error(code)
     }
 
-    throw new StepException(code, bindings(_code).context, errout)
+    throw new StepException(code, bindingContexts(_code), errout)
   }
 }

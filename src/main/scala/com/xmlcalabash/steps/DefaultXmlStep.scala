@@ -5,11 +5,12 @@ import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.BindingSpecification
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.{ImplParams, StaticContext, XMLCalabashRuntime, XProcDataConsumer, XProcMetadata, XmlPortSpecification, XmlStep}
-import com.xmlcalabash.util.XProcVarValue
-import net.sf.saxon.s9api.{QName, Serializer, XdmAtomicValue, XdmMap, XdmValue}
+import com.xmlcalabash.runtime._
+import com.xmlcalabash.util.S9Api
+import net.sf.saxon.ma.map.MapItem
+import net.sf.saxon.s9api._
+import net.sf.saxon.value.QNameValue
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
@@ -49,7 +50,8 @@ class DefaultXmlStep extends XmlStep {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[XProcDataConsumer] = None
   protected var config: XMLCalabashRuntime = _
-  protected val bindings = mutable.HashMap.empty[QName,XProcVarValue]
+  protected val bindingContexts = mutable.HashMap.empty[QName, StaticContext]
+  protected val bindings = mutable.HashMap.empty[QName,XdmValue]
 
   def location: Option[Location] = _location
 
@@ -63,7 +65,8 @@ class DefaultXmlStep extends XmlStep {
   override def bindingSpec: BindingSpecification = BindingSpecification.ANY
 
   override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    bindings.put(variable, new XProcVarValue(value, context))
+    bindingContexts.put(variable, context)
+    bindings.put(variable, value)
   }
 
   override def setConsumer(consumer: XProcDataConsumer): Unit = {
@@ -104,17 +107,29 @@ class DefaultXmlStep extends XmlStep {
     // nop
   }
 
-  def stringBinding(name: QName): Option[String] = {
+  def optionalStringBinding(name: QName): Option[String] = {
     if (bindings.contains(name)) {
-      Some(bindings(name).getStringValue)
+      Some(bindings(name).getUnderlyingValue.getStringValue)
     } else {
       None
     }
   }
 
+  def stringBinding(name: QName): String = {
+    stringBinding(name, "")
+  }
+
+  def stringBinding(name: QName, default: String): String = {
+    if (bindings.contains(name)) {
+      bindings(name).getUnderlyingValue.getStringValue
+    } else {
+      default
+    }
+  }
+
   def booleanBinding(name: QName): Option[Boolean] = {
     if (bindings.contains(name)) {
-      Some(bindings(name).getStringValue == "true")
+      Some(bindings(name).getUnderlyingValue.getStringValue == "true")
     } else {
       None
     }
@@ -122,7 +137,7 @@ class DefaultXmlStep extends XmlStep {
 
   def integerBinding(name: QName): Option[Integer] = {
     if (bindings.contains(name)) {
-      Some(bindings(name).getStringValue.toInt)
+      Some(bindings(name).getUnderlyingValue.getStringValue.toInt)
     } else {
       None
     }
@@ -130,7 +145,7 @@ class DefaultXmlStep extends XmlStep {
 
   def mapBinding(name: QName): XdmMap = {
     if (bindings.contains(name)) {
-      val map = bindings(name).value
+      val map = bindings(name)
       if (map.size > 0) {
         map.asInstanceOf[XdmMap]
       } else {
@@ -139,6 +154,37 @@ class DefaultXmlStep extends XmlStep {
     } else {
       new XdmMap()
     }
+  }
+
+  def qnameBinding(name: QName): Option[QName] = {
+    // This method doesn't distinguish between there was no binding for 'name' and
+    // the binding for 'name' was not of type QName.
+    if (bindings.contains(name)) {
+      bindings(name).getUnderlyingValue match {
+        case qn: QNameValue =>
+          Some(new QName(qn.getPrefix, qn.getNamespaceURI, qn.getLocalName))
+        case _ => None
+      }
+    } else {
+      None
+    }
+  }
+
+  def serializationOptions(): Map[QName, String] = {
+    serializationOptions(XProcConstants._serialization)
+  }
+
+  def serializationOptions(name: QName): Map[QName, String] = {
+    val serialOpts = mutable.HashMap.empty[QName, String]
+    val bs = mapBinding(name)
+    val bx = S9Api.forceQNameKeys(bs.getUnderlyingValue)
+    val iter = bx.keySet.iterator()
+    while (iter.hasNext) {
+      val key = iter.next()
+      serialOpts.put(key.getQNameValue, bx.get(key).toString)
+    }
+
+    serialOpts.toMap
   }
 
   def serializationOption(name: QName): Option[String] = {

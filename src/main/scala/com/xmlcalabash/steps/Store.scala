@@ -25,16 +25,10 @@ class Store extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
-    val href = if (bindings.contains(XProcConstants._href)) {
-      val _href = bindings(XProcConstants._href).getStringValue
-      if (context.baseURI.isDefined) {
-        context.baseURI.get.resolve(_href)
-      } else {
-        new URI(_href)
-      }
+    val href = if (context.baseURI.isDefined) {
+      context.baseURI.get.resolve(stringBinding(XProcConstants._href))
     } else {
-      // This can't actually happen, but ...
-      throw XProcException.xsMissingRequiredOption(XProcConstants._href, location)
+      new URI(stringBinding(XProcConstants._href))
     }
 
     if (href.getScheme != "file") {
@@ -51,18 +45,7 @@ class Store extends DefaultXmlStep {
           count = is.read(bytes)
         }
       case node: XdmNode =>
-        // FIXME: get serialization parameters from serialization option
-        val serialOpts = mutable.HashMap.empty[QName,String]
-        if (bindings.contains(XProcConstants._serialization)) {
-          val bs = bindings(XProcConstants._serialization).value
-          val bx = S9Api.forceQNameKeys(bs.getUnderlyingValue.asInstanceOf[MapItem])
-          val iter = bx.keySet.iterator()
-          while (iter.hasNext) {
-            val key = iter.next()
-            serialOpts.put(key.getQNameValue, bx.get(key).toString)
-          }
-        }
-
+        val serialOpts = serializationOptions()
         val serializer = config.processor.newSerializer(os)
 
         val contentType = smeta.get.contentType
@@ -71,7 +54,7 @@ class Store extends DefaultXmlStep {
         }
 
         S9Api.configureSerializer(serializer, config.defaultSerializationOptions(contentType))
-        S9Api.configureSerializer(serializer, serialOpts.toMap)
+        S9Api.configureSerializer(serializer, serialOpts)
 
         S9Api.serialize(config.config, node, serializer)
       case _ =>

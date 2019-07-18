@@ -3,7 +3,6 @@ package com.xmlcalabash.steps
 import java.net.URI
 
 import com.xmlcalabash.config.DocumentRequest
-import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
@@ -17,16 +16,10 @@ class Load() extends DefaultXmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANY
 
   override def run(context: StaticContext): Unit = {
-    val href = if (bindings.contains(XProcConstants._href)) {
-      val _href = bindings(XProcConstants._href).getStringValue
-      if (context.baseURI.isDefined) {
-        context.baseURI.get.resolve(_href)
-      } else {
-        new URI(_href)
-      }
+    val href = if (context.baseURI.isDefined) {
+      context.baseURI.get.resolve(stringBinding(XProcConstants._href))
     } else {
-      // This can't actually happen, but ...
-      throw XProcException.xsMissingRequiredOption(XProcConstants._href, location)
+      new URI(stringBinding(XProcConstants._href))
     }
 
     // FIXME: the key type conversions here should occur centrally based on map type.
@@ -34,7 +27,7 @@ class Load() extends DefaultXmlStep {
     val params = mutable.HashMap.empty[QName, XdmValue]
     if (bindings.contains(XProcConstants._parameters)) {
       val _params = bindings(XProcConstants._parameters)
-      _params.value match {
+      _params match {
         case map: XdmMap =>
           for (key <- map.keySet.asScala) {
             val value = map.get(key)
@@ -52,7 +45,7 @@ class Load() extends DefaultXmlStep {
     val docprops = mutable.HashMap.empty[QName, XdmValue]
     if (bindings.contains(XProcConstants._document_properties)) {
       val _props = bindings(XProcConstants._document_properties)
-      _props.value match {
+      _props match {
         case map: XdmMap =>
           for (key <- map.keySet.asScala) {
             val value = map.get(key)
@@ -68,7 +61,7 @@ class Load() extends DefaultXmlStep {
     }
 
     val declContentType = if (bindings.contains(XProcConstants._content_type)) {
-      Some(MediaType.parse(bindings(XProcConstants._content_type).getStringValue))
+      Some(MediaType.parse(stringBinding(XProcConstants._content_type)))
     } else {
       None
     }

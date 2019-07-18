@@ -63,9 +63,7 @@ class ValidateWithXSD() extends DefaultXmlStep {
   private def validateWithSaxon(manager: SchemaManager): Unit = {
     logger.trace(s"Validating with Saxon: ${source.getBaseURI} with ${schemas.length} schema(s)")
 
-    if (bindings.contains(_version)) {
-      version = bindings(_version).getStringValue
-    }
+    version = stringBinding(_version, version)
 
     val saxonConfig = config.processor.getUnderlyingConfiguration
 
@@ -87,21 +85,13 @@ class ValidateWithXSD() extends DefaultXmlStep {
 
     if (bindings.contains(_try_namespaces)) {
       val namespace = S9Api.documentElement(source).get.getNodeName.getNamespaceURI
-      try_namespaces = bindings(_try_namespaces).getStringValue == "true"
+      try_namespaces = booleanBinding(_try_namespaces).getOrElse(false)
       try_namespaces = try_namespaces && namespace != ""
     }
 
-    if (bindings.contains(_assert_valid)) {
-      assert_valid = bindings(_assert_valid).getStringValue == "true"
-    }
-
-    if (bindings.contains(_mode)) {
-      mode = bindings(_mode).getStringValue
-    }
-
-    if (bindings.contains(_use_location_hints)) {
-      use_location_hints = bindings(_use_location_hints).getStringValue == "true"
-    }
+    mode = stringBinding(_mode, mode)
+    assert_valid = booleanBinding(_assert_valid).getOrElse(false)
+    use_location_hints = booleanBinding(_use_location_hints).getOrElse(false)
 
     // FIXME: populate the URI cache so that computed schema documents will be found preferentially
 

@@ -44,12 +44,11 @@ class Hash() extends DefaultXmlStep  with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
-    val value = bindings(_value).getStringValue.getBytes("UTF-8")
-    val qn = bindings(_algorithm).value.getUnderlyingValue.asInstanceOf[QNameValue]
-    val algorithm = new QName(qn.getPrefix, qn.getNamespaceURI, qn.getLocalName)
+    val value = stringBinding(_value).getBytes("UTF-8")
+    val algorithm = qnameBinding(_algorithm).get
 
     val version = if (bindings.contains(_version)) {
-      bindings(_version).getStringValue
+      stringBinding(_version)
     } else {
       algorithm match {
         case `_crc` => "32"
@@ -69,7 +68,7 @@ class Hash() extends DefaultXmlStep  with ProcessMatchingNodes {
       case `cx_hmac` =>
         if (bindings.contains(XProcConstants._parameters)) {
           val key = bindings(XProcConstants._parameters)
-          val map = TypeUtils.castAsScala(key.value).asInstanceOf[Map[Any,Any]]
+          val map = TypeUtils.castAsScala(key).asInstanceOf[Map[Any,Any]]
           if (map.contains("accessKey")) {
             hash = HashUtils.hmac(value, version, map("accessKey").toString, location)
           } else {
@@ -82,7 +81,7 @@ class Hash() extends DefaultXmlStep  with ProcessMatchingNodes {
         throw XProcException.xcBadHashAlgorithm(algorithm.toString, location)
     }
 
-    pattern = bindings(XProcConstants._match).getStringValue
+    pattern = stringBinding(XProcConstants._match)
     matcher = new ProcessMatch(config, this, context)
     matcher.process(source, pattern)
 

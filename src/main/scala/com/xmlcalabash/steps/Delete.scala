@@ -20,7 +20,7 @@ class Delete() extends DefaultXmlStep  with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
-    pattern = bindings(XProcConstants._match).getStringValue
+    pattern = stringBinding(XProcConstants._match)
 
     matcher = new ProcessMatch(config, this, context)
     matcher.process(source, pattern)

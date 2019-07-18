@@ -45,7 +45,7 @@ abstract class AbstractLoader() extends DefaultXmlStep {
     }
 
     for ((name, value) <- bindings) {
-      value.value match {
+      value match {
         case node: XdmNode =>
           val message = new XdmNodeItemMessage(node, XProcMetadata.XML, context)
           msgBindings.put(name.getClarkName, message)

@@ -31,7 +31,7 @@ class UnescapeMarkup() extends DefaultXmlStep {
     super.run(context)
 
     if (bindings.contains(XProcConstants._namespace)) {
-      namespace = Some(bindings(XProcConstants._namespace).getStringValue)
+      namespace = Some(stringBinding(XProcConstants._namespace))
     }
 
     val root = S9Api.documentElement(source)
@@ -40,7 +40,7 @@ class UnescapeMarkup() extends DefaultXmlStep {
     }
 
     var result: XdmNode = null
-    val contentType = MediaType.parse(bindings(_content_type).getStringValue)
+    val contentType = MediaType.parse(stringBinding(_content_type))
     if (contentType.xmlContentType) {
       // Special case XML to deal with the needs-a-wrapper case
       val text = "<wrapper>" + root.get.getStringValue + "</wrapper>"

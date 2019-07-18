@@ -9,8 +9,6 @@ import scala.collection.mutable.ListBuffer
 
 class WrapSequence extends DefaultXmlStep {
   private val _wrapper = new QName("", "wrapper")
-  private val _wrapper_prefix = new QName("", "wrapper-prefix")
-  private val _wrapper_namespace = new QName("", "wrapper-namespace")
   private val _group_adjacent = new QName("", "group-adjacent")
 
   private val inputs = ListBuffer.empty[XdmItem]
@@ -27,26 +25,7 @@ class WrapSequence extends DefaultXmlStep {
   }
 
   override def run(staticContext: StaticContext) {
-    var wrapper = new QName("", "INVALID")
-
-    val name = bindings(_wrapper).getStringValue
-    if (bindings.contains(_wrapper_prefix) || bindings.contains(_wrapper_namespace)) {
-      if (name.contains(":")) {
-        throw new RuntimeException("colon in error?")
-      }
-      if (bindings.contains(_wrapper_prefix)) {
-        wrapper = new QName(bindings(_wrapper_prefix).getStringValue, bindings(_wrapper_namespace).getStringValue, name)
-      } else {
-        wrapper = new QName(bindings(_wrapper_namespace).getStringValue, name)
-      }
-    } else {
-      val scontext = new StaticContext(staticContext)
-      scontext.nsBindings = bindings(_wrapper).context.nsBindings
-      if (location.isDefined) {
-        scontext.location = location.get
-      }
-      wrapper = ValueParser.parseQName(name, scontext)
-    }
+    val wrapper = qnameBinding(_wrapper).get
 
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(staticContext.baseURI)
@@ -60,6 +39,7 @@ class WrapSequence extends DefaultXmlStep {
     }
     builder.addEndElement()
     builder.endDocument()
+
     consumer.get.receive("result", builder.result, XProcMetadata.XML)
   }
 }

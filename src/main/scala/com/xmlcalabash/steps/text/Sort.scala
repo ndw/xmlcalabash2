@@ -18,14 +18,6 @@ class Sort() extends TextLines {
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.TEXTSOURCE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.TEXTRESULT
 
-  private def svalue(key: QName): Option[String] = {
-    if (bindings.contains(key)) {
-      Some(bindings(key).getStringValue)
-    } else {
-      None
-    }
-  }
-
   override def run(context: StaticContext): Unit = {
     val xslbuilder = new XsltStylesheet(config)
 
@@ -37,8 +29,16 @@ class Sort() extends TextLines {
 
     xslbuilder.startNamedTemplate("sort")
     xslbuilder.startForEach("$lines")
-    xslbuilder.startSort(".", svalue(_lang), svalue(_order), svalue(_collation),
-      svalue(_stable), svalue(_case_order), svalue(_data_type))
+
+    val lang = optionalStringBinding(_lang)
+    val order = optionalStringBinding(_order)
+    val collation = optionalStringBinding(_collation)
+    val stable = optionalStringBinding(_stable)
+    val case_order = optionalStringBinding(_case_order)
+    val data_type = optionalStringBinding(_data_type)
+
+    xslbuilder.startSort(".", lang, order, collation, stable, case_order, data_type)
+
     xslbuilder.endSort()
     xslbuilder.valueOf(".")
     xslbuilder.text("\n")

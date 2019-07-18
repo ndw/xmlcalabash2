@@ -13,8 +13,7 @@ class Head() extends TextLines {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.TEXTRESULT
 
   override def run(context: StaticContext): Unit = {
-    // There must be a better way to do this!
-    val count = bindings(_count).value.toString.toInt
+    val count = integerBinding(_count).get
     var newLines = ListBuffer.empty[String]
 
     if (count == 0) {

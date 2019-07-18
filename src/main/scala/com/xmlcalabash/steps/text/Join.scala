@@ -27,17 +27,9 @@ class Join() extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
-    val separator = if (bindings.contains(_separator)) {
-      bindings(_separator).getStringValue
-    } else {
-      ""
-    }
+    val separator = stringBinding(_separator)
 
-    var result = if (bindings.contains(_prefix)) {
-      bindings(_prefix).getStringValue
-    } else {
-      ""
-    }
+    var result = stringBinding(_prefix)
 
     var first = true
     for (node <- docs) {
@@ -48,13 +40,11 @@ class Join() extends DefaultXmlStep {
       first = false
     }
 
-    if (bindings.contains(_suffix)) {
-      result += bindings(_suffix).getStringValue
-    }
+    result += stringBinding(_suffix)
 
     var contentType = MediaType.TEXT
     if (bindings.contains(XProcConstants._override_content_type)) {
-      contentType = MediaType.parse(bindings(XProcConstants._override_content_type).getStringValue)
+      contentType = MediaType.parse(stringBinding(XProcConstants._override_content_type))
     }
 
     consumer.get.receive("result", new XdmAtomicValue(result), new XProcMetadata(contentType))

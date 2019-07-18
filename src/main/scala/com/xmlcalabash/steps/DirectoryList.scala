@@ -27,15 +27,15 @@ class DirectoryList() extends DefaultXmlStep {
     builder.addStartElement(XProcConstants.c_directory)
     builder.startContent()
 
-    val path = bindings(_path).getStringValue
-    val detailed = bindings(_detailed).getStringValue == "true"
+    val path = stringBinding(_path)
+    val detailed = booleanBinding(_detailed).getOrElse(false)
     val fileDS = new FileDataStore(new FallbackDataStore())
     val include = ListBuffer.empty[Regex]
     val exclude = ListBuffer.empty[Regex]
 
     if (bindings.contains(_include_filter)) {
       val filter = bindings(_include_filter)
-      val iter = filter.value.iterator()
+      val iter = filter.iterator()
       while (iter.hasNext) {
         val item = iter.next()
         include += new Regex(item.getStringValue)
@@ -44,7 +44,7 @@ class DirectoryList() extends DefaultXmlStep {
 
     if (bindings.contains(_exclude_filter)) {
       val filter = bindings(_exclude_filter)
-      val iter = filter.value.iterator()
+      val iter = filter.iterator()
       while (iter.hasNext) {
         val item = iter.next()
         exclude += new Regex(item.getStringValue)

@@ -18,8 +18,8 @@ class StepOutputTest() extends DefaultXmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULT
 
   override def run(context: StaticContext): Unit = {
-    val contentType = MediaType.parse(bindings(_content_type).getStringValue)
-    val resultType = bindings(_result_type).getStringValue
+    val contentType = MediaType.parse(stringBinding(_content_type))
+    val resultType = stringBinding(_result_type)
     val metadata = new XProcMetadata(contentType, Map.empty[QName,XdmValue])
 
     contentType.classification match {

@@ -28,9 +28,8 @@ class Rename() extends DefaultXmlStep with ProcessMatchingNodes {
   override def run(context: StaticContext): Unit = {
     super.run(context)
 
-    val qn = bindings(_new_name).value.getUnderlyingValue.asInstanceOf[QNameValue]
-    newName = new QName(qn.getPrefix, qn.getNamespaceURI, qn.getLocalName)
-    pattern = bindings(XProcConstants._match).getStringValue
+    newName = qnameBinding(_new_name).get
+    pattern = stringBinding(XProcConstants._match)
     this.context = context
 
     matcher = new ProcessMatch(config, this, context)

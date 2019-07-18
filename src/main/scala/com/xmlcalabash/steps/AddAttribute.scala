@@ -32,10 +32,9 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
-    val qn = bindings(_attribute_name).value.getUnderlyingValue.asInstanceOf[QNameValue]
-    attrName = new QName(qn.getPrefix, qn.getNamespaceURI, qn.getLocalName)
-    attrValue = bindings(_attribute_value).getStringValue
-    pattern = bindings(XProcConstants._match).getStringValue
+    attrName = qnameBinding(_attribute_name).get
+    attrValue = stringBinding(_attribute_value)
+    pattern = stringBinding(XProcConstants._match)
 
     if (attrName.getLocalName == "xmlns"
       || attrName.getPrefix == "xmlns"

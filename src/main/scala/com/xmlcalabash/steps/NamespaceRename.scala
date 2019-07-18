@@ -32,13 +32,9 @@ class NamespaceRename() extends DefaultXmlStep with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
-    from = bindings(_from).getStringValue
-    to = bindings(_to).getStringValue
-    if (bindings.contains(_apply_to)) {
-      applyTo = bindings(_apply_to).getStringValue
-    } else {
-      applyTo = "all"
-    }
+    from = stringBinding(_from)
+    to = stringBinding(_to)
+    applyTo = stringBinding(_apply_to, "all")
 
     matcher = new ProcessMatch(config, this, context)
     matcher.process(source, "*")
