@@ -128,6 +128,29 @@ class DefaultXmlStep extends XmlStep {
     }
   }
 
+  def mapBinding(name: QName): XdmMap = {
+    if (bindings.contains(name)) {
+      val map = bindings(name).value
+      if (map.size > 0) {
+        map.asInstanceOf[XdmMap]
+      } else {
+        new XdmMap()
+      }
+    } else {
+      new XdmMap()
+    }
+  }
+
+  def serializationOption(name: QName): Option[String] = {
+    val qn = new XdmAtomicValue(name)
+    val smap = mapBinding(XProcConstants._serialization)
+    if (smap.containsKey(qn)) {
+      Some(smap.get(qn).getUnderlyingValue.getStringValue)
+    } else {
+      None
+    }
+  }
+
   def makeSerializer(optsmap: XdmMap): Serializer = {
     val serializer = config.processor.newSerializer()
     val options = new SerializationOptions(optsmap)
@@ -187,7 +210,6 @@ class DefaultXmlStep extends XmlStep {
   class SerializationOptions(map: XdmMap) {
     private val options = mutable.HashMap.empty[QName,XdmValue]
 
-    // FIXME: serialization map should be automatically converted to qnames
     for (entry <- map.entrySet().asScala) {
       val qname = entry.getKey.getQNameValue
       options.put(qname, entry.getValue)

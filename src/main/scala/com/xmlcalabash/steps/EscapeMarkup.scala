@@ -6,7 +6,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.S9Api
-import net.sf.saxon.s9api.{Axis, Serializer, XdmAtomicValue, XdmMap, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api._
 
 class EscapeMarkup() extends DefaultXmlStep {
   private var source: XdmNode = _
@@ -24,12 +24,7 @@ class EscapeMarkup() extends DefaultXmlStep {
   override def run(context: StaticContext): Unit = {
     super.run(context)
 
-    val options = if (bindings.contains(XProcConstants._serialization)) {
-      bindings(XProcConstants._serialization).value.asInstanceOf[XdmMap]
-    } else {
-      new XdmMap()
-    }
-
+    val options = mapBinding(XProcConstants._serialization)
     val tree = new SaxonTreeBuilder(config)
     tree.startDocument(source.getBaseURI)
 
@@ -39,8 +34,6 @@ class EscapeMarkup() extends DefaultXmlStep {
     if (!options.containsKey(komit) && !options.containsKey(ksa)) {
       serializer.setOutputProperty(XProcConstants._omit_xml_declaration, "yes")
     }
-
-    // It might be nice to make omit-xml-declaration the default here
 
     var topLevelElement = false
     val iter = source.axisIterator(Axis.CHILD)
