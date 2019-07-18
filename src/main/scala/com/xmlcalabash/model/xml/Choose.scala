@@ -112,6 +112,15 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
       identity.stepType = XProcConstants.p_identity
       other.addChild(identity)
 
+      // If there isn't a primary output, make sure we sink the output of
+      // the identity step we just added so that one doesn't get added
+      // automatically
+      if (primaryOutput.isEmpty) {
+        val sink = new AtomicStep(config)
+        sink.stepType = XProcConstants.p_sink
+        other.addChild(sink)
+      }
+
       addChild(other)
       other.makeStructureExplicit(environment)
     }

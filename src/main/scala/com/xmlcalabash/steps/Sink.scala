@@ -7,8 +7,7 @@ class Sink extends DefaultXmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.NONE
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
-    println("SINK RECEIVE")
-    println(item)
+    // He shoots! He scores! Bit bucket!
   }
 
 }
