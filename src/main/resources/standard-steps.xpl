@@ -19,7 +19,7 @@
   <p:input port="source" content-types="*/*"/>
   <p:output port="result" content-types="*/*"/>
   <p:option name="content-type" as="xs:string"/>
-  <p:option name="parameters" as="map(*)"/>
+  <p:option name="parameters" as="map(*)?"/>
 </p:declare-step>
 
 <p:declare-step type="p:count">
@@ -51,14 +51,13 @@
 <p:declare-step type="p:escape-markup">
   <p:input port="source" content-types="xml html"/>
   <p:output port="result" content-types="xml html"/>
-  <p:option name="serialization" as="map(xs:QName,item()*)?"
-            select="map { }"/>
+  <p:option name="serialization" as="map(xs:QName,item()*)?"/>
 </p:declare-step>
 
 <p:declare-step type="p:hash">
   <p:input port="source" primary="true" content-types="xml html"/>
   <p:output port="result" content-types="text xml html"/>
-  <p:option name="parameters" as="map(*)"/>
+  <p:option name="parameters" as="map(*)?"/>
   <p:option name="value" required="true" as="xs:string"/>
   <p:option name="algorithm" required="true" as="xs:QName"/>
   <p:option name="match" as="xs:string" select="'/*/node()'" cx:as="XSLTSelectionPattern"/>
@@ -91,9 +90,9 @@
 <p:declare-step type="p:load">
   <p:output port="result" sequence="true" content-types="*/*"/>
   <p:option name="href" required="true" as="xs:anyURI"/>
-  <p:option name="parameters" as="map(*)"/>
+  <p:option name="parameters" as="map(*)?"/>
   <p:option name="content-type" as="xs:string"/>
-  <p:option name="document-properties" as="map(*)"/>
+  <p:option name="document-properties" as="map(*)?"/>
 </p:declare-step>
 
 <p:declare-step type="p:namespace-rename">
@@ -107,7 +106,7 @@
 
 <p:declare-step type="p:parameters">
   <p:output port="result" content-types="application/xml"/>
-  <p:option name="parameters" as="map(*)"/>
+  <p:option name="parameters" as="map(*)?"/>
 </p:declare-step>
 
 <p:declare-step type="p:rename">
@@ -125,7 +124,7 @@
   <p:input port="source" content-types="*/*"/>
   <p:output port="result" content-types="application/xml"/>
   <p:option name="href" required="true" as="xs:anyURI"/>
-  <p:option name="serialization" as="map(*)"/>
+  <p:option name="serialization" as="map(*)?"/>
 </p:declare-step>
 
 <p:declare-step type="p:text-count">
@@ -200,7 +199,7 @@
   <p:input port="schema" content-types="application/xml text/xml */*+xml"/>
   <p:output port="result" primary="true" content-types="application/xml"/>
   <p:output port="report" sequence="true" content-types="application/xml"/>
-  <p:option name="parameters" as="map(xs:QName,item())"/>
+  <p:option name="parameters" as="map(xs:QName,item())?"/>
   <p:option name="phase" select="'#ALL'" as="xs:string"/>
   <p:option name="assert-valid" select="true()" as="xs:boolean"/>
 </p:declare-step>
@@ -228,7 +227,7 @@
   <p:input port="stylesheet" content-types="application/xml text/xml */*+xml"/>
   <p:output port="result" primary="true" sequence="true" content-types="*/*"/>
   <p:output port="secondary" sequence="true"/>
-  <p:option name="parameters" as="map(*)"/>
+  <p:option name="parameters" as="map(*)?"/>
   <p:option name="initial-mode" as="xs:QName"/>
   <p:option name="template-name" as="xs:QName"/>
   <p:option name="output-base-uri" as="xs:anyURI"/>
@@ -245,26 +244,26 @@
 <p:declare-step type="cx:base64-encode">
   <p:input port="source" content-types="*/*"/>
   <p:output port="result" content-types="text/plain"/>
-  <p:option name="serialization" as="map(*)"/>
-  <p:option name="parameters" as="map(*)"/>
+  <p:option name="serialization" as="map(*)?"/>
+  <p:option name="parameters" as="map(*)?"/>
 </p:declare-step>
 
 <p:declare-step type="cx:base64-decode">
   <p:input port="source" content-types="*/*"/>
   <p:output port="result" content-types="*/*"/>
-  <p:option name="parameters" as="map(*)"/>
+  <p:option name="parameters" as="map(*)?"/>
 </p:declare-step>
 
 <p:declare-step type="cx:markdown">
   <p:input port="source" content-types="text/*"/>
   <p:output port="result" content-types="application/xml+html"/>
-  <p:option name="parameters" as="map(*)"/>
+  <p:option name="parameters" as="map(*)?"/>
 </p:declare-step>
 
 <p:declare-step type="cx:javascript">
   <p:input port="script"/>
   <p:output port="result"/>
-  <p:option name="parameters" as="map(*)"/>
+  <p:option name="parameters" as="map(*)?"/>
 </p:declare-step>
 
 <p:declare-step type="cx:peephole">
