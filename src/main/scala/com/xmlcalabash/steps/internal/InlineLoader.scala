@@ -167,14 +167,6 @@ class InlineLoader() extends AbstractLoader {
         expandTVT(node, builder, expandText)
         builder.endDocument()
         val result = builder.result
-        // No sneaky poking an element in there!
-        val iter = result.axisIterator(Axis.CHILD)
-        while (iter.hasNext) {
-          val child = iter.next()
-          if (child.getNodeKind != XdmNodeKind.TEXT) {
-            throw XProcException.xdNoMarkupAllowed(child.getNodeName, exprContext.location)
-          }
-        }
         result.getStringValue
       } else {
         node.getStringValue
