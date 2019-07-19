@@ -50,37 +50,10 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
       if (bindings.isEmpty && parent.get.isInstanceOf[AtomicStep]) {
         val depends = staticContext.dependsOnContextString(_select.get)
         if (!depends) {
-          val expr = new XProcXPathExpression(staticContext, _select.get)
+          values
+          val expr = new XProcXPathExpression(staticContext, _select.get, as, allowedValues, None)
           var msg = config.expressionEvaluator.value(expr, List(), inScopeStatics, None)
-          val xvalue = msg.item.getUnderlyingValue.reduce()
-          if (xvalue.getLength == 0 && xvalue == EmptySequence.getInstance()) {
-            staticValue = msg
-          } else {
-            xvalue match {
-              case atomic: XdmAtomicValue =>
-                var tvalue = typeUtils.castAtomicAs(atomic, Some(declaredType), staticContext)
-                tvalue = typeUtils.castAtomicAs(tvalue, as, staticContext)
-                staticValue = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
-              case atomic: AtomicValue =>
-                var tvalue = typeUtils.castAtomicAs(XdmAtomicValue.makeAtomicValue(atomic), Some(declaredType), staticContext)
-                tvalue = typeUtils.castAtomicAs(tvalue, as, staticContext)
-                staticValue = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
-              case item: XdmItem =>
-                var tvalue = typeUtils.castAtomicAs(XdmAtomicValue.makeAtomicValue(item), Some(declaredType), staticContext)
-                tvalue = typeUtils.castAtomicAs(tvalue, as, staticContext)
-                staticValue = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
-              case map: MapItem =>
-                val tvalue = new XdmMap(map)
-                // FIXME: validation on map types?
-                staticValue = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
-              case array: ArrayItem =>
-                val tvalue = new XdmArray(array)
-                // FIXME: validation on map types?
-                staticValue = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
-              case _ =>
-                throw new RuntimeException("Unexpected item type")
-            }
-          }
+          staticValue = new XdmValueItemMessage(msg.item, XProcMetadata.XML, staticContext)
         }
       }
     } else {
