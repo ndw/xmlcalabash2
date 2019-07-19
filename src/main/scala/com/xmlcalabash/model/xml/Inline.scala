@@ -56,8 +56,8 @@ class Inline(override val config: XMLCalabashConfig, val node: XdmNode, val impl
       MediaType.XML
     }
 
-    // FIXME: this isn't sufficient
-    if (ctype.xmlContentType || ctype.htmlContentType) {
+    // Is this sufficient? We don't want to attempt to parse AVTs in JSON!
+    if (ctype.markupContentType || ctype.textContentType) {
       findVariablesInTVT(node, true)
       for (ref <- nameBindings) {
         val binding = env.variable(ref)

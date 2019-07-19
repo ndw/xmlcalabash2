@@ -8,7 +8,7 @@ import com.xmlcalabash.runtime.params.StepParams
 import com.xmlcalabash.runtime.{ImplParams, StepExecutable, StepProxy, StepRunner, StepWrapper, XMLCalabashRuntime, XmlStep}
 import com.xmlcalabash.steps.internal.{DocumentLoader, InlineLoader}
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import net.sf.saxon.ma.map.{MapItem, SingleEntryMap}
+import net.sf.saxon.ma.map.{MapItem, MapType, SingleEntryMap}
 import net.sf.saxon.s9api.{ItemType, QName, XdmNode}
 
 import scala.collection.immutable.HashMap.HashTrieMap
@@ -104,10 +104,11 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
             val dtype = doption.declaredType.get
             woption.as = dtype
 
-            if (dtype.getItemType == ItemType.ANY_MAP) {
-              woption.select = attributes(doption.name)
-            } else {
-              woption.avt = attributes(doption.name)
+            dtype.getItemType.getUnderlyingItemType match {
+              case map: MapType =>
+                woption.select = attributes(doption.name)
+              case _ =>
+                woption.avt = attributes(doption.name)
             }
           } else {
             woption.avt = attributes(doption.name)

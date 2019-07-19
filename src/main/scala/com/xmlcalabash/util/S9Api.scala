@@ -4,8 +4,8 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.net.URI
 
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.XMLCalabashRuntime
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
+import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime}
 import net.sf.saxon.`type`.BuiltInAtomicType
 import net.sf.saxon.ma.map.MapItem
 import net.sf.saxon.om.{FingerprintedQName, InscopeNamespaceResolver, NameOfNode, NamespaceBinding}
@@ -179,7 +179,7 @@ object S9Api {
     tree.result
   }
 
-  def forceQNameKeys(inputMap: MapItem): XdmMap = {
+  def forceQNameKeys(inputMap: MapItem, context: StaticContext): XdmMap = {
     var map = new XdmMap()
 
     val iter = inputMap.keyValuePairs().iterator()
@@ -187,8 +187,8 @@ object S9Api {
       val pair = iter.next()
       pair.key.getItemType match {
         case BuiltInAtomicType.STRING =>
-          val key = new QName("", "", pair.key.getStringValue)
-          map = map.put(new XdmAtomicValue(key), XdmValue.wrap(pair.value))
+          val qname = ValueParser.parseQName(pair.key.getStringValue, context)
+          map = map.put(new XdmAtomicValue(qname), XdmValue.wrap(pair.value))
         case BuiltInAtomicType.QNAME =>
           val qvalue = pair.key.asInstanceOf[QNameValue]
           val key = new QName(qvalue.getPrefix, qvalue.getNamespaceURI, qvalue.getLocalName)

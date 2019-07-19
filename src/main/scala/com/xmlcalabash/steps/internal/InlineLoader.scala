@@ -75,7 +75,7 @@ class InlineLoader() extends AbstractLoader {
     contentType = if (propContentType.isDefined) {
       if (content_type.isDefined) {
         if (!content_type.get.matches(propContentType.get)) {
-          throw XProcException.xdMismatchedContentType(content_type.get, propContentType.get, location)
+          throw XProcException.xdMismatchedContentType(content_type.get, propContentType.get, exprContext.location)
         }
       }
       propContentType.get
@@ -89,10 +89,10 @@ class InlineLoader() extends AbstractLoader {
 
     if (encoding.isDefined) {
       if (contentType.xmlContentType) {
-        throw XProcException.xdCannotEncodeXml(encoding.get, contentType, location)
+        throw XProcException.xdCannotEncodeXml(encoding.get, contentType, exprContext.location)
       }
       if (encoding.get != "base64") {
-        throw XProcException.xsUnsupportedEncoding(encoding.get, location)
+        throw XProcException.xsUnsupportedEncoding(encoding.get, exprContext.location)
       }
     }
 
@@ -110,7 +110,11 @@ class InlineLoader() extends AbstractLoader {
         child.getNodeKind match {
           case XdmNodeKind.TEXT => Unit
           case _ =>
-            throw XProcException.xdNoMarkupAllowed(location)
+            if (encoding.isDefined) {
+              throw XProcException.xdNoMarkupAllowedEncoded(child.getNodeName, exprContext.location)
+            } else {
+              throw XProcException.xdNoMarkupAllowed(child.getNodeName, exprContext.location)
+            }
         }
       }
     }
@@ -145,7 +149,7 @@ class InlineLoader() extends AbstractLoader {
       S9Api.serialize(config.config, result, serializer)
       val stream = new ByteArrayInputStream(baos.toByteArray)
 
-      val request = new DocumentRequest(node.getBaseURI, contentType, location)
+      val request = new DocumentRequest(node.getBaseURI, contentType, exprContext.location)
       val response = config.documentManager.parse(request, stream)
       val metadata = new XProcMetadata(response.contentType, response.props)
 
@@ -168,7 +172,7 @@ class InlineLoader() extends AbstractLoader {
         while (iter.hasNext) {
           val child = iter.next()
           if (child.getNodeKind != XdmNodeKind.TEXT) {
-            throw XProcException.xsInvalidNodeType(child.getNodeKind.toString, location)
+            throw XProcException.xdNoMarkupAllowed(child.getNodeName, exprContext.location)
           }
         }
         result.getStringValue
@@ -187,7 +191,7 @@ class InlineLoader() extends AbstractLoader {
         } catch {
           case ex: SaxonApiException =>
             if (ex.getMessage.contains("Invalid JSON")) {
-              throw XProcException.xdInvalidJson(ex.getMessage, location)
+              throw XProcException.xdInvalidJson(ex.getMessage, exprContext.location)
             } else {
               throw ex
             }
@@ -288,7 +292,7 @@ class InlineLoader() extends AbstractLoader {
           val attr = iter.next()
           if (attr.getNodeName == XProcConstants.p_inline_expand_text) {
             if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
-              throw XProcException.xsInlineExpandTextNotAllowed(location)
+              throw XProcException.xsInlineExpandTextNotAllowed(exprContext.location)
             }
             discardAttribute = true
             newExpand = attr.getStringValue == "true"

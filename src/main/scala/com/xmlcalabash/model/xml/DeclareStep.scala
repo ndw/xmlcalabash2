@@ -217,6 +217,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
           if (option.select.isDefined) {
             optSig.defaultSelect = option.select.get
           }
+          optSig.forceQNameKeys = option.qnameKeys
           stepSig.addOption(optSig, option.location.get)
         case _ =>
           Unit

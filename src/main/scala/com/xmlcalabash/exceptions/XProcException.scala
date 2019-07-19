@@ -110,10 +110,11 @@ object XProcException {
   def xdNotWFXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, line, col, message), location)
 
   def xdCannotEncodeXml(encoding: String, contentType: MediaType, location: Option[Location]): XProcException = dynamicError(54, List(encoding,contentType), location)
-  def xdNoMarkupAllowed(location: Option[Location]): XProcException = dynamicError(56, location)
+  def xdNoMarkupAllowedEncoded(name: QName, location: Option[Location]): XProcException = dynamicError(56, name, location)
   def xdInvalidJson(message: String, location: Option[Location]): XProcException = dynamicError(57, message, location)
   def xdUnsupportedEncoding(encoding: String, location: Option[Location]): XProcException = dynamicError(60, encoding, location)
   def xdMismatchedContentType(declType: MediaType, propType: MediaType, location: Option[Location]): XProcException = dynamicError(62, List(declType,propType), location)
+  def xdNoMarkupAllowed(name: QName, location: Option[Location]): XProcException = dynamicError(63, name, location)
   def xdBadMapKey(key: String, location: Option[Location]): XProcException = dynamicError(70, key, location)
   def xdValueNotInList(value: String, location: Option[Location]): XProcException = dynamicError(101, value, location)
 
@@ -142,7 +143,6 @@ object XProcException {
   def xsImportFailed(href: URI, location: Option[Location]): XProcException = staticError((52,1), href, location)
   def xsBadImport(name: QName, location: Option[Location]): XProcException = staticError((52,2), name, location)
   def xsStepTypeRequired(location: Option[Location]): XProcException = staticError(53, List(), location)
-  def xsInvalidNodeType(nodeKind: String, location: Option[Location]): XProcException = staticError(56, nodeKind, location)
   def xsInvalidVersion(version: Double, location: Option[Location]): XProcException = staticError(60, version, location)
   def xsVersionRequired(location: Option[Location]): XProcException = staticError(62, location)
   def xsBadVersion(version: String, location: Option[Location]): XProcException = staticError(63, version, location)

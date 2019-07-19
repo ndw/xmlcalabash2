@@ -4,14 +4,11 @@ import com.jafpl.graph.{ContainerStart, Node}
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.ValueParser
-import com.xmlcalabash.runtime.params.XPathBindingParams
 import com.xmlcalabash.runtime._
+import com.xmlcalabash.runtime.params.XPathBindingParams
 import com.xmlcalabash.util.TypeUtils
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import net.sf.saxon.ma.arrays.ArrayItem
-import net.sf.saxon.ma.map.{HashTrieMap, MapItem, SingleEntryMap}
-import net.sf.saxon.s9api.{QName, XdmArray, XdmAtomicValue, XdmItem, XdmMap, XdmValue}
-import net.sf.saxon.value.{AtomicValue, EmptySequence}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmValue}
 
 import scala.collection.mutable
 

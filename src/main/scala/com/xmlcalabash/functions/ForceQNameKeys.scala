@@ -2,6 +2,7 @@ package com.xmlcalabash.functions
 
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.runtime.StaticContext
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.`type`.BuiltInAtomicType
 import net.sf.saxon.expr.XPathContext
@@ -22,6 +23,6 @@ class ForceQNameKeys(runtime: XMLCalabashConfig) extends FunctionImpl() {
       case _ => throw new RuntimeException("arg to fqk must be a map")
     }
 
-    S9Api.forceQNameKeys(inputMap).getUnderlyingValue
+    S9Api.forceQNameKeys(inputMap, new StaticContext(runtime)).getUnderlyingValue
   }
 }

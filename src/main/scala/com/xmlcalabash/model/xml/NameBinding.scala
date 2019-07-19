@@ -7,8 +7,10 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{XMLCalabashRuntime, XProcMetadata, XProcVtExpression, XProcXPathExpression}
-import com.xmlcalabash.util.TvtExpander
-import net.sf.saxon.s9api.{QName, SaxonApiException, SequenceType, XdmAtomicValue, XdmNode}
+import com.xmlcalabash.util.{TvtExpander, TypeUtils}
+import net.sf.saxon.ma.map.MapType
+import net.sf.saxon.om.StructuredQName
+import net.sf.saxon.s9api.{ItemType, ItemTypeFactory, QName, SaxonApiException, SequenceType, XdmAtomicValue, XdmNode}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -28,8 +30,14 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   protected var collection = false
   private var resolvedStatically = false
 
+  private var _qnameKeys = false
+  private val structuredQName = new StructuredQName("xs", XProcConstants.ns_xs, "QName")
+
   protected var _href = Option.empty[String]
   protected var _pipe = Option.empty[String]
+
+  private val typeFactory = new ItemTypeFactory(config.processor)
+  private var typeUtils: TypeUtils = _
 
   def name: QName = _name
   def as: Option[SequenceType] = _as
@@ -61,6 +69,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   def static: Boolean = _static.getOrElse(false)
   def visibility: String = _visibility.getOrElse("public")
   def allowedValues: Option[List[XdmAtomicValue]] = _allowedValues
+  def qnameKeys: Boolean = _qnameKeys
 
   protected[xmlcalabash] def staticValue: Option[XdmValueItemMessage] = _staticValue
   protected[model] def staticValue_=(value: XdmValueItemMessage): Unit = {
@@ -70,13 +79,29 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
 
+    typeUtils = new TypeUtils(config, staticContext)
+
     if (attributes.contains(XProcConstants._name)) {
       _name = staticContext.parseQName(attr(XProcConstants._name).get)
     } else {
       throw XProcException.xsMissingRequiredAttribute(XProcConstants._name, location)
     }
 
-    _as = staticContext.parseSequenceType(attr(XProcConstants._as))
+    val seqTypeString = attr(XProcConstants._as)
+    _as = typeUtils.parseSequenceType(seqTypeString)
+
+    if (as.isDefined)
+      as.get.getUnderlyingSequenceType.getPrimaryType match {
+        case map: MapType =>
+          if (map.getKeyType.getPrimitiveItemType.getTypeName == structuredQName) {
+            // We have to lie about the type of maps with QName keys because we're
+            // going to allow users to put strings in there.
+            _qnameKeys = true
+            _as = Some(typeUtils.parseFakeMapSequenceType(seqTypeString.get))
+          }
+        case _ => Unit
+      }
+
     _values = attr(XProcConstants._values)
     _static = staticContext.parseBoolean(attr(XProcConstants._static))
     _required = staticContext.parseBoolean(attr(XProcConstants._required))

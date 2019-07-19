@@ -117,7 +117,7 @@ object ValueParser {
 
   def parseQName(name: Option[String], context: StaticContext): Option[QName] = {
     if (name.isDefined) {
-      val eqname = "^Q\\{(.*)\\}(\\S+)$".r
+      val eqname = "^Q\\s*\\{(.*)\\}(\\S+)$".r
       name.get match {
         case eqname(uri,local) => Some(new QName(uri, local))
         case _ =>

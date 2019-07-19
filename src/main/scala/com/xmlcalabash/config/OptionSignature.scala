@@ -10,6 +10,7 @@ class OptionSignature(val name: QName) {
   private var _occurrence = Option.empty[String]
   private var _tokenList: Option[ListBuffer[XdmAtomicValue]] = None
   private var _defaultValue = Option.empty[String]
+  private var _forceQNameKeys = false
 
   def this(name: QName, optType: SequenceType, required: Boolean) = {
     this(name)
@@ -30,6 +31,11 @@ class OptionSignature(val name: QName) {
   def occurrence: Option[String] = _occurrence
   def occurrence_=(value: String): Unit = {
     _occurrence = Some(value)
+  }
+
+  def forceQNameKeys: Boolean = _forceQNameKeys
+  protected[xmlcalabash] def forceQNameKeys_=(force: Boolean): Unit = {
+    _forceQNameKeys = force
   }
 
   def tokenList: Option[List[XdmAtomicValue]] = {

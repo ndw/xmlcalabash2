@@ -176,14 +176,12 @@ class DefaultXmlStep extends XmlStep {
 
   def serializationOptions(name: QName): Map[QName, String] = {
     val serialOpts = mutable.HashMap.empty[QName, String]
-    val bs = mapBinding(name)
-    val bx = S9Api.forceQNameKeys(bs.getUnderlyingValue)
-    val iter = bx.keySet.iterator()
+    val map = mapBinding(name)
+    val iter = map.keySet.iterator()
     while (iter.hasNext) {
       val key = iter.next()
-      serialOpts.put(key.getQNameValue, bx.get(key).toString)
+      serialOpts.put(key.getQNameValue, map.get(key).toString)
     }
-
     serialOpts.toMap
   }
 

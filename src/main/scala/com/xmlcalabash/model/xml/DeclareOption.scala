@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{ContainerStart, Node}
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
-import com.xmlcalabash.runtime.{ExprParams, XMLCalabashRuntime, XProcExpression, XProcXPathExpression, XProcXPathValue}
+import com.xmlcalabash.runtime.{ExprParams, XMLCalabashRuntime, XProcXPathExpression, XProcXPathValue}
 import com.xmlcalabash.util.XProcVarValue
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.{QName, SequenceType}
@@ -17,7 +17,7 @@ class DeclareOption(override val config: XMLCalabashConfig) extends NameBinding(
 
   override def declaredType: SequenceType = {
     if (_as.isEmpty) {
-      _declaredType = staticContext.parseSequenceType(Some("xs:string"))
+      _declaredType = staticContext.parseSequenceType(Some("Q{http://www.w3.org/2001/XMLSchema}string"))
     } else {
       _declaredType = _as
     }

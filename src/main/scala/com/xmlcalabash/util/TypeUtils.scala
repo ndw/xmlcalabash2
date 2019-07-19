@@ -8,7 +8,7 @@ import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.parsers.SequenceBuilder
 import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime}
 import jdk.nashorn.api.scripting.ScriptObjectMirror
-import net.sf.saxon.s9api.{ItemType, ItemTypeFactory, Processor, QName, SequenceType, XdmArray, XdmAtomicValue, XdmEmptySequence, XdmMap, XdmNode, XdmValue}
+import net.sf.saxon.s9api._
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -121,12 +121,18 @@ object TypeUtils {
   }
 }
 
-class TypeUtils(val processor: Processor) {
+class TypeUtils(val processor: Processor, val context: StaticContext) {
+  def this(config: XMLCalabashConfig, context: StaticContext) = {
+    this(config.processor, context)
+  }
+  def this(config: XMLCalabashRuntime, context: StaticContext) = {
+    this(config.processor, context)
+  }
   def this(config: XMLCalabashConfig) = {
-    this(config.processor)
+    this(config.processor, new StaticContext(config))
   }
   def this(config: XMLCalabashRuntime) = {
-    this(config.processor)
+    this(config.processor, new StaticContext(config))
   }
 
   val typeFactory = new ItemTypeFactory(processor)
@@ -180,5 +186,148 @@ class TypeUtils(val processor: Processor) {
     }
 
     new XdmValue(alist)
+  }
+
+  def parseSequenceType(seqType: Option[String]): Option[SequenceType] = {
+    if (seqType.isDefined) {
+      Some(parseSequenceType(seqType.get))
+    } else {
+      None
+    }
+  }
+
+  def parseSequenceType(seqType: String): SequenceType = {
+    // XPathParser.parseSequenceType returns a type.SequenceType.
+    // I need an s9api.SequenceType. Michael Kay confirms there's no
+    // easy way to convert between them. I'm rolling my own until such time
+    // as there's a better way. If it has to stay this way, I should call
+    // the actual XPath 3.1 parser for it, but I'm just going to hack my
+    // way through it for now.
+    val parensre = "^\\((.*)\\)$".r
+    val stypere = "^([^*+?()]+)\\s*([*+?])?$".r
+    val mtypere = "^map\\s*\\((.*)\\)\\s*([*+?])?$".r
+    val atypere = "^array\\s*\\((.*)\\)\\s*([*+?])?$".r
+    val ftypere = "^function\\s*\\((.*)\\)\\s*([*+?])?$".r
+    val itemre  = "^item\\s*\\(\\s*\\)\\s*([*+?])?$".r
+    seqType.trim() match {
+      case parensre(body) =>
+        parseSequenceType(body)
+      case stypere(typename, cardchar) =>
+        // xs:sometype?
+        val itype = simpleType(typename)
+        SequenceType.makeSequenceType(itype, cardinality(cardchar))
+      case mtypere(mbody, cardchar) =>
+        if (mbody.trim == "*") {
+          return SequenceType.makeSequenceType(ItemType.ANY_MAP, cardinality(cardchar))
+        }
+        val tuplere = "^([^,]+),(.*)$".r
+        mbody match {
+          case tuplere(keyseqtype,itemseqtype) =>
+            val keytype = simpleType(keyseqtype)
+            val itemtype = parseSequenceType(itemseqtype)
+            SequenceType.makeSequenceType(typeFactory.getMapType(keytype, itemtype), cardinality(cardchar))
+          case _ =>
+            throw new RuntimeException(s"Unexpected map syntax: map($mbody)")
+        }
+      case atypere(itemseqtype, cardchar) =>
+        val itemtype = parseSequenceType(itemseqtype)
+        SequenceType.makeSequenceType(typeFactory.getArrayType(itemtype), cardinality(cardchar))
+      case ftypere(params, cardchar) =>
+        SequenceType.makeSequenceType(ItemType.ANY_FUNCTION, cardinality(cardchar))
+      case itemre(cardchar) =>
+        SequenceType.makeSequenceType(ItemType.ANY_ITEM, cardinality(cardchar))
+      case _ =>
+        throw new RuntimeException(s"Unexpected sequence type: $seqType")
+    }
+  }
+
+  def parseFakeMapSequenceType(seqType: String): SequenceType = {
+    // This is just like parseSequenceType except that it lies about the type of maps
+    val mtypere = "^map\\s*\\((.*)\\)\\s*([*+?])?$".r
+    seqType.trim() match {
+      case mtypere(mbody, cardchar) =>
+        // I actually only care about the case where the keys are QNames
+        if (mbody.trim == "*") {
+          return SequenceType.makeSequenceType(ItemType.ANY_MAP, cardinality(cardchar))
+        }
+        val tuplere = "^([^,]+),(.*)$".r
+        mbody match {
+          case tuplere(keyseqtype,itemseqtype) =>
+            val keytype = ItemType.ANY_ATOMIC_VALUE
+            val itemtype = parseSequenceType(itemseqtype)
+            SequenceType.makeSequenceType(typeFactory.getMapType(keytype, itemtype), cardinality(cardchar))
+          case _ =>
+            throw new RuntimeException(s"Unexpected map syntax: map($mbody)")
+        }
+      case _ =>
+        parseSequenceType(seqType)
+    }
+  }
+
+  private def simpleType(typename: String): ItemType = {
+    val qname = ValueParser.parseQName(typename, context)
+    qname match {
+      case XProcConstants.xs_anyURI =>             ItemType.ANY_URI
+      case XProcConstants.xs_base64Binary =>       ItemType.BASE64_BINARY
+      case XProcConstants.xs_boolean =>            ItemType.BOOLEAN
+      case XProcConstants.xs_byte =>               ItemType.BYTE
+      case XProcConstants.xs_date =>               ItemType.DATE
+      case XProcConstants.xs_dateTime =>           ItemType.DATE_TIME
+      case XProcConstants.xs_dateTimeStamp =>      ItemType.DATE_TIME_STAMP
+      case XProcConstants.xs_dayTimeDuration =>    ItemType.DAY_TIME_DURATION
+      case XProcConstants.xs_decimal =>            ItemType.DECIMAL
+      case XProcConstants.xs_double =>             ItemType.DOUBLE
+      case XProcConstants.xs_duration =>           ItemType.DURATION
+      case XProcConstants.xs_ENTITY =>             ItemType.ENTITY
+      case XProcConstants.xs_float =>              ItemType.FLOAT
+      case XProcConstants.xs_gDay =>               ItemType.G_DAY
+      case XProcConstants.xs_gMonth =>             ItemType.G_MONTH
+      case XProcConstants.xs_gMonthDay =>          ItemType.G_MONTH_DAY
+      case XProcConstants.xs_gYear =>              ItemType.G_YEAR
+      case XProcConstants.xs_gYearMonth =>         ItemType.G_YEAR_MONTH
+      case XProcConstants.xs_hexBinary =>          ItemType.HEX_BINARY
+      case XProcConstants.xs_ID =>                 ItemType.ID
+      case XProcConstants.xs_IDREF =>              ItemType.IDREF
+      case XProcConstants.xs_int =>                ItemType.INT
+      case XProcConstants.xs_integer =>            ItemType.INTEGER
+      case XProcConstants.xs_language =>           ItemType.LANGUAGE
+      case XProcConstants.xs_long =>               ItemType.LONG
+      case XProcConstants.xs_name =>               ItemType.NAME
+      case XProcConstants.xs_NCName =>             ItemType.NCNAME
+      case XProcConstants.xs_negativeInteger =>    ItemType.NEGATIVE_INTEGER
+      case XProcConstants.xs_NMTOKEN =>            ItemType.NMTOKEN
+      case XProcConstants.xs_nonNegativeInteger => ItemType.NON_NEGATIVE_INTEGER
+      case XProcConstants.xs_nonPositiveInteger => ItemType.NON_POSITIVE_INTEGER
+      case XProcConstants.xs_normalizedString =>   ItemType.NORMALIZED_STRING
+      case XProcConstants.xs_notation =>           ItemType.NOTATION
+      case XProcConstants.xs_positiveInteger =>    ItemType.POSITIVE_INTEGER
+      case XProcConstants.xs_QName =>              ItemType.QNAME
+      case XProcConstants.xs_short =>              ItemType.SHORT
+      case XProcConstants.xs_string =>             ItemType.STRING
+      case XProcConstants.xs_time =>               ItemType.TIME
+      case XProcConstants.xs_token =>              ItemType.TOKEN
+      case XProcConstants.xs_unsignedByte =>       ItemType.UNSIGNED_BYTE
+      case XProcConstants.xs_unsignedInt =>        ItemType.UNSIGNED_INT
+      case XProcConstants.xs_unsignedLong =>       ItemType.UNSIGNED_LONG
+      case XProcConstants.xs_unsignedShort =>      ItemType.UNSIGNED_SHORT
+      case XProcConstants.xs_untypedAtomic =>      ItemType.UNTYPED_ATOMIC
+      case XProcConstants.xs_yearMonthDuration =>  ItemType.YEAR_MONTH_DURATION
+      case _ =>
+        throw XProcException.xsInvalidSequenceType(qname.getClarkName, "Unknown type", context.location)
+    }
+  }
+
+  private def cardinality(card: String): OccurrenceIndicator = {
+    if (card == null) {
+      OccurrenceIndicator.ONE
+    } else {
+      card match {
+        case "*" => OccurrenceIndicator.ZERO_OR_MORE
+        case "?" => OccurrenceIndicator.ZERO_OR_ONE
+        case "+" => OccurrenceIndicator.ONE_OR_MORE
+        case _ =>
+          throw new RuntimeException(s"Unexpected cardinality $card")
+      }
+    }
   }
 }

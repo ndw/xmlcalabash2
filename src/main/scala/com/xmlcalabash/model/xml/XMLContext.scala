@@ -24,6 +24,8 @@ class XMLContext(override val config: XMLCalabashConfig) extends StaticContext(c
     _location = location
   }
 
+  val typeUtils = new TypeUtils(config, this)
+
   def parseBoolean(value: Option[String]): Option[Boolean] = {
     if (value.isDefined) {
       if (value.get == "true" || value.get == "false") {
@@ -100,64 +102,7 @@ class XMLContext(override val config: XMLCalabashConfig) extends StaticContext(c
   }
 
   def parseSequenceType(seqType: Option[String]): Option[SequenceType] = {
-    if (seqType.isDefined) {
-      try {
-        val parser = new XPathParser
-        parser.setLanguage(XPathParser.SEQUENCE_TYPE, 31)
-        val ic = new IndependentContext(config.processor.getUnderlyingConfiguration)
-        for ((prefix, uri) <- nsBindings) {
-          ic.declareNamespace(prefix, uri)
-        }
-
-        // Fracking heck, this returns an type.SequenceType. I can't work out
-        // how to convert that into an s9api.SequenceType. Hacksville
-        var s9apiSequenceType: SequenceType = null
-        val stypere = "^([^*+?()]+)([*+?])?$".r
-        seqType.get match {
-          case stypere(typename, card) =>
-            val itemtype = typename match {
-              case "xs:string" => ItemType.STRING
-              case "xs:integer" => ItemType.INTEGER
-              case "xs:NCName" => ItemType.NCNAME
-              case "xs:token" => ItemType.TOKEN
-              case "xs:QName" => ItemType.QNAME
-              case "xs:anyURI" => ItemType.ANY_URI
-              case "xs:boolean" => ItemType.BOOLEAN
-              case "xs:language" => ItemType.LANGUAGE
-              case "xs:float" => ItemType.FLOAT
-              case "xs:decimal" => ItemType.DECIMAL
-              case _ =>
-                throw XProcException.xsInvalidSequenceType(seqType.get, "Probably bad sequence type parsing", location)
-            }
-            val cardinality = if (card == null) {
-              OccurrenceIndicator.ONE
-            } else {
-              card match {
-                case "*" => OccurrenceIndicator.ZERO_OR_MORE
-                case "?" => OccurrenceIndicator.ZERO_OR_ONE
-                case "+" => OccurrenceIndicator.ONE_OR_MORE
-                case _ =>
-                  throw new RuntimeException(s"Unexpected cardinality $card")
-              }
-            }
-            s9apiSequenceType = SequenceType.makeSequenceType(itemtype, cardinality)
-          case _ =>
-            if (seqType.get.startsWith("map(")) {
-              s9apiSequenceType = SequenceType.makeSequenceType(ItemType.ANY_MAP, OccurrenceIndicator.ONE)
-            } else {
-              throw new RuntimeException(s"Unparsable sequence type: ${seqType.get}")
-            }
-        }
-        Some(s9apiSequenceType)
-      } catch {
-        case xpe: XPathException =>
-          throw XProcException.xsInvalidSequenceType(seqType.get, xpe.getMessage, location)
-        case t: Throwable =>
-          throw t
-      }
-    } else {
-      None
-    }
+    typeUtils.parseSequenceType(seqType)
   }
 
   def parseAvt(value: String): List[String] = {

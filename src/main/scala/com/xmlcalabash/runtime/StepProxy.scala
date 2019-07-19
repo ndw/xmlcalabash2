@@ -159,9 +159,8 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
           val xvalue = valuemsg.item.getUnderlyingValue
           xvalue match {
             case map: MapItem =>
-              // All maps are Map(*), see bug in XMLContext.parseSequenceType()
-              if (optsig.name == XProcConstants._serialization) {
-                val qmap = S9Api.forceQNameKeys(map)
+              if (optsig.forceQNameKeys) {
+                val qmap = S9Api.forceQNameKeys(map, staticContext)
                 step.receiveBinding(qname, qmap, valuemsg.context)
               } else {
                 step.receiveBinding(qname, valuemsg.item, valuemsg.context)

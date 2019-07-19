@@ -94,6 +94,7 @@ object XProcConstants {
   val xs_hexBinary = new QName("xs", ns_xs, "hexBinary")
   val xs_int = new QName("xs", ns_xs, "int")
   val xs_integer = new QName("xs", ns_xs, "integer")
+  val xs_language = new QName("xs", ns_xs, "language")
   val xs_long = new QName("xs", ns_xs, "long")
   val xs_name = new QName("xs", ns_xs, "name")
   val xs_negativeInteger = new QName("xs", ns_xs, "negativeInteger")

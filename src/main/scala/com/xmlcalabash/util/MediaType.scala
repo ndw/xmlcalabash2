@@ -164,7 +164,7 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
   def anyContentType: Boolean = true
 
   def markupContentType: Boolean = {
-    xmlContentType || jsonContentType || htmlContentType
+    xmlContentType || htmlContentType
   }
 
   def matchingMediaType(mtypes: Array[MediaType]): Option[MediaType] = {
