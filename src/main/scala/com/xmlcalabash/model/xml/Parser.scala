@@ -71,9 +71,8 @@ class Parser(config: XMLCalabashConfig) {
       toElaborate += decl
 
       for (root <- toElaborate) {
-        var env = new Environment()
-        root.makeStructureExplicit(env)
-        root.makeBindingsExplicit(env, None)
+        root.makeStructureExplicit()
+        root.makeBindingsExplicit()
         root.validateStructure()
       }
     }
@@ -202,11 +201,6 @@ class Parser(config: XMLCalabashConfig) {
       }
     }
 
-    //library.loadImports()
-    /*
-    var env = new Environment()
-    library.makeStructureExplicit(env)
-*/
     library
   }
 
@@ -223,60 +217,6 @@ class Parser(config: XMLCalabashConfig) {
   private def parseImportFunctions(node: XdmNode): ImportFunctions = {
     parseNoChildrenAllowed(node, new ImportFunctions(config))
   }
-
-  /*
-  private def x_parseImport(node: XdmNode): Option[Container] = {
-    val attr = node.getAttributeValue(XProcConstants._href)
-    if (attr == null) {
-      throw new RuntimeException("href attribute is required")
-    }
-    val href = node.getBaseURI.resolve(attr)
-
-    if (parsedURIs.contains(href)) {
-      return parsedURIs.get(href)
-    }
-
-    val request = new DocumentRequest(href, MediaType.XML)
-    val response = config.documentManager.parse(request)
-
-    val root = S9Api.documentElement(response.value.asInstanceOf[XdmNode])
-    if (root.isEmpty) {
-      throw new RuntimeException("nothing to import?")
-    }
-
-    val declContainer = root.get.getNodeName match {
-      case XProcConstants.p_declare_step =>
-        parseDeclareStep(root.get)
-      case XProcConstants.p_library =>
-        parseLibrary(root.get)
-      case _ =>
-        throw new RuntimeException("p:declare-step or p:library expected")
-    }
-
-    declContainer match {
-      case library: Library =>
-        if (!parsedURIs.contains(href)) {
-          parsedURIs.put(href, library)
-
-          val env = new Environment()
-          library.makeBindingsExplicit(env)
-          library.validateStructure()
-
-          for (decl <- library.children[DeclareStep]) {
-            if (!decl.atomic) {
-              decl.normalizeToPipes()
-              decl.addContentTypeCheckers()
-              decl.addFilters()
-            }
-          }
-        }
-      case _ => Unit
-    }
-
-    Some(declContainer)
-  }
-
-   */
 
   private def parseChoose(node: XdmNode): Choose = {
     parseContainer(node, new Choose(config))

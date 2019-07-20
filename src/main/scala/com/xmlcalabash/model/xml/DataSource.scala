@@ -23,9 +23,9 @@ class DataSource(override val config: XMLCalabashConfig) extends Artifact(config
       }
     }
 
+    val env = environment()
     val loader = new AtomicStep(config, params, this)
     loader.stepType = stepType
-    loader._drp = defaultReadablePort
 
     if (allChildren.nonEmpty) {
       val winput = new WithInput(config)

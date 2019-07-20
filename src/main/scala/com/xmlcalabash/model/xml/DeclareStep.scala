@@ -227,42 +227,24 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
     _signature = Some(stepSig)
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     if (madeStructureExplicit) {
       return
     }
     madeStructureExplicit = true
 
     for (child <- allChildren) {
-      child match {
-        case atomic: AtomicStep =>
-          atomic.makeStructureExplicit(environment)
-        case decl: DeclareStep =>
-          val newenvironment = environment.declareStep()
-          decl.makeStructureExplicit(newenvironment)
-        case library: Library =>
-          val newenvironment = environment.declareStep()
-          library.makeStructureExplicit(environment)
-        case variable: Variable =>
-          variable.makeStructureExplicit(environment)
-          environment.addVariable(variable)
-        case option: DeclareOption =>
-          option.makeStructureExplicit(environment)
-          environment.addVariable(option)
-        case _ =>
-          child.makeStructureExplicit(environment)
-      }
+      child.makeStructureExplicit()
     }
   }
 
-  override protected[model] def makeBindingsExplicit(env: Environment, drp: Option[Port]): Unit = {
+  override protected[model] def makeBindingsExplicit(): Unit = {
     if (madeBindingsExplicit) {
       return
     }
     madeBindingsExplicit = true
 
-    env.addStep(this)
-    super.makeBindingsExplicit(env, drp)
+    super.makeBindingsExplicit()
   }
 
   override protected[model] def validateStructure(): Unit = {

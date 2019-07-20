@@ -29,41 +29,31 @@ class Library(override val config: XMLCalabashConfig) extends DeclContainer(conf
     }
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     for (child <- allChildren) {
       child match {
         case decl: DeclareStep =>
-          val newenvironment = environment.declareStep()
-          decl.makeStructureExplicit(newenvironment)
+          decl.makeStructureExplicit()
         case variable: Variable =>
-          variable.makeStructureExplicit(environment)
-          environment.addVariable(variable)
+          variable.makeStructureExplicit()
         case function: DeclareFunction =>
-          function.makeStructureExplicit(environment)
+          function.makeStructureExplicit()
         case _ =>
           throw new RuntimeException(s"Invalid element: $child")
       }
     }
   }
 
-  protected[model] def makeBindingsExplicit(env: Environment): Unit = {
-    makeBindingsExplicit(env, None)
-  }
-
-  override protected[model] def makeBindingsExplicit(initialEnvironment: Environment, initialDrp: Option[Port]): Unit = {
-    val containerEnvironment = configureContainerEnvironment(initialEnvironment)
-
+  override protected[model] def makeBindingsExplicit(): Unit = {
     for (child <- allChildren) {
       child match {
         case decl: DeclareStep =>
-          val newenvironment = containerEnvironment.declareStep()
-          decl.makeBindingsExplicit(newenvironment, None)
+          decl.makeBindingsExplicit()
         case variable: Variable =>
           if (!variable.static) {
             throw new RuntimeException("Variables in libraries must be static")
           }
-          variable.makeBindingsExplicit(containerEnvironment, None)
-          containerEnvironment.addVariable(variable)
+          variable.makeBindingsExplicit()
         case function: DeclareFunction =>
           Unit
       }

@@ -50,7 +50,7 @@ class Port(override val config: XMLCalabashConfig) extends Artifact(config) {
     lb.toList
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     if (_href.isDefined && _pipe.isDefined) {
       throw XProcException.xsPipeAndHref(location)
     }
@@ -100,7 +100,7 @@ class Port(override val config: XMLCalabashConfig) extends Artifact(config) {
     }
 
     for (child <- allChildren) {
-      child.makeStructureExplicit(environment)
+      child.makeStructureExplicit()
     }
   }
 

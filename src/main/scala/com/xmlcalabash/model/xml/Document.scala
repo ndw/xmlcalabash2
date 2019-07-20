@@ -47,19 +47,21 @@ class Document(override val config: XMLCalabashConfig) extends DataSource(config
     }
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     // nop
   }
 
-  override protected[model] def makeBindingsExplicit(env: Environment, drp: Option[Port]): Unit = {
-    super.makeBindingsExplicit(env, drp)
+  override protected[model] def makeBindingsExplicit(): Unit = {
+    super.makeBindingsExplicit()
 
-    if (allChildren.isEmpty && drp.isDefined && !parent.get.isInstanceOf[DeclareInput]) {
+    val env = environment()
+    if (allChildren.isEmpty && env.defaultReadablePort.isDefined && !parent.get.isInstanceOf[DeclareInput]) {
       _context_provided = true
       val pipe = new Pipe(config)
-      pipe.port = drp.get.port
-      pipe.step = drp.get.step.stepName
-      pipe.link = drp.get
+      val drp = env.defaultReadablePort.get
+      pipe.link = env.defaultReadablePort.get
+      pipe.port = env.defaultReadablePort.get.port
+      pipe.step = env.defaultReadablePort.get.step.stepName
       addChild(pipe)
     }
 

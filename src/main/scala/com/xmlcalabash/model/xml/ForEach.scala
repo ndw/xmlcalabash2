@@ -17,12 +17,11 @@ class ForEach(override val config: XMLCalabashConfig) extends Container(config) 
     }
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     val fc = firstChild
     if (firstWithInput.isEmpty) {
       val winput = new WithInput(config)
       winput.port = "#source"
-      winput.primary = true
       addChild(winput, fc)
     }
 
@@ -31,7 +30,7 @@ class ForEach(override val config: XMLCalabashConfig) extends Container(config) 
     input.primary = true
     addChild(input, fc)
 
-    makeContainerStructureExplicit(environment)
+    makeContainerStructureExplicit()
   }
 
   override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {

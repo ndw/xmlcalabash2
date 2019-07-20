@@ -36,7 +36,7 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
     }
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     var firstChild = Option.empty[Artifact]
     var input = Option.empty[WithInput]
     for (child <- allChildren) {
@@ -51,10 +51,10 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
           input = Some(winput)
         case when: When =>
           hasWhen = true
-          when.makeStructureExplicit(environment)
+          when.makeStructureExplicit()
         case otherwise: Otherwise =>
           hasOtherwise = true
-          otherwise.makeStructureExplicit(environment)
+          otherwise.makeStructureExplicit()
       }
     }
 
@@ -122,14 +122,7 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
       }
 
       addChild(other)
-      other.makeStructureExplicit(environment)
-    }
-  }
-
-  override protected[model] def makeBindingsExplicit(env: Environment, drp: Option[Port]): Unit = {
-    for (child <- allChildren) {
-      val cenv = new Environment(env)
-      child.makeBindingsExplicit(cenv, drp)
+      other.makeStructureExplicit()
     }
   }
 

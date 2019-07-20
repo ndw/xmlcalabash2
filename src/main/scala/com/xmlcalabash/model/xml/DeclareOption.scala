@@ -2,11 +2,11 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Node}
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.runtime.{ExprParams, XMLCalabashRuntime, XProcXPathExpression, XProcXPathValue}
 import com.xmlcalabash.util.XProcVarValue
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import net.sf.saxon.s9api.{QName, SequenceType}
+import net.sf.saxon.s9api.{QName, SaxonApiException, SequenceType}
 
 class DeclareOption(override val config: XMLCalabashConfig) extends NameBinding(config) {
   private var _runtimeBindings = Map.empty[QName,XProcVarValue]
@@ -28,6 +28,8 @@ class DeclareOption(override val config: XMLCalabashConfig) extends NameBinding(
     for (child <- allChildren) {
       child match {
         case _: WithInput => Unit
+        case _: NamePipe =>
+          throw XProcException.xsStaticErrorInExpression(select.get, "Non-static variable reference", location)
         case _ =>
           throw new RuntimeException(s"Invalid content in $this")
       }
@@ -36,6 +38,19 @@ class DeclareOption(override val config: XMLCalabashConfig) extends NameBinding(
 
   def runtimeBindings(bindings: Map[QName, XProcVarValue]): Unit = {
     _runtimeBindings = bindings
+  }
+
+  def computeStatically(): Unit = {
+    // Evaluate it; no reference to context or non-statics is allowed.
+    val exprContext = staticContext.withStatics(inScopeStatics)
+    val expr = new XProcXPathExpression(staticContext, select.get)
+    try {
+      val msg = config.expressionEvaluator.value(expr, List(), exprContext.statics, None)
+      staticValue = msg
+    } catch {
+      case sae: SaxonApiException =>
+        throw XProcException.xsStaticErrorInExpression(select.get, sae.getMessage, exprContext.location)
+    }
   }
 
   override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {

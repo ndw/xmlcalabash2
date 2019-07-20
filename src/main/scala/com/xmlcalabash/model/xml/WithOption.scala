@@ -20,8 +20,10 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
     _name = name
   }
 
-  override protected[model] def makeBindingsExplicit(env: Environment, drp: Option[Port]): Unit = {
-    super.makeBindingsExplicit(env, drp)
+  override protected[model] def makeBindingsExplicit(): Unit = {
+    super.makeBindingsExplicit()
+
+    val env = environment()
 
     val bindings = mutable.HashSet.empty[QName]
     if (_avt.isDefined) {

@@ -22,7 +22,7 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
     }
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     var hasSubpipeline = false
     var hasCatch = false
     var hasFinally = false
@@ -68,6 +68,7 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
         if (noCode) {
           throw new RuntimeException("Only the last catch can omit the code")
         }
+        noCode = true
       }
       for (code <- child.codes) {
         if (codes.contains(code)) {
@@ -89,7 +90,9 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
       }
     }
 
-    makeContainerStructureExplicit(environment)
+    for (child <- allChildren) {
+      child.makeStructureExplicit()
+    }
 
     val outputSet = mutable.HashSet.empty[String]
     var primaryOutput = Option.empty[String]
@@ -142,10 +145,9 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
     }
   }
 
-  override protected[model] def makeBindingsExplicit(env: Environment, drp: Option[Port]): Unit = {
+  override protected[model] def makeBindingsExplicit(): Unit = {
     for (child <- allChildren) {
-      val cenv = new Environment(env)
-      child.makeBindingsExplicit(cenv, drp)
+      child.makeBindingsExplicit()
     }
   }
 

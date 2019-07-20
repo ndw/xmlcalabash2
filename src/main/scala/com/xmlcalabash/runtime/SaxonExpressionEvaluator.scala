@@ -318,13 +318,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         case sae: SaxonApiException =>
           sae.getCause match {
             case xpe: XPathException =>
-              if (xpe.getMessage.contains("Undeclared variable")) {
-                throw XProcException.xsStaticErrorInExpression(xpath, sae.getMessage, exprContext.location)
-              }
-              if (xpe.getMessage.contains("argument function named")) {
-                throw XProcException.xsStaticErrorInExpression(xpath, sae.getMessage, exprContext.location)
-              }
-              throw sae
+              throw XProcException.xsStaticErrorInExpression(xpath, sae.getMessage, exprContext.location)
             case _ => throw sae
           }
         case other: Throwable =>

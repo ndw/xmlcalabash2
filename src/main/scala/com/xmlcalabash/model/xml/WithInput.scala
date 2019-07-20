@@ -33,8 +33,11 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
     }
   }
 
-  override protected[model] def makeBindingsExplicit(env: Environment, drp: Option[Port]): Unit = {
-    super.makeBindingsExplicit(env, drp)
+  override protected[model] def makeBindingsExplicit(): Unit = {
+    super.makeBindingsExplicit()
+
+    val env = environment()
+    val drp = env.defaultReadablePort
 
     if (allChildren.isEmpty) {
       if (drp.isDefined) {
@@ -84,7 +87,6 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
     val params = new SelectFilterParams(context, select.get)
     val filter = new AtomicStep(config, params)
     filter.stepType = XProcConstants.cx_select_filter
-    filter._drp = defaultReadablePort
 
     val finput = new WithInput(config)
     finput.port = "source"

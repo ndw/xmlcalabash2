@@ -53,14 +53,17 @@ class Pipe(override val config: XMLCalabashConfig, shortcut: Option[String]) ext
     }
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     // nop
   }
 
-  override protected[model] def makeBindingsExplicit(env: Environment, drp: Option[Port]): Unit = {
+  override protected[model] def makeBindingsExplicit(): Unit = {
     for (child <- allChildren) {
-      child.makeBindingsExplicit(env, drp)
+      child.makeBindingsExplicit()
     }
+
+    val env = environment()
+    val drp = env.defaultReadablePort
 
     if (_link.isEmpty) {
       if (_step.isEmpty) {

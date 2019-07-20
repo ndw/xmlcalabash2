@@ -31,13 +31,13 @@ class Catch(override val config: XMLCalabashConfig) extends Container(config) wi
     }
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     val input = new DeclareInput(config)
     input.port = "error"
     input.sequence = true
     addChild(input, firstChild)
 
-    makeContainerStructureExplicit(environment)
+    makeContainerStructureExplicit()
   }
 
   override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {

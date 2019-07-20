@@ -11,6 +11,10 @@ class Empty(override val config: XMLCalabashConfig) extends DataSource(config) {
     normalizeDataSourceToPipes(XProcConstants.cx_empty_loader, params)
   }
 
+  override protected[model] def makeStructureExplicit(): Unit = {
+    // nop
+  }
+
   override def toString: String = {
     if (tumble_id.startsWith("!syn")) {
       s"p:empty"

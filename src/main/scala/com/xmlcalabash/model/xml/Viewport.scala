@@ -29,7 +29,7 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
     }
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     val first = firstChild
 
     if (firstWithInput.isEmpty) {
@@ -43,11 +43,13 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
     current.primary = true
     addChild(current, first)
 
-    makeContainerStructureExplicit(environment)
+    makeContainerStructureExplicit()
   }
 
-  override protected[model] def makeBindingsExplicit(env: Environment, drp: Option[Port]): Unit = {
-    super.makeBindingsExplicit(env, drp)
+  override protected[model] def makeBindingsExplicit(): Unit = {
+    super.makeBindingsExplicit()
+
+    val env = environment()
 
     val bindings = mutable.HashSet.empty[QName]
     bindings ++= staticContext.findVariableRefsInString(_match)

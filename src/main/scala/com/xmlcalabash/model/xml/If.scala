@@ -10,7 +10,7 @@ import net.sf.saxon.s9api.XdmNode
 import scala.collection.mutable
 
 class If(override val config: XMLCalabashConfig) extends Choose(config) {
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     // p:if is purely syntactic sugar for a p:choose...so let's implement it that way
 
     val choose = new Choose(config)
@@ -29,7 +29,7 @@ class If(override val config: XMLCalabashConfig) extends Choose(config) {
     }
     choose.addChild(when)
     parent.get.replaceChild(choose, this)
-    choose.makeStructureExplicit(environment)
+    choose.makeStructureExplicit()
   }
 
   override def toString: String = {

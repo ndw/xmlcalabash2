@@ -16,8 +16,8 @@ class Finally(override val config: XMLCalabashConfig) extends Container(config) 
     }
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
-    makeContainerStructureExplicit(environment)
+  override protected[model] def makeStructureExplicit(): Unit = {
+    makeContainerStructureExplicit()
 
     for (output <- children[DeclareOutput]) {
       if (output.primary) {

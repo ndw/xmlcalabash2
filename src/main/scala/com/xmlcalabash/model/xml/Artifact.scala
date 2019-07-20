@@ -20,7 +20,6 @@ import scala.reflect.ClassTag
 
 class Artifact(val config: XMLCalabashConfig) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  protected[model] var _drp: Option[Port] = None
   protected[model] var _readablePorts = List.empty[Port]
   protected[model] var _graphNode: Option[Node] = None
   private var _parent: Option[Artifact] = None
@@ -61,8 +60,6 @@ class Artifact(val config: XMLCalabashConfig) {
   protected[xmlcalabash] def extensionAttr(name: QName): Option[String] = {
     extensionAttributes.get(name)
   }
-
-  protected[model] def defaultReadablePort: Option[Port] = _drp
 
   protected[model] def parent: Option[Artifact] = _parent
   protected[model] def parent_=(art: Artifact): Unit = {
@@ -280,10 +277,15 @@ class Artifact(val config: XMLCalabashConfig) {
     }
   }
 
-  protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  protected[model] def environment(): Environment = {
+    // N.B. Do not cache this; the structure changes when filters are added.
+    Environment.newEnvironment(this)
+  }
+
+  protected[model] def makeStructureExplicit(): Unit = {
     println(s"Make structure explicit: $this")
     for (child <- allChildren) {
-      child.makeStructureExplicit(environment)
+      child.makeStructureExplicit()
     }
   }
 
@@ -294,8 +296,8 @@ class Artifact(val config: XMLCalabashConfig) {
     }
   }
 
-  protected[model] def makeBindingsExplicit(env: Environment, drp: Option[Port]): Unit = {
-    _drp = drp
+  protected[model] def makeBindingsExplicit(): Unit = {
+    val env = environment()
 
     for (sbinding <- env.staticVariables) {
       _inScopeStatics.put(sbinding.name.getClarkName, sbinding)
@@ -306,7 +308,7 @@ class Artifact(val config: XMLCalabashConfig) {
     }
 
     for (child <- allChildren) {
-      child.makeBindingsExplicit(env, drp)
+      child.makeBindingsExplicit()
     }
   }
 

@@ -8,10 +8,9 @@ import com.xmlcalabash.runtime.params.StepParams
 import com.xmlcalabash.runtime.{ImplParams, StepExecutable, StepProxy, StepRunner, StepWrapper, XMLCalabashRuntime, XmlStep}
 import com.xmlcalabash.steps.internal.{DocumentLoader, InlineLoader}
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import net.sf.saxon.ma.map.{MapItem, MapType, SingleEntryMap}
-import net.sf.saxon.s9api.{ItemType, QName, XdmNode}
+import net.sf.saxon.ma.map.MapType
+import net.sf.saxon.s9api.{QName, XdmNode}
 
-import scala.collection.immutable.HashMap.HashTrieMap
 import scala.collection.mutable
 
 class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplParams]) extends Step(config) with NamedArtifact {
@@ -42,7 +41,7 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
     _stepType = node.getNodeName
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     if (declaration(stepType).isEmpty) {
       throw XProcException.xsMissingDeclaration(stepType, location)
     }
@@ -52,14 +51,14 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
     for (item <- allChildren) {
       item match {
         case winput: WithInput =>
-          winput.makeStructureExplicit(environment)
+          winput.makeStructureExplicit()
           if (winput.port == "") {
             if (decl.primaryInput.isDefined) {
               winput.port = decl.primaryInput.get.port
             }
           }
         case _ =>
-          item.makeStructureExplicit(environment)
+          item.makeStructureExplicit()
       }
     }
 

@@ -38,8 +38,11 @@ class Inline(override val config: XMLCalabashConfig, val node: XdmNode, val impl
     _exclude_inline_prefixes = attr(XProcConstants._exclude_inline_prefixes)
   }
 
-  override protected[model] def makeBindingsExplicit(env: Environment, drp: Option[Port]): Unit = {
-    super.makeBindingsExplicit(env, drp)
+  override protected[model] def makeBindingsExplicit(): Unit = {
+    super.makeBindingsExplicit()
+
+    val env = environment()
+    val drp = env.defaultReadablePort
 
     if (allChildren.isEmpty && drp.isDefined && !parent.get.isInstanceOf[DeclareInput]) {
       _context_provided = true
@@ -74,7 +77,7 @@ class Inline(override val config: XMLCalabashConfig, val node: XdmNode, val impl
     }
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     // nop
   }
 

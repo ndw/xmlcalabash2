@@ -23,7 +23,7 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
     true
   }
 
-  protected[model] def makeContainerStructureExplicit(environment: Environment): Unit = {
+  protected[model] def makeContainerStructureExplicit(): Unit = {
     var firstChild = Option.empty[Artifact]
     var withInput = Option.empty[WithInput]
     var lastOutput = Option.empty[DeclareOutput]
@@ -54,16 +54,16 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
             primaryOutput = Some(output)
           }
         case atomic: AtomicStep =>
-          atomic.makeStructureExplicit(environment)
+          atomic.makeStructureExplicit()
           lastStep = Some(atomic)
         case compound: Container =>
-          compound.makeStructureExplicit(environment)
+          compound.makeStructureExplicit()
           lastStep = Some(compound)
         case variable: Variable =>
-          variable.makeStructureExplicit(environment)
+          variable.makeStructureExplicit()
           environment.addVariable(variable)
         case _ =>
-          child.makeStructureExplicit(environment)
+          child.makeStructureExplicit()
       }
     }
 
@@ -91,38 +91,22 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
     }
   }
 
-  protected[model] def configureContainerEnvironment(env: Environment): Environment = {
-    // Add the readable steps to the environment
-    val containerEnvironment = new Environment(env)
-    for (port <- children[DeclareInput]) {
-      containerEnvironment.addPort(port)
-    }
-    for (step <- children[Step]) {
-      containerEnvironment.addStep(step)
-      for (port <- step.children[DeclareOutput]) {
-        containerEnvironment.addPort(port)
-      }
-    }
-    containerEnvironment
-  }
+  override protected[model] def makeBindingsExplicit(): Unit = {
+    val env = environment()
 
-  override protected[model] def makeBindingsExplicit(initialEnvironment: Environment, initialDrp: Option[Port]): Unit = {
     // Be careful here, we don't call super.makeBindingsExplicit() so this method
     // has to be kept up-to-date with respect to changes there!
 
-    val containerEnvironment = configureContainerEnvironment(initialEnvironment)
     // Make the bindings for this step's inputs explicit
     for (input <- children[WithInput]) {
-      input.makeBindingsExplicit(containerEnvironment, initialDrp)
+      input.makeBindingsExplicit()
     }
 
-    _drp = initialDrp
-
-    for (sbinding <- initialEnvironment.staticVariables) {
+    for (sbinding <- env.staticVariables) {
       _inScopeStatics.put(sbinding.name.getClarkName, sbinding)
     }
 
-    for (dbinding <- initialEnvironment.variables) {
+    for (dbinding <- env.variables) {
       _inScopeDynamics.put(dbinding.name, dbinding)
     }
 
@@ -131,14 +115,9 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
     }
 
     var poutput = Option.empty[DeclareOutput]
-    var drp = initialDrp
     var lastStep = Option.empty[Step]
     for (child <- allChildren) {
       child match {
-        case input: DeclareInput =>
-          if (input.primary) {
-            drp = Some(input)
-          }
         case output: DeclareOutput =>
           if (output.primary) {
             poutput = Some(output)
@@ -162,37 +141,15 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
 
     for (child <- allChildren) {
       child match {
-        case library: Library =>
-          val newenvironment = containerEnvironment.declareStep()
-          library.makeBindingsExplicit(newenvironment)
-        case decl: DeclareStep =>
-          val newenvironment = containerEnvironment.declareStep()
-          decl.makeBindingsExplicit(newenvironment, None)
-        case step: Step =>
-          step.makeBindingsExplicit(containerEnvironment, drp)
-          drp = step.primaryOutput
-        case variable: Variable =>
-          variable.makeBindingsExplicit(containerEnvironment, drp)
-          containerEnvironment.addVariable(variable)
         case option: DeclareOption =>
-          option.makeBindingsExplicit(containerEnvironment, drp)
+          option.makeBindingsExplicit()
           if (option.select.isDefined && !option.static) {
-            // Evaluate it; no reference to context is allowed.
-            val exprContext = staticContext.withStatics(inScopeStatics)
-            val expr = new XProcXPathExpression(staticContext, option.select.get)
-            try {
-              val msg = config.expressionEvaluator.value(expr, List(), exprContext.statics, None)
-              option.staticValue = msg
-            } catch {
-              case sae: SaxonApiException =>
-                throw XProcException.xsStaticErrorInExpression(option.select.get, sae.getMessage, exprContext.location)
-            }
+            option.computeStatically()
           }
-          containerEnvironment.addVariable(option)
         case _: WithInput =>
           Unit // we did this above
         case _ =>
-          child.makeBindingsExplicit(containerEnvironment, drp)
+          child.makeBindingsExplicit()
       }
     }
   }

@@ -24,14 +24,14 @@ class ChooseBranch(override val config: XMLCalabashConfig) extends Container(con
     _collection = Some(coll)
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     // We don't make the with-input structure explicit here because we want
     // to do it after any potential inputs have been turned into pipes.
-    makeContainerStructureExplicit(environment)
+    makeContainerStructureExplicit()
   }
 
-  override protected[model] def makeBindingsExplicit(initialEnvironment: Environment, initialDrp: Option[Port]): Unit = {
-    super.makeBindingsExplicit(initialEnvironment, initialDrp)
+  override protected[model] def makeBindingsExplicit(): Unit = {
+    super.makeBindingsExplicit()
 
     var winput = firstWithInput
     if (winput.isEmpty) {
@@ -46,11 +46,12 @@ class ChooseBranch(override val config: XMLCalabashConfig) extends Container(con
     if (bindings.isEmpty) {
       val depends = staticContext.dependsOnContextString(_test)
       if (!depends) {
-        //println("WHEN/OTHERWISE CAN BE RESOLVED STATICALLY")
+        //FIXME: WHEN/OTHERWISE CAN BE RESOLVED STATICALLY
       }
     } else {
+      val env = environment()
       for (ref <- bindings) {
-        val binding = initialEnvironment.variable(ref)
+        val binding = env.variable(ref)
         if (binding.isEmpty) {
           throw new RuntimeException("Reference to undefined variable")
         }

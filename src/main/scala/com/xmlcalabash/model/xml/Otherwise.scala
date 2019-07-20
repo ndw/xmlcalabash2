@@ -21,15 +21,15 @@ class Otherwise(override val config: XMLCalabashConfig) extends ChooseBranch(con
     }
   }
 
-  override protected[model] def makeBindingsExplicit(initialEnvironment: Environment, initialDrp: Option[Port]): Unit = {
-    if (synthetic && initialDrp.isEmpty) {
+  override protected[model] def makeBindingsExplicit(): Unit = {
+    if (synthetic && environment().defaultReadablePort.isEmpty) {
       val ident = children[Step].head
       val winput = ident.firstWithInput
       val empty = new Empty(config)
       winput.get.addChild(empty)
     }
 
-    super.makeBindingsExplicit(initialEnvironment, initialDrp)
+    super.makeBindingsExplicit()
   }
 
   override protected[model] def normalizeToPipes(): Unit = {

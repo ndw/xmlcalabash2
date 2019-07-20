@@ -118,7 +118,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
     }
   }
 
-  override protected[model] def makeStructureExplicit(environment: Environment): Unit = {
+  override protected[model] def makeStructureExplicit(): Unit = {
     if (_href.isDefined && _pipe.isDefined) {
       throw XProcException.xsPipeAndHref(location)
     }
@@ -166,12 +166,12 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
     }
 
     for (child <- allChildren) {
-      child.makeStructureExplicit(environment)
+      child.makeStructureExplicit()
     }
   }
 
-  override protected[model] def makeBindingsExplicit(env: Environment, drp: Option[Port]): Unit = {
-    super.makeBindingsExplicit(env, drp)
+  override protected[model] def makeBindingsExplicit(): Unit = {
+    super.makeBindingsExplicit()
 
     val ds = ListBuffer.empty[DataSource]
     for (child <- allChildren) {
@@ -187,6 +187,9 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
           throw new RuntimeException(s"Unexpected child: $child")
       }
     }
+
+    val env = environment()
+    val drp = env.defaultReadablePort
 
     if (ds.isEmpty) {
       if (drp.isDefined && !static) {
@@ -223,7 +226,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
               context += new XdmNodeItemMessage(result, XProcMetadata.XML, inline.staticContext)
             } catch {
               case ex: XProcException =>
-                if (ex.code == XProcException.xs0107 && ex.details(1).toString().contains("Undeclared variable")) {
+                if (ex.code == XProcException.xs0107 && ex.details(1).toString.contains("Undeclared variable")) {
                   throw XProcException.xsStaticRefsNonStaticStr(ex.details.head.toString, location)
                 }
                 throw ex
