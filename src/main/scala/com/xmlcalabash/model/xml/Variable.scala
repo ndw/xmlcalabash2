@@ -22,7 +22,7 @@ class Variable(override val config: XMLCalabashConfig) extends NameBinding(confi
 
     val params = new ExprParams(collection)
     val init = new XProcXPathExpression(staticContext, _select.getOrElse("()"), as, _allowedValues, params)
-    val node = runtime.graph.addOption(_name.getClarkName, init, xpathBindingParams())
+    val node = cnode.addOption(_name.getClarkName, init, xpathBindingParams())
     _graphNode = Some(node)
   }
 

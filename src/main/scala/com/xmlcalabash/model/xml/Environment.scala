@@ -266,19 +266,12 @@ class Environment private() {
   protected[xml] def defaultReadablePort_=(port: Option[Port]): Unit = {
     _defaultReadablePort = port
   }
-  /*
-  private def clearDefaultReadablePort(): Unit = {
-    _defaultReadablePort = None
-  }
-  */
   private def clearSteps(): Unit = {
     _inScopeSteps.clear()
   }
 
   def addStep(step: Step): Unit = {
-    if (!step.stepName.startsWith("!")) {
-      addName(step.stepName, step)
-    }
+    addName(step.stepName, step)
   }
 
   private def clearPorts(): Unit = {

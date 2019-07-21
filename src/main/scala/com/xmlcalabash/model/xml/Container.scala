@@ -31,9 +31,12 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
     var lastStep = Option.empty[Step]
 
     for (child <- allChildren) {
+      child.makeStructureExplicit()
+
       if (firstChild.isEmpty) {
         firstChild = Some(child)
       }
+
       child match {
         case input: WithInput =>
           if (withInput.isDefined) {
@@ -54,16 +57,13 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
             primaryOutput = Some(output)
           }
         case atomic: AtomicStep =>
-          atomic.makeStructureExplicit()
           lastStep = Some(atomic)
         case compound: Container =>
-          compound.makeStructureExplicit()
           lastStep = Some(compound)
         case variable: Variable =>
-          variable.makeStructureExplicit()
           environment.addVariable(variable)
         case _ =>
-          child.makeStructureExplicit()
+          Unit
       }
     }
 

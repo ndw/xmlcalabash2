@@ -32,7 +32,6 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
   protected val bindingsMap = mutable.HashMap.empty[String, Message]
   protected var dynamicContext = new DynamicContext()
   protected var received = mutable.HashMap.empty[String,Long]
-  //protected var defaultSelect = mutable.HashMap.empty[String, XProcExpression]
 
   def nodeId: String = _id
   def nodeId_=(id: String): Unit = {
@@ -47,12 +46,6 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
   def location_=(location: Location): Unit = {
     throw new RuntimeException("You can't assign the location")
   }
-
-  /*
-  def setDefaultSelect(port: String, select: XProcExpression): Unit = {
-    defaultSelect.put(port, select)
-  }
-   */
 
   // =============================================================================================
 
@@ -209,15 +202,6 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
         receiveBinding(bindmsg)
       }
     }
-
-    /*
-    for (port <- defaultSelect.keySet) {
-      if (!received.contains(port)) {
-        // If the input has a select, this is the context for that expression
-        evalSelect(port, defaultSelect(port), None)
-      }
-    }
-     */
 
     for (qname <- step.signature.optionNames) {
       if (!bindings.contains(qname)) {

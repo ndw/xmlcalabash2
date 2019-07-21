@@ -112,7 +112,7 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
       val params = new ExprParams(collection)
       new XProcXPathExpression(staticContext, _select.getOrElse("()"), as, _allowedValues, params)
     }
-    val node = runtime.graph.addOption(_name.getClarkName, init, params)
+    val node = cnode.addOption(_name.getClarkName, init, params)
     _graphNode = Some(node)
   }
 
