@@ -5,12 +5,9 @@ import java.net.URI
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.{MediaType, S9Api, ValueUtils, XProcCollectionFinder}
-import javax.xml.transform.{Result, SourceLocator}
-import net.sf.saxon.Controller
-import net.sf.saxon.lib.OutputURIResolver
-import net.sf.saxon.s9api.{MessageListener, QName, ValidationMode, XdmDestination, XdmNode, XdmValue}
-import net.sf.saxon.serialize.SerializationProperties
+import com.xmlcalabash.util.{MediaType, S9Api, XProcCollectionFinder}
+import javax.xml.transform.SourceLocator
+import net.sf.saxon.s9api.{Destination, MessageListener, QName, ValidationMode, XdmDestination, XdmNode, XdmValue}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -33,6 +30,9 @@ class Xslt extends DefaultXmlStep {
   private var parameters = Map.empty[QName, XdmValue]
   private var version = Option.empty[String]
 
+  private val secondaryResults = mutable.HashMap.empty[URI, XdmDestination]
+
+
   override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
     Map("source" -> PortCardinality.EXACTLY_ONE, "stylesheet" -> PortCardinality.EXACTLY_ONE),
     Map("source" -> List("application/xml", "text/plain"), "stylesheet" -> List("application/xml"))
@@ -53,14 +53,27 @@ class Xslt extends DefaultXmlStep {
   }
 
   override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    variable match {
-      case `_initial_mode` => initialMode = Some(ValueParser.parseQName(ValueUtils.singletonStringValue(value, context.location), context))
-      case `_template_name` => templateName = Some(ValueParser.parseQName(ValueUtils.singletonStringValue(value, context.location), context))
-      case `_output_base_uri` => outputBaseURI = Some(ValueUtils.singletonStringValue(value, context.location))
-      case `_parameters` => parameters = ValueParser.parseParameters(value, context)
-      case `_version` => version = Some(ValueUtils.singletonStringValue(value, context.location))
-      case _ =>
-        logger.info("Ignoring unexpected option to p:xslt: " + variable)
+    if (variable == _parameters) {
+      if (value.size() > 0) {
+        parameters = ValueParser.parseParameters(value, context)
+      }
+    } else {
+      // All of the other options should be single values or the empty sequence
+      value.size() match {
+        case 0 => Unit
+        case 1 =>
+          val str = value.getUnderlyingValue.getStringValue
+          variable match {
+            case `_initial_mode` => initialMode = Some(ValueParser.parseQName(str, context))
+            case `_template_name` => templateName = Some(ValueParser.parseQName(str, context))
+            case `_output_base_uri` => outputBaseURI = Some(str)
+            case `_version` => version = Some(str)
+            case _ =>
+              logger.info("Ignoring unexpected option to p:xslt: " + variable)
+          }
+        case _ =>
+          throw new RuntimeException(s"The value of $variable may not be a sequence")
+      }
     }
   }
 
@@ -78,11 +91,9 @@ class Xslt extends DefaultXmlStep {
     // FIXME: runtime.getConfigurer().getSaxonConfigurer().configXSLT(config);
 
 
-    val uriResolver = config.getOutputURIResolver
     val collectionFinder = config.getCollectionFinder
     val unparsedTextURIResolver = config.getUnparsedTextURIResolver
 
-    config.setOutputURIResolver(new OutputResolver())
     config.setDefaultCollection(XProcCollectionFinder.DEFAULT)
     config.setCollectionFinder(new XProcCollectionFinder(runtime, defaultCollection.toList, collectionFinder))
 
@@ -100,6 +111,7 @@ class Xslt extends DefaultXmlStep {
     }
 
     transformer.setMessageListener(new CatchMessages())
+    transformer.setResultDocumentHandler(new ResultDocumentHandler())
 
     val result = new XdmDestination()
     transformer.setDestination(result)
@@ -126,33 +138,17 @@ class Xslt extends DefaultXmlStep {
     if (xformed.isDefined) {
       consumer.get.receive("result", xformed.get, new XProcMetadata(MediaType.XML))
     }
-  }
 
-  class OutputResolver extends OutputURIResolver {
-    val secondaryResults = mutable.HashMap.empty[String, XdmDestination]
-
-    override def newInstance: OutputURIResolver = {
-      new OutputResolver
+    for ((uri, destination) <- secondaryResults) {
+      consumer.get.receive("secondary", destination.getXdmNode, new XProcMetadata(MediaType.XML))
+    }
     }
 
-    override def resolve(href: String, base: String): Result = {
-      val baseURI = new URI(base).resolve(href)
-      val xdmResult = new XdmDestination()
-
-      secondaryResults.put(baseURI.toASCIIString, xdmResult)
-
-      val controller = new Controller(config.processor.getUnderlyingConfiguration)
-      val pipe = controller.makePipelineConfiguration()
-      val receiver = xdmResult.getReceiver(pipe, new SerializationProperties())
-      receiver.setSystemId(baseURI.toASCIIString)
-      receiver
-    }
-
-    def close(result: Result): Unit = {
-      val href = result.getSystemId
-      val xdmResult = secondaryResults(href)
-      val doc = xdmResult.getXdmNode
-      consumer.get.receive("secondary", doc, new XProcMetadata(MediaType.XML))
+  class ResultDocumentHandler extends java.util.function.Function[URI,Destination] {
+    override def apply(uri: URI): Destination = {
+      val destination = new XdmDestination()
+      secondaryResults.put(uri, destination)
+      destination
     }
   }
 

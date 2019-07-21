@@ -33,7 +33,7 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
       }
 
       for (key <- config.saxon_configuration_properties.keySet) {
-        configuration.processor.setConfigurationProperty(key, config.saxon_configuration_properties(key))
+        configuration.processor.getUnderlyingConfiguration.setConfigurationProperty(key, config.saxon_configuration_properties(key))
       }
     }
 
