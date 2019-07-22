@@ -6,7 +6,7 @@ import com.jafpl.exceptions.{JafplException, JafplLoopDetected}
 import com.jafpl.graph.{Binding, Node}
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.{ModelException, ParseException, StepException, XProcException}
-import com.xmlcalabash.model.xml.Parser
+import com.xmlcalabash.model.xml.{DeclareStep, Parser}
 import com.xmlcalabash.runtime.{PrintingConsumer, XProcMetadata}
 import com.xmlcalabash.util.{ArgBundle, URIUtils}
 import net.sf.saxon.s9api.QName
@@ -17,6 +17,7 @@ object Main extends App {
   val config = XMLCalabashConfig.newInstance()
   val options = new ArgBundle(config, args.toList)
 
+  var decl = Option.empty[DeclareStep]
   var errored = false
   try {
     config.debugOptions.injectables = options.injectables
@@ -24,13 +25,15 @@ object Main extends App {
     val parser = new Parser(config)
     val pipeline = parser.loadDeclareStep(new URI(options.pipeline))
 
-    pipeline.dump()
+    decl = Some(pipeline)
 
+    config.debugOptions.dumpTree(pipeline)
+    config.debugOptions.dumpXmlTree(pipeline)
     config.debugOptions.dumpGraph(pipeline)
 
     val runtime = pipeline.runtime()
 
-    if (config.debugOptions.norun) {
+    if (!config.debugOptions.run) {
       System.exit(0)
     }
 
@@ -58,8 +61,12 @@ object Main extends App {
     case ex: Exception =>
       errored = true
 
-      if (config.debugOptions.debug) {
-        ex.printStackTrace()
+      if (decl.isDefined) {
+        config.debugOptions.dumpStacktrace(decl.get, ex)
+      } else {
+        if (config.debugOptions.stackTrace.isDefined) {
+          ex.printStackTrace()
+        }
       }
 
       val mappedex = XProcException.mapPipelineException(ex)

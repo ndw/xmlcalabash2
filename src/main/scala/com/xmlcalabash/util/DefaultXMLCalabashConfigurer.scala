@@ -70,6 +70,35 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
       configuration.debugOptions.graphviz_dot = config.graphviz_dot.get
     }
 
+    // Have to check because assigning none enables the default behavior
+    if (config.debug_output_directory.isDefined) {
+      configuration.debugOptions.outputDirectory = config.debug_output_directory.get
+    }
+
+    if (config.debug_tree.isDefined) {
+      configuration.debugOptions.tree = config.debug_tree
+    }
+
+    if (config.debug_xml_tree.isDefined) {
+      configuration.debugOptions.xmlTree = config.debug_xml_tree
+    }
+
+    if (config.debug_graph.isDefined) {
+      configuration.debugOptions.graph = config.debug_graph
+    }
+
+    if (config.debug_jafpl_graph.isDefined) {
+      configuration.debugOptions.jafplGraph = config.debug_jafpl_graph
+    }
+
+    if (config.debug_open_graph.isDefined) {
+      configuration.debugOptions.openGraph = config.debug_open_graph
+    }
+
+    if (config.debug_stacktrace.isDefined) {
+      configuration.debugOptions.stackTrace = config.debug_stacktrace
+    }
+
     loadProperties(configuration)
   }
 

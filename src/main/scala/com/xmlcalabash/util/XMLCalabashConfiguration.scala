@@ -25,6 +25,13 @@ class XMLCalabashConfiguration {
   private val cc_system_property = new QName("cc", ns_cc, "system-property")
   private val cc_watchdog_timeout = new QName("cc", ns_cc, "watchdog-timeout")
   private val cc_graphviz = new QName("cc", ns_cc, "graphviz")
+  private val cc_debug_output_directory = new QName("cc", ns_cc, "debug-output-directory")
+  private val cc_debug_tree = new QName("cc", ns_cc, "tree")
+  private val cc_debug_xml_tree = new QName("cc", ns_cc, "xml-tree")
+  private val cc_debug_graph = new QName("cc", ns_cc, "graph")
+  private val cc_debug_jafpl_graph = new QName("cc", ns_cc, "jafpl-graph")
+  private val cc_debug_open_graph = new QName("cc", ns_cc, "open-graph")
+  private val cc_debug_stacktrace = new QName("cc", ns_cc, "stacktrace")
   private val _key = new QName("key")
   private val _value = new QName("value")
   private val _type = new QName("type")
@@ -41,6 +48,13 @@ class XMLCalabashConfiguration {
   private var _module_uri_resolver = Option.empty[String]
   private var _unparsed_text_uri_resolver = Option.empty[String]
   private var _graphviz_dot = Option.empty[String]
+  private var _debug_output_directory = Option.empty[String]
+  private var _debug_tree = Option.empty[String]
+  private var _debug_xml_tree = Option.empty[String]
+  private var _debug_graph = Option.empty[String]
+  private var _debug_jafpl_graph = Option.empty[String]
+  private var _debug_open_graph = Option.empty[String]
+  private var _debug_stacktrace = Option.empty[String]
 
   def show_messages: Boolean = _show_messages.getOrElse(false)
   def schema_aware: Boolean = _schema_aware.getOrElse(false)
@@ -53,6 +67,13 @@ class XMLCalabashConfiguration {
   def module_uri_resolver: Option[String] = _module_uri_resolver
   def unparsed_text_uri_resolver: Option[String] = _unparsed_text_uri_resolver
   def graphviz_dot: Option[String] = _graphviz_dot
+  def debug_output_directory: Option[String] = _debug_output_directory
+  def debug_tree: Option[String] = _debug_tree
+  def debug_xml_tree: Option[String] = _debug_xml_tree
+  def debug_graph: Option[String] = _debug_graph
+  def debug_jafpl_graph: Option[String] = _debug_jafpl_graph
+  def debug_open_graph: Option[String] = _debug_open_graph
+  def debug_stacktrace: Option[String] = _debug_stacktrace
 
   def serialization: Map[String,Map[QName,String]] = {
     val map = mutable.HashMap.empty[String, Map[QName,String]]
@@ -141,6 +162,20 @@ class XMLCalabashConfiguration {
         _unparsed_text_uri_resolver = Some(setString(node, option))
       case `cc_graphviz` =>
         parseGraphviz(node)
+      case `cc_debug_output_directory` =>
+        parseDebugOutputDirectory(node)
+      case `cc_debug_tree` =>
+        parseDebugTree(node)
+      case `cc_debug_xml_tree` =>
+        parseDebugXmlTree(node)
+      case `cc_debug_graph` =>
+        parseDebugGraph(node)
+      case `cc_debug_jafpl_graph` =>
+        parseDebugJafplGraph(node)
+      case `cc_debug_open_graph` =>
+        parseDebugOpenGraph(node)
+      case `cc_debug_stacktrace` =>
+        parseDebugStacktrace(node)
       case _ =>
         logger.error(s"Unexpected configuration option: ${node.getNodeName}")
     }
@@ -209,6 +244,70 @@ class XMLCalabashConfiguration {
     val dot = node.getAttributeValue(_dot)
     if (dot != null) {
       _graphviz_dot = Some(dot)
+    }
+  }
+
+  private def parseDebugOutputDirectory(node: XdmNode): Unit = {
+    val name = node.getStringValue.trim
+    val file = new File(name)
+    if (!file.exists || !file.isDirectory) {
+      logger.error(s"The debug-output-directory must be a directory")
+    } else {
+      _debug_output_directory = Some(name)
+    }
+  }
+
+  private def parseDebugTree(node: XdmNode): Unit = {
+    val name = node.getStringValue.trim
+    if (name.contains("/")) {
+      logger.error(s"The cc:debug-tree must be a filename (no /'s allowed)")
+    } else {
+      _debug_tree = Some(name)
+    }
+  }
+
+  private def parseDebugXmlTree(node: XdmNode): Unit = {
+    val name = node.getStringValue.trim
+    if (name.contains("/")) {
+      logger.error(s"The cc:debug-xml-tree must be a filename (no /'s allowed)")
+    } else {
+      _debug_xml_tree = Some(name)
+    }
+  }
+
+  private def parseDebugGraph(node: XdmNode): Unit = {
+    val name = node.getStringValue.trim
+    if (name.contains("/")) {
+      logger.error(s"The cc:debug-graph must be a filename (no /'s allowed)")
+    } else {
+      _debug_graph = Some(name)
+    }
+  }
+
+  private def parseDebugJafplGraph(node: XdmNode): Unit = {
+    val name = node.getStringValue.trim
+    if (name.contains("/")) {
+      logger.error(s"The cc:debug-jafpl-graph must be a filename (no /'s allowed)")
+    } else {
+      _debug_jafpl_graph = Some(name)
+    }
+  }
+
+  private def parseDebugOpenGraph(node: XdmNode): Unit = {
+    val name = node.getStringValue.trim
+    if (name.contains("/")) {
+      logger.error(s"The cc:debug-open-graph must be a filename (no /'s allowed)")
+    } else {
+      _debug_open_graph = Some(name)
+    }
+  }
+
+  private def parseDebugStacktrace(node: XdmNode): Unit = {
+    val name = node.getStringValue.trim
+    if (name.contains("/")) {
+      logger.error(s"The cc:debug-stacktrace must be a filename (no /'s allowed)")
+    } else {
+      _debug_stacktrace = Some(name)
     }
   }
 

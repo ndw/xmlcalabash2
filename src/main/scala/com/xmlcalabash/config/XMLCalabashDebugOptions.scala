@@ -14,21 +14,30 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
+  private val STACKTRACE = "stacktrace"
+  private val TREE = "tree"
+  private val XMLTREE = "xml-tree"
+  private val GRAPH = "graph"
+  private val JAFPLGRAPH = "jafpl-graph"
+  private val OPENGRAPH = "open-graph"
+
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
-  private val cx_graph = new QName(XProcConstants.ns_cx, "graph")
-  private val cx_open_graph = new QName(XProcConstants.ns_cx, "open-graph")
-  private val cx_xml = new QName(XProcConstants.ns_cx, "xml")
-  private val cx_raw = new QName(XProcConstants.ns_cx, "raw")
-  private val filenames = mutable.HashSet.empty[String]
   private val _injectables = ListBuffer.empty[String]
+  private var _graphviz_dot = Option.empty[String]
+  private var _run = true
 
-  var dumpGraphStep = Option.empty[QName]
-  var dumpGraphType = "graph"
-  var dumpGraph = Option.empty[String]
-  var norun: Boolean = false
-  var debug: Boolean = false
-  var _graphviz_dot = Option.empty[String]
+  private var _output_directory = "."
+  private var _stack_trace = Option.empty[String]
+  private var _tree = Option.empty[String]
+  private var _xml_tree = Option.empty[String]
+  private var _graph = Option.empty[String]
+  private var _jafpl_graph = Option.empty[String]
+  private var _open_graph = Option.empty[String]
+
+  private var debugOptions = mutable.HashSet.empty[String]
+  private var dumped = mutable.HashMap.empty[DeclareStep,mutable.HashSet[String]]
+  private var dumpCount = mutable.HashMap.empty[DeclareStep,mutable.HashMap[String,Long]]
 
   def injectables: List[String] = _injectables.toList
   def injectables_=(list: List[String]): Unit = {
@@ -41,48 +50,174 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
     _graphviz_dot = Some(dot)
   }
 
+  def run: Boolean = _run
+  def run_=(run: Boolean): Unit = {
+    _run = run
+  }
+
+  def outputDirectory: String = _output_directory
+  def outputDirectory_=(dir: String): Unit = {
+    _output_directory = dir
+  }
+
+  def stackTrace: Option[String] = _stack_trace
+  def stackTrace_=(trace: Option[String]): Unit = {
+    _stack_trace = trace
+    debugOptions += STACKTRACE
+  }
+
+  def tree: Option[String] = _tree
+  def tree_=(tree: Option[String]): Unit = {
+    _tree = tree
+    debugOptions += TREE
+  }
+
+  def xmlTree: Option[String] = _xml_tree
+  def xmlTree_=(xml_tree: Option[String]): Unit = {
+    _xml_tree = xml_tree
+    debugOptions += XMLTREE
+  }
+
+  def graph: Option[String] = _graph
+  def graph_=(graph: Option[String]): Unit = {
+    _graph = graph
+    debugOptions += GRAPH
+  }
+
+  def jafplGraph: Option[String] = _jafpl_graph
+  def jafplGraph_=(graph: Option[String]): Unit = {
+    _jafpl_graph = graph
+    debugOptions += JAFPLGRAPH
+  }
+
+  def openGraph: Option[String] = _open_graph
+  def openGraph_=(graph: Option[String]): Unit = {
+    _open_graph = graph
+    debugOptions += OPENGRAPH
+  }
+
   // ===========================================================================================
 
-  def dumpGraph(decl: DeclareStep): Unit = {
-    if (dumpGraph.isDefined)
-      dumpGraphType match {
-        case "graph" =>
-          graphPipeline(decl, dumpGraph.get)
-        case "pipeline" =>
-          dumpPipeline(decl, dumpGraph.get)
-        case _ => Unit
-    }
+  def dumpStacktrace(decl: DeclareStep, exception: Exception): Unit = {
+    dump(decl, STACKTRACE, None, Some(exception))
   }
 
-  def dumpGraph(graph: Graph, open: Boolean): Unit = {
-    if (dumpGraph.isEmpty) {
+  def dumpTree(decl: DeclareStep): Unit = {
+    dump(decl, TREE)
+  }
+
+  def dumpXmlTree(decl: DeclareStep): Unit = {
+    dump(decl, XMLTREE)
+  }
+
+  def dumpGraph(decl: DeclareStep): Unit = {
+    dump(decl, GRAPH)
+  }
+
+  def dumpJafplGraph(decl: DeclareStep, graph: Graph): Unit = {
+    dump(decl, JAFPLGRAPH, Some(graph), None)
+  }
+
+  def dumpOpenGraph(decl: DeclareStep, graph: Graph): Unit = {
+    dump(decl, OPENGRAPH, Some(graph), None)
+  }
+
+  private def dump(decl: DeclareStep, opt: String): Unit = {
+    dump(decl, opt, None, None)
+  }
+
+  private def dump(decl: DeclareStep, opt: String, graph: Option[Graph], exception: Option[Exception]): Unit = {
+    if (!debugOptions.contains(opt)) {
       return
     }
+    val output = dumped.getOrElse(decl, mutable.HashSet.empty[String])
+    if (output.contains(opt)) {
+      return
+    }
+    output += opt
+    dumped.put(decl, output)
 
-    if (open) {
-      if (dumpGraphType == "opengraph") {
-        graphGraph(graph, dumpGraph.get + graph.uid.toString)
-      }
-    } else {
-      if (dumpGraphType == "jafpl") {
-        graphGraph(graph, dumpGraph.get + graph.uid.toString)
-      }
+    val name = decl.stepName
+    val counts = dumpCount.getOrElse(decl, mutable.HashMap.empty[String,Long])
+    val count = counts.getOrElse(opt, 0L)
+
+    var ext = ""
+    if (count > 0) {
+      ext = s"$count%03d"
+    }
+
+    counts.put(opt,count+1)
+
+    opt match {
+      case TREE =>
+        if (tree.isDefined) {
+          var basefn = tree.getOrElse(name)
+          val fn = s"$outputDirectory/$basefn$ext.txt"
+          val fos = new FileOutputStream(new File(fn))
+          val psout = new PrintStream(fos)
+          Console.withOut(psout) {
+            decl.dump()
+          }
+          psout.close()
+        } else {
+          Console.withOut(System.err) {
+            decl.dump()
+          }
+        }
+      case XMLTREE =>
+        var basefn = xmlTree.getOrElse(name)
+        val fn = s"$outputDirectory/$basefn$ext.xml"
+        val fos = new FileOutputStream(new File(fn))
+        var pw = new PrintWriter(fos)
+        pw.write(decl.xdump.toString)
+        pw.close()
+        fos.close()
+      case GRAPH =>
+        var basefn = graph.getOrElse(name)
+        val fn = s"$outputDirectory/$basefn$ext.svg"
+        val baos = new ByteArrayOutputStream()
+        var pw = new PrintWriter(baos)
+        pw.write(decl.xdump.toString)
+        pw.close()
+        svgPipeline(fn, baos)
+      case JAFPLGRAPH =>
+        var basefn = jafplGraph.getOrElse(name)
+        if (debugOptions.contains(GRAPH) && graph.isEmpty
+          || debugOptions.contains(OPENGRAPH) && openGraph.isEmpty) {
+          ext = "_jafpl$ext"
+        }
+        val fn = s"$outputDirectory/$basefn$ext.svg"
+        val baos = new ByteArrayOutputStream()
+        var pw = new PrintWriter(baos)
+        pw.write(graph.get.asXML.toString)
+        pw.close()
+        svgGraph(fn, baos)
+      case OPENGRAPH =>
+        var basefn = openGraph.getOrElse(name)
+        if (debugOptions.contains(GRAPH) && graph.isEmpty
+          || debugOptions.contains(JAFPLGRAPH) && jafplGraph.isEmpty) {
+          ext = "_open$ext"
+        }
+        val fn = s"$outputDirectory/$basefn$ext.svg"
+        val baos = new ByteArrayOutputStream()
+        var pw = new PrintWriter(baos)
+        pw.write(graph.get.asXML.toString)
+        pw.close()
+        svgGraph(fn, baos)
+      case STACKTRACE =>
+        if (stackTrace.isDefined) {
+          var basefn = stackTrace.get
+          val fn = s"$outputDirectory/$basefn$ext.txt"
+          val fos = new FileOutputStream(new File(fn))
+          val pos = new PrintStream(fos)
+          exception.get.printStackTrace(pos)
+          pos.close()
+        } else {
+          exception.get.printStackTrace()
+        }
     }
   }
 
-  private def dumpPipeline(decl: DeclareStep, baseName: String): Unit = {
-    val fn = if (baseName.contains(".")) {
-      baseName
-    } else {
-      baseName + ".xml"
-    }
-
-    val fos = new FileOutputStream(new File(fn))
-    var pw = new PrintWriter(fos)
-    pw.write(decl.xdump.toString)
-    pw.close()
-    fos.close()
-  }
 
   private def graphGraph(graph: Graph, baseName: String): Unit = {
     val fn = if (baseName.contains(".")) {
@@ -91,26 +226,8 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
       baseName + ".svg"
     }
 
-    val baos = new ByteArrayOutputStream()
-    var pw = new PrintWriter(baos)
-    pw.write(graph.asXML.toString)
-    pw.close()
-    svgGraph(fn, baos)
   }
 
-  private def graphPipeline(decl: DeclareStep, baseName: String): Unit = {
-    val fn = if (baseName.contains(".")) {
-      baseName
-    } else {
-      baseName + ".svg"
-    }
-
-    val baos = new ByteArrayOutputStream()
-    var pw = new PrintWriter(baos)
-    pw.write(decl.xdump.toString)
-    pw.close()
-    svgPipeline(fn, baos)
-  }
 
   private def svgGraph(fn: String, xmlBaos: ByteArrayOutputStream): Unit = {
     if (config.debugOptions.graphviz_dot.isEmpty) {

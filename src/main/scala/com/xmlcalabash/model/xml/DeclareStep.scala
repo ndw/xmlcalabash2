@@ -300,7 +300,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
       }
     }
 
-    runtime.init()
+    runtime.init(this)
     runtime
   }
 
@@ -385,7 +385,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
     }
   }
 
-  def xdump(): XdmNode = {
+  def xdump: XdmNode = {
     val xml = new ElaboratedPipeline(config)
     xdump(xml)
     val doc = xml.endPipeline()

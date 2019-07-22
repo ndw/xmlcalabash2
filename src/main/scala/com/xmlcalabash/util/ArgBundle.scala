@@ -48,16 +48,14 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
   }
 
   def parse(args: List[String]): Unit = {
-    // -iport=input | --input port=input
-    // -oport=output | --output port=output
+    // -iport=input       | --input port=input
+    // -oport=output      | --output port=output
     // -bprefix=namespace | --bind prefix=namespace
-    // -jinjectable | --inject injectable
-    // --raw
-    // -G | --graph output.xml
-    // --graph-step qname
-    // --graph-type pipeline|graph|opengraph
-    // --norun
-    // -D | --debug
+    // -jinjectable       | --inject injectable
+    //                    | --norun
+    // -d                 | --debug
+    // -v                 | --verbose
+    //
     // param=string value
     // +param=file value
     // ?param=xpath expression value
@@ -77,6 +75,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
             case "output" => parsePort(_outputs, args(pos+1))
           }
           pos += 2
+
         case paramRegex(kind, name, value) =>
           val scontext = new XMLContext(xmlCalabash, None, _nsbindings.toMap, None)
           val qname = ValueParser.parseQName(name, scontext)
@@ -110,26 +109,14 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
               throw XProcException.xiArgBundlePfxChar(kind)
           }
           pos += 1
+
         case longOptRegex(optname) =>
           try {
             optname match {
               case "verbose" => _verbose = true
-              case "norun" => _debugOptions.norun = true
-              case "debug" => _debugOptions.debug = true
-              case "graph" =>
-                _debugOptions.dumpGraph = Some(args(pos + 1))
-                pos += 1
-              case "graph-step" =>
-                throw new RuntimeException("Not implemented yet")
-              case "graph-type" =>
-                val rest = args(pos+1)
-                rest match {
-                  case "pipeline" => _debugOptions.dumpGraphType = rest
-                  case "graph" => _debugOptions.dumpGraphType = rest
-                  case "jafpl" => _debugOptions.dumpGraphType = rest
-                  case "jafplopen" => _debugOptions.dumpGraphType = rest
-                  case _ => throw XProcException.xiArgBundleCannotParseGraphType(s"--graph-type $rest")
-                }
+              case "norun" => _debugOptions.run = false
+              case "debug" =>
+                parseDebugOptions(args(pos+1))
                 pos += 1
               case "inject" =>
                 _injectables += args(pos+1)
@@ -188,10 +175,10 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
               if (!skip) {
                 ch match {
                   case 'v' => _verbose = true
-                  case 'D' => _debugOptions.debug = true
-                  case 'G' =>
-                    _debugOptions.dumpGraph = Some(args(pos + 1))
-                    pos += 1
+                  case 'd' =>
+                    val rest = chars.substring(chpos + 1)
+                    parseDebugOptions(rest)
+                    skip = true
                   case 'i' =>
                     val rest = chars.substring(chpos + 1)
                     val eqpos = rest.indexOf("=")
@@ -266,7 +253,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
     }
   }
 
-  def parsePort(ports: mutable.HashMap[String,List[String]], binding: String): Unit = {
+  private def parsePort(ports: mutable.HashMap[String,List[String]], binding: String): Unit = {
     val pos = binding.indexOf("=")
     if (pos < 1) {
       throw XProcException.xiArgBundleInvalidPortSpec(binding)
@@ -281,4 +268,42 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
     }
   }
 
+  private def parseDebugOptions(opts: String): Unit = {
+    val validKeys = List("stacktrace", "tree", "xml-tree", "graph", "jafpl-graph", "open-graph")
+
+    val options = opts.split("\\s*,\\s*")
+    for (opt <- options) {
+      var token = opt
+      var value = Option.empty[String]
+
+      if (opt.contains(":")) {
+        val pos = opt.indexOf(":")
+        token = opt.substring(0, pos)
+        value = Some(opt.substring(pos+1))
+      }
+
+      var key = Option.empty[String]
+      for (valid <- validKeys) {
+        if (valid.startsWith(token)) {
+          if (key.isDefined) {
+            throw new RuntimeException(s"Ambiguous debug key: $token")
+          }
+          key = Some(valid)
+        }
+      }
+
+      if (key.isDefined) {
+        key.get match {
+          case "stacktrace" => _debugOptions.stackTrace = value
+          case "tree" => _debugOptions.tree = value
+          case "xml-tree" => _debugOptions.xmlTree = value
+          case "graph" => _debugOptions.graph = value
+          case "jafpl-graph" => _debugOptions.jafplGraph = value
+          case "open-graph" => _debugOptions.openGraph = value
+        }
+      } else {
+        throw new RuntimeException(s"Invalid debug key: $token")
+      }
+    }
+  }
 }

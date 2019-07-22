@@ -247,7 +247,7 @@ class ArgBundleSpec extends FlatSpec {
     val bundle = new ArgBundle(config)
     val args = "--norun".split("\\s+")
     bundle.parse(args.toList)
-    assert(config.debugOptions.norun)
+    assert(!config.debugOptions.run)
   }
 
   // -G | --graph

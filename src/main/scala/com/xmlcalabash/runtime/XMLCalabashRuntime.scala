@@ -50,12 +50,13 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   val jafpl: Jafpl = Jafpl.newInstance()
   val graph: Graph = jafpl.newGraph()
 
-  protected[xmlcalabash] def init(): Unit = {
-    config.debugOptions.dumpGraph(graph, true)
+  protected[xmlcalabash] def init(decl: DeclareStep): Unit = {
+
+    config.debugOptions.dumpOpenGraph(decl, graph)
 
     runtime = new GraphRuntime(graph, this)
 
-    config.debugOptions.dumpGraph(graph, false)
+    config.debugOptions.dumpJafplGraph(decl, graph)
 
     runtime.traceEventManager = _traceEventManager
   }
