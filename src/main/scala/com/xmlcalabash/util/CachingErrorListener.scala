@@ -1,22 +1,24 @@
 package com.xmlcalabash.util
 
+import com.xmlcalabash.util.xc.Errors
 import javax.xml.transform.{ErrorListener, TransformerException}
+import net.sf.saxon.`type`.ValidationException
 import org.xml.sax.{ErrorHandler, SAXParseException}
 
 import scala.collection.mutable.ListBuffer
 
-class CachingErrorListener() extends ErrorListener with ErrorHandler {
+class CachingErrorListener(errors: Errors) extends ErrorListener with ErrorHandler {
   private val _exceptions = ListBuffer.empty[Exception]
   private var _listener = Option.empty[ErrorListener]
   private var _handler = Option.empty[ErrorHandler]
 
-  def this(listener: ErrorListener) = {
-    this()
+  def this(errors: Errors, listener: ErrorListener) = {
+    this(errors)
     _listener = Some(listener)
   }
 
-  def this(handler: ErrorHandler) = {
-    this()
+  def this(errors: Errors, handler: ErrorHandler) = {
+    this(errors)
     _handler = Some(handler)
   }
 
@@ -36,13 +38,14 @@ class CachingErrorListener() extends ErrorListener with ErrorHandler {
     if (_listener.isDefined) {
       _listener.get.warning(exception)
     }
-    // I don't care about warnings; they won't stop the parse
+    report(exception)
   }
 
   override def error(exception: TransformerException): Unit = {
     if (_listener.isDefined) {
       _listener.get.error(exception)
     }
+    report(exception)
     _exceptions += exception
   }
 
@@ -50,6 +53,7 @@ class CachingErrorListener() extends ErrorListener with ErrorHandler {
     if (_listener.isDefined) {
       _listener.get.fatalError(exception)
     }
+    report(exception)
     _exceptions += exception
   }
 
@@ -57,13 +61,14 @@ class CachingErrorListener() extends ErrorListener with ErrorHandler {
     if (_handler.isDefined) {
       _handler.get.warning(exception)
     }
-    _exceptions += exception
+    report(exception)
   }
 
   override def error(exception: SAXParseException): Unit = {
     if (_handler.isDefined) {
       _handler.get.error(exception)
     }
+    report(exception)
     _exceptions += exception
   }
 
@@ -71,6 +76,18 @@ class CachingErrorListener() extends ErrorListener with ErrorHandler {
     if (_handler.isDefined) {
       _handler.get.fatalError(exception)
     }
+    report(exception)
     _exceptions += exception
+  }
+
+  private def report(exception: Exception): Unit = {
+    exception match {
+      case ve: ValidationException =>
+        val msg = ve.getMessage
+        val fail = ve.getValidationFailure
+        errors.xsdValidationError(msg, fail)
+      case _: Exception =>
+        errors.xsdValidationError(exception.getLocalizedMessage)
+    }
   }
 }

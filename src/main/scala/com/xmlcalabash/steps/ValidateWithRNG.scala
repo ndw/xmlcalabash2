@@ -10,6 +10,7 @@ import com.thaiopensource.validate.rng.CompactSchemaReader
 import com.thaiopensource.validate.{SchemaReader, ValidateProperty, ValidationDriver}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.util.xc.Errors
 import com.xmlcalabash.util.{CachingErrorListener, S9Api}
 import net.sf.saxon.s9api.{QName, XdmNode}
 import org.xml.sax.InputSource
@@ -61,7 +62,8 @@ class ValidateWithRNG() extends DefaultXmlStep {
       dtd_id_idref_warnings = booleanBinding(_dtd_id_idref_warnings).getOrElse(false)
     }
 
-    val listener = new CachingErrorListener()
+    val errors = new Errors(config.config)
+    val listener = new CachingErrorListener(errors)
     val properties = new PropertyMapBuilder()
     properties.put(ValidateProperty.ERROR_HANDLER, listener)
     properties.put(ValidateProperty.URI_RESOLVER, config.uriResolver)

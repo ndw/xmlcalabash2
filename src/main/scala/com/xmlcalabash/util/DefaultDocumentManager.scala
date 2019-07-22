@@ -12,6 +12,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.util.xc.Errors
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmValue}
@@ -208,7 +209,8 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       // Is this necessary? I'm carefully synchronizing calls that mess with the
       // configuration's error listener.
 
-      val listener = new CachingErrorListener()
+      val errors = new Errors(xmlCalabash)
+      val listener = new CachingErrorListener(errors)
       val saxonConfig = xmlCalabash.processor.getUnderlyingConfiguration
       saxonConfig.synchronized {
         listener.chainedListener = saxonConfig.getErrorListener

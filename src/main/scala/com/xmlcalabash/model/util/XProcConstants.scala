@@ -118,6 +118,8 @@ object XProcConstants {
   val pxs_XSLTMatchPattern = new QName("xs", ns_xs, "XSLTMatchPattern")
 
   val xsi_type = new QName("xsi", ns_xsi, "type")
+  val xsi_noNamespaceSchemaLocation = new QName("xsi", ns_xsi, "noNamespaceSchemaLocation")
+  val xsi_schemaLocation = new QName("xsi", ns_xsi, "schemaLocation")
 
   // Extras for testing
   val p_producer = new QName("p", ns_p, "producer")
@@ -199,6 +201,19 @@ object XProcConstants {
   val _last_modified = new QName("", "", "last-modified")
   val _message = new QName("", "message")
   val _condition = new QName("", "condition")
+
+  // Related to errors
+  val _uri = new QName("", "uri")
+  val _line = new QName("", "line-number")
+  val _column = new QName("", "column-number")
+  val _source_uri = new QName("", "source-uri")
+  val _source_line = new QName("", "source-line-number")
+  val _source_column = new QName("", "source-column-number")
+  val _path = new QName("", "path")
+  val _constraint_name = new QName("", "constraint-name")
+  val _constraint_cause = new QName("", "constraint-clause")
+  val _schema_type = new QName("", "schema-type")
+  val _schema_part = new QName("", "schema-part")
 
   val sx_attribute_order = new QName("http://saxon.sf.net/", "attribute-order")
   val sx_character_representation = new QName("http://saxon.sf.net/", "character-representation")

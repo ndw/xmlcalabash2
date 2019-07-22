@@ -207,7 +207,8 @@
 <p:declare-step type="p:validate-with-xml-schema">
   <p:input port="source" primary="true" content-types="application/xml text/xml */*+xml"/>
   <p:input port="schema" sequence="true" content-types="application/xml text/xml */*+xml"/>
-  <p:output port="result" content-types="application/xml"/>
+  <p:output port="result" content-types="application/xml" primary="true"/>
+  <p:output port="report" content-types="application/xml"/>
   <p:option name="use-location-hints" select="false()" as="xs:boolean"/>
   <p:option name="try-namespaces" select="false()" as="xs:boolean"/>
   <p:option name="assert-valid" select="true()" as="xs:boolean"/>

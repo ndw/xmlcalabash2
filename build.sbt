@@ -2,8 +2,8 @@ import java.io.{BufferedReader, InputStreamReader}
 
 lazy val xmlCalabashVersion = "1.99.8b"
 lazy val jafplVersion = "0.1.17"
-lazy val saxonVersion = "9.9.1-3"
-lazy val useSaxonEE = false
+lazy val saxonVersion = "9.9.1-4"
+lazy val useSaxonEE = true
 
 name         := "XML Calabash"
 organization := "com.xmlcalabash"
@@ -175,6 +175,8 @@ libraryDependencies +=
   "org.apache.httpcomponents" % "httpclient" % "4.5.3" excludeAll(
     ExclusionRule(organization = "commons-logging")
   )
+
+dependencyOverrides += "net.sf.saxon" % "Saxon-HE" % "9.9.1-4"
 
 mappings in (Compile, packageBin) := {
   (mappings in (Compile, packageBin)).value.filter {

@@ -215,6 +215,10 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     }
 
     try {
+      // This smells bad
+      if (staticContext.location.isDefined) {
+        step.setLocation(staticContext.location.get)
+      }
       DynamicContext.withContext(dynamicContext) { step.run(staticContext) }
     } finally {
       var thrown = Option.empty[Exception]
@@ -310,16 +314,24 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     // Let's try to validate and normalize what just got sent out of the step.
     // If it claims to be XML, HTML, JSON, or text, we need to get it into an XDM.
 
-    val contentType = metadata.contentType
-    val sendMessage = contentType.classification match {
-      case MediaType.XML => makeXmlMessage(item, metadata)
-      case MediaType.HTML => makeHtmlMessage(item, metadata)
-      case MediaType.JSON => makeJsonMessage(item, metadata)
-      case MediaType.TEXT => makeTextMessage(item, metadata)
-      case _ => makeBinaryMessage(item,metadata)
+    item match {
+      case ex: XProcException =>
+        // The only way this can happen is if we're in a catch or finally
+        // and reading the error port.
+        consumer.get.receive(port, new XdmNodeItemMessage(ex.errors.get, XProcMetadata.XML, staticContext))
+      case _ =>
+        val contentType = metadata.contentType
+        val sendMessage = contentType.classification match {
+          case MediaType.XML => makeXmlMessage(item, metadata)
+          case MediaType.HTML => makeHtmlMessage(item, metadata)
+          case MediaType.JSON => makeJsonMessage(item, metadata)
+          case MediaType.TEXT => makeTextMessage(item, metadata)
+          case _ => makeBinaryMessage(item,metadata)
+        }
+        consumer.get.receive(port, sendMessage)
     }
 
-    consumer.get.receive(port, sendMessage)
+
   }
 
   private def makeXmlMessage(item: Any, metadata: XProcMetadata): Message = {

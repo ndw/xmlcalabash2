@@ -1,11 +1,15 @@
 package com.xmlcalabash.steps
 
-import java.lang.reflect.InvocationTargetException
+import java.net.URI
 
 import com.jafpl.steps.PortCardinality
+import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.util.xc.Errors
 import com.xmlcalabash.util.{CachingErrorListener, MediaType, S9Api}
+import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.Controller
 import net.sf.saxon.`type`.ValidationException
 import net.sf.saxon.s9api.{QName, SaxonApiException, SchemaManager, XdmDestination, XdmNode}
@@ -19,6 +23,7 @@ class ValidateWithXSD() extends DefaultXmlStep {
   private val _assert_valid = new QName("", "assert-valid")
   private val _mode = new QName("", "mode")
   private val _version = new QName("", "version")
+  private val _targetNamespace = new QName("", "targetNamespace")
 
   private var source: XdmNode = _
   private var sourceMetadata: XProcMetadata = _
@@ -30,12 +35,16 @@ class ValidateWithXSD() extends DefaultXmlStep {
   private var version = "1.1"
 
   override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
-    Map("source" -> PortCardinality.ONE_OR_MORE,
+    Map("source" -> PortCardinality.EXACTLY_ONE,
         "schema" -> PortCardinality.ZERO_OR_MORE),
     Map("source" -> List("application/xml", "text/xml", "*/*+xml"),
         "schema" -> List("application/xml", "text/xml", "*/*+xml")))
 
-  override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
+  override def outputSpec: XmlPortSpecification = new XmlPortSpecification(
+    Map("result" -> PortCardinality.EXACTLY_ONE,
+        "report" -> PortCardinality.ZERO_OR_MORE),
+    Map("result" -> List("application/xml", "text/xml", "*/*+xml"),
+        "report" -> List("application/xml", "text/xml", "*/*+xml")))
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     item match {
@@ -66,39 +75,62 @@ class ValidateWithXSD() extends DefaultXmlStep {
     version = stringBinding(_version, version)
 
     val saxonConfig = config.processor.getUnderlyingConfiguration
+    saxonConfig.clearSchemaCache()
 
-    // Saxon 9.2.0.4j introduces a clearSchemaCache method on Configuration.
-    // Call it if it's available.
-    try {
-      val clearSchemaCache = config.getClass.getMethod("clearSchemaCache", null)
-      clearSchemaCache.invoke(config)
-      logger.trace("Cleared schema cache.")
-    } catch {
-      case nsme: NoSuchMethodException =>
-        // nop; oh, well
-        logger.debug("Cannot reset schema cache: no such method")
-      case nsme: IllegalAccessException =>
-        logger.debug("Cannot reset schema cache: illegal access exception")
-      case nsme: InvocationTargetException =>
-        logger.debug("Cannot reset schema cache: invocation target exception")
-    }
-
-    if (bindings.contains(_try_namespaces)) {
-      val namespace = S9Api.documentElement(source).get.getNodeName.getNamespaceURI
-      try_namespaces = booleanBinding(_try_namespaces).getOrElse(false)
-      try_namespaces = try_namespaces && namespace != ""
-    }
-
+    try_namespaces = booleanBinding(_try_namespaces).getOrElse(false)
     mode = stringBinding(_mode, mode)
     assert_valid = booleanBinding(_assert_valid).getOrElse(false)
     use_location_hints = booleanBinding(_use_location_hints).getOrElse(false)
 
-    // FIXME: populate the URI cache so that computed schema documents will be found preferentially
-
-    // FIXME: support try_namespaces
-
+    // Populate the URI cache so that URI references in schema documents will
+    // preferentially find the schemas provided
+    val schemaDocuments = ListBuffer.empty[XdmNode]
     for (schema <- schemas) {
-      manager.load(schema.asSource())
+      val schemaNode = S9Api.documentElement(schema)
+      val targetNS = if (schemaNode.isDefined) {
+        Option(schemaNode.get.getAttributeValue(_targetNamespace)).getOrElse("")
+      } else {
+        ""
+      }
+      logger.debug(s"Caching input schema: ${schema.getBaseURI} for $targetNS")
+      // FIXME: populate the runtime resolver cache with these documents!
+      schemaDocuments += schema
+    }
+
+    val sourceNode = S9Api.documentElement(source)
+    if (use_location_hints && sourceNode.isDefined) {
+      val nonsSchemaHint = Option(sourceNode.get.getAttributeValue(XProcConstants.xsi_noNamespaceSchemaLocation))
+      val schemaHint = Option(sourceNode.get.getAttributeValue(XProcConstants.xsi_schemaLocation))
+      if (nonsSchemaHint.isDefined) {
+        val uri = sourceNode.get.getBaseURI.resolve(nonsSchemaHint.get)
+        val resp = config.documentManager.parse(new DocumentRequest(uri, MediaType.XML))
+        schemaDocuments += resp.value.asInstanceOf[XdmNode]
+      }
+      if (schemaHint.isDefined) {
+        val parts = schemaHint.get.split("\\s+")
+        var idx = 1
+        while (idx < parts.length) {
+          val uri = sourceNode.get.getBaseURI.resolve(parts(idx))
+          val resp = config.documentManager.parse(new DocumentRequest(uri, MediaType.XML))
+          schemaDocuments += resp.value.asInstanceOf[XdmNode]
+          idx += 2
+        }
+      }
+    }
+
+    if (try_namespaces && sourceNode.isDefined) {
+      val ns = sourceNode.get.getNodeName.getNamespaceURI
+      if (ns != "") {
+        val resp = config.documentManager.parse(new DocumentRequest(new URI(ns), MediaType.XML))
+        schemaDocuments += resp.value.asInstanceOf[XdmNode]
+      }
+    }
+
+    for (schema <- schemaDocuments) {
+      val schemaSource = S9Api.xdmToInputSource(config.config, schema)
+      schemaSource.setSystemId(schema.getBaseURI.toASCIIString)
+      val source = new SAXSource(schemaSource)
+      manager.load(source)
     }
 
     val destination = new XdmDestination
@@ -108,7 +140,8 @@ class ValidateWithXSD() extends DefaultXmlStep {
     pipe.setRecoverFromValidationErrors(assert_valid)
     receiver.setPipelineConfiguration(pipe)
 
-    val listener = new CachingErrorListener()
+    val report = new Errors(config.config)
+    val listener = new CachingErrorListener(report)
     val validator = manager.newSchemaValidator()
     validator.setDestination(destination)
     validator.setErrorListener(listener)
@@ -119,6 +152,7 @@ class ValidateWithXSD() extends DefaultXmlStep {
       validator.validate(source.asSource())
     } catch {
       case ex: SaxonApiException =>
+        val errors = report.endErrors()
         var msg = ex.getMessage
         if (listener.exceptions.nonEmpty) {
           val lex = listener.exceptions.head
@@ -128,23 +162,30 @@ class ValidateWithXSD() extends DefaultXmlStep {
               val fail = ve.getValidationFailure
               val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, fail.getLineNumber, fail.getColumnNumber, msg, location)
               except.underlyingCauses = listener.exceptions
+              except.errors = errors
               throw except
             case _: Exception =>
               msg = lex.getMessage
               val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, msg, location)
               except.underlyingCauses = listener.exceptions
+              except.errors = errors
               throw except
           }
         } else {
           val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, msg, location)
-          except.underlyingCauses = listener.exceptions
           throw except
         }
       case ex: Exception =>
-        throw XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, ex.getMessage, location)
+        val errors = report.endErrors()
+        val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, ex.getMessage, location)
+        except.underlyingCauses = listener.exceptions
+        except.errors = errors
+        throw except
     }
 
+    val errors = report.endErrors()
     val metadata = new XProcMetadata(MediaType.XML)
     consumer.get.receive("result", destination.getXdmNode, sourceMetadata)
+    consumer.get.receive("report", errors, XProcMetadata.XML)
   }
 }

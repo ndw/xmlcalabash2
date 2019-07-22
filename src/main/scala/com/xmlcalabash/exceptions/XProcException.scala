@@ -344,6 +344,7 @@ object XProcException {
 
 class XProcException(val code: QName, val variant: Int, val message: Option[String], val location: Option[Location], val details: List[Any]) extends RuntimeException {
   private val _underlyingCauses = ListBuffer.empty[Exception]
+  private var _errors = Option.empty[XdmNode]
 
   def this(code: QName) {
     this(code, 1, None, None, List.empty[String])
@@ -368,6 +369,11 @@ class XProcException(val code: QName, val variant: Int, val message: Option[Stri
   def underlyingCauses: List[Exception] = _underlyingCauses.toList
   def underlyingCauses_=(causes: List[Exception]): Unit = {
     _underlyingCauses ++= causes
+  }
+
+  def errors: Option[XdmNode] = _errors
+  def errors_=(errors: XdmNode): Unit = {
+    _errors = Some(errors)
   }
 
   override def getMessage: String = {
