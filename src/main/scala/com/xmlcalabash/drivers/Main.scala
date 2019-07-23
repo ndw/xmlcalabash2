@@ -5,7 +5,7 @@ import java.net.URI
 import com.jafpl.exceptions.{JafplException, JafplLoopDetected}
 import com.jafpl.graph.{Binding, Node}
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
-import com.xmlcalabash.exceptions.{ModelException, ParseException, StepException, XProcException}
+import com.xmlcalabash.exceptions.{ModelException, ParseException, XProcException}
 import com.xmlcalabash.model.xml.{DeclareStep, Parser}
 import com.xmlcalabash.runtime.{PrintingConsumer, XProcMetadata}
 import com.xmlcalabash.util.{ArgBundle, URIUtils}
@@ -133,21 +133,6 @@ object Main extends App {
 
           if (options.verbose && code.isInstanceOf[QName]) {
             val explanation = config.errorExplanation.explanation(code.asInstanceOf[QName], xproc.variant)
-            if (explanation != "") {
-              println(explanation)
-            }
-          }
-        case step: StepException =>
-          val code = step.code
-          val message = if (step.message.isDefined) {
-            step.message.get
-          } else {
-            config.errorExplanation.message(code, 1)
-          }
-          println(s"ERROR $code $message")
-
-          if (options.verbose) {
-            val explanation = config.errorExplanation.explanation(code, 1)
             if (explanation != "") {
               println(explanation)
             }

@@ -2,7 +2,7 @@ package com.xmlcalabash.exceptions
 
 import java.net.URI
 
-import com.jafpl.exceptions.JafplException
+import com.jafpl.exceptions.{JafplException, JafplExceptionCode}
 import com.jafpl.graph.Location
 import com.jafpl.messages.{Message, Metadata}
 import com.xmlcalabash.model.util.XProcConstants
@@ -198,6 +198,23 @@ object XProcException {
   def xsPrimaryOutputRequired(location: Option[Location]): XProcException = staticError(108, location)
   def xsUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = staticError(111, ctype, location)
 
+  def xcGeneralException(code: QName, errors: Option[XdmNode], location: Option[Location]): XProcException = {
+    val except = new XProcException(code, 1, None, location, List())
+    if (errors.isDefined) {
+      except.errors = errors.get
+    }
+    except
+  }
+
+  def xcGeneralException(code: QName, cause: Exception, errors: Option[XdmNode], location: Option[Location]): XProcException = {
+    val except = new XProcException(code, 1, None, location, List())
+    if (errors.isDefined) {
+      except.errors = errors.get
+    }
+    except.underlyingCauses = List(cause)
+    except
+  }
+
   def xcBadRenamePI(name: QName, location: Option[Location]): XProcException = stepError(13, name, location)
   def xcInvalidSelection(pattern: String, nodeType: String, location: Option[Location]): XProcException = stepError(23, List(pattern, nodeType), location)
   def xcBadPosition(pattern: String, position: String, location: Option[Location]): XProcException = stepError(24, List(pattern, position), location)
@@ -342,7 +359,7 @@ object XProcException {
   }
 }
 
-class XProcException(val code: QName, val variant: Int, val message: Option[String], val location: Option[Location], val details: List[Any]) extends RuntimeException {
+class XProcException(val code: QName, val variant: Int, val message: Option[String], val location: Option[Location], val details: List[Any]) extends RuntimeException with JafplExceptionCode {
   private val _underlyingCauses = ListBuffer.empty[Exception]
   private var _errors = Option.empty[XdmNode]
 
@@ -365,6 +382,8 @@ class XProcException(val code: QName, val variant: Int, val message: Option[Stri
   def this(code: QName, context: StaticContext) {
     this(code, 1, None, context.location, List.empty[String])
   }
+
+  override def jafplExceptionCode: Any = code
 
   def underlyingCauses: List[Exception] = _underlyingCauses.toList
   def underlyingCauses_=(causes: List[Exception]): Unit = {

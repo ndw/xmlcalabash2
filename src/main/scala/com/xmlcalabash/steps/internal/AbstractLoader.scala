@@ -27,6 +27,10 @@ abstract class AbstractLoader() extends DefaultXmlStep {
         contextItem = Some(new XdmNodeItemMessage(node, meta, context))
       case item: XdmValue =>
         contextItem = Some(new XdmValueItemMessage(item, meta, context))
+      case item: XProcException =>
+        if (item.errors.isDefined) {
+          contextItem = Some(new XdmNodeItemMessage(item.errors.get, XProcMetadata.XML, context))
+        }
       case _ =>
         throw new RuntimeException("Recieved unexpected item")
     }

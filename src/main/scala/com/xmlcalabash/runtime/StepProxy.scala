@@ -8,13 +8,13 @@ import com.jafpl.messages.{BindingMessage, ExceptionMessage, Message, PipelineMe
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality, Step}
 import com.xmlcalabash.config.DocumentRequest
-import com.xmlcalabash.exceptions.{StepException, XProcException}
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.params.StepParams
 import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils}
 import net.sf.saxon.ma.map.MapItem
-import net.sf.saxon.s9api.{Axis, QName, SequenceType, XdmArray, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, SequenceType, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import org.apache.http.util.ByteArrayBuffer
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -261,7 +261,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     message match {
       case msg: ExceptionMessage =>
         msg.item match {
-          case ex: StepException =>
+          case ex: XProcException =>
             if (ex.errors.isDefined) {
               step.receive(port, ex.errors.get, XProcMetadata.XML)
             } else {

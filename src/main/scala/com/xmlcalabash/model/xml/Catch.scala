@@ -35,6 +35,7 @@ class Catch(override val config: XMLCalabashConfig) extends Container(config) wi
     val input = new DeclareInput(config)
     input.port = "error"
     input.sequence = true
+    input.primary = true
     addChild(input, firstChild)
 
     makeContainerStructureExplicit()

@@ -3,7 +3,7 @@ package com.xmlcalabash.testing
 import java.net.URI
 
 import com.xmlcalabash.exceptions.ExceptionCode.ExceptionCode
-import com.xmlcalabash.exceptions.{ModelException, StepException, XProcException}
+import com.xmlcalabash.exceptions.{ModelException, XProcException}
 import net.sf.saxon.s9api.QName
 
 class TestResult(pass: Boolean) {
@@ -57,8 +57,6 @@ class TestResult(pass: Boolean) {
         _errCode = Some(model.code)
       case xproc: XProcException =>
         _errQName = Some(xproc.code)
-      case step: StepException =>
-        _errQName = Some(step.code)
       case _ =>
         Unit
     }

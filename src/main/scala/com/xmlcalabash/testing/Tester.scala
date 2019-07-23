@@ -64,7 +64,6 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
     var runtime: XMLCalabashRuntime = null
     try {
       val decl = _parser.loadDeclareStep(_pipeline.get)
-      decl.xdump()
       runtime = decl.runtime()
       val result = new BufferingConsumer()
 

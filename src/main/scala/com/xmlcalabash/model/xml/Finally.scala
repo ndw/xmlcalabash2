@@ -17,6 +17,12 @@ class Finally(override val config: XMLCalabashConfig) extends Container(config) 
   }
 
   override protected[model] def makeStructureExplicit(): Unit = {
+    val input = new DeclareInput(config)
+    input.port = "error"
+    input.sequence = true
+    input.primary = true
+    addChild(input, firstChild)
+
     makeContainerStructureExplicit()
 
     for (output <- children[DeclareOutput]) {

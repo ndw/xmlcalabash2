@@ -4,7 +4,7 @@ import com.jafpl.messages.{ExceptionMessage, Message}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality}
 import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
-import com.xmlcalabash.exceptions.{StepException, XProcException}
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{AnyItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.xml.DeclareStep
 import com.xmlcalabash.util.XProcVarValue
@@ -126,7 +126,11 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
   }
 
   override def abort(): Unit = {
-    throw new RuntimeException("Don't know how to abort a StepRunner")
+    try {
+      runtime.stop()
+    } catch {
+      case _: Exception => Unit
+    }
   }
 
   override def stop(): Unit = {
@@ -142,7 +146,7 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
       message match {
         case msg: ExceptionMessage =>
           msg.item match {
-            case ex: StepException =>
+            case ex: XProcException =>
               if (ex.errors.isDefined) {
                 consumer.receive(result_port, ex.errors.get, XProcMetadata.XML)
               } else {

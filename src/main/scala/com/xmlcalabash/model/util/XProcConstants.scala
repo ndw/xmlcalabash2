@@ -127,6 +127,7 @@ object XProcConstants {
   val c_data = new QName("c", ns_c, "data")
   val c_error = new QName("c", ns_c, "error")
   val c_errors = new QName("c", ns_c, "errors")
+  val c_message = new QName("c", ns_c, "message")
   val c_param_set = new QName("c", ns_c, "param-set")
   val c_param = new QName("c", ns_c, "param")
   val c_document_properties = new QName("c", ns_c, "document-properties")

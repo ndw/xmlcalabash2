@@ -4,10 +4,10 @@ import java.net.URI
 import java.util
 
 import com.jafpl.graph.BindingParams
-import com.jafpl.messages.{Message, PipelineMessage}
+import com.jafpl.messages.{ExceptionMessage, Message, PipelineMessage}
 import com.jafpl.runtime.ExpressionEvaluator
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.exceptions.{StepException, XProcException}
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.params.XPathBindingParams
@@ -349,10 +349,19 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
                   selector.setContextItem(item)
                 }
               case _ =>
-                throw new RuntimeException(s"Impossible to set context item to ${contextItem.head}")
+                throw new RuntimeException(s"Impossible to set context item to ${msg.item}")
             }
           case msg: AnyItemMessage =>
             selector.setContextItem(proxies(msg.shadow))
+          case msg: ExceptionMessage =>
+            msg.item match {
+              case ex: XProcException =>
+                if (ex.errors.isDefined) {
+                  selector.setContextItem(ex.errors.get)
+                }
+              case _ =>
+                throw new RuntimeException(s"Impossible to set context item to ${msg.item}")
+            }
           case _ =>
             throw new RuntimeException(s"Impossible to set context item to ${contextItem.head}")
         }
@@ -396,7 +405,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         saue.getCause match {
           case xpe: XPathException =>
             val code = new QName(xpe.getErrorCodeNamespace, xpe.getErrorCodeLocalPart)
-            throw new StepException(code, xpe.getMessage, xpe, exprContext.location)
+            throw XProcException.xcGeneralException(code, xpe, None, exprContext.location)
           case _ => throw saue
         }
       case ex: Exception =>
