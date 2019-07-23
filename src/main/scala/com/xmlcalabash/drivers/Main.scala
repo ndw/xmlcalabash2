@@ -60,14 +60,7 @@ object Main extends App {
   } catch {
     case ex: Exception =>
       errored = true
-
-      if (decl.isDefined) {
-        config.debugOptions.dumpStacktrace(decl.get, ex)
-      } else {
-        if (config.debugOptions.stackTrace.isDefined) {
-          ex.printStackTrace()
-        }
-      }
+      config.debugOptions.dumpStacktrace(decl, ex)
 
       val mappedex = XProcException.mapPipelineException(ex)
 
@@ -112,8 +105,11 @@ object Main extends App {
             first = false
           }
         case jafpl: JafplException =>
-          println(jafpl)
+          config.debugOptions.dumpStacktrace(decl, ex)
+          println(jafpl.getMessage())
         case xproc: XProcException =>
+          config.debugOptions.dumpStacktrace(decl, ex)
+
           val code = xproc.code
           val message = if (xproc.message.isDefined) {
             xproc.message.get
@@ -139,6 +135,7 @@ object Main extends App {
           }
 
         case _ =>
+          config.debugOptions.dumpStacktrace(decl, ex)
           println("Caught unexpected error: " + ex)
       }
   }

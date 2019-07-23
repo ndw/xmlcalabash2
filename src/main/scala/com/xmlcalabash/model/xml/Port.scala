@@ -65,7 +65,8 @@ class Port(override val config: XMLCalabashConfig) extends Artifact(config) {
 
     if (_href.isDefined) {
       val doc = new Document(config)
-      doc.href = staticContext.baseURI.get.resolve(_href.get).toASCIIString
+      doc.staticContext = staticContext
+      doc.href = _href.get
       addChild(doc)
     }
 

@@ -98,8 +98,31 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
 
   // ===========================================================================================
 
-  def dumpStacktrace(decl: DeclareStep, exception: Exception): Unit = {
-    dump(decl, STACKTRACE, None, Some(exception))
+  def dumpStacktrace(decl: Option[DeclareStep], exception: Exception): Unit = {
+    if (decl.isDefined) {
+      dump(decl.get, STACKTRACE, None, Some(exception))
+    } else {
+      dumpStackTrace(exception)
+    }
+  }
+
+  private def dumpStackTrace(exception: Exception): Unit = {
+    val opt = STACKTRACE
+
+    if (!debugOptions.contains(opt)) {
+      return
+    }
+
+    if (stackTrace.isDefined) {
+      var basefn = stackTrace.get
+      val fn = s"$outputDirectory/$basefn.txt"
+      val fos = new FileOutputStream(new File(fn))
+      val pos = new PrintStream(fos)
+      exception.printStackTrace(pos)
+      pos.close()
+    } else {
+      exception.printStackTrace()
+    }
   }
 
   def dumpTree(decl: DeclareStep): Unit = {

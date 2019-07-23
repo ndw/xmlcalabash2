@@ -202,9 +202,11 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
                 val stderr2 = new ByteArrayOutputStream()
                 val pstrace = new PrintStream(stderr2)
 
+                /*
                 Console.withErr(pstrace) {
                   error.printStackTrace()
                 }
+                 */
 
                 junit.addText(stderr2.toString)
                 junit.addEndElement()
