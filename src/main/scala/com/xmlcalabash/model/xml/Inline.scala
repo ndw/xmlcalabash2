@@ -3,7 +3,7 @@ package com.xmlcalabash.model.xml
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.params.InlineLoaderParams
 import com.xmlcalabash.runtime.XProcVtExpression
 import com.xmlcalabash.util.xc.ElaboratedPipeline
@@ -12,11 +12,12 @@ import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
 
-class Inline(override val config: XMLCalabashConfig, val node: XdmNode, val implied: Boolean) extends DataSource(config) {
+class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val implied: Boolean) extends DataSource(config) {
   def this(config: XMLCalabashConfig, node: XdmNode) {
     this(config, node, false)
   }
 
+  private var _node: XdmNode = _
   private var _contentType = Option.empty[MediaType]
   private var _documentProperties = Option.empty[String]
   private var _encoding = Option.empty[String]
@@ -25,9 +26,27 @@ class Inline(override val config: XMLCalabashConfig, val node: XdmNode, val impl
   private val nameBindings = mutable.HashSet.empty[QName]
   private val _statics = mutable.HashMap.empty[String, Message]
 
-  if (node.getNodeKind != XdmNodeKind.DOCUMENT) {
+  if (srcNode.getNodeKind != XdmNodeKind.DOCUMENT) {
     throw new RuntimeException("inline document must be a document")
   }
+
+  // Trim the leading and trailing whitespace
+  var children = S9Api.axis(srcNode, Axis.CHILD)
+  if (children.nonEmpty && children.head.getNodeKind == XdmNodeKind.TEXT && children.head.getStringValue.trim == "") {
+    children = children.tail
+  }
+  if (children.nonEmpty && children.last.getNodeKind == XdmNodeKind.TEXT && children.last.getStringValue.trim == "") {
+    children = children.dropRight(1)
+  }
+  val tree = new SaxonTreeBuilder(config)
+  tree.startDocument(srcNode.getBaseURI)
+  for (child <- children) {
+    tree.addSubtree(child)
+  }
+  tree.endDocument()
+  _node = tree.result
+
+  def node: XdmNode = _node
 
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
@@ -61,7 +80,7 @@ class Inline(override val config: XMLCalabashConfig, val node: XdmNode, val impl
 
     // Is this sufficient? We don't want to attempt to parse AVTs in JSON!
     if (ctype.markupContentType || ctype.textContentType) {
-      findVariablesInTVT(node, true)
+      findVariablesInTVT(_node, true)
       for (ref <- nameBindings) {
         val binding = env.variable(ref)
         if (binding.isEmpty) {
@@ -87,7 +106,7 @@ class Inline(override val config: XMLCalabashConfig, val node: XdmNode, val impl
 
   override protected[model] def normalizeToPipes(): Unit = {
     val context = staticContext.withStatics(inScopeStatics)
-    val params = new InlineLoaderParams(node, _contentType, _documentProperties, _encoding, _exclude_inline_prefixes, expand_text, _context_provided, context)
+    val params = new InlineLoaderParams(_node, _contentType, _documentProperties, _encoding, _exclude_inline_prefixes, expand_text, _context_provided, context)
     normalizeDataSourceToPipes(XProcConstants.cx_inline_loader, params)
   }
 
@@ -153,7 +172,7 @@ class Inline(override val config: XMLCalabashConfig, val node: XdmNode, val impl
 
   override def xdump(xml: ElaboratedPipeline): Unit = {
     var root = Option.empty[QName]
-    val iter = node.axisIterator(Axis.CHILD)
+    val iter = _node.axisIterator(Axis.CHILD)
     while (root.isEmpty && iter.hasNext) {
       val item = iter.next()
       if (item.getNodeKind == XdmNodeKind.ELEMENT) {
@@ -169,7 +188,7 @@ class Inline(override val config: XMLCalabashConfig, val node: XdmNode, val impl
   }
 
   override def toString: String = {
-    val root = S9Api.documentElement(node)
+    val root = S9Api.documentElement(_node)
     if (root.isDefined) {
       s"p:inline <${root.get.getNodeName}> $tumble_id"
     } else {

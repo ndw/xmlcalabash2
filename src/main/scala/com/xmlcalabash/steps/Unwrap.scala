@@ -1,18 +1,18 @@
 package com.xmlcalabash.steps
 
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
-import net.sf.saxon.s9api.{QName, XdmNode}
+import net.sf.saxon.s9api.{Axis, XdmNode, XdmNodeKind}
 
-class Delete() extends DefaultXmlStep  with ProcessMatchingNodes {
-  private val _position = new QName("", "position")
+class Unwrap() extends DefaultXmlStep  with ProcessMatchingNodes {
   private var source: XdmNode = _
   private var source_metadata: XProcMetadata = _
   private var pattern: String = _
   private var matcher: ProcessMatch = _
 
-  override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCESEQ
-  override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULTSEQ
+  override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCE
+  override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULT
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     source = item.asInstanceOf[XdmNode]
@@ -27,39 +27,39 @@ class Delete() extends DefaultXmlStep  with ProcessMatchingNodes {
 
     val result = matcher.result
     consumer.get.receive("result", result, checkMetadata(result, source_metadata))
-    }
+  }
 
   override def startDocument(node: XdmNode): Boolean = {
-    false
+    throw XProcException.xcInvalidSelection(pattern, "document", location)
   }
 
   override def startElement(node: XdmNode): Boolean = {
-    false
+    true
   }
 
   override def endElement(node: XdmNode): Unit = {
-    // nop, deleted
+    // nop
   }
 
   override def endDocument(node: XdmNode): Unit = {
-    // nop, deleted
+    // nop
   }
 
   override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
 
   override def attribute(node: XdmNode): Unit = {
-    // nop, deleted
+    throw XProcException.xcInvalidSelection(pattern, "attribute", location)
   }
 
   override def text(node: XdmNode): Unit = {
-    // nop, deleted
+    throw XProcException.xcInvalidSelection(pattern, "text", location)
   }
 
   override def comment(node: XdmNode): Unit = {
-    // nop, deleted
+    throw XProcException.xcInvalidSelection(pattern, "comment", location)
   }
 
   override def pi(node: XdmNode): Unit = {
-    // nop, deleted
+    throw XProcException.xcInvalidSelection(pattern, "processing-instruction", location)
   }
 }

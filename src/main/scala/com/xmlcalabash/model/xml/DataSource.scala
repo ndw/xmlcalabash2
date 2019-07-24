@@ -7,8 +7,12 @@ import net.sf.saxon.s9api.QName
 class DataSource(override val config: XMLCalabashConfig) extends Artifact(config) {
 
   override protected[model] def validateStructure(): Unit = {
-    if (allChildren.nonEmpty) {
-      throw new RuntimeException(s"Invalid content in $this")
+    for (child <- allChildren) {
+      child match {
+        case _: Pipe => Unit
+        case _ =>
+          throw new RuntimeException(s"Invalid content in $this")
+      }
     }
   }
 

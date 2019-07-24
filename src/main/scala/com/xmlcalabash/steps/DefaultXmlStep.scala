@@ -107,6 +107,31 @@ class DefaultXmlStep extends XmlStep {
     // nop
   }
 
+  def checkMetadata(result: Any, metadata: XProcMetadata): XProcMetadata = {
+    result match {
+      case node: XdmNode =>
+        var textOnly = true
+        node.getNodeKind match {
+          case XdmNodeKind.DOCUMENT =>
+            var count = 0
+            val iter = node.axisIterator(Axis.CHILD)
+            while (iter.hasNext) {
+              val next = iter.next()
+              count += 1
+              textOnly = textOnly && next.getNodeKind == XdmNodeKind.TEXT
+            }
+            textOnly = textOnly && count == 1
+            if (textOnly) {
+              XProcMetadata.TEXT
+            } else {
+              metadata
+            }
+          case _ => metadata
+        }
+      case _ => metadata
+    }
+  }
+
   def definedBinding(name: QName): Boolean = {
     if (bindings.contains(name)) {
       val value = bindings(name).getUnderlyingValue

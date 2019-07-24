@@ -185,6 +185,12 @@
   <p:option name="charset" as="xs:string?"/>
 </p:declare-step>
 
+<p:declare-step type="p:unwrap">
+  <p:input port="source" content-types="xml html"/>
+  <p:output port="result" sequence="true" content-types="xml text/plain"/>
+  <p:option name="match" cx:as="XSLTMatchPattern" select="'/*'"/>
+</p:declare-step>
+
 <p:declare-step type="p:validate-with-relax-ng">
   <p:input port="source" primary="true" content-types="application/xml text/xml */*+xml"/>
   <p:input port="schema" content-types="application/xml */*+xml"/>
