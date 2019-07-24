@@ -6,9 +6,11 @@ import com.xmlcalabash.messages.XProcItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import net.sf.saxon.expr.{StaticContext, XPathContext}
 import net.sf.saxon.om.{Item, Sequence}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmValue}
 
 class DocumentPropertiesDocument(runtime: XMLCalabashConfig) extends FunctionImpl() {
+  private val _map = new QName("map")
+  
   def call(staticContext: StaticContext, context: XPathContext, arguments: Array[Sequence[_]]): Sequence[_] = {
     val exprEval = runtime.expressionEvaluator
     if (exprEval.dynContext.isEmpty) {
@@ -51,6 +53,9 @@ class DocumentPropertiesDocument(runtime: XMLCalabashConfig) extends FunctionImp
             }
             builder.startContent()
             builder.addText(atomic.getStringValue)
+          case map: XdmMap =>
+            builder.addAttribute(_map, "true")
+            builder.startContent()
           case value: XdmValue =>
             builder.startContent()
             builder.addValues(value)

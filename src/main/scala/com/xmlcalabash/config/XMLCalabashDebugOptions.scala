@@ -160,7 +160,12 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
     output += opt
     dumped.put(decl, output)
 
-    val name = decl.stepName
+    val name = if (decl.stepName.startsWith("!")) {
+      decl.stepName.substring(1).replace(".","_")
+    } else {
+      decl.stepName
+    }
+
     val counts = dumpCount.getOrElse(decl, mutable.HashMap.empty[String,Long])
     val count = counts.getOrElse(opt, 0L)
 

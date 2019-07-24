@@ -25,7 +25,7 @@ class Load() extends DefaultXmlStep {
     // FIXME: the key type conversions here should occur centrally based on map type.
 
     val params = mutable.HashMap.empty[QName, XdmValue]
-    if (bindings.contains(XProcConstants._parameters)) {
+    if (definedBinding(XProcConstants._parameters)) {
       val _params = bindings(XProcConstants._parameters)
       _params match {
         case map: XdmMap =>
@@ -43,7 +43,7 @@ class Load() extends DefaultXmlStep {
     }
 
     val docprops = mutable.HashMap.empty[QName, XdmValue]
-    if (bindings.contains(XProcConstants._document_properties)) {
+    if (definedBinding(XProcConstants._document_properties)) {
       val _props = bindings(XProcConstants._document_properties)
       _props match {
         case map: XdmMap =>
@@ -60,7 +60,7 @@ class Load() extends DefaultXmlStep {
       }
     }
 
-    val declContentType = if (bindings.contains(XProcConstants._content_type)) {
+    val declContentType = if (definedBinding(XProcConstants._content_type)) {
       Some(MediaType.parse(stringBinding(XProcConstants._content_type)))
     } else {
       None

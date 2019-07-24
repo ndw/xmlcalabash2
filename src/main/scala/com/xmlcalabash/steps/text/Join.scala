@@ -43,7 +43,7 @@ class Join() extends DefaultXmlStep {
     result += stringBinding(_suffix)
 
     var contentType = MediaType.TEXT
-    if (bindings.contains(XProcConstants._override_content_type)) {
+    if (definedBinding(XProcConstants._override_content_type)) {
       contentType = MediaType.parse(stringBinding(XProcConstants._override_content_type))
     }
 

@@ -30,7 +30,7 @@ class UnescapeMarkup() extends DefaultXmlStep {
   override def run(context: StaticContext): Unit = {
     super.run(context)
 
-    if (bindings.contains(XProcConstants._namespace)) {
+    if (definedBinding(XProcConstants._namespace)) {
       namespace = Some(stringBinding(XProcConstants._namespace))
     }
 

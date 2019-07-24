@@ -47,7 +47,7 @@ class Hash() extends DefaultXmlStep  with ProcessMatchingNodes {
     val value = stringBinding(_value).getBytes("UTF-8")
     val algorithm = qnameBinding(_algorithm).get
 
-    val version = if (bindings.contains(_version)) {
+    val version = if (definedBinding(_version)) {
       stringBinding(_version)
     } else {
       algorithm match {
@@ -66,7 +66,7 @@ class Hash() extends DefaultXmlStep  with ProcessMatchingNodes {
       case `_sha` =>
         hash = HashUtils.sha(value, version, location)
       case `cx_hmac` =>
-        if (bindings.contains(XProcConstants._parameters)) {
+        if (definedBinding(XProcConstants._parameters)) {
           val key = bindings(XProcConstants._parameters)
           val map = TypeUtils.castAsScala(key).asInstanceOf[Map[Any,Any]]
           if (map.contains("accessKey")) {

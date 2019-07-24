@@ -58,7 +58,7 @@ class ValidateWithRNG() extends DefaultXmlStep {
   override def run(context: StaticContext): Unit = {
     super.run(context)
 
-    if (bindings.contains(_dtd_id_idref_warnings)) {
+    if (definedBinding(_dtd_id_idref_warnings)) {
       dtd_id_idref_warnings = booleanBinding(_dtd_id_idref_warnings).getOrElse(false)
     }
 

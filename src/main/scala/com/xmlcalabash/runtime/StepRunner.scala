@@ -6,9 +6,10 @@ import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality}
 import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{AnyItemMessage, XdmValueItemMessage}
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.DeclareStep
-import com.xmlcalabash.util.XProcVarValue
-import net.sf.saxon.s9api.{QName, XdmItem, XdmValue}
+import com.xmlcalabash.util.{S9Api, XProcVarValue}
+import net.sf.saxon.s9api.{QName, XdmItem, XdmNode, XdmValue}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -106,7 +107,16 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
 
     for ((port,lb) <- inputs) {
       for ((value,metadata) <- lb) {
-        runtime.input(port, value, metadata)
+        value match {
+          case node: XdmNode =>
+            val root = S9Api.documentElement(node)
+            if (root.isDefined && root.get.getNodeName == XProcConstants.cx_use_default_input) {
+              // nop
+            } else {
+              runtime.input(port, value, metadata)
+            }
+          case _ => runtime.input(port, value, metadata)
+        }
       }
     }
 

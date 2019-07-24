@@ -107,8 +107,17 @@ class DefaultXmlStep extends XmlStep {
     // nop
   }
 
-  def optionalStringBinding(name: QName): Option[String] = {
+  def definedBinding(name: QName): Boolean = {
     if (bindings.contains(name)) {
+      val value = bindings(name).getUnderlyingValue
+      value.getLength > 0
+    } else {
+      false
+    }
+  }
+
+  def optionalStringBinding(name: QName): Option[String] = {
+    if (definedBinding(name)) {
       Some(bindings(name).getUnderlyingValue.getStringValue)
     } else {
       None
@@ -120,7 +129,7 @@ class DefaultXmlStep extends XmlStep {
   }
 
   def stringBinding(name: QName, default: String): String = {
-    if (bindings.contains(name)) {
+    if (definedBinding(name)) {
       bindings(name).getUnderlyingValue.getStringValue
     } else {
       default
@@ -128,7 +137,7 @@ class DefaultXmlStep extends XmlStep {
   }
 
   def booleanBinding(name: QName): Option[Boolean] = {
-    if (bindings.contains(name)) {
+    if (definedBinding(name)) {
       Some(bindings(name).getUnderlyingValue.getStringValue == "true")
     } else {
       None
@@ -136,7 +145,7 @@ class DefaultXmlStep extends XmlStep {
   }
 
   def integerBinding(name: QName): Option[Integer] = {
-    if (bindings.contains(name)) {
+    if (definedBinding(name)) {
       Some(bindings(name).getUnderlyingValue.getStringValue.toInt)
     } else {
       None
@@ -144,7 +153,7 @@ class DefaultXmlStep extends XmlStep {
   }
 
   def mapBinding(name: QName): XdmMap = {
-    if (bindings.contains(name)) {
+    if (definedBinding(name)) {
       val map = bindings(name)
       if (map.size > 0) {
         map.asInstanceOf[XdmMap]
@@ -159,7 +168,7 @@ class DefaultXmlStep extends XmlStep {
   def qnameBinding(name: QName): Option[QName] = {
     // This method doesn't distinguish between there was no binding for 'name' and
     // the binding for 'name' was not of type QName.
-    if (bindings.contains(name)) {
+    if (definedBinding(name)) {
       bindings(name).getUnderlyingValue match {
         case qn: QNameValue =>
           Some(new QName(qn.getPrefix, qn.getNamespaceURI, qn.getLocalName))

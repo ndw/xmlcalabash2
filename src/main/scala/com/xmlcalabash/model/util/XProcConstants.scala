@@ -146,6 +146,7 @@ object XProcConstants {
   val cx_inline_loader = new QName("cx", ns_cx, "inline-loader")
   val cx_document_loader = new QName("cx", ns_cx, "document-loader")
   val cx_empty_loader = new QName("cx", ns_cx, "empty-loader")
+  val cx_use_default_input = new QName("cx", ns_cx, "use-default-input")
 
   val _as = new QName("", "as")
   val _byte_order_mark = new QName("", "byte-order-mark")

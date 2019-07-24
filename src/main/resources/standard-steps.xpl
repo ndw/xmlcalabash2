@@ -144,7 +144,7 @@
   <p:option name="separator" required="false" as="xs:string"/>
   <p:option name="prefix" required="false" as="xs:string"/>
   <p:option name="suffix" required="false" as="xs:string"/>
-  <p:option name="override-content-type" required="false" as="xs:string"/>
+  <p:option name="override-content-type" required="false" as="xs:string?"/>
 </p:declare-step>
 
 <p:declare-step type="p:text-replace">
