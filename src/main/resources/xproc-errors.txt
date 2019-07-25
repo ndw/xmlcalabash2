@@ -105,6 +105,9 @@ When an non-XML (and non-HTML) encoding is specified for a p:inline, markup is n
 XS0001
 Pipeline contains a loop from “$2” on “$1”.
 
+XS0002
+Duplicate step name: “$1”.
+
 XS0003
 No connection provided for input port ‘$2’ on step ‘$1’.
 
@@ -149,6 +152,9 @@ No connection provided for primary input port ‘$2’ on step ‘$1’ and no d
 
 XS0036
 Cannot redefine steps; “$1” is already in scope.
+
+XS0037
+Only whitespace text nodes allowed: “$1”.
 
 XS0038
 Required attribute “$1” is missing.
@@ -294,6 +300,9 @@ Validity error in “$1”: $2
 
 XC0059
 Cannot add namespaces, “$1” is invalid.
+
+XC0060
+Unsupported UUID version: $1.
 
 XC0091
 Multiple top-level elements are not allowed in p:escape-markup.

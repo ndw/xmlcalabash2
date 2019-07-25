@@ -119,7 +119,7 @@ object XProcException {
   def xdValueNotInList(value: String, location: Option[Location]): XProcException = dynamicError(101, value, location)
 
   def xsLoop(step: String, port: String, location: Option[Location]): XProcException = staticError(1, List(step, port), location)
-  //def xsUnconnectedInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(3, List(step,port), location)
+  def xsDuplicateStepName(step: String, location: Option[Location]): XProcException = staticError(2, step, location)
   def xsUnconnectedInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(3, List(step,port), location)
   def xsDupOptionName(location: Option[Location], name: String): XProcException = staticError(4, name, location)
   def xsUnconnectedOutputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(6, List(step, port), location)
@@ -137,6 +137,7 @@ object XProcException {
   def xsUndeclaredOption(stepType: QName, optName: QName, location: Option[Location]): XProcException = staticError(31, List(stepType,optName), location)
   def xsUnconnectedPrimaryInputPort(step: String, port: String, location: Option[Location]): XProcException = staticError(32, List(step,port), location)
   def xsDupStepType(stepType: QName, location: Option[Location]): XProcException = staticError(36, stepType, location)
+  def xsTextNotAllowed(text: String, location: Option[Location]): XProcException = staticError(37, text, location)
   def xsMissingRequiredAttribute(attName: QName, location: Option[Location]): XProcException = staticError(38, attName, location)
   def xsMissingDeclaration(name: QName, location: Option[Location]): XProcException = staticError(44, name, location)
 
@@ -157,7 +158,6 @@ object XProcException {
 
   def xsBadTypeValue(value: String, reqdType: String, location: Option[Location]): XProcException = staticError(77, List(value, reqdType), location)
 
-  def xsTextNotAllowed(text: String, location: Option[Location]): XProcException = staticError((79,1), text, location)
   def xsCommentNotAllowed(comment: String, location: Option[Location]): XProcException = staticError((79,2), comment, location)
   def xsPiNotAllowed(pi: String, location: Option[Location]): XProcException = staticError((79,3), pi, location)
 
@@ -231,6 +231,7 @@ object XProcException {
   def xcNotSchemaValid(href: String, message: String, location: Option[Location]): XProcException = stepError(53, List(href, message), location)
   def xcNotSchemaValid(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = stepError(53, List(href, line, col, message), location)
   def xcCannotAddNamespaces(name: QName, location: Option[Location]): XProcException = stepError(59, name, location)
+  def xcUnsupportedUuidVersion(version: Integer, location: Option[Location]): XProcException = stepError(60, version.toString, location)
   def xcUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = stepError(70, ctype, location)
   def xcMultipleTopLevelElements(location: Option[Location]): XProcException = stepError(91, location)
   def xcAttributeNameCollision(qname: QName, location: Option[Location]): XProcException = stepError(92, qname, location)

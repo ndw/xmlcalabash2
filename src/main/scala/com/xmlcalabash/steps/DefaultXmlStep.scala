@@ -7,7 +7,7 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime._
-import com.xmlcalabash.util.S9Api
+import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.ma.map.MapItem
 import net.sf.saxon.s9api._
 import net.sf.saxon.value.QNameValue
@@ -108,7 +108,7 @@ class DefaultXmlStep extends XmlStep {
   }
 
   def checkMetadata(result: Any, metadata: XProcMetadata): XProcMetadata = {
-    result match {
+    val textOnly = result match {
       case node: XdmNode =>
         var textOnly = true
         node.getNodeKind match {
@@ -121,14 +121,25 @@ class DefaultXmlStep extends XmlStep {
               textOnly = textOnly && next.getNodeKind == XdmNodeKind.TEXT
             }
             textOnly = textOnly && count == 1
-            if (textOnly) {
-              XProcMetadata.TEXT
-            } else {
-              metadata
-            }
-          case _ => metadata
+            textOnly
+          case _ => false
         }
-      case _ => metadata
+      case _ => false
+    }
+
+    if (textOnly) {
+      val props = mutable.HashMap.empty[QName, XdmValue]
+      for ((name,value) <- metadata.properties) {
+        name match {
+          case XProcConstants._serialization => Unit
+          case XProcConstants._content_type =>
+            props.put(name, new XdmAtomicValue("text/plain"))
+          case _ => props.put(name,value)
+        }
+      }
+      new XProcMetadata(MediaType.TEXT, props.toMap)
+    } else {
+      metadata
     }
   }
 

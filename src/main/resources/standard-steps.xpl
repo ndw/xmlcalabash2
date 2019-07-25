@@ -191,6 +191,13 @@
   <p:option name="match" cx:as="XSLTMatchPattern" select="'/*'"/>
 </p:declare-step>
 
+<p:declare-step type="p:uuid">
+  <p:input port="source" primary="true" content-types="xml html"/>
+  <p:output port="result" content-types="text xml html"/>
+  <p:option name="match" as="xs:string" select="'/*'"/>
+  <p:option name="version" as="xs:integer?"/>
+</p:declare-step>
+
 <p:declare-step type="p:validate-with-relax-ng">
   <p:input port="source" primary="true" content-types="application/xml text/xml */*+xml"/>
   <p:input port="schema" content-types="application/xml */*+xml"/>

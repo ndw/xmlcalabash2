@@ -1,5 +1,7 @@
 package com.xmlcalabash.model.xml
 
+import com.sun.org.apache.xpath.internal.XPathProcessorException
+import com.xmlcalabash.exceptions.XProcException
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
@@ -291,7 +293,7 @@ class Environment private() {
 
   private def addName(name: String, step: Step): Unit = {
     if (_inScopeSteps.contains(name)) {
-      throw new RuntimeException("duplicate name in scope")
+      throw XProcException.xsDuplicateStepName(name, None)
     }
     _inScopeSteps.put(name, step)
   }

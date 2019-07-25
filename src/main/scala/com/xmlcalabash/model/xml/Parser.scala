@@ -158,7 +158,7 @@ class Parser(config: XMLCalabashConfig) {
         case XdmNodeKind.COMMENT => Unit
         case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
         case XdmNodeKind.TEXT =>
-          throw new RuntimeException("Non-ws text")
+          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new NodeLocation(child)))
         case _ =>
           throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
       }
@@ -195,7 +195,7 @@ class Parser(config: XMLCalabashConfig) {
         case XdmNodeKind.COMMENT => Unit
         case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
         case XdmNodeKind.TEXT =>
-          throw new RuntimeException("Non-ws text")
+          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new NodeLocation(child)))
         case _ =>
           throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
       }
@@ -296,7 +296,7 @@ class Parser(config: XMLCalabashConfig) {
         case XdmNodeKind.COMMENT => Unit
         case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
         case XdmNodeKind.TEXT =>
-          throw new RuntimeException("Non-ws text")
+          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new NodeLocation(child)))
         case _ =>
           throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
       }
@@ -343,7 +343,7 @@ class Parser(config: XMLCalabashConfig) {
         case XdmNodeKind.COMMENT => Unit
         case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
         case XdmNodeKind.TEXT =>
-          throw new RuntimeException("Non-ws text")
+          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new NodeLocation(child)))
         case _ =>
           throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
       }
@@ -377,7 +377,7 @@ class Parser(config: XMLCalabashConfig) {
         case XdmNodeKind.COMMENT => Unit
         case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
         case XdmNodeKind.TEXT =>
-          throw new RuntimeException("Non-ws text")
+          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new NodeLocation(child)))
         case _ =>
           throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
       }

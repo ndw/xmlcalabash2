@@ -37,7 +37,7 @@ class Document(override val config: XMLCalabashConfig) extends DataSource(config
 
     _href = attr(XProcConstants._href).get
     _hrefAvt = staticContext.parseAvt(_href)
-    _contentType = MediaType.parse(attributes.get(XProcConstants._content_type))
+    _contentType = MediaType.parse(attr(XProcConstants._content_type))
     _documentProperties = attr(XProcConstants._document_properties)
     _parameters = attr(XProcConstants._parameters)
 

@@ -7,19 +7,6 @@ import com.xmlcalabash.util.{HashUtils, TypeUtils}
 import net.sf.saxon.s9api.{QName, XdmNode}
 import net.sf.saxon.value.QNameValue
 
-/*
-<p:declare-step type="p:hash">
-  <p:input port="source" primary="true" content-types="xml html"/>
-  <p:output port="result" content-types="text xml html"/>
-  <p:option name="parameters" as="map(xs:QName,item()*)?"/>
-  <p:option name="value" required="true" as="xs:string"/>
-  <p:option name="algorithm" required="true" as="xs:QName"/>
-  <p:option name="match" as="xs:string" select="'//node()'" cx:as="XSLTSelectionPattern"/>
-  <p:option name="version" as="xs:string?"/>
-</p:declare-step>
-
- */
-
 class Hash() extends DefaultXmlStep  with ProcessMatchingNodes {
   private val _value = new QName("", "value")
   private val _algorithm = new QName("", "algorithm")
