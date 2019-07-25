@@ -102,6 +102,7 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
           if (doption.declaredType.isDefined) {
             val dtype = doption.declaredType.get
             woption.as = dtype
+            woption.qnameKeys = doption.forceQNameKeys
 
             dtype.getItemType.getUnderlyingItemType match {
               case map: MapType =>

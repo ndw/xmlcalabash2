@@ -2,6 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.util.MediaType
 
 import scala.collection.mutable.ListBuffer
 
@@ -10,6 +11,7 @@ class Port(override val config: XMLCalabashConfig) extends Artifact(config) {
   protected[xml] var _sequence = Option.empty[Boolean]
   protected[xml] var _primary = Option.empty[Boolean]
   protected[xml] var _select = Option.empty[String]
+  protected[xml] var _content_types = List.empty[MediaType]
 
   protected var _href = Option.empty[String]
   protected var _pipe = Option.empty[String]
@@ -27,6 +29,7 @@ class Port(override val config: XMLCalabashConfig) extends Artifact(config) {
     _primary = Some(primary)
   }
   def select: Option[String] = _select
+  def content_types: List[MediaType] = _content_types
 
   def step: NamedArtifact = {
     if (parent.isDefined) {

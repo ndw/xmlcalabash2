@@ -68,7 +68,7 @@ class StepSignature(val stepType: Option[QName]) {
   def optionNames: Set[QName] = _options.keySet.toSet
   def options: Set[OptionSignature] = _options.values.toSet
 
-  def input(port: String, location: Location): PortSignature = {
+  def input(port: String, location: Option[Location]): PortSignature = {
     if (_inputPorts.contains(port)) {
       _inputPorts(port)
     } else {
@@ -76,7 +76,7 @@ class StepSignature(val stepType: Option[QName]) {
     }
   }
 
-  def output(port: String, location: Location): PortSignature = {
+  def output(port: String, location: Option[Location]): PortSignature = {
     if (_outputPorts.contains(port)) {
       _outputPorts(port)
     } else {

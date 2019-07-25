@@ -1,8 +1,13 @@
 package com.xmlcalabash.config
 
+import com.xmlcalabash.util.MediaType
+
+import scala.collection.mutable.ListBuffer
+
 class PortSignature(val port: String) {
   private var _cardinality = "1"
   private var _primary = Option.empty[Boolean]
+  private val _contentTypes = ListBuffer.empty[MediaType]
 
   def this(port: String, primary: Boolean, sequence: Boolean) {
     this(port)
@@ -24,4 +29,9 @@ class PortSignature(val port: String) {
   }
   def primaryDeclared: Boolean = _primary.isDefined
 
+  def contentTypes: List[MediaType] = _contentTypes.toList
+  def contentTypes_=(types: List[MediaType]): Unit = {
+    _contentTypes.clear()
+    _contentTypes ++= types
+  }
 }

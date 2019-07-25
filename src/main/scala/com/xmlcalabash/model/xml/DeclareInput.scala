@@ -13,11 +13,9 @@ import net.sf.saxon.s9api.XdmNode
 import scala.collection.mutable.ListBuffer
 
 class DeclareInput(override val config: XMLCalabashConfig) extends Port(config) {
-  private var _content_types = List.empty[MediaType]
   private var _exclude_result_prefixes = List.empty[String]
   protected[model] var defaultInputs: ListBuffer[AtomicStep] = ListBuffer.empty[AtomicStep]
 
-  def content_types: List[MediaType] = _content_types
   def exclude_result_prefixes: List[String] = _exclude_result_prefixes
 
   override def parse(node: XdmNode): Unit = {

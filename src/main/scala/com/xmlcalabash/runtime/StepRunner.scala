@@ -24,7 +24,7 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
   private val cardMap = mutable.HashMap.empty[String,PortCardinality]
   private val typeMap = mutable.HashMap.empty[String,List[String]]
   for (port <- signature.inputPorts) {
-    val portSig = signature.input(port, decl.location.get)
+    val portSig = signature.input(port, decl.location)
     portSig.cardinality match {
       case "1" => cardMap.put(portSig.port, new PortCardinality(1,1))
       case "*" => cardMap.put(portSig.port, new PortCardinality(0))
@@ -38,7 +38,7 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
   cardMap.clear()
   typeMap.clear()
   for (port <- signature.outputPorts) {
-    val portSig = signature.output(port, decl.location.get)
+    val portSig = signature.output(port, decl.location)
     portSig.cardinality match {
       case "1" => cardMap.put(portSig.port, new PortCardinality(1,1))
       case "*" => cardMap.put(portSig.port, new PortCardinality(0))

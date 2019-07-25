@@ -189,9 +189,12 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
       mmatch = mmatch && suffix.get == mtype.suffix.get
     }
 
+    // application/xml should match */*
+    // but text/plain shouldn't match */*+xml
+
     // This special rule seems necessary but I can't really justify it
-    if (mmatch && mtype.mediaType == "*" && mtype.mediaSubtype == "*") {
-      mmatch = mmatch && (suffix.isEmpty && mtype.suffix.isEmpty || suffix.isDefined && mtype.suffix.isDefined)
+    if (mmatch && mtype.mediaType == "*" && mtype.mediaSubtype == "*" && mtype.suffix.isDefined) {
+      mmatch = mmatch && suffix.isDefined
     }
 
     mmatch

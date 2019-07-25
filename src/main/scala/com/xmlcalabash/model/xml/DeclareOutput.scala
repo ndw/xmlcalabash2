@@ -10,8 +10,6 @@ import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 class DeclareOutput(override val config: XMLCalabashConfig) extends Port(config) {
-  private var _content_types = List.empty[MediaType]
-
   def serialization: Map[QName,String] = Map.empty[QName,String]
 
   override def parse(node: XdmNode): Unit = {

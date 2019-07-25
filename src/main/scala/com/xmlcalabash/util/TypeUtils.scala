@@ -312,6 +312,7 @@ class TypeUtils(val processor: Processor, val context: StaticContext) {
       case XProcConstants.xs_unsignedShort =>      ItemType.UNSIGNED_SHORT
       case XProcConstants.xs_untypedAtomic =>      ItemType.UNTYPED_ATOMIC
       case XProcConstants.xs_yearMonthDuration =>  ItemType.YEAR_MONTH_DURATION
+      case XProcConstants.xs_anyAtomicType =>      ItemType.ANY_ATOMIC_VALUE
       case _ =>
         throw XProcException.xsInvalidSequenceType(qname.getClarkName, "Unknown type", context.location)
     }

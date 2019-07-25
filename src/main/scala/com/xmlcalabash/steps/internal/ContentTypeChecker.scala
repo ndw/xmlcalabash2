@@ -88,7 +88,7 @@ class ContentTypeChecker() extends XmlStep {
       }
 
       if (!allowed) {
-        throw XProcException.xdBadMediaType(meta.contentType, allowedTypes, location)
+        throw XProcException.xsBadInputMediaType(meta.contentType, allowedTypes, location)
       }
     }
 

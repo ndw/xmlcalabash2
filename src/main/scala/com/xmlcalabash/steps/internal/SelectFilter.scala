@@ -30,8 +30,8 @@ class SelectFilter() extends XmlStep {
   protected var allowedTypes = List.empty[MediaType]
   protected var portName: String = _
   protected var sequence = false
-  private val nodeMeta = mutable.HashMap.empty[XdmNode, XProcMetadata]
-  private val nodes = ListBuffer.empty[XdmNode]
+  private val nodeMeta = mutable.HashMap.empty[XdmValue, XProcMetadata]
+  private val nodes = ListBuffer.empty[XdmValue]
   private var _location = Option.empty[Location]
   private var select: String = _
   private var selectContext: StaticContext = _
@@ -63,7 +63,7 @@ class SelectFilter() extends XmlStep {
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     item match {
-      case node: XdmNode =>
+      case node: XdmValue =>
         nodes += node
         nodeMeta.put(node, metadata)
       case _ =>
@@ -102,7 +102,10 @@ class SelectFilter() extends XmlStep {
       val metadata = nodeMeta(node)
       val exprEval = config.expressionEvaluator.newInstance()
       val expr = new XProcXPathExpression(selectContext, select, None, None, None)
-      val msg = new XdmNodeItemMessage(node, metadata, selectContext)
+      val msg = node match {
+        case value: XdmNode => new XdmNodeItemMessage(value, metadata, selectContext)
+        case _ => new XdmValueItemMessage(node, metadata, selectContext)
+      }
       val result = exprEval.value(expr, List(msg), bindings.toMap, None)
       val xdmvalue = result.item
       val iter = xdmvalue.iterator()

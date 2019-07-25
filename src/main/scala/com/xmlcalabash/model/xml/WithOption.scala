@@ -6,9 +6,9 @@ import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime._
 import com.xmlcalabash.runtime.params.XPathBindingParams
-import com.xmlcalabash.util.TypeUtils
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmValue}
+import com.xmlcalabash.util.{S9Api, TypeUtils}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmValue}
 
 import scala.collection.mutable
 
@@ -49,10 +49,23 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
       if (bindings.isEmpty && parent.get.isInstanceOf[AtomicStep]) {
         val depends = staticContext.dependsOnContextString(_select.get)
         if (!depends) {
-          values
-          val expr = new XProcXPathExpression(staticContext, _select.get, as, allowedValues, None)
-          var msg = config.expressionEvaluator.value(expr, List(), inScopeStatics, None)
-          staticValue = new XdmValueItemMessage(msg.item, XProcMetadata.XML, staticContext)
+          val checkas = if (qnameKeys) {
+            None
+          } else {
+            as
+          }
+          val expr = new XProcXPathExpression(staticContext, _select.get, checkas, allowedValues, None)
+          val msg = config.expressionEvaluator.value(expr, List(), inScopeStatics, None)
+
+          if (qnameKeys) {
+            msg.item match {
+              case map: XdmMap =>
+                staticValue = new XdmValueItemMessage(S9Api.forceQNameKeys(map.getUnderlyingValue, staticContext), XProcMetadata.XML, staticContext)
+              case _ => throw new RuntimeException("qname map type didn't evaluate to a map")
+            }
+          } else {
+            staticValue = new XdmValueItemMessage(msg.item, XProcMetadata.XML, staticContext)
+          }
         }
       }
     } else {

@@ -58,7 +58,10 @@ XD0036
 Computed result “$1” does not match specified type “$2”.
 
 XD0038
-Content type “$1” is not an acceptable type (expected one of $2).
+Input content type “$1” is not an acceptable type (expected one of $2).
+
+XD0042
+Output content type “$1” is not an acceptable type (expected one of $2).
 
 XD0044
 Invalid second argument to p:document-property: “$1”. Argument must be a string or QName.

@@ -254,8 +254,32 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
 
   override def receive(port: String, message: Message): Unit = {
     received.put(port, received.getOrElse(port, 1))
-
     inputSpec.checkInputCardinality(port, received(port))
+
+    val mtypes = step.signature.input(port, staticContext.location).contentTypes
+    if (mtypes.nonEmpty) {
+      val ctype = message match {
+        case msg: XdmNodeItemMessage => Some(msg.metadata.contentType)
+        case msg: XdmValueItemMessage => Some(msg.metadata.contentType)
+        case msg: AnyItemMessage => Some(msg.metadata.contentType)
+        case msg: PipelineMessage =>
+          msg.metadata match {
+            case meta: XProcMetadata => Some(meta.contentType)
+            case _ => None
+          }
+        case _ => None
+      }
+
+      if (ctype.isDefined) {
+        var ok = false
+        for (mtype <- mtypes) {
+          ok = ok || ctype.get.matches(mtype)
+        }
+        if (!ok) {
+          throw XProcException.xsBadInputMediaType(ctype.get, mtypes, staticContext.location)
+        }
+      }
+    }
 
     // Get exceptions out of the way
     message match {
@@ -274,43 +298,51 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
       case _ => Unit
     }
 
-    if (false /*defaultSelect.contains(port)*/) {
-      //evalSelect(port, defaultSelect(port), Some(message))
-    } else {
-      message match {
-        case msg: XdmNodeItemMessage =>
-          dynamicContext.addDocument(msg.item, msg)
-          step.receive(port, msg.item, msg.metadata)
-        case msg: XdmValueItemMessage =>
-          step.receive(port, msg.item, msg.metadata)
-        case msg: AnyItemMessage =>
-          step.receive(port, msg.shadow, msg.metadata)
-        case msg: PipelineMessage =>
-          // Attempt to convert this...
-          msg.item match {
-            case node: XdmNode =>
-              if (node.getNodeKind == XdmNodeKind.DOCUMENT) {
-                step.receive(port, node, msg.metadata.asInstanceOf[XProcMetadata])
-              } else {
-                // Messages have to be documents...
-                val builder = new SaxonTreeBuilder(config)
-                builder.startDocument(node.getBaseURI)
-                builder.addSubtree(node)
-                builder.endDocument()
-                step.receive(port, builder.result, msg.metadata.asInstanceOf[XProcMetadata])
-              }
-            case item: XdmItem =>
-              step.receive(port, item, msg.metadata.asInstanceOf[XProcMetadata])
-            case _ =>
-              throw XProcException.xiInvalidMessage(staticContext.location, message)
+    message match {
+      case msg: XdmNodeItemMessage =>
+        dynamicContext.addDocument(msg.item, msg)
+        step.receive(port, msg.item, msg.metadata)
+      case msg: XdmValueItemMessage =>
+        step.receive(port, msg.item, msg.metadata)
+      case msg: AnyItemMessage =>
+        step.receive(port, msg.shadow, msg.metadata)
+      case msg: PipelineMessage =>
+        // Attempt to convert this...
+        msg.item match {
+          case node: XdmNode =>
+            if (node.getNodeKind == XdmNodeKind.DOCUMENT) {
+              step.receive(port, node, msg.metadata.asInstanceOf[XProcMetadata])
+            } else {
+              // Messages have to be documents...
+              val builder = new SaxonTreeBuilder(config)
+              builder.startDocument(node.getBaseURI)
+              builder.addSubtree(node)
+              builder.endDocument()
+              step.receive(port, builder.result, msg.metadata.asInstanceOf[XProcMetadata])
+            }
+          case item: XdmItem =>
+            step.receive(port, item, msg.metadata.asInstanceOf[XProcMetadata])
+          case _ =>
+            throw XProcException.xiInvalidMessage(staticContext.location, message)
         }
-        case _ =>
-          throw XProcException.xiInvalidMessage(staticContext.location, message)
-      }
+      case _ =>
+        throw XProcException.xiInvalidMessage(staticContext.location, message)
     }
   }
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
+    // Is the content type ok?
+    val mtypes = step.signature.output(port, staticContext.location).contentTypes
+    if (mtypes.nonEmpty) {
+      var ok = false
+      for (mtype <- mtypes) {
+        ok = ok || metadata.contentType.matches(mtype)
+      }
+      if (!ok) {
+        throw XProcException.xsBadOutputMediaType(metadata.contentType, mtypes, staticContext.location)
+      }
+    }
+
     // Let's try to validate and normalize what just got sent out of the step.
     // If it claims to be XML, HTML, JSON, or text, we need to get it into an XDM.
 

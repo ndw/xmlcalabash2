@@ -205,9 +205,11 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
       child match {
         case input: DeclareInput =>
           val portSig = new PortSignature(input.port, input.primary, input.sequence)
+          portSig.contentTypes = input.content_types
           stepSig.addInput(portSig, input.location.get)
         case output: DeclareOutput =>
           val portSig = new PortSignature(output.port, output.primary, output.sequence)
+          portSig.contentTypes = output.content_types
           stepSig.addOutput(portSig, output.location.get)
         case option: DeclareOption =>
           val optSig = new OptionSignature(option.name, option.declaredType, option.required)

@@ -116,6 +116,20 @@
    <p:option name="new-name" required="true" as="xs:QName"/>
 </p:declare-step>
 
+<p:declare-step type="p:set-attributes">
+  <p:input port="source" primary="true" content-types="xml html"/>
+  <p:output port="result" content-types="xml html"/>
+  <p:option name="match" as="xs:string" select="'/*'"/>
+  <p:option name="attributes" required="true" as="map(xs:QName, xs:anyAtomicType)"/>
+</p:declare-step>
+
+<p:declare-step type="p:set-properties">
+  <p:input port="source" content-types="any"/>
+  <p:output port="result" content-types="any"/>
+  <p:option name="properties" required="true" as="map(xs:QName,item()*)"/>
+  <p:option name="merge" select="false()" as="xs:boolean"/>
+</p:declare-step>
+
 <p:declare-step type="p:sink">
   <p:input port="source" content-types="any" sequence="true"/>
 </p:declare-step>

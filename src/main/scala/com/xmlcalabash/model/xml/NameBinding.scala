@@ -16,7 +16,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class NameBinding(override val config: XMLCalabashConfig) extends Artifact(config) {
-  protected var _name = new QName("UNINITIALIZED")
+  protected var _name: QName = _
   protected var _declaredType = Option.empty[SequenceType]
   protected var _as = Option.empty[SequenceType]
   protected var _values = Option.empty[String]
@@ -28,9 +28,9 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   protected var _allowedValues = Option.empty[List[XdmAtomicValue]]
   protected var _staticValue = Option.empty[XdmValueItemMessage]
   protected var collection = false
-  private var resolvedStatically = false
 
   private var _qnameKeys = false
+  private var resolvedStatically = false
   private val structuredQName = new StructuredQName("xs", XProcConstants.ns_xs, "QName")
 
   protected var _href = Option.empty[String]
@@ -70,6 +70,9 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   def visibility: String = _visibility.getOrElse("public")
   def allowedValues: Option[List[XdmAtomicValue]] = _allowedValues
   def qnameKeys: Boolean = _qnameKeys
+  protected[xml] def qnameKeys_=(keys: Boolean): Unit = {
+    _qnameKeys = keys
+  }
 
   protected[xmlcalabash] def staticValue: Option[XdmValueItemMessage] = _staticValue
   protected[model] def staticValue_=(value: XdmValueItemMessage): Unit = {
@@ -119,6 +122,9 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   }
 
   override protected[model] def makeStructureExplicit(): Unit = {
+    val astep = parent.get
+
+
     if (_href.isDefined && _pipe.isDefined) {
       throw XProcException.xsPipeAndHref(location)
     }
