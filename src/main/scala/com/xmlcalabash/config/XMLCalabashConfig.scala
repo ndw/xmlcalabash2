@@ -78,7 +78,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
   private var _trim_inline_whitespace = false
   private var _watchdogTimeout = 1000L
   private var _staticBaseURI = URIUtils.cwdAsURI
-  private var _language = defaultLocale
+  private var _locale = defaultLocale
   private var _episode = computeEpisode
   private var _builtinSteps = Option.empty[Library]
   private var _defaultSerializationOptions = Map.empty[String,Map[QName,String]]
@@ -264,11 +264,11 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
     _watchdogTimeout = timeout
   }
 
-  def language: String = _language
-  def language_=(language: String): Unit = {
+  def locale: String = _locale
+  def locale_=(language: String): Unit = {
     checkClosed()
     // FIXME: Check for valid format
-    _language = language
+    _locale = language
   }
 
   def defaultSerializationOptions: Map[String,Map[QName,String]] = _defaultSerializationOptions

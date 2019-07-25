@@ -15,7 +15,11 @@ class SystemProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
     }
 
     val lexicalQName = arguments(0).head().asInstanceOf[Item[_]].getStringValue
-    val propertyName = StructuredQName.fromLexicalQName(lexicalQName, false, false, staticContext.getNamespaceResolver)
+    val propertyName = if (lexicalQName.trim.startsWith("Q{")) {
+      StructuredQName.fromClarkName(lexicalQName)
+    } else {
+      StructuredQName.fromLexicalQName(lexicalQName, false, false, staticContext.getNamespaceResolver)
+    }
 
     val uri = propertyName.getURI
     val local = propertyName.getLocalPart
@@ -26,8 +30,8 @@ class SystemProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
         local match {
           case "episode" =>
             value = runtime.episode
-          case "language" =>
-            value = runtime.language
+          case "locale" =>
+            value = runtime.locale
           case "product-name" =>
             value = runtime.productName
           case "product-version" =>
