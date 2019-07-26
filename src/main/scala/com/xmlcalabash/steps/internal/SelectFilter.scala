@@ -6,10 +6,10 @@ import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.BindingSpecification
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
+import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.runtime.params.SelectFilterParams
-import com.xmlcalabash.runtime.{ImplParams, StaticContext, XMLCalabashRuntime, XProcDataConsumer, XProcMetadata, XProcXPathExpression, XmlPortSpecification, XmlStep}
+import com.xmlcalabash.runtime.{BinaryNode, ImplParams, StaticContext, XMLCalabashRuntime, XProcDataConsumer, XProcMetadata, XProcXPathExpression, XmlPortSpecification, XmlStep}
 import com.xmlcalabash.util.{MediaType, XProcVarValue}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
@@ -30,8 +30,8 @@ class SelectFilter() extends XmlStep {
   protected var allowedTypes = List.empty[MediaType]
   protected var portName: String = _
   protected var sequence = false
-  private val nodeMeta = mutable.HashMap.empty[XdmValue, XProcMetadata]
-  private val nodes = ListBuffer.empty[XdmValue]
+  private val nodeMeta = mutable.HashMap.empty[Any, XProcMetadata]
+  private val nodes = ListBuffer.empty[Any]
   private var _location = Option.empty[Location]
   private var select: String = _
   private var selectContext: StaticContext = _
@@ -62,6 +62,9 @@ class SelectFilter() extends XmlStep {
   }
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
+    nodes += item
+    nodeMeta.put(item,metadata)
+    /*
     item match {
       case node: XdmValue =>
         nodes += node
@@ -69,6 +72,8 @@ class SelectFilter() extends XmlStep {
       case _ =>
         throw new RuntimeException("Cannot filter non-XML inputs")
     }
+
+     */
   }
 
   override def configure(config: XMLCalabashConfig, params: Option[ImplParams]): Unit = {
@@ -104,7 +109,13 @@ class SelectFilter() extends XmlStep {
       val expr = new XProcXPathExpression(selectContext, select, None, None, None)
       val msg = node match {
         case value: XdmNode => new XdmNodeItemMessage(value, metadata, selectContext)
-        case _ => new XdmValueItemMessage(node, metadata, selectContext)
+        case value: XdmValue => new XdmValueItemMessage(value, metadata, selectContext)
+        case value: BinaryNode =>
+          val tree = new SaxonTreeBuilder(config)
+          tree.startDocument(metadata.baseURI)
+          tree.endDocument()
+          new AnyItemMessage(tree.result, value, metadata, selectContext)
+        case _ => throw new RuntimeException("fred")
       }
       val result = exprEval.value(expr, List(msg), bindings.toMap, None)
       val xdmvalue = result.item

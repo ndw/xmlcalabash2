@@ -200,6 +200,19 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
     mmatch
   }
 
+  def allowed(types: List[MediaType]): Boolean = {
+    // This media type is allowed if it's allowed by at least one member of types
+    // and is not forbidden by the last member
+    var allowed = false
+    for (ctype <- types) {
+      if (matches(ctype)) {
+        allowed = ctype.inclusive
+      }
+    }
+
+    allowed
+  }
+
   def charset: Option[String] = {
     if (param.isDefined) {
       for (param <- param.get) {

@@ -1,5 +1,6 @@
 package com.xmlcalabash.steps
 
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
@@ -10,7 +11,7 @@ import scala.collection.mutable
 class SetProperties() extends DefaultXmlStep {
   private val _merge = new QName("merge")
 
-  private var source: XdmValue = _
+  private var source: Any = _
   private var metadata: XProcMetadata = _
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.XMLSOURCE
@@ -18,7 +19,7 @@ class SetProperties() extends DefaultXmlStep {
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     if (port == "source") {
-      source = item.asInstanceOf[XdmValue]
+      source = item
       this.metadata = metadata
     } else {
       throw new IllegalArgumentException(s"p:set-properties received input on port: $port")
@@ -38,6 +39,9 @@ class SetProperties() extends DefaultXmlStep {
 
     for ((name,value) <- properties.asMap.asScala) {
       val qname = name.getQNameValue
+      if (qname == XProcConstants._content_type) {
+        throw XProcException.xcContentTypeNotAllowed(context.location)
+      }
       newprops.put(qname, value)
     }
 

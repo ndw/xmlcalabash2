@@ -12,7 +12,7 @@ import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants
 import com.xmlcalabash.runtime.params.InlineLoaderParams
 import com.xmlcalabash.runtime.{BinaryNode, ImplParams, StaticContext, XProcMetadata, XProcVtExpression, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api}
-import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -96,7 +96,7 @@ class InlineLoader() extends AbstractLoader {
       }
     }
 
-    val props = mutable.HashMap.empty[QName, XdmItem]
+    val props = mutable.HashMap.empty[QName, XdmValue]
     props ++= docProps
     if (!props.contains(XProcConstants._base_uri)) {
       props.put(XProcConstants._base_uri, new XdmAtomicValue(node.getBaseURI))
@@ -150,8 +150,14 @@ class InlineLoader() extends AbstractLoader {
       val stream = new ByteArrayInputStream(baos.toByteArray)
 
       val request = new DocumentRequest(node.getBaseURI, contentType, exprContext.location)
+      request.baseURI = node.getBaseURI
       val response = config.documentManager.parse(request, stream)
-      val metadata = new XProcMetadata(response.contentType, response.props)
+
+      for ((name,value) <- response.props) {
+        props.put(name,value)
+      }
+
+      val metadata = new XProcMetadata(response.contentType, props.toMap)
 
       response.value match {
         case node: XdmNode =>
@@ -201,12 +207,21 @@ class InlineLoader() extends AbstractLoader {
         val result = builder.result
         consumer.get.receive("result", result, new XProcMetadata(contentType, props.toMap))
       } else {
-        throw new IllegalArgumentException(s"Unexected content type: $contentType")
+        // FIXME: what's the right answer for unexpected content types?
+        props.put(XProcConstants._content_length, new XdmAtomicValue(text.length))
+
+        val builder = new SaxonTreeBuilder(config)
+        builder.startDocument(node.getBaseURI)
+        builder.startContent()
+        builder.addText(text)
+        builder.endDocument()
+        val result = builder.result
+        consumer.get.receive("result", result, new XProcMetadata(contentType, props.toMap))
       }
     }
   }
 
-  private def dealWithEncodedText(contentType: MediaType, props: mutable.HashMap[QName, XdmItem]): Unit = {
+  private def dealWithEncodedText(contentType: MediaType, props: mutable.HashMap[QName, XdmValue]): Unit = {
     var str = node.getStringValue
     val decoded = Base64.getMimeDecoder.decode(str)
 

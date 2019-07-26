@@ -39,7 +39,7 @@ class Uuid() extends DefaultXmlStep  with ProcessMatchingNodes {
   }
 
   override def startDocument(node: XdmNode): Boolean = {
-    throw XProcException.xcInvalidSelection(pattern, "document", location)
+    matcher.addText(uuid)
     false
   }
 

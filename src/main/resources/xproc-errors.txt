@@ -307,6 +307,9 @@ Cannot add namespaces, “$1” is invalid.
 XC0060
 Unsupported UUID version: $1.
 
+XC0069
+The ‘content-type’ property cannot be set with p:set-properties.
+
 XC0091
 Multiple top-level elements are not allowed in p:escape-markup.
 

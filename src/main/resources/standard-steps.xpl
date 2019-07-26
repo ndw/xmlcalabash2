@@ -154,7 +154,7 @@
 
 <p:declare-step type="p:text-join">
   <p:input port="source" sequence="true" content-types="text"/>
-  <p:output port="result" sequence="false" content-types="text/plain"/>
+  <p:output port="result" sequence="false" content-types="text"/>
   <p:option name="separator" required="false" as="xs:string"/>
   <p:option name="prefix" required="false" as="xs:string"/>
   <p:option name="suffix" required="false" as="xs:string"/>

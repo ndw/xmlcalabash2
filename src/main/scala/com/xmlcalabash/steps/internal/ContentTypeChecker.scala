@@ -82,11 +82,7 @@ class ContentTypeChecker() extends XmlStep {
 
   override def receive(port: String, item: Any, meta: XProcMetadata): Unit = {
     if (allowedTypes.nonEmpty) {
-      var allowed = false
-      for (ctype <- allowedTypes) {
-        allowed = allowed || meta.contentType.matches(ctype)
-      }
-
+      val allowed = meta.contentType.allowed(allowedTypes)
       if (!allowed) {
         throw XProcException.xsBadInputMediaType(meta.contentType, allowedTypes, location)
       }

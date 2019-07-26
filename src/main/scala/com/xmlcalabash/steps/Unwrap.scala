@@ -30,7 +30,7 @@ class Unwrap() extends DefaultXmlStep  with ProcessMatchingNodes {
   }
 
   override def startDocument(node: XdmNode): Boolean = {
-    throw XProcException.xcInvalidSelection(pattern, "document", location)
+    true
   }
 
   override def startElement(node: XdmNode): Boolean = {
@@ -42,7 +42,7 @@ class Unwrap() extends DefaultXmlStep  with ProcessMatchingNodes {
   }
 
   override def endDocument(node: XdmNode): Unit = {
-    // nop
+    matcher.endDocument()
   }
 
   override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true

@@ -270,14 +270,8 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
         case _ => None
       }
 
-      if (ctype.isDefined) {
-        var ok = false
-        for (mtype <- mtypes) {
-          ok = ok || ctype.get.matches(mtype)
-        }
-        if (!ok) {
-          throw XProcException.xsBadInputMediaType(ctype.get, mtypes, staticContext.location)
-        }
+      if (ctype.isDefined && !ctype.get.allowed(mtypes)) {
+        throw XProcException.xsBadInputMediaType(ctype.get, mtypes, staticContext.location)
       }
     }
 
@@ -303,6 +297,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
         dynamicContext.addDocument(msg.item, msg)
         step.receive(port, msg.item, msg.metadata)
       case msg: XdmValueItemMessage =>
+        dynamicContext.addDocument(msg.item, msg)
         step.receive(port, msg.item, msg.metadata)
       case msg: AnyItemMessage =>
         step.receive(port, msg.shadow, msg.metadata)
@@ -334,11 +329,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     // Is the content type ok?
     val mtypes = step.signature.output(port, staticContext.location).contentTypes
     if (mtypes.nonEmpty) {
-      var ok = false
-      for (mtype <- mtypes) {
-        ok = ok || metadata.contentType.matches(mtype)
-      }
-      if (!ok) {
+      if (!metadata.contentType.allowed(mtypes)) {
         throw XProcException.xsBadOutputMediaType(metadata.contentType, mtypes, staticContext.location)
       }
     }
@@ -500,6 +491,12 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
         makeBinaryMessage(new ByteArrayInputStream(value), metadata)
       case value: InputStream =>
         val binary = new BinaryNode(config, value)
+        new AnyItemMessage(tree.result, binary, metadata, staticContext)
+      case value: XdmNode =>
+        val binary = new BinaryNode(config, value.getStringValue.getBytes("UTF-8"))
+        new AnyItemMessage(tree.result, binary, metadata, staticContext)
+      case value: XdmValue =>
+        val binary = new BinaryNode(config, value.getUnderlyingValue.getStringValue.getBytes("UTF-8"))
         new AnyItemMessage(tree.result, binary, metadata, staticContext)
       case _ =>
         throw XProcException.xiNotBinary(None)

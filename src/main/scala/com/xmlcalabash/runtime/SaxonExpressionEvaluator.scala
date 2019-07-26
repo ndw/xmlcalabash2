@@ -529,9 +529,16 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
     }
   }
 
-  class ExprNodeResource(node: XdmNode) extends Resource {
-    override def getResourceURI: String = node.getBaseURI.toASCIIString
-    override def getItem(context: XPathContext): Item[_ <: Item[_]] = node.getUnderlyingNode.head
+  class ExprNodeResource(uri: String, item: Item[_]) extends Resource {
+    def this(node: XdmNode) {
+      this(node.getBaseURI.toASCIIString, node.getUnderlyingNode)
+    }
+    def this(value: XdmValue) {
+      this(null, value.getUnderlyingValue.head)
+    }
+
+    override def getResourceURI: String = uri
+    override def getItem(context: XPathContext): Item[_] = item
     override def getContentType: String = null
   }
 }

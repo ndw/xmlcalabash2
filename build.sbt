@@ -11,6 +11,7 @@ homepage     := Some(url("https://xmlcalabash.com/"))
 version      := xmlCalabashVersion
 scalaVersion := "2.12.6"
 
+buildInfoUsePackageAsPath := true
 buildInfoKeys ++= Seq[BuildInfoKey](
   "jafplVersion" -> jafplVersion,
   BuildInfoKey.action("buildTime") {

@@ -72,9 +72,12 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
   }
 
   override def parse(request: DocumentRequest, stream: InputStream): DocumentResponse = {
-    loadStream(request, request.contentType.getOrElse(MediaType.OCTET_STREAM), stream, Map.empty[QName,XdmValue])
+    val initProps = mutable.HashMap.empty[QName,XdmValue]
+    if (request.baseURI.isDefined) {
+      initProps.put(XProcConstants._base_uri, new XdmAtomicValue(request.baseURI.get))
+    }
+    loadStream(request, request.contentType.getOrElse(MediaType.OCTET_STREAM), stream, initProps.toMap)
   }
-
 
   private def load(href: URI, request: DocumentRequest): DocumentResponse = {
     href.getScheme match {

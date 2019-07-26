@@ -98,6 +98,8 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
         if (results.isEmpty) {
           new TestResult(true)
         } else {
+          println(resultDoc)
+          println(results)
           if (fail == "") {
             new TestResult(false, "SCHEMATRON")
           } else {

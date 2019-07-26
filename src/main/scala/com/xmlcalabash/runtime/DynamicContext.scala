@@ -4,8 +4,8 @@ import java.net.URI
 
 import com.jafpl.graph.Location
 import com.jafpl.messages.Message
-import net.sf.saxon.om.Item
-import net.sf.saxon.s9api.{QName, XdmNode}
+import net.sf.saxon.om.{GroundedValue, Item}
+import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 import net.sf.saxon.value.StringValue
 
 import scala.collection.mutable
@@ -20,9 +20,9 @@ object DynamicContext {
 class DynamicContext {
   private var _iterationPosition = Option.empty[Long]
   private var _iterationSize = Option.empty[Long]
-  private val _documents = mutable.HashMap.empty[Item[_ <: Item[_]],Message]
-  private val _imessages = mutable.HashMap.empty[Message,Item[_ <: Item[_]]]
-  private val _messages = mutable.HashMap.empty[Message,XdmNode]
+  private val _documents = mutable.HashMap.empty[Any,Message]
+  private val _imessages = mutable.HashMap.empty[Message,Any]
+  private val _messages = mutable.HashMap.empty[Message,XdmValue]
   private var _location = Option.empty[Location]
   private var _baseURI = Option.empty[URI]
   private var _injElapsed = Option.empty[Double]
@@ -37,7 +37,7 @@ class DynamicContext {
     _documents.get(document)
   }
 
-  def document(message: Message): Option[XdmNode] = {
+  def document(message: Message): Option[XdmValue] = {
     _messages.get(message)
   }
 
@@ -66,33 +66,21 @@ class DynamicContext {
     _injType = Some(stype)
   }
 
-  def addDocument(doc: XdmNode, msg: Message): Unit = {
-    _documents.put(doc.getUnderlyingNode, msg)
+  def addDocument(doc: XdmValue, msg: Message): Unit = {
     _messages.put(msg, doc)
-    _imessages.put(msg, doc.getUnderlyingNode)
+
+    doc match {
+      case node: XdmNode =>
+        _documents.put(node.getUnderlyingValue, msg)
+        _imessages.put(msg, node.getUnderlyingValue)
+      case _ =>
+        _documents.put(doc, msg)
+        _imessages.put(msg, doc)
+    }
   }
 
   def addItem(item: Item[_ <: Item[_]], msg: Message): Unit = {
-    item match {
-      case s: StringValue =>
-        _documents.put(new FakeStringValue(s), msg)
-      case _ =>
-        _documents.put(item, msg)
-    }
-
+    _documents.put(item, msg)
     _imessages.put(msg, item)
-  }
-
-  // WTF? Saxon's StringValue class throws an exception if you call .equals() on it.
-  // So this is a wrapper that doesn't do that.
-  private class FakeStringValue(str: StringValue) extends StringValue {
-    override def equals(other: Any): Boolean = {
-      other match {
-        case s: StringValue =>
-          str.toString == s.toString
-        case _ =>
-          false
-      }
-    }
   }
 }
