@@ -4,7 +4,6 @@ import java.net.{URI, URLConnection}
 
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.params.DocumentLoaderParams
 import com.xmlcalabash.runtime.{BinaryNode, ImplParams, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
@@ -92,10 +91,9 @@ class DocumentLoader() extends AbstractLoader {
 
     // Using the filename sort of sucks, but it's what the OSes do at this point so...sigh
     // You can extend the set of known extensions by pointing the system property
-    // `content.types.user.table` at your own mime types file. The default file to
-    // start with is in $JAVA_HOME/lib/content-types.properties
-    val map = URLConnection.getFileNameMap
-    var contentTypeString = Option(URLConnection.guessContentTypeFromName(href.toASCIIString)).getOrElse("application/xml")
+    // `content.types.user.table` at your own mime types file. See
+    // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=JDK-8039362
+    val contentTypeString = Option(URLConnection.guessContentTypeFromName(href.toASCIIString)).getOrElse("application/xml")
 
     val propContentType = if (docProps.contains(XProcConstants._content_type)) {
       Some(MediaType.parse(docProps.get(XProcConstants._content_type).toString))

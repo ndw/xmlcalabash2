@@ -8,7 +8,7 @@ import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
 import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.params.{StepParams, XPathBindingParams}
-import com.xmlcalabash.runtime.{NodeLocation, StaticContext, XMLCalabashRuntime}
+import com.xmlcalabash.runtime.{XProcLocation, StaticContext, XMLCalabashRuntime}
 import com.xmlcalabash.util.S9Api
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind, XdmValue}
@@ -226,7 +226,7 @@ class Artifact(val config: XMLCalabashConfig) {
     _synthetic = false
     _tumbleId = tumbleId(node)
     _staticContext.baseURI = node.getBaseURI
-    _staticContext.location = new NodeLocation(node)
+    _staticContext.location = new XProcLocation(node)
 
     // Parse attributes
     val aiter = node.axisIterator(Axis.ATTRIBUTE)

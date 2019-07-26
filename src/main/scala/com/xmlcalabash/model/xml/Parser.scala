@@ -5,7 +5,7 @@ import java.net.URI
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.NodeLocation
+import com.xmlcalabash.runtime.XProcLocation
 import com.xmlcalabash.util.{MediaType, S9Api}
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
@@ -158,7 +158,7 @@ class Parser(config: XMLCalabashConfig) {
         case XdmNodeKind.COMMENT => Unit
         case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
         case XdmNodeKind.TEXT =>
-          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new NodeLocation(child)))
+          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
         case _ =>
           throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
       }
@@ -195,7 +195,7 @@ class Parser(config: XMLCalabashConfig) {
         case XdmNodeKind.COMMENT => Unit
         case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
         case XdmNodeKind.TEXT =>
-          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new NodeLocation(child)))
+          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
         case _ =>
           throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
       }
@@ -272,7 +272,7 @@ class Parser(config: XMLCalabashConfig) {
 
     for (child <- children(node)) {
       if (forbidden.nonEmpty && forbidden.contains(child.getNodeName)) {
-        throw XProcException.xsElementNotAllowed(child.getNodeName, Some(new NodeLocation(child)))
+        throw XProcException.xsElementNotAllowed(child.getNodeName, Some(new XProcLocation(child)))
       }
 
       child.getNodeKind match {
@@ -296,7 +296,7 @@ class Parser(config: XMLCalabashConfig) {
         case XdmNodeKind.COMMENT => Unit
         case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
         case XdmNodeKind.TEXT =>
-          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new NodeLocation(child)))
+          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
         case _ =>
           throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
       }
@@ -343,7 +343,7 @@ class Parser(config: XMLCalabashConfig) {
         case XdmNodeKind.COMMENT => Unit
         case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
         case XdmNodeKind.TEXT =>
-          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new NodeLocation(child)))
+          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
         case _ =>
           throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
       }
@@ -377,7 +377,7 @@ class Parser(config: XMLCalabashConfig) {
         case XdmNodeKind.COMMENT => Unit
         case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
         case XdmNodeKind.TEXT =>
-          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new NodeLocation(child)))
+          throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
         case _ =>
           throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")
       }

@@ -11,7 +11,7 @@ import com.xmlcalabash.exceptions.TestException
 import com.xmlcalabash.messages.XdmNodeItemMessage
 import com.xmlcalabash.model.xml.XMLContext
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
-import com.xmlcalabash.runtime.{NodeLocation, SaxonExpressionEvaluator, StaticContext, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.runtime.{XProcLocation, SaxonExpressionEvaluator, StaticContext, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.{MediaType, S9Api, URIUtils}
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind, XdmValue}
@@ -666,7 +666,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
 
               val scontext = new XMLContext(runtimeConfig)
               scontext.nsBindings = ns.toMap
-              scontext.location = new NodeLocation(node)
+              scontext.location = new XProcLocation(node)
               val qcode = ValueParser.parseQName(ecode, scontext)
               if (result.errQName.isDefined) {
                 passed = passed || qcode == result.errQName.get
@@ -715,7 +715,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
 
     val src = node.getAttributeValue(_src)
     if ((src == null) && children.isEmpty) {
-      val scontext = new XMLContext(runtimeConfig, Some(node.getBaseURI), S9Api.inScopeNamespaces(node), Some(new NodeLocation(node)))
+      val scontext = new XMLContext(runtimeConfig, Some(node.getBaseURI), S9Api.inScopeNamespaces(node), Some(new XProcLocation(node)))
       val value = node.getAttributeValue(_select)
       val eval = runtimeConfig.expressionEvaluator
       val contextItem = inlineDocument(node)

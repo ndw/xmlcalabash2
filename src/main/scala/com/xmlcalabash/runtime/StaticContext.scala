@@ -33,7 +33,7 @@ class StaticContext(val config: XMLCalabashConfig) {
     this(config)
     _baseURI = Option(node.getBaseURI)
     _inScopeNS = S9Api.inScopeNamespaces(node)
-    _location = Some(new NodeLocation(node))
+    _location = Some(new XProcLocation(node))
   }
 
   def baseURI: Option[URI] = _baseURI

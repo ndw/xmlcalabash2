@@ -2,6 +2,7 @@ package com.xmlcalabash.steps
 
 import java.io.{IOException, StringReader}
 
+import com.jafpl.graph.Location
 import com.jafpl.steps.PortCardinality
 import com.thaiopensource.util.PropertyMapBuilder
 import com.thaiopensource.validate.auto.AutoSchemaReader
@@ -9,9 +10,9 @@ import com.thaiopensource.validate.prop.rng.RngProperty
 import com.thaiopensource.validate.rng.CompactSchemaReader
 import com.thaiopensource.validate.{SchemaReader, ValidateProperty, ValidationDriver}
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{XProcLocation, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.xc.Errors
-import com.xmlcalabash.util.{CachingErrorListener, S9Api}
+import com.xmlcalabash.util.{CachingErrorListener, MediaType, S9Api}
 import net.sf.saxon.s9api.{QName, XdmNode}
 import org.xml.sax.InputSource
 
@@ -49,7 +50,7 @@ class ValidateWithRNG() extends DefaultXmlStep {
           case "schema" =>
             schema = node
             schemaMetadata = metadata
-          case _ => logger.debug(s"Unexpected connection to p:validate-with-xsd: $port")
+          case _ => logger.debug(s"Unexpected connection to p:validate-with-relax-ng: $port")
         }
       case _ => throw new RuntimeException("Non-XML document passed to xsd validator?")
     }
@@ -61,6 +62,13 @@ class ValidateWithRNG() extends DefaultXmlStep {
     if (definedBinding(_dtd_id_idref_warnings)) {
       dtd_id_idref_warnings = booleanBinding(_dtd_id_idref_warnings).getOrElse(false)
     }
+
+    /*
+    if (sourceMetadata.contentType.textContentType) {
+      throw new RuntimeException("Convert schemas to RNG first; compact syntax cannot be used")
+    }
+
+     */
 
     val errors = new Errors(config.config)
     val listener = new CachingErrorListener(errors)
@@ -102,21 +110,31 @@ class ValidateWithRNG() extends DefaultXmlStep {
         val din = S9Api.xdmToInputSource(config.config, source)
         if (!driver.validate(din)) {
           if (assert_valid) {
-            var msg = "RELAX NG validation failed"
-            if (listener.exceptions.nonEmpty) {
-              val lex = listener.exceptions.head
+            var except: Option[XProcException] = None
+            var errloc: Option[Location] = None
+            for (lex <- listener.exceptions) {
               lex match {
+                case ex: SAXParseException =>
+                  if (errloc.isEmpty) {
+                    errloc = Some(new XProcLocation(ex))
+                  }
+                  if (except.isEmpty) {
+                    except = Some(XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, lex.getMessage, errloc))
+                  }
                 case _: Exception =>
-                  msg = lex.getMessage
-                  val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, msg, location)
-                  except.underlyingCauses = listener.exceptions
-                  throw except
+                  if (except.isEmpty) {
+                    except = Some(XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, lex.getMessage, location))
+                  }
               }
-            } else {
-              val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, msg, location)
-              except.underlyingCauses = listener.exceptions
-              throw except
             }
+
+            if (except.isEmpty) {
+              except = Some(XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, "RELAX NG validation failed", location))
+            }
+
+            except.get.underlyingCauses = listener.exceptions
+
+            throw except.get
           }
         }
       } else {

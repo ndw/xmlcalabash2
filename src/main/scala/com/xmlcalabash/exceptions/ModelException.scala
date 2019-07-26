@@ -3,7 +3,7 @@ package com.xmlcalabash.exceptions
 import com.jafpl.graph.Location
 import com.xmlcalabash.exceptions.ExceptionCode.ExceptionCode
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.NodeLocation
+import com.xmlcalabash.runtime.XProcLocation
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 class ModelException(val code: ExceptionCode, val data: List[String], private val loc: Option[Location]) extends Exception {
@@ -15,7 +15,7 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
 
   def this(code: ExceptionCode, data: List[String], node: XdmNode) {
     this(code, data, None)
-    _location = Some(new NodeLocation(node))
+    _location = Some(new XProcLocation(node))
   }
 
   def this(code: ExceptionCode, data: String, node: XdmNode) {
