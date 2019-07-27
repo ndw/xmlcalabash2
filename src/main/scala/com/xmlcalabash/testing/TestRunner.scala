@@ -535,6 +535,14 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
           return result
         }
       }
+      if (features.contains("p-validate-with-xsd")) {
+        if (runtimeConfig.processor.getSchemaManager == null) {
+          val result = new TestResult(true) // skipped counts as a pass...
+          result.baseURI = node.getBaseURI
+          result.skipped = "The 'p-validate-with-xsd' feature is not supported with this version of Saxon"
+          return result
+        }
+      }
     }
 
     val src = node.getAttributeValue(_src)
