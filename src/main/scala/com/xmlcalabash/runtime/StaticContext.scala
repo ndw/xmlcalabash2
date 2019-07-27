@@ -5,32 +5,52 @@ import java.net.URI
 import com.jafpl.graph.Location
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.model.xml.NameBinding
+import com.xmlcalabash.model.xml.{Artifact, NameBinding}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.XdmNode
 
 import scala.collection.mutable
 
-class StaticContext(val config: XMLCalabashConfig) {
+class StaticContext(val config: XMLCalabashConfig, val artifact: Option[Artifact]) {
   protected var _baseURI: Option[URI] = None
   protected var _inScopeNS = Map.empty[String,String]
   protected var _location: Option[Location] = None
   protected var _statics = Map.empty[String,Message]
 
-  def this(runtime: XMLCalabashRuntime) {
-    this(runtime.config)
+  def this(config: XMLCalabashConfig) {
+    this(config, None)
   }
 
-  def this(context: StaticContext) {
-    this(context.config)
+  def this(config: XMLCalabashRuntime) {
+    this(config.config, None)
+  }
+
+  def this(config: XMLCalabashConfig, artifact: Artifact) {
+    this(config, Some(artifact))
+  }
+
+  def this(runtime: XMLCalabashRuntime, artifact: Option[Artifact]) {
+    this(runtime.config, artifact)
+  }
+
+  def this(runtime: XMLCalabashRuntime, artifact: Artifact) {
+    this(runtime.config, Some(artifact))
+  }
+
+  def this(context: StaticContext, artifact: Option[Artifact]) {
+    this(context.config, artifact)
     _baseURI = context._baseURI
     _inScopeNS = context._inScopeNS
     _location = context._location
     _statics = context._statics
   }
 
-  def this(config: XMLCalabashConfig, node: XdmNode) {
-    this(config)
+  def this(context: StaticContext, artifact: Artifact) {
+    this(context, Some(artifact))
+  }
+
+  def this(config: XMLCalabashConfig, artifact: Artifact, node: XdmNode) {
+    this(config, Some(artifact))
     _baseURI = Option(node.getBaseURI)
     _inScopeNS = S9Api.inScopeNamespaces(node)
     _location = Some(new XProcLocation(node))
@@ -54,7 +74,7 @@ class StaticContext(val config: XMLCalabashConfig) {
   def statics: Map[String,Message] = _statics
 
   def withStatics(statics: Map[String,Message]): StaticContext = {
-    val context = new StaticContext(this)
+    val context = new StaticContext(this, artifact)
     context._statics = statics
     context
   }

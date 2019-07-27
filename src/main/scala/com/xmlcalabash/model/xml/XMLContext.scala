@@ -5,20 +5,33 @@ import java.net.URI
 import com.jafpl.graph.Location
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util.ValueParser
+import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.StaticContext
 import com.xmlcalabash.util.{MediaType, TypeUtils}
-import net.sf.saxon.expr.parser.{ExpressionTool, XPathParser}
-import net.sf.saxon.s9api.{ItemType, OccurrenceIndicator, QName, SaxonApiException, SequenceType, XdmAtomicValue}
-import net.sf.saxon.sxpath.IndependentContext
-import net.sf.saxon.trans.XPathException
+import net.sf.saxon.expr.parser.ExpressionTool
+import net.sf.saxon.s9api.{ItemType, QName, SaxonApiException, SequenceType, XdmAtomicValue}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class XMLContext(override val config: XMLCalabashConfig) extends StaticContext(config) {
+class XMLContext(override val config: XMLCalabashConfig, override val artifact: Option[Artifact]) extends StaticContext(config, artifact) {
+  def this(config: XMLCalabashConfig, artifact: Artifact) {
+    this(config, Some(artifact))
+  }
+
+  def this(config: XMLCalabashConfig) {
+    this(config, None)
+  }
+
+  def this(config: XMLCalabashConfig, artifact: Artifact, baseURI: Option[URI], ns: Map[String,String], location: Option[Location]) {
+    this(config, Some(artifact))
+    _baseURI = baseURI
+    _inScopeNS = ns
+    _location = location
+  }
+
   def this(config: XMLCalabashConfig, baseURI: Option[URI], ns: Map[String,String], location: Option[Location]) {
-    this(config)
+    this(config, None)
     _baseURI = baseURI
     _inScopeNS = ns
     _location = location
@@ -195,12 +208,45 @@ class XMLContext(override val config: XMLCalabashConfig) extends StaticContext(c
       val parser = config.expressionParser
       parser.parse(text.get)
       for (ref <- parser.variableRefs) {
-        val qname = ValueParser.parseClarkName(ref)
+        val qname = ValueParser.parseQName(ref, this)
         variableRefs += qname
       }
     }
 
     variableRefs.toSet
+  }
+
+  def findFunctionRefsInAvt(list: List[String]): Set[QName] = {
+    val functionRefs = mutable.HashSet.empty[QName]
+
+    var avt = false
+    for (substr <- list) {
+      if (avt) {
+        functionRefs ++= findFunctionRefsInString(substr)
+      }
+      avt = !avt
+    }
+
+    functionRefs.toSet
+  }
+
+  def findFunctionRefsInString(text: String): Set[QName] = {
+    findFunctionRefsInString(Some(text))
+  }
+
+  def findFunctionRefsInString(text: Option[String]): Set[QName] = {
+    val functionRefs = mutable.HashSet.empty[QName]
+
+    if (text.isDefined) {
+      val parser = config.expressionParser
+      parser.parse(text.get)
+      for (ref <- parser.functionRefs) {
+        val qname = ValueParser.parseQName(ref, this)
+        functionRefs += qname
+      }
+    }
+
+    functionRefs.toSet
   }
 
   def dependsOnContextAvt(list: List[String]): Boolean = {
@@ -218,7 +264,13 @@ class XMLContext(override val config: XMLCalabashConfig) extends StaticContext(c
   }
 
   def dependsOnContextString(expr: String): Boolean = {
-    if (findVariableRefsInString(expr).isEmpty) {
+    var depends = false
+    for (func <- findFunctionRefsInString(expr)) {
+      depends = depends || func == XProcConstants.p_iteration_size || func == XProcConstants.p_iteration_position
+    }
+    depends = depends || findVariableRefsInString(expr).nonEmpty
+
+    if (!depends) {
       val xcomp = config.processor.newXPathCompiler()
       for ((prefix, uri) <- nsBindings) {
         xcomp.declareNamespace(prefix, uri)

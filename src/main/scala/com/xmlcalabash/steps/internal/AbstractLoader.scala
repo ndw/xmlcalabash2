@@ -21,7 +21,7 @@ abstract class AbstractLoader() extends DefaultXmlStep {
   protected var disabled = false
 
   override def receive(port: String, item: Any, meta: XProcMetadata): Unit = {
-    val context = new StaticContext(config)
+    val context = new StaticContext(config, None)
     item match {
       case node: XdmNode =>
         contextItem = Some(new XdmNodeItemMessage(node, meta, context))

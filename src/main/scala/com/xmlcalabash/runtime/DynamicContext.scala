@@ -2,11 +2,11 @@ package com.xmlcalabash.runtime
 
 import java.net.URI
 
-import com.jafpl.graph.Location
+import com.jafpl.graph.{Location, LoopStart}
 import com.jafpl.messages.Message
-import net.sf.saxon.om.{GroundedValue, Item}
+import com.xmlcalabash.model.xml.{Artifact, ForEach}
+import net.sf.saxon.om.Item
 import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
-import net.sf.saxon.value.StringValue
 
 import scala.collection.mutable
 import scala.util.DynamicVariable
@@ -17,9 +17,29 @@ object DynamicContext {
   def dynContext: Option[DynamicContext] = Option(_dynContext.value)
 }
 
-class DynamicContext {
-  private var _iterationPosition = Option.empty[Long]
-  private var _iterationSize = Option.empty[Long]
+class DynamicContext() {
+  def this(artifact: Option[Artifact]) {
+    this()
+
+    var found = false
+    var p: Option[Artifact] = artifact
+    while (!found && p.isDefined) {
+      p.get match {
+        case loop: ForEach =>
+          found = true
+          if (loop.graphNode.isDefined) {
+            val node = loop.graphNode.get.asInstanceOf[LoopStart]
+            _iterationPosition = node.iterationPosition
+            _iterationSize = node.iterationSize
+          }
+        case _ => Unit
+      }
+      p = p.get.parent
+    }
+  }
+
+  private var _iterationPosition = 1L
+  private var _iterationSize = 1L
   private val _documents = mutable.HashMap.empty[Any,Message]
   private val _imessages = mutable.HashMap.empty[Message,Any]
   private val _messages = mutable.HashMap.empty[Message,XdmValue]
@@ -30,8 +50,8 @@ class DynamicContext {
   private var _injId = Option.empty[String]
   private var _injType = Option.empty[QName]
 
-  def iterationPosition: Option[Long] = _iterationPosition
-  def iterationSize: Option[Long] = _iterationSize
+  def iterationPosition: Long = _iterationPosition
+  def iterationSize: Long = _iterationSize
 
   def message(document: Item[_ <: Item[_]]): Option[Message] = {
     _documents.get(document)

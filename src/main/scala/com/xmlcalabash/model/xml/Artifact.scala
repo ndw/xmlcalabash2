@@ -24,7 +24,7 @@ class Artifact(val config: XMLCalabashConfig) {
   protected[model] var _graphNode: Option[Node] = None
   private var _parent: Option[Artifact] = None
   private val _children: ListBuffer[Artifact] = ListBuffer.empty[Artifact]
-  private var _staticContext = new XMLContext(config)
+  private var _staticContext = new XMLContext(config, this)
   private var _xmlId = Option.empty[String]
   private var _synthetic = true
   private val _uid = UniqueId.nextId
@@ -35,6 +35,8 @@ class Artifact(val config: XMLCalabashConfig) {
 
   protected[model] val attributes = mutable.HashMap.empty[QName, String]
   protected[model] val extensionAttributes = mutable.HashMap.empty[QName, String]
+
+  def graphNode: Option[Node] = _graphNode
 
   protected[model] def expand_text: Boolean = {
     if (_expand_text.isDefined) {
@@ -61,7 +63,7 @@ class Artifact(val config: XMLCalabashConfig) {
     extensionAttributes.get(name)
   }
 
-  protected[model] def parent: Option[Artifact] = _parent
+  protected[xmlcalabash] def parent: Option[Artifact] = _parent
   protected[model] def parent_=(art: Artifact): Unit = {
     _parent = Some(art)
   }
@@ -107,7 +109,7 @@ class Artifact(val config: XMLCalabashConfig) {
   protected[xmlcalabash] def location: Option[Location] = _staticContext.location
   protected[model] def staticContext: XMLContext = _staticContext
   protected[model] def staticContext_=(context: StaticContext): Unit = {
-    _staticContext = new XMLContext(config, context.baseURI, context.nsBindings, context.location)
+    _staticContext = new XMLContext(config, this, context.baseURI, context.nsBindings, context.location)
   }
   protected[model] def uid: Long = _uid
   protected[model] def xml_id: Option[String] = _xmlId

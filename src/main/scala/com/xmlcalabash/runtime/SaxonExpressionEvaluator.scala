@@ -10,6 +10,7 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
+import com.xmlcalabash.model.xml.XMLContext
 import com.xmlcalabash.runtime.params.XPathBindingParams
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.expr.XPathContext
@@ -66,7 +67,19 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
 
   override def value(xpath: Any, context: List[Message], bindings: Map[String, Message], params: Option[BindingParams]): XdmValueItemMessage = {
     val proxies = mutable.HashMap.empty[Any, XdmItem]
-    val newContext = new DynamicContext()
+
+    // FIXME: this is ugly
+    val exprContext = xpath match {
+      case expr: XProcXPathExpression => Some(expr.context)
+      case expr: XProcVtExpression => Some(expr.context)
+      case _ => None
+    }
+    val newContext = if (exprContext.isDefined) {
+      new DynamicContext(exprContext.get.artifact)
+    } else {
+      new DynamicContext()
+    }
+
     for (message <- context) {
       message match {
         case msg: XdmValueItemMessage =>

@@ -5,7 +5,7 @@ import java.net.URI
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode}
-import com.xmlcalabash.functions.{CwdShim, DocumentPropertiesDocumentShim, DocumentPropertiesShim, DocumentPropertyShim, ForceQNameKeysShim, InjElapsedShim, InjIdShim, InjNameShim, InjTypeShim, SystemPropertyShim}
+import com.xmlcalabash.functions.{CwdShim, DocumentPropertiesDocumentShim, DocumentPropertiesShim, DocumentPropertyShim, ForceQNameKeysShim, InjElapsedShim, InjIdShim, InjNameShim, InjTypeShim, IterationPositionShim, IterationSizeShim, SystemPropertyShim}
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.{Container, DeclContainer, Library}
 import com.xmlcalabash.parsers.XPathParser
@@ -392,6 +392,8 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
     processor.registerExtensionFunction(new InjNameShim(this))
     processor.registerExtensionFunction(new InjTypeShim(this))
     processor.registerExtensionFunction(new SystemPropertyShim(this))
+    processor.registerExtensionFunction(new IterationPositionShim(this))
+    processor.registerExtensionFunction(new IterationSizeShim(this))
   }
   private def checkClosed(): Unit = {
     if (closed) {

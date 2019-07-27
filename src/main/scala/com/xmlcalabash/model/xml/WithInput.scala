@@ -22,7 +22,7 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
     if (attributes.contains(XProcConstants._port)) {
       _port = staticContext.parseNCName(attr(XProcConstants._port)).get
     }
-    _context = new StaticContext(config, node)
+    _context = new StaticContext(config, this, node)
     _select = attr(XProcConstants._select)
 
     _href = attr(XProcConstants._href)

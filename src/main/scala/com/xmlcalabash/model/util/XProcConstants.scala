@@ -54,6 +54,9 @@ object XProcConstants {
   val p_with_option = new QName("p", ns_p, "with-option")
   val p_with_output = new QName("p", ns_p, "with-output")
 
+  val p_iteration_size = new QName("p", ns_p, "iteration-size")
+  val p_iteration_position = new QName("p", ns_p, "iteration-position")
+
   val p_injectable = new QName("p", ns_p, "injectable")
   val p_start = new QName("p", ns_p, "start")
   val p_end = new QName("p", ns_p, "end")

@@ -68,7 +68,7 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
 
   override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
     // It's too early to set in the runtime, save for later
-    bindings.put(variable, new XProcVarValue(value, new StaticContext(context)))
+    bindings.put(variable, new XProcVarValue(value, new StaticContext(context, decl)))
   }
 
   // Input to the pipeline

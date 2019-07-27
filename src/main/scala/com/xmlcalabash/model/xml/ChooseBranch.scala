@@ -16,7 +16,7 @@ class ChooseBranch(override val config: XMLCalabashConfig) extends Container(con
   def test: String = _test
   protected[model] def test_=(expr: String): Unit = {
     _test = expr
-    val context = new StaticContext(staticContext)
+    val context = new StaticContext(staticContext, this)
     testExpr = new XProcXPathExpression(context, _test)
   }
   def collection: Boolean = _collection.getOrElse(false)
