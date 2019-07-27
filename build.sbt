@@ -178,6 +178,7 @@ libraryDependencies +=
   )
 
 dependencyOverrides += "net.sf.saxon" % "Saxon-HE" % "9.9.1-4"
+dependencyOverrides += "xml-apis" % "xml-apis" % "1.3.04"
 
 mappings in (Compile, packageBin) := {
   (mappings in (Compile, packageBin)).value.filter {
