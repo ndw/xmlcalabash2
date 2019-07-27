@@ -26,11 +26,8 @@ class XProcTestSpec extends FunSpec {
     case ex: Exception => false
   }
 
-  protected def runtests(title: String, source: String): Unit = {
+  protected def runtests(title: String, testFiles: List[String]): Unit = {
     describe(title) {
-      val dir = new File(source)
-      recurse(dir)
-
       testFiles foreach {
         case filename =>
           val pos = filename.indexOf("/tests/")
@@ -42,6 +39,20 @@ class XProcTestSpec extends FunSpec {
           it (s"test: $name") {
             test(filename)
           }
+      }
+    }
+  }
+
+  protected def runtest(title: String, filename: String): Unit = {
+    describe(title) {
+      val pos = filename.indexOf("/tests/")
+      val name = if (pos >= 0) {
+        filename.substring(pos+7)
+      } else {
+        filename
+      }
+      it (s"test: $name") {
+        test(filename)
       }
     }
   }
