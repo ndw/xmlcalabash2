@@ -14,6 +14,8 @@ class If(override val config: XMLCalabashConfig) extends Choose(config) {
     // p:if is purely syntactic sugar for a p:choose...so let's implement it that way
 
     val choose = new Choose(config)
+    choose._name = Some(stepName)
+    choose.p_if = true
     for (child <- children[WithInput]) {
       choose.addChild(child)
     }
@@ -29,15 +31,6 @@ class If(override val config: XMLCalabashConfig) extends Choose(config) {
     }
     choose.addChild(when)
     parent.get.replaceChild(choose, this)
-
-    var primary = false
-    for (child <- children[DeclareOutput]) {
-      primary = primary || child.primary
-    }
-
-    if (!primary) {
-      throw XProcException.xsPrimaryOutputRequired(location)
-    }
 
     choose.makeStructureExplicit()
   }

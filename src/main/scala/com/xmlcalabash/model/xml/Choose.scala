@@ -15,6 +15,7 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
   private var hasOtherwise = false
   protected var ifexpr: Option[String] = None
   protected var ifcoll: Option[Boolean] = None
+  protected[xml] var p_if = false
 
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
@@ -49,6 +50,7 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
             throw new RuntimeException("Only one with-input is allowed")
           }
           input = Some(winput)
+          winput.makeStructureExplicit()
         case when: When =>
           hasWhen = true
           when.makeStructureExplicit()
@@ -123,6 +125,17 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
 
       addChild(other)
       other.makeStructureExplicit()
+    }
+
+    if (p_if) {
+      var primary = false
+      for (child <- children[WithOutput]) {
+        primary = primary || child.primary
+      }
+
+      if (!primary) {
+        throw XProcException.xsPrimaryOutputRequired(location)
+      }
     }
   }
 

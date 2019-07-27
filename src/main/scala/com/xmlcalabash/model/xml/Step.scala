@@ -5,7 +5,7 @@ import com.xmlcalabash.model.util.XProcConstants
 import net.sf.saxon.s9api.XdmNode
 
 class Step(override val config: XMLCalabashConfig) extends Artifact(config) with NamedArtifact {
-  protected var _name = Option.empty[String]
+  protected[xml] var _name = Option.empty[String]
   override def stepName: String = _name.getOrElse(tumble_id)
   protected[model] def stepName_=(name: String): Unit = {
     _name = Some(name)
