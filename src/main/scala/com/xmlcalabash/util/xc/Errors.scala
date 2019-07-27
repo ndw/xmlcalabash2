@@ -8,7 +8,7 @@ import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable
 
-class Errors(config: XMLCalabashConfig) {
+class Errors(val config: XMLCalabashConfig) {
   private val builder = new SaxonTreeBuilder(config)
   private val openStack = mutable.Stack.empty[QName]
   private val inLibrary = false

@@ -10,9 +10,9 @@ import com.thaiopensource.validate.prop.rng.RngProperty
 import com.thaiopensource.validate.rng.CompactSchemaReader
 import com.thaiopensource.validate.{SchemaReader, ValidateProperty, ValidationDriver}
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.runtime.{XProcLocation, StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{StaticContext, XProcLocation, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.xc.Errors
-import com.xmlcalabash.util.{CachingErrorListener, MediaType, S9Api}
+import com.xmlcalabash.util.{CachingErrorListener, S9Api}
 import net.sf.saxon.s9api.{QName, XdmNode}
 import org.xml.sax.InputSource
 
@@ -63,13 +63,6 @@ class ValidateWithRNG() extends DefaultXmlStep {
       dtd_id_idref_warnings = booleanBinding(_dtd_id_idref_warnings).getOrElse(false)
     }
 
-    /*
-    if (sourceMetadata.contentType.textContentType) {
-      throw new RuntimeException("Convert schemas to RNG first; compact syntax cannot be used")
-    }
-
-     */
-
     val errors = new Errors(config.config)
     val listener = new CachingErrorListener(errors)
     val properties = new PropertyMapBuilder()
@@ -80,8 +73,6 @@ class ValidateWithRNG() extends DefaultXmlStep {
     if (dtd_id_idref_warnings) {
       RngProperty.CHECK_ID_IDREF.add(properties)
     }
-
-    val docBaseURI = source.getBaseURI
 
     val compact = schemaMetadata.contentType.textContentType
 

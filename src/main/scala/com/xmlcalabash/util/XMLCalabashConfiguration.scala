@@ -32,6 +32,7 @@ class XMLCalabashConfiguration {
   private val cc_debug_jafpl_graph = new QName("cc", ns_cc, "jafpl-graph")
   private val cc_debug_open_graph = new QName("cc", ns_cc, "open-graph")
   private val cc_debug_stacktrace = new QName("cc", ns_cc, "stacktrace")
+  private val cc_show_errors = new QName("cc", ns_cc, "show-errors")
   private val _key = new QName("key")
   private val _value = new QName("value")
   private val _type = new QName("type")
@@ -48,6 +49,7 @@ class XMLCalabashConfiguration {
   private var _module_uri_resolver = Option.empty[String]
   private var _unparsed_text_uri_resolver = Option.empty[String]
   private var _graphviz_dot = Option.empty[String]
+  private var _showErrors = false
   private var _debug_output_directory = Option.empty[String]
   private var _debug_tree = Option.empty[String]
   private var _debug_xml_tree = Option.empty[String]
@@ -67,6 +69,7 @@ class XMLCalabashConfiguration {
   def module_uri_resolver: Option[String] = _module_uri_resolver
   def unparsed_text_uri_resolver: Option[String] = _unparsed_text_uri_resolver
   def graphviz_dot: Option[String] = _graphviz_dot
+  def showErrors: Boolean = _showErrors
   def debug_output_directory: Option[String] = _debug_output_directory
   def debug_tree: Option[String] = _debug_tree
   def debug_xml_tree: Option[String] = _debug_xml_tree
@@ -176,6 +179,8 @@ class XMLCalabashConfiguration {
         parseDebugOpenGraph(node)
       case `cc_debug_stacktrace` =>
         parseDebugStacktrace(node)
+      case `cc_show_errors` =>
+        parseShowErrors(node)
       case _ =>
         logger.error(s"Unexpected configuration option: ${node.getNodeName}")
     }
@@ -244,6 +249,13 @@ class XMLCalabashConfiguration {
     val dot = node.getAttributeValue(_dot)
     if (dot != null) {
       _graphviz_dot = Some(dot)
+    }
+  }
+
+  private def parseShowErrors(node: XdmNode): Unit = {
+    val bv = setBoolean(node, "show-errors")
+    if (bv.isDefined) {
+      _showErrors = bv.get
     }
   }
 

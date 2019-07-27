@@ -12,6 +12,8 @@ class CachingErrorListener(errors: Errors) extends ErrorListener with ErrorHandl
   private var _listener = Option.empty[ErrorListener]
   private var _handler = Option.empty[ErrorHandler]
 
+  private var showErrors = errors.config.showErrors
+
   def this(errors: Errors, listener: ErrorListener) = {
     this(errors)
     _listener = Some(listener)
@@ -38,12 +40,18 @@ class CachingErrorListener(errors: Errors) extends ErrorListener with ErrorHandl
     if (_listener.isDefined) {
       _listener.get.warning(exception)
     }
+    if (showErrors) {
+      println(exception)
+    }
     report(exception)
   }
 
   override def error(exception: TransformerException): Unit = {
     if (_listener.isDefined) {
       _listener.get.error(exception)
+    }
+    if (showErrors) {
+      println(exception)
     }
     report(exception)
     _exceptions += exception
@@ -53,6 +61,9 @@ class CachingErrorListener(errors: Errors) extends ErrorListener with ErrorHandl
     if (_listener.isDefined) {
       _listener.get.fatalError(exception)
     }
+    if (showErrors) {
+      println(exception)
+    }
     report(exception)
     _exceptions += exception
   }
@@ -61,12 +72,18 @@ class CachingErrorListener(errors: Errors) extends ErrorListener with ErrorHandl
     if (_handler.isDefined) {
       _handler.get.warning(exception)
     }
+    if (showErrors) {
+      println(exception)
+    }
     report(exception)
   }
 
   override def error(exception: SAXParseException): Unit = {
     if (_handler.isDefined) {
       _handler.get.error(exception)
+    }
+    if (showErrors) {
+      println(exception)
     }
     report(exception)
     _exceptions += exception
@@ -75,6 +92,9 @@ class CachingErrorListener(errors: Errors) extends ErrorListener with ErrorHandl
   override def fatalError(exception: SAXParseException): Unit = {
     if (_handler.isDefined) {
       _handler.get.fatalError(exception)
+    }
+    if (showErrors) {
+      println(exception)
     }
     report(exception)
     _exceptions += exception

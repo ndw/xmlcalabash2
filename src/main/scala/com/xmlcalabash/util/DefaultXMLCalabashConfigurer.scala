@@ -69,6 +69,7 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
     if (config.graphviz_dot.isDefined) {
       configuration.debugOptions.graphviz_dot = config.graphviz_dot.get
     }
+    configuration.showErrors = config.showErrors
 
     // Have to check because assigning none enables the default behavior
     if (config.debug_output_directory.isDefined) {

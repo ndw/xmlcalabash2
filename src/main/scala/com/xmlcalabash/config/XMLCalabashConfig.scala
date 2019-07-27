@@ -80,6 +80,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
   private var _staticBaseURI = URIUtils.cwdAsURI
   private var _locale = defaultLocale
   private var _episode = computeEpisode
+  private var _showErrors = false
   private var _builtinSteps = Option.empty[Library]
   private var _defaultSerializationOptions = Map.empty[String,Map[QName,String]]
   private val _importedURIs = mutable.HashMap.empty[URI, DeclContainer]
@@ -291,6 +292,12 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
   def episode_=(episode: String): Unit = {
     checkClosed()
     _episode = episode
+  }
+
+  def showErrors: Boolean = _showErrors
+  def showErrors_=(show: Boolean): Unit = {
+    checkClosed()
+    _showErrors = show
   }
 
   // ==============================================================================================
