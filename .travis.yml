@@ -13,6 +13,7 @@ jdk:
   - oraclejdk8
 env:
   - VERBOSE_TEST_OUTPUT=true
+  - TEST_LIST=ab-choose-007.xml
 
 deploy:
   provider: releases
