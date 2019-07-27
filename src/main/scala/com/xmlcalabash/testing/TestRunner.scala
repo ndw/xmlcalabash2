@@ -690,6 +690,10 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
         }
       }
 
+      if (!result.passed && result.exception.isDefined) {
+        result.exception.get.printStackTrace()
+      }
+
       result
     }
   }
