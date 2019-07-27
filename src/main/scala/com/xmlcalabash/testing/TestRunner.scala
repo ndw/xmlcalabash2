@@ -66,7 +66,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
   private val testFiles = ListBuffer.empty[String]
   private val fnregex = "^.*.xml".r
 
-  private val verboseOutput = Option(System.getProperty("com.xmlcalabash.verboseTestOutput")).getOrElse("false") == "true"
+  private val verboseOutput = Option(System.getenv("VERBOSE_TEST_OUTPUT")).getOrElse("false") == "true"
 
   private val context = new StaticContext(runtimeConfig)
   private val processor = runtimeConfig.processor

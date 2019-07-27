@@ -18,7 +18,7 @@ class XProcTestSpec extends FunSpec {
   protected val runtimeConfig: XMLCalabashConfig = XMLCalabashConfig.newInstance()
   protected val testFiles: ListBuffer[String] = ListBuffer.empty[String]
 
-  private val verboseOutput = Option(System.getProperty("com.xmlcalabash.verboseTestOutput")).getOrElse("false") == "true"
+  private val verboseOutput = Option(System.getenv("VERBOSE_TEST_OUTPUT")).getOrElse("false") == "true"
 
   protected val online: Boolean = try {
     val docreq = new DocumentRequest(new URI("http://www.w3.org/"), MediaType.HTML)

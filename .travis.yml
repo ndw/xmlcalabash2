@@ -11,6 +11,8 @@ script:
 sudu: false
 jdk:
   - oraclejdk8
+env:
+  - VERBOSE_TEST_OUTPUT=true
 
 deploy:
   provider: releases
