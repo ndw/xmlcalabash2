@@ -21,6 +21,7 @@ import org.xml.sax.helpers.XMLReaderFactory
 import org.xml.sax.{EntityResolver, InputSource}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 object XMLCalabashConfig {
   val _configProperty = "com.xmlcalabash.config.XProcConfigurer"
@@ -84,6 +85,8 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
   private var _builtinSteps = Option.empty[Library]
   private var _defaultSerializationOptions = Map.empty[String,Map[QName,String]]
   private val _importedURIs = mutable.HashMap.empty[URI, DeclContainer]
+  // Do not allow the order to be random
+  private val _imports = ListBuffer.empty[URI]
 
   def this(xprocConfig: XProcConfigurer) {
     this(xprocConfig, None)
@@ -140,7 +143,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
     _builtinSteps = Some(lib)
   }
 
-  protected[xmlcalabash] def importedURIs: Set[URI] = _importedURIs.keySet.toSet
+  protected[xmlcalabash] def importedURIs: List[URI] = _imports.toList
   protected[xmlcalabash] def importedURI(href: URI): Option[DeclContainer] = {
     _importedURIs.get(href)
   }
@@ -149,9 +152,11 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
       throw new RuntimeException(s"Attempt to redefine imported uri: $href")
     }
     _importedURIs.put(href, container)
+    _imports += href
   }
   protected[xmlcalabash] def clearImportedURIs(): Unit = {
     _importedURIs.clear()
+    _imports.clear()
   }
 
   def debugOptions: XMLCalabashDebugOptions = _debugOptions
