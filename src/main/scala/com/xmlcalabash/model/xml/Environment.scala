@@ -103,7 +103,7 @@ object Environment {
         }
 
         // If we fell off the bottom of this loop, something has gone terribly wrong
-        throw new RuntimeException("Fell of ancestor list in computing environment")
+        throw new RuntimeException("Fell off ancestor list in computing environment")
 
       case step: Container =>
         // DeclareStep is special; if it's the last ancestor, then it's the root of
@@ -173,6 +173,8 @@ object Environment {
           return env
         }
 
+        println(s"Next: $next")
+
         // Libraries are a special case, they aren't in the children of the container
         if (next.get.isInstanceOf[Library]) {
           return walk(env, ancestors.tail)
@@ -180,7 +182,9 @@ object Environment {
 
         // Now walk down to the next ancestor, calculating the drp
         for (child <- step.allChildren) {
+          println(s"Child: $child")
           if (next.get == child) {
+            println("Found next")
             return walk(env, ancestors.tail)
           }
           step match {
@@ -203,7 +207,7 @@ object Environment {
         }
 
         // If we fell off the bottom of this loop, something has gone terribly wrong
-        throw new RuntimeException("Fell of ancestor list in container")
+        throw new RuntimeException("Fell off ancestor list in container")
 
       case step: AtomicStep =>
         if (next.isEmpty) {
