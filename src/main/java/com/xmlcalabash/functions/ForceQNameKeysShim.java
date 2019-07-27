@@ -50,6 +50,7 @@ public class ForceQNameKeysShim extends ExtensionFunctionDefinition {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Sequence<?> call(XPathContext context, Sequence[] arguments) {
             ForceQNameKeys impl = new ForceQNameKeys(runtime);
             return impl.call(context, arguments);

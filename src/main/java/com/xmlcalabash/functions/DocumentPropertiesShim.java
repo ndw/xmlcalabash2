@@ -58,6 +58,7 @@ public class DocumentPropertiesShim extends ExtensionFunctionDefinition {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Sequence<?> call(XPathContext context, Sequence[] arguments) {
             DocumentProperties impl = new DocumentProperties(runtime);
             return impl.call(staticContext, context, arguments);

@@ -219,3 +219,4 @@ unmanagedClasspath in Runtime ++= (
 //)
 
 scalacOptions := Seq("-unchecked", "-deprecation")
+javacOptions := Seq("-Xlint:unchecked", "-Xlint:deprecation")

@@ -50,6 +50,7 @@ public class InjElapsedShim extends ExtensionFunctionDefinition {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Sequence<?> call(XPathContext context, Sequence[] arguments) {
             InjElapsed impl = new InjElapsed(runtime);
             return impl.call(context, arguments);

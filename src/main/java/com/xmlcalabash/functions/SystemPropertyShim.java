@@ -58,6 +58,7 @@ public class SystemPropertyShim extends ExtensionFunctionDefinition {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Sequence<?> call(XPathContext context, Sequence[] arguments) {
             SystemProperty impl = new SystemProperty(runtime);
             return impl.call(staticContext, context, arguments);

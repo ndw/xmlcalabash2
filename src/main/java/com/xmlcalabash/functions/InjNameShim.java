@@ -50,6 +50,7 @@ public class InjNameShim extends ExtensionFunctionDefinition {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Sequence<?> call(XPathContext context, Sequence[] arguments) {
             InjName impl = new InjName(runtime);
             return impl.call(context, arguments);

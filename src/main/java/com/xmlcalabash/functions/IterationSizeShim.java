@@ -58,6 +58,7 @@ public class IterationSizeShim extends ExtensionFunctionDefinition {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Sequence<?> call(XPathContext context, Sequence[] arguments) {
             IterationSize impl = new IterationSize(runtime);
             return impl.call(staticContext, context, arguments);

@@ -50,6 +50,7 @@ public class InjIdShim extends ExtensionFunctionDefinition {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Sequence<?> call(XPathContext context, Sequence[] arguments) {
             InjId impl = new InjId(runtime);
             return impl.call(context, arguments);

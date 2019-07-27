@@ -58,6 +58,7 @@ public class IterationPositionShim extends ExtensionFunctionDefinition {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Sequence<?> call(XPathContext context, Sequence[] arguments) {
             IterationPosition impl = new IterationPosition(runtime);
             return impl.call(staticContext, context, arguments);
