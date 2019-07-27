@@ -18,6 +18,8 @@ class XProcTestSpec extends FunSpec {
   protected val runtimeConfig: XMLCalabashConfig = XMLCalabashConfig.newInstance()
   protected val testFiles: ListBuffer[String] = ListBuffer.empty[String]
 
+  private val verboseOutput = Option(System.getProperty("com.xmlcalabash.verboseTestOutput")).getOrElse("false") == "true"
+
   protected val online: Boolean = try {
     val docreq = new DocumentRequest(new URI("http://www.w3.org/"), MediaType.HTML)
     val doc = runtimeConfig.documentManager.parse(docreq)
@@ -61,10 +63,12 @@ class XProcTestSpec extends FunSpec {
     val runner = new TestRunner(runtimeConfig, online, List(fn))
     val results = runner.run()
     for (result <- results) {
-      if (result.passed) {
-        println(s"PASS: $fn")
-      } else {
-        println(s"FAIL: $fn")
+      if (verboseOutput) {
+        if (result.passed) {
+          println(s"PASS: $fn")
+        } else {
+          println(s"FAIL: $fn")
+        }
       }
       assert(result.passed)
     }

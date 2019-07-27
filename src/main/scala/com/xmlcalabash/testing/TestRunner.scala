@@ -66,6 +66,8 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
   private val testFiles = ListBuffer.empty[String]
   private val fnregex = "^.*.xml".r
 
+  private val verboseOutput = Option(System.getProperty("com.xmlcalabash.verboseTestOutput")).getOrElse("false") == "true"
+
   private val context = new StaticContext(runtimeConfig)
   private val processor = runtimeConfig.processor
   private val builder = processor.newDocumentBuilder()
@@ -99,9 +101,13 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
     var count = 0
     for (fn <- testFiles) {
       count += 1
-      println(s"Running $count of ${testFiles.length}: $fn")
 
-      if (Option(System.getProperty("com.xmlcalabash.suppressTestOutput")).getOrElse("false") == "true") {
+      if (verboseOutput) {
+        println(s"Running $count of ${testFiles.length}: $fn")
+        val source = new SAXSource(new InputSource(fn))
+        val node = builder.build(source)
+        resultList ++= runTestDocument(node)
+      } else {
         val stdout = new ByteArrayOutputStream()
         val psout = new PrintStream(stdout)
 
@@ -118,10 +124,6 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
 
         psout.close()
         pserr.close()
-      } else {
-        val source = new SAXSource(new InputSource(fn))
-        val node = builder.build(source)
-        resultList ++= runTestDocument(node)
       }
     }
 
