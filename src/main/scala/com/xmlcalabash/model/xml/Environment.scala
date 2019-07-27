@@ -30,6 +30,8 @@ object Environment {
         return Environment.newEnvironment(step.parent.get)
     }
 
+    step.dump()
+
     val env = new Environment()
 
     val ancestors = ListBuffer.empty[Artifact]    // includes self for compound steps

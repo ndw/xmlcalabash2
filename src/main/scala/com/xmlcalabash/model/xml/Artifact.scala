@@ -377,10 +377,10 @@ class Artifact(val config: XMLCalabashConfig) {
   }
 
   def dump(): Unit = {
-    dump("")
+    dump("", Set.empty[Artifact])
   }
 
-  private def dump(indent: String): Unit = {
+  private def dump(indent: String, dumped: Set[Artifact]): Unit = {
     println(s"$indent$this")
     for (child <- allChildren) {
       child match {
@@ -388,7 +388,11 @@ class Artifact(val config: XMLCalabashConfig) {
           println("")
         case _ => Unit
       }
-      child.dump(s"$indent  ")
+      if (dumped.contains(child)) {
+        println(s"$indent$this...")
+      } else {
+        child.dump(s"$indent  ", dumped + child)
+      }
     }
   }
 
