@@ -23,7 +23,7 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
       if (attributes.contains(XProcConstants._test)) {
         ifexpr = attr(XProcConstants._test)
       } else {
-        throw new RuntimeException("p:if must have a test")
+        throw XProcException.xsMissingRequiredAttribute(XProcConstants._test, location)
       }
       if (attributes.contains(XProcConstants._collection)) {
         ifcoll = staticContext.parseBoolean(attr(XProcConstants._collection))

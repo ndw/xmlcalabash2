@@ -29,6 +29,16 @@ class If(override val config: XMLCalabashConfig) extends Choose(config) {
     }
     choose.addChild(when)
     parent.get.replaceChild(choose, this)
+
+    var primary = false
+    for (child <- children[DeclareOutput]) {
+      primary = primary || child.primary
+    }
+
+    if (!primary) {
+      throw XProcException.xsPrimaryOutputRequired(location)
+    }
+
     choose.makeStructureExplicit()
   }
 
