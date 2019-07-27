@@ -30,8 +30,6 @@ object Environment {
         return Environment.newEnvironment(step.parent.get)
     }
 
-    step.dump()
-
     val env = new Environment()
 
     val ancestors = ListBuffer.empty[Artifact]    // includes self for compound steps
@@ -56,9 +54,7 @@ object Environment {
       pptr = pptr.get.parent
     }
 
-    val x = walk(env, ancestors.toList)
-    //println(s"$step = $x")
-    x
+    walk(env, ancestors.toList)
   }
 
   private def walk(env: Environment, ancestors: List[Artifact]): Environment = {
@@ -175,8 +171,6 @@ object Environment {
           return env
         }
 
-        println(s"Next: $next")
-
         // Libraries are a special case, they aren't in the children of the container
         if (next.get.isInstanceOf[Library]) {
           return walk(env, ancestors.tail)
@@ -184,9 +178,7 @@ object Environment {
 
         // Now walk down to the next ancestor, calculating the drp
         for (child <- step.allChildren) {
-          println(s"Child: $child")
           if (next.get == child) {
-            println("Found next")
             return walk(env, ancestors.tail)
           }
           step match {
