@@ -37,11 +37,15 @@ object XmlPortSpecification {
     Map("result"->PortCardinality.EXACTLY_ONE),
     Map("result" -> List("application/xhtml+xml")))
 
-
   /** Allow a single TEXT document on the `source` port. */
   val TEXTSOURCE: XmlPortSpecification = new XmlPortSpecification(
     Map("source"->PortCardinality.EXACTLY_ONE),
     Map("source"->List("text")))
+
+  /** Allow a single JSON document on the `source` port. */
+  val JSONSOURCE: XmlPortSpecification = new XmlPortSpecification(
+    Map("source"->PortCardinality.EXACTLY_ONE),
+    Map("source"->List("json")))
 
   /** Allow a sequence of TEXT documents on the `source` port. */
   val TEXTSOURCESEQ: XmlPortSpecification = new XmlPortSpecification(
@@ -63,6 +67,11 @@ object XmlPortSpecification {
     Map("result"->PortCardinality.EXACTLY_ONE),
     Map("result" -> List("application/xml")))
 
+  /** Allow a single JSON document on the `result` port. */
+  val JSONRESULT: XmlPortSpecification = new XmlPortSpecification(
+    Map("result"->PortCardinality.EXACTLY_ONE),
+    Map("result" -> List("json")))
+
   /** Allow a sequence of zero or more documents of any sort on the `source` port. */
   val ANYSOURCESEQ: XmlPortSpecification = new XmlPortSpecification(
     Map("source"->PortCardinality.ZERO_OR_MORE),
@@ -72,6 +81,16 @@ object XmlPortSpecification {
   val ANYRESULTSEQ: XmlPortSpecification = new XmlPortSpecification(
     Map("result"->PortCardinality.ZERO_OR_MORE),
     Map("result"->List("application/octet-stream")))
+
+  /** Allow a sequence of zero or more JSON documents on the `source` port. */
+  val JSONSOURCESEQ: XmlPortSpecification = new XmlPortSpecification(
+    Map("source"->PortCardinality.ZERO_OR_MORE),
+    Map("source"->List("json")))
+
+  /** Allow a sequence of zero or more JSON documents on the `result` port. */
+  val JSONRESULTSEQ: XmlPortSpecification = new XmlPortSpecification(
+    Map("result"->PortCardinality.ZERO_OR_MORE),
+    Map("result"->List("json")))
 
   /** Allow a sequence of zero or more XML documents on the `source` port. */
   val XMLSOURCESEQ: XmlPortSpecification = new XmlPortSpecification(

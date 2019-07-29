@@ -42,4 +42,9 @@ class WrapSequence extends DefaultXmlStep {
 
     consumer.get.receive("result", builder.result, XProcMetadata.XML)
   }
+
+  override def reset(): Unit = {
+    super.reset()
+    inputs.clear()
+  }
 }

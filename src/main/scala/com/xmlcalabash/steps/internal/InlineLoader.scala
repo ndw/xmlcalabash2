@@ -153,8 +153,8 @@ class InlineLoader() extends AbstractLoader {
       request.baseURI = node.getBaseURI
       val response = config.documentManager.parse(request, stream)
 
-      for ((name,value) <- response.props) {
-        props.put(name,value)
+      for ((name, value) <- response.props) {
+        props.put(name, value)
       }
 
       val metadata = new XProcMetadata(response.contentType, props.toMap)
@@ -164,6 +164,25 @@ class InlineLoader() extends AbstractLoader {
           consumer.get.receive("result", node, metadata)
         case _ =>
           throw new RuntimeException("Unexpected node type from parseHtml")
+      }
+    } else if (contentType.jsonContentType) {
+      val text = node.getStringValue
+      val expr = new XProcXPathExpression(context, "parse-json($json)")
+      val bindingsMap = mutable.HashMap.empty[String, Message]
+      val vmsg = new XdmValueItemMessage(new XdmAtomicValue(text), XProcMetadata.JSON, context)
+      bindingsMap.put("{}json", vmsg)
+      try {
+        val smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+        consumer.get.receive("result", smsg.item, new XProcMetadata(contentType, props.toMap))
+      } catch {
+        case ex: SaxonApiException =>
+          if (ex.getMessage.contains("Invalid JSON")) {
+            throw XProcException.xdInvalidJson(ex.getMessage, exprContext.location)
+          } else {
+            throw ex
+          }
+        case ex: Exception =>
+          throw ex
       }
     } else {
       val text = if (expandText) {
@@ -178,25 +197,7 @@ class InlineLoader() extends AbstractLoader {
         node.getStringValue
       }
 
-      if (contentType.jsonContentType) {
-        val expr = new XProcXPathExpression(context, "parse-json($json)")
-        val bindingsMap = mutable.HashMap.empty[String, Message]
-        val vmsg = new XdmValueItemMessage(new XdmAtomicValue(text), XProcMetadata.JSON, context)
-        bindingsMap.put("{}json", vmsg)
-        try {
-          val smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
-          consumer.get.receive("result", smsg.item, new XProcMetadata(contentType, props.toMap))
-        } catch {
-          case ex: SaxonApiException =>
-            if (ex.getMessage.contains("Invalid JSON")) {
-              throw XProcException.xdInvalidJson(ex.getMessage, exprContext.location)
-            } else {
-              throw ex
-            }
-          case ex: Exception =>
-            throw ex
-        }
-      } else if (contentType.textContentType) {
+      if (contentType.textContentType) {
         props.put(XProcConstants._content_length, new XdmAtomicValue(text.length))
 
         val builder = new SaxonTreeBuilder(config)

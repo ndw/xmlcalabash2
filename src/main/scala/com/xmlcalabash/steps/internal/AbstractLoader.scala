@@ -2,7 +2,7 @@ package com.xmlcalabash.steps.internal
 
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{XProcItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
-import com.xmlcalabash.model.util.ValueParser
+import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{DynamicContext, StaticContext, XProcExpression, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.steps.DefaultXmlStep
 import com.xmlcalabash.util.MediaType
@@ -41,6 +41,10 @@ abstract class AbstractLoader() extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    if (bindings.contains(XProcConstants._content_type)) {
+      content_type = Some(MediaType.parse(bindings(XProcConstants._content_type).getUnderlyingValue.getStringValue))
+    }
+
     // Fake the statics
     for ((name,message) <- exprContext.statics) {
       val msg = message.asInstanceOf[XdmValueItemMessage]
