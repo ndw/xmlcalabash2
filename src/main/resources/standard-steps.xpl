@@ -104,6 +104,13 @@
             values="('all','elements','attributes')"/>
 </p:declare-step>
 
+<p:declare-step type="p:pack">
+  <p:input port="source" content-types="text xml html" sequence="true" primary="true"/>
+  <p:input port="alternate" sequence="true" content-types="text xml html"/>
+  <p:output port="result" sequence="true" content-types="application/xml"/>
+  <p:option name="wrapper" required="true" as="xs:QName"/>
+</p:declare-step>
+
 <p:declare-step type="p:parameters">
   <p:output port="result" content-types="application/xml"/>
   <p:option name="parameters" as="map(xs:QName,item()*)?"/>
