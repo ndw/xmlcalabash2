@@ -32,7 +32,14 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
   override protected[model] def makeStructureExplicit(): Unit = {
     val first = firstChild
 
-    if (firstWithInput.isEmpty) {
+    if (firstWithInput.isDefined) {
+      val fwi = firstWithInput.get
+      fwi.port match {
+        case "" => fwi.port = "source"
+        case "source" => Unit
+        case _ => throw new RuntimeException("Viewport with-input must be named 'source'")
+      }
+    } else {
       val input = new WithInput(config)
       input.port = "source"
       addChild(input, first)
