@@ -81,7 +81,11 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
 
       runtime.run()
 
-      val resultDoc = result.messages.head.item.asInstanceOf[XdmNode]
+      val resultDoc = if (result.messages.isEmpty) {
+        result.messages.head.item.asInstanceOf[XdmNode]
+      }  else {
+        return new TestResult(false, "Result returned no messages")
+      }
       //println(resultDoc)
 
       if (_schematron.isDefined) {
