@@ -42,6 +42,11 @@ class Insert() extends DefaultXmlStep  with ProcessMatchingNodes {
     consumer.get.receive("result", matcher.result, source_metadata)
   }
 
+  override def reset(): Unit = {
+    super.reset()
+    insertion.clear()
+  }
+
   override def startDocument(node: XdmNode): Boolean = {
     if (position == "before" || position == "after") {
       throw XProcException.xcBadPosition(pattern, position, location)
