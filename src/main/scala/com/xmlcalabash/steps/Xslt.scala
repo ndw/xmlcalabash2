@@ -7,7 +7,9 @@ import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, XProcCollectionFinder}
 import javax.xml.transform.SourceLocator
-import net.sf.saxon.s9api.{Destination, MessageListener, QName, ValidationMode, XdmDestination, XdmNode, XdmValue}
+import net.sf.saxon.event.{PipelineConfiguration, Receiver}
+import net.sf.saxon.s9api.{Destination, MessageListener, QName, ValidationMode, XdmAtomicValue, XdmDestination, XdmNode, XdmValue}
+import net.sf.saxon.serialize.SerializationProperties
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -16,10 +18,6 @@ class Xslt extends DefaultXmlStep {
   private val _initial_mode = new QName("", "initial-mode")
   private val _template_name = new QName("", "template-name")
   private val _output_base_uri = new QName("", "output-base-uri")
-  private val _version = new QName("", "version")
-  private val _parameters = new QName("", "parameters")
-  private val _content_type = new QName("", "content-type")
-  private val cx_decode = new QName("cx", XProcConstants.ns_cx, "decode")
 
   private var stylesheet = Option.empty[XdmNode]
   private val defaultCollection = ListBuffer.empty[XdmNode]
@@ -30,8 +28,10 @@ class Xslt extends DefaultXmlStep {
   private var parameters = Map.empty[QName, XdmValue]
   private var version = Option.empty[String]
 
-  private val secondaryResults = mutable.HashMap.empty[URI, XdmDestination]
+  private val outputProperties = mutable.HashMap.empty[QName, XdmValue]
 
+  private val secondaryResults = mutable.HashMap.empty[URI, XdmDestination]
+  private val secondaryOutputProperties = mutable.HashMap.empty[URI, mutable.HashMap[QName, XdmValue]]
 
   override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
     Map("source" -> PortCardinality.EXACTLY_ONE, "stylesheet" -> PortCardinality.EXACTLY_ONE),
@@ -53,7 +53,7 @@ class Xslt extends DefaultXmlStep {
   }
 
   override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    if (variable == _parameters) {
+    if (variable == XProcConstants._parameters) {
       if (value.size() > 0) {
         parameters = ValueParser.parseParameters(value, context)
       }
@@ -67,7 +67,7 @@ class Xslt extends DefaultXmlStep {
             case `_initial_mode` => initialMode = Some(ValueParser.parseQName(str, context))
             case `_template_name` => templateName = Some(ValueParser.parseQName(str, context))
             case `_output_base_uri` => outputBaseURI = Some(str)
-            case `_version` => version = Some(str)
+            case XProcConstants._version => version = Some(str)
             case _ =>
               logger.info("Ignoring unexpected option to p:xslt: " + variable)
           }
@@ -82,7 +82,7 @@ class Xslt extends DefaultXmlStep {
 
     if (version.isEmpty && stylesheet.isDefined) {
       val root = S9Api.documentElement(stylesheet.get)
-      version = Option(root.get.getAttributeValue(_version))
+      version = Option(root.get.getAttributeValue(XProcConstants._version))
     }
 
     val runtime = this.config.config
@@ -113,7 +113,7 @@ class Xslt extends DefaultXmlStep {
     transformer.setMessageListener(new CatchMessages())
     transformer.setResultDocumentHandler(new ResultDocumentHandler())
 
-    val result = new XdmDestination()
+    val result = new MyDestination(new XdmDestination(), outputProperties)
     transformer.setDestination(result)
 
     if (initialMode.isDefined) {
@@ -136,18 +136,61 @@ class Xslt extends DefaultXmlStep {
 
     val xformed = Option(result.getXdmNode)
     if (xformed.isDefined) {
-      consumer.get.receive("result", xformed.get, new XProcMetadata(MediaType.XML))
+      consumer.get.receive("result", xformed.get, new XProcMetadata(MediaType.XML, outputProperties.toMap))
     }
 
     for ((uri, destination) <- secondaryResults) {
-      consumer.get.receive("secondary", destination.getXdmNode, new XProcMetadata(MediaType.XML))
+      val props = secondaryOutputProperties(uri)
+      consumer.get.receive("secondary", destination.getXdmNode, new XProcMetadata(MediaType.XML, props.toMap))
     }
+  }
+
+  class MyDestination(val destination: XdmDestination, map: mutable.HashMap[QName,XdmValue]) extends XdmDestination {
+    override def setDestinationBaseURI(baseURI: URI): Unit = {
+      destination.setDestinationBaseURI(baseURI)
     }
+
+    override def getDestinationBaseURI: URI = destination.getDestinationBaseURI
+
+    override def getReceiver(pipe: PipelineConfiguration, params: SerializationProperties): Receiver = {
+      val props = params.getProperties
+      val enum = props.propertyNames()
+      while (enum.hasMoreElements) {
+        val name: String = enum.nextElement().asInstanceOf[String]
+        val qname = if (name.startsWith("{")) {
+          ValueParser.parseClarkName(name)
+        } else {
+          new QName(name)
+        }
+        val value = props.get(name).asInstanceOf[String]
+        if (value == "yes" || value == "no") {
+          map.put(qname, new XdmAtomicValue(value == "yes"))
+        } else {
+          map.put(qname, new XdmAtomicValue(value))
+        }
+      }
+      destination.getReceiver(pipe, params)
+    }
+
+    override def closeAndNotify(): Unit = {
+      destination.closeAndNotify()
+    }
+
+    override def close(): Unit = {
+      destination.close()
+    }
+
+    override def getXdmNode: XdmNode = {
+      destination.getXdmNode
+    }
+  }
 
   class ResultDocumentHandler extends java.util.function.Function[URI,Destination] {
     override def apply(uri: URI): Destination = {
       val destination = new XdmDestination()
-      secondaryResults.put(uri, destination)
+      val outputProps = mutable.HashMap.empty[QName, XdmValue]
+      secondaryOutputProperties.put(uri, outputProps)
+      secondaryResults.put(uri, new MyDestination(destination, outputProps))
       destination
     }
   }
