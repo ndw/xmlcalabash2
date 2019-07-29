@@ -147,11 +147,13 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
   }
 
   override def xdump(xml: ElaboratedPipeline): Unit = {
-    xml.startWithOption(tumble_id, tumble_id, name)
-    for (child <- rawChildren) {
-      child.xdump(xml)
+    if (staticValue.isEmpty) {
+      xml.startWithOption(tumble_id, tumble_id, name)
+      for (child <- rawChildren) {
+        child.xdump(xml)
+      }
+      xml.endWithOption()
     }
-    xml.endWithOption()
   }
 
   override def toString: String = {
