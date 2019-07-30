@@ -17,7 +17,7 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
     this(config, node, false)
   }
 
-  private var _node: XdmNode = _
+  private var _node: XdmNode = srcNode
   private var _contentType = Option.empty[MediaType]
   private var _documentProperties = Option.empty[String]
   private var _encoding = Option.empty[String]
@@ -29,22 +29,6 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
   if (srcNode.getNodeKind != XdmNodeKind.DOCUMENT) {
     throw new RuntimeException("inline document must be a document")
   }
-
-  // Trim the leading and trailing whitespace
-  var children = S9Api.axis(srcNode, Axis.CHILD)
-  if (children.nonEmpty && children.head.getNodeKind == XdmNodeKind.TEXT && children.head.getStringValue.trim == "") {
-    children = children.tail
-  }
-  if (children.nonEmpty && children.last.getNodeKind == XdmNodeKind.TEXT && children.last.getStringValue.trim == "") {
-    children = children.dropRight(1)
-  }
-  val tree = new SaxonTreeBuilder(config)
-  tree.startDocument(srcNode.getBaseURI)
-  for (child <- children) {
-    tree.addSubtree(child)
-  }
-  tree.endDocument()
-  _node = tree.result
 
   def node: XdmNode = _node
 
@@ -97,7 +81,23 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
   }
 
   override protected[model] def makeStructureExplicit(): Unit = {
-    // nop
+    // Trim the leading and trailing whitespace
+    if (synthetic) {
+      var children = S9Api.axis(srcNode, Axis.CHILD)
+      if (children.nonEmpty && children.head.getNodeKind == XdmNodeKind.TEXT && children.head.getStringValue.trim == "") {
+        children = children.tail
+      }
+      if (children.nonEmpty && children.last.getNodeKind == XdmNodeKind.TEXT && children.last.getStringValue.trim == "") {
+        children = children.dropRight(1)
+      }
+      val tree = new SaxonTreeBuilder(config)
+      tree.startDocument(srcNode.getBaseURI)
+      for (child <- children) {
+        tree.addSubtree(child)
+      }
+      tree.endDocument()
+      _node = tree.result
+    }
   }
 
   override protected[model] def validateStructure(): Unit = {

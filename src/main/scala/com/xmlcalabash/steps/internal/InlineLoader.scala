@@ -166,7 +166,18 @@ class InlineLoader() extends AbstractLoader {
           throw new RuntimeException("Unexpected node type from parseHtml")
       }
     } else if (contentType.jsonContentType) {
-      val text = node.getStringValue
+      val text = if (expandText) {
+        val builder = new SaxonTreeBuilder(config)
+        builder.startDocument(node.getBaseURI)
+        builder.startContent()
+        expandTVT(node, builder, expandText)
+        builder.endDocument()
+        val result = builder.result
+        result.getStringValue
+      } else {
+        node.getStringValue
+      }
+
       val expr = new XProcXPathExpression(context, "parse-json($json)")
       val bindingsMap = mutable.HashMap.empty[String, Message]
       val vmsg = new XdmValueItemMessage(new XdmAtomicValue(text), XProcMetadata.JSON, context)
