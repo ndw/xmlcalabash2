@@ -3,25 +3,27 @@ package com.xmlcalabash.steps
 import java.io.{FileOutputStream, InputStream}
 import java.net.URI
 
+import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api}
-import net.sf.saxon.ma.map.MapItem
-import net.sf.saxon.s9api.{QName, Serializer, XdmNode}
-
-import scala.collection.mutable
+import net.sf.saxon.s9api.{Serializer, XdmNode}
 
 class Store extends DefaultXmlStep {
-  private var source: Option[Any] = None
-  private var smeta: Option[XProcMetadata] = None
+  private var source: Any = _
+  private var smeta: XProcMetadata = _
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCE
-  override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
+  override def outputSpec: XmlPortSpecification = new XmlPortSpecification(
+    Map("result" -> PortCardinality.EXACTLY_ONE,
+      "result-uri" -> PortCardinality.EXACTLY_ONE),
+    Map("result" -> List("*/*"),
+      "result-uri" -> List("application/xml")))
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
-    source = Some(item)
-    smeta = Some(metadata)
+    source = item
+    smeta = metadata
   }
 
   override def run(context: StaticContext): Unit = {
@@ -36,7 +38,7 @@ class Store extends DefaultXmlStep {
     }
 
     val os = new FileOutputStream(href.getPath)
-    source.get match {
+    source match {
       case is: InputStream =>
         val bytes = new Array[Byte](8192)
         var count = is.read(bytes)
@@ -48,7 +50,7 @@ class Store extends DefaultXmlStep {
         val serialOpts = serializationOptions()
         val serializer = config.processor.newSerializer(os)
 
-        val contentType = smeta.get.contentType
+        val contentType = smeta.contentType
         if (!contentType.xmlContentType && !contentType.htmlContentType) {
           serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
         }
@@ -58,12 +60,12 @@ class Store extends DefaultXmlStep {
 
         S9Api.serialize(config.config, node, serializer)
       case _ =>
-        throw XProcException.xiUnexpectedItem(source.get.toString, context.location)
+        throw XProcException.xiUnexpectedItem(source.toString, context.location)
     }
     os.close()
 
     val builder = new SaxonTreeBuilder(config)
-    builder.startDocument(smeta.get.baseURI)
+    builder.startDocument(smeta.baseURI)
     builder.startContent()
     builder.addStartElement(XProcConstants.c_result)
     builder.startContent()
@@ -72,6 +74,7 @@ class Store extends DefaultXmlStep {
     builder.endDocument()
     val result = builder.result
 
-    consumer.get.receive("result", result, new XProcMetadata(MediaType.XML))
+    consumer.get.receive("result", source, smeta)
+    consumer.get.receive("result-uri", result, new XProcMetadata(MediaType.XML))
   }
 }
