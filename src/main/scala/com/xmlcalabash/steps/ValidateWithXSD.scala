@@ -61,6 +61,8 @@ class ValidateWithXSD() extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val manager = Option(config.processor.getSchemaManager)
     if (manager.isDefined) {
       validateWithSaxon(manager.get)
