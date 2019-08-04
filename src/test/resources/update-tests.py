@@ -5,6 +5,7 @@ import os
 # with the test-suite project directory located as a sibling.
 PASSING = "src/test/resources/passing-tests.txt"
 FAILING = "src/test/resources/failing-tests.txt"
+EXTENSION = "src/test/resources/extension-tests.txt"
 
 with open(PASSING) as file:
     passing = file.readlines()
@@ -27,3 +28,13 @@ with open(FAILING, "w") as file:
     for fname in failing:
         file.write("%s\n" % fname)
 
+# Just rewrite exgtension-tests every time
+passing = []
+for dirname, subdirList, fileList in os.walk("src/test/resources/extension-tests/tests"):
+    for fname in sorted(fileList):
+        passing.append(fname)
+
+print("%d extension tests:" % len(passing))
+with open(EXTENSION, "w") as file:
+    for fname in passing:
+        file.write("%s\n" % fname)
