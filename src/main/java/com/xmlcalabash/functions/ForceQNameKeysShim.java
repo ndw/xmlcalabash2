@@ -10,8 +10,7 @@ import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.value.SequenceType;
 
 public class ForceQNameKeysShim extends ExtensionFunctionDefinition {
-    private static XProcConstants$ xproc_constants = XProcConstants$.MODULE$;
-    private static StructuredQName funcname = new StructuredQName("p", xproc_constants.ns_p(), "force-qname-keys");
+    private static StructuredQName funcname = new StructuredQName("p", "http://www.w3.org/ns/xproc", "force-qname-keys");
     private XMLCalabashConfig runtime = null;
 
     private ForceQNameKeysShim() {

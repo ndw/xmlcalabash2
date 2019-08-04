@@ -10,8 +10,7 @@ import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.value.SequenceType;
 
 public class InjTypeShim extends ExtensionFunctionDefinition {
-    private static XProcConstants$ xproc_constants = XProcConstants$.MODULE$;
-    private static StructuredQName funcname = new StructuredQName("cx", xproc_constants.ns_cx(), "step-type");
+    private static StructuredQName funcname = new StructuredQName("cx", "http://xmlcalabash.com/ns/extensions", "step-type");
     private XMLCalabashConfig runtime = null;
 
     private InjTypeShim() {

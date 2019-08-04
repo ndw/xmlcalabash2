@@ -10,8 +10,7 @@ import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.value.SequenceType;
 
 public class InjIdShim extends ExtensionFunctionDefinition {
-    private static XProcConstants$ xproc_constants = XProcConstants$.MODULE$;
-    private static StructuredQName funcname = new StructuredQName("cx", xproc_constants.ns_cx(), "injectable-id");
+    private static StructuredQName funcname = new StructuredQName("cx", "http://xmlcalabash.com/ns/extensions", "injectable-id");
     private XMLCalabashConfig runtime = null;
 
     private InjIdShim() {

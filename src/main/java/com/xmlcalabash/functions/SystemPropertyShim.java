@@ -12,8 +12,7 @@ import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.value.SequenceType;
 
 public class SystemPropertyShim extends ExtensionFunctionDefinition {
-    private static XProcConstants$ xproc_constants = XProcConstants$.MODULE$;
-    private static StructuredQName funcname = new StructuredQName("p", xproc_constants.ns_p(), "system-property");
+    private static StructuredQName funcname = new StructuredQName("p", "http://www.w3.org/ns/xproc", "system-property");
     private XMLCalabashConfig runtime = null;
 
     private SystemPropertyShim() {

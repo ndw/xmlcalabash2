@@ -10,8 +10,7 @@ import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.value.SequenceType;
 
 public class CwdShim extends ExtensionFunctionDefinition {
-    private static XProcConstants$ xproc_constants = XProcConstants$.MODULE$;
-    private static StructuredQName funcname = new StructuredQName("exf", xproc_constants.ns_exf(), "cwd");
+    private static StructuredQName funcname = new StructuredQName("exf", "http://exproc.org/standard/functions", "cwd");
     private XMLCalabashConfig runtime = null;
 
     private CwdShim() {
