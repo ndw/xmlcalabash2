@@ -69,8 +69,8 @@ object HashUtils {
     * @param bytes The data to be signed.
     * @param key The signing key.
     * @return The Base64-encoded RFC 2104-compliant HMAC signature.
-    * @throws XProcException exception when signature generation fails
     */
+  @throws(classOf[XProcException])
   def hmac(bytes: Array[Byte], version: String, key: String, location: Option[Location]): String = {
     var result = ""
     try {
