@@ -1,10 +1,10 @@
 <t:test xmlns:t="http://xproc.org/ns/testsuite/3.0" expected="pass">
 
 <t:info>
-  <t:title>Base64 encode a document</t:title>
+  <t:title>Test error output from p:load with a well-formedness error</t:title>
   <t:revision-history>
     <t:revision>
-      <t:date>2018-10-19</t:date>
+      <t:date>2018-10-25</t:date>
       <t:author initials="ndw">
         <t:name>Norman Walsh</t:name>
       </t:author>
@@ -16,7 +16,7 @@
 </t:info>
 
 <t:description xmlns="http://www.w3.org/1999/xhtml">
-  <p>Test that the <code>cx:base64-encode</code> step works.</p>
+  <p>Test that the <code>p:load</code> step gives a useful message for a well-formedness error..</p>
 </t:description>
 
 <t:pipeline>
@@ -26,13 +26,6 @@
     <p:output port="result"
               serialization="map { 'omit-xml-declaration': true(),
                                    'indent': true() }"/>
-
-    <p:declare-step type="cx:base64-encode">
-      <p:input port="source" content-types="*/*"/>
-      <p:output port="result" content-types="text/plain"/>
-      <p:option name="serialization" as="map(*)"/>
-      <p:option name="parameters" as="map(*)"/>
-    </p:declare-step>
 
     <cx:base64-encode>
       <p:with-input port="source">
