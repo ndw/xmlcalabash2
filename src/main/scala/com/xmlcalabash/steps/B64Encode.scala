@@ -7,7 +7,7 @@ import java.util.Base64
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils}
-import net.sf.saxon.s9api.{QName, Serializer, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{QName, Serializer, XdmEmptySequence, XdmNode, XdmValue}
 
 import scala.collection.mutable
 
@@ -21,12 +21,16 @@ class B64Encode extends DefaultXmlStep {
 
   override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
     if (variable == XProcConstants._serialization) {
-      val opts = TypeUtils.castAsScala(value).asInstanceOf[Map[Any,Any]]
-      for (opt <- opts.keySet) {
-        opt match {
-          case name: QName =>
-            serialOpts.put(name, opt.toString)
-        }
+      value match {
+        case _: XdmEmptySequence => Unit
+        case _ =>
+          val opts = TypeUtils.castAsScala(value).asInstanceOf[Map[Any,Any]]
+          for (opt <- opts.keySet) {
+            opt match {
+              case name: QName =>
+                serialOpts.put(name, opt.toString)
+            }
+          }
       }
     }
   }

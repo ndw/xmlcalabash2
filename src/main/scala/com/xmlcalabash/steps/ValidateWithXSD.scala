@@ -75,6 +75,9 @@ class ValidateWithXSD() extends DefaultXmlStep {
     logger.trace(s"Validating with Saxon: ${source.getBaseURI} with ${schemas.length} schema(s)")
 
     version = stringBinding(_version, version)
+    if (version != "1.0" && version != "1.1") {
+      throw XProcException.xcVersionNotAvailable(version, location)
+    }
 
     val saxonConfig = config.processor.getUnderlyingConfiguration
     saxonConfig.clearSchemaCache()
@@ -150,11 +153,14 @@ class ValidateWithXSD() extends DefaultXmlStep {
     validator.setLax(mode == "lax")
     validator.setUseXsiSchemaLocation(use_location_hints)
 
+    var raisedException = Option.empty[Exception]
+    var errors = Option.empty[XdmNode]
+
     try {
       validator.validate(source.asSource())
     } catch {
       case ex: SaxonApiException =>
-        val errors = report.endErrors()
+        errors = Some(report.endErrors())
         var msg = ex.getMessage
         if (listener.exceptions.nonEmpty) {
           val lex = listener.exceptions.head
@@ -164,30 +170,38 @@ class ValidateWithXSD() extends DefaultXmlStep {
               val fail = ve.getValidationFailure
               val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, fail.getLineNumber, fail.getColumnNumber, msg, location)
               except.underlyingCauses = listener.exceptions
-              except.errors = errors
-              throw except
+              except.errors = errors.get
+              raisedException = Some(except)
             case _: Exception =>
               msg = lex.getMessage
               val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, msg, location)
               except.underlyingCauses = listener.exceptions
-              except.errors = errors
-              throw except
+              except.errors = errors.get
+              raisedException = Some(except)
           }
         } else {
           val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, msg, location)
-          throw except
+          raisedException = Some(except)
         }
       case ex: Exception =>
-        val errors = report.endErrors()
+        errors = Some(report.endErrors())
         val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, ex.getMessage, location)
         except.underlyingCauses = listener.exceptions
-        except.errors = errors
-        throw except
+        except.errors = errors.get
+        raisedException = Some(except)
     }
 
-    val errors = report.endErrors()
-    val metadata = new XProcMetadata(MediaType.XML)
-    consumer.get.receive("result", destination.getXdmNode, sourceMetadata)
-    consumer.get.receive("report", errors, XProcMetadata.XML)
+    if (raisedException.isDefined) {
+      if (assert_valid) {
+        throw raisedException.get
+      } else {
+        consumer.get.receive("report", errors.get, XProcMetadata.XML)
+        consumer.get.receive("result", source, sourceMetadata)
+      }
+    } else {
+      errors = Some(report.endErrors())
+      consumer.get.receive("report", errors.get, XProcMetadata.XML)
+      consumer.get.receive("result", destination.getXdmNode, sourceMetadata)
+    }
   }
 }

@@ -2,9 +2,9 @@ package com.xmlcalabash.steps
 
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
-import net.sf.saxon.s9api.{QName, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable.ListBuffer
 
@@ -24,11 +24,21 @@ class Insert() extends DefaultXmlStep  with ProcessMatchingNodes {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULTSEQ
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
+    val node = item match {
+      case n: XdmNode => n
+      case v: XdmAtomicValue =>
+        val tree = new SaxonTreeBuilder(config)
+        tree.startDocument(None)
+        tree.addText(v.getStringValue)
+        tree.endDocument()
+        tree.result
+    }
+
     if (port == "source") {
-      source = item.asInstanceOf[XdmNode]
+      source = node
       source_metadata = metadata
     } else {
-      insertion += item.asInstanceOf[XdmNode]
+      insertion += node
     }
   }
 
