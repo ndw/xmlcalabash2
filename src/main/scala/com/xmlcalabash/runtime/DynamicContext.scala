@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.jafpl.graph.{Location, LoopStart}
 import com.jafpl.messages.Message
-import com.xmlcalabash.model.xml.{Artifact, ForEach}
+import com.xmlcalabash.model.xml.{Artifact, ForEach, ForLoop, ForUntil}
 import net.sf.saxon.om.Item
 import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 
@@ -24,15 +24,14 @@ class DynamicContext() {
     var found = false
     var p: Option[Artifact] = artifact
     while (!found && p.isDefined) {
-      p.get match {
-        case loop: ForEach =>
-          found = true
-          if (loop.graphNode.isDefined) {
-            val node = loop.graphNode.get.asInstanceOf[LoopStart]
+      if (p.get.graphNode.isDefined) {
+        p.get.graphNode.get match {
+          case node: LoopStart =>
+            found = true
             _iterationPosition = node.iterationPosition
             _iterationSize = node.iterationSize
-          }
-        case _ => Unit
+          case _ => Unit
+        }
       }
       p = p.get.parent
     }

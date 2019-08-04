@@ -133,6 +133,12 @@ class Parser(config: XMLCalabashConfig) {
               container.addChild(parseIf(child))
             case XProcConstants.p_for_each =>
               container.addChild(parseForEach(child))
+            case XProcConstants.cx_until =>
+              container.addChild(parseUntil(child))
+            case XProcConstants.cx_while =>
+              container.addChild(parseWhile(child))
+            case XProcConstants.cx_loop =>
+              container.addChild(parseLoop(child))
             case XProcConstants.p_viewport =>
               container.addChild(parseViewport(child))
             case XProcConstants.p_group =>
@@ -236,6 +242,18 @@ class Parser(config: XMLCalabashConfig) {
 
   private def parseForEach(node: XdmNode): ForEach = {
     parseContainer(node, new ForEach(config))
+  }
+
+  private def parseUntil(node: XdmNode): ForUntil = {
+    parseContainer(node, new ForUntil(config))
+  }
+
+  private def parseWhile(node: XdmNode): ForWhile = {
+    parseContainer(node, new ForWhile(config))
+  }
+
+  private def parseLoop(node: XdmNode): ForLoop = {
+    parseContainer(node, new ForLoop(config))
   }
 
   private def parseViewport(node: XdmNode): Viewport = {

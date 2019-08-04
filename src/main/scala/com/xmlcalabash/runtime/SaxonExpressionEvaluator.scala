@@ -74,6 +74,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
       case expr: XProcVtExpression => Some(expr.context)
       case _ => None
     }
+
     val newContext = if (exprContext.isDefined) {
       new DynamicContext(exprContext.get.artifact)
     } else {
@@ -288,9 +289,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
                            extensionsOk: Boolean,
                            params: XPathBindingParams,
                            useCollection: Boolean): XdmValue = {
-    val results = ListBuffer.empty[XdmItem]
     val config = xmlCalabash.processor.getUnderlyingConfiguration
-    val collection = List.empty[XdmNode]
 
     val sconfig = xmlCalabash.processor.getUnderlyingConfiguration
     val curfinder = sconfig.getCollectionFinder

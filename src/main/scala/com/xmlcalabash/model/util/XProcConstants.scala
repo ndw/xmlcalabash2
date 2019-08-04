@@ -66,6 +66,9 @@ object XProcConstants {
   val p_identity = new QName("p", ns_p, "identity")
   val p_sink = new QName("p", ns_p, "sink")
 
+  val cx_until = new QName("cx", ns_cx, "until")
+  val cx_while = new QName("cx", ns_cx, "while")
+  val cx_loop = new QName("cx", ns_cx, "loop")
   val cx_content_type_checker = new QName("cx", ns_cx, "content-type-checker")
   val cx_filter = new QName("cx", ns_cx, "filter")
   val cx_exception_translator = new QName("cx", ns_cx, "exception-translator")

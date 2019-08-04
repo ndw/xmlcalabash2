@@ -47,15 +47,16 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
     } else if (_select.isDefined) {
       bindings ++= staticContext.findVariableRefsInString(_select.get)
       if (bindings.isEmpty && parent.get.isInstanceOf[AtomicStep]) {
-        val depends = staticContext.dependsOnContextString(_select.get)
+        val depends = collection || staticContext.dependsOnContextString(_select.get)
         if (!depends) {
           val checkas = if (qnameKeys) {
             None
           } else {
             as
           }
-          val expr = new XProcXPathExpression(staticContext, _select.get, checkas, allowedValues, None)
-          val msg = config.expressionEvaluator.value(expr, List(), inScopeStatics, None)
+          val opts = new XPathBindingParams(Map.empty[QName, XdmValue], collection)
+          val expr = new XProcXPathExpression(staticContext, _select.get, checkas, allowedValues, opts)
+          val msg = config.expressionEvaluator.value(expr, List(), inScopeStatics, Some(opts))
 
           if (qnameKeys) {
             msg.item match {
@@ -117,12 +118,12 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
       }
     }
 
-    val params = new XPathBindingParams(statics.toMap)
+    val params = new XPathBindingParams(statics.toMap, collection)
     val init = if (_avt.isDefined) {
       val expr = staticContext.parseAvt(_avt.get)
       new XProcVtExpression(staticContext, expr)
     } else {
-      val params = new ExprParams(collection)
+      val params = new XPathBindingParams(collection)
       new XProcXPathExpression(staticContext, _select.getOrElse("()"), as, _allowedValues, params)
     }
     val node = cnode.addOption(_name.getClarkName, init, params)

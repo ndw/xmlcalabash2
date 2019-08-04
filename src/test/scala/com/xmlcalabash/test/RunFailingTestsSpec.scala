@@ -22,7 +22,6 @@ class RunFailingTestsSpec extends XProcTestSpec {
       val filename = "src/test/resources/failing-tests.txt"
       val passing = new File(filename)
       if (passing.exists) {
-        val tests = ListBuffer.empty[String]
         val bufferedSource = Source.fromFile(passing)
         for (line <- bufferedSource.getLines) {
           tests += s"src/test/resources/test-suite/test-suite/tests/$line"

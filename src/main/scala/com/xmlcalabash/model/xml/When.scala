@@ -3,6 +3,7 @@ package com.xmlcalabash.model.xml
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.runtime.params.XPathBindingParams
 import com.xmlcalabash.runtime.{ExprParams, XProcXPathExpression}
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.XdmNode
@@ -16,7 +17,7 @@ class When(override val config: XMLCalabashConfig) extends ChooseBranch(config) 
 
     if (attributes.contains(XProcConstants._test)) {
       _test = attr(XProcConstants._test).get
-      val params = new ExprParams(collection)
+      val params = new XPathBindingParams(collection)
       testExpr = new XProcXPathExpression(staticContext, _test, None, None, Some(params))
     } else {
       throw XProcException.xsMissingRequiredAttribute(XProcConstants._test, location)

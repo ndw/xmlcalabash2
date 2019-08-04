@@ -5,12 +5,18 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.XMLCalabashRuntime
-import com.xmlcalabash.util.MediaType
+import com.xmlcalabash.util.{MediaType, S9Api}
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import net.sf.saxon.s9api.{QName, XdmNode}
+import net.sf.saxon.s9api.{QName, XdmMap, XdmNode}
+
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 class DeclareOutput(override val config: XMLCalabashConfig) extends Port(config) {
-  def serialization: Map[QName,String] = Map.empty[QName,String]
+  private var mapexpr = Option.empty[String]
+  private var _serialization = mutable.Map.empty[QName,String]
+
+  def serialization: Map[QName,String] = _serialization.toMap
 
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
@@ -28,12 +34,33 @@ class DeclareOutput(override val config: XMLCalabashConfig) extends Port(config)
       _content_types = List(MediaType.OCTET_STREAM)
     }
 
+    if (attributes.contains(XProcConstants._serialization)) {
+      mapexpr = attr(XProcConstants._serialization)
+    }
+
     _href = attr(XProcConstants._href)
     _pipe = attr(XProcConstants._pipe)
 
     if (attributes.nonEmpty) {
       val badattr = attributes.keySet.head
       throw XProcException.xsBadAttribute(badattr, location)
+    }
+  }
+
+  override def makeBindingsExplicit(): Unit = {
+    super.makeBindingsExplicit()
+    if (mapexpr.isDefined) {
+      val msg = computeStatically(mapexpr.get)
+      msg.item match {
+        case map: XdmMap =>
+          val sermap = S9Api.forceQNameKeys(map.getUnderlyingValue, staticContext)
+          for ((key,value) <- sermap.asImmutableMap().asScala) {
+            val name = key.getQNameValue
+            _serialization(name) = value.getUnderlyingValue.getStringValue
+          }
+        case _ =>
+          throw new RuntimeException("Serialization options must be a map")
+      }
     }
   }
 

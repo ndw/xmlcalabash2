@@ -295,6 +295,9 @@ Attempted p:hash failed: “$1”.
 XC0036/6
 The cx:hmac algorithm requires an ‘accessKey’ parameter.
 
+XC0038
+The requested version, “$1”, is not available.
+
 XC0053
 Validity error in “$1” at line $2, column $3: $4
 
@@ -418,13 +421,18 @@ Internal error: configuration object is not an XMLCalabash object.
 {http://xmlcalabash.com/ns/extensions}XI0049
 Internal error: configuration object differs from runtime configuration object.
 
-{http://xmlcalabash.com/ns/extensions}XI0050
-
-{http://xmlcalabash.com/ns/extensions}XI0051
-
-{http://xmlcalabash.com/ns/extensions}XI0052
-
 {http://xmlcalabash.com/ns/extensions}XI0053
 Could not initialize requested Saxon version.
 
-{http://xmlcalabash.com/ns/extensions}XI0055
+{http://xmlcalabash.com/ns/extensions}XI0061
+While loop exceeded maximum iterations: $1
+
+{http://xmlcalabash.com/ns/extensions}XI0062
+Until loop exceeded maximum iterations: $1
+
+{http://xmlcalabash.com/ns/extensions}XI0063
+The cx:loop increment may not be zero.
+
+{http://xmlcalabash.com/ns/extensions}XI9999
+This is the end of the file.
+

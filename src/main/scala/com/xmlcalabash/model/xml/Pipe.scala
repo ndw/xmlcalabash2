@@ -79,7 +79,6 @@ class Pipe(override val config: XMLCalabashConfig, shortcut: Option[String]) ext
         if (step.isEmpty) {
           throw XProcException.xsPortNotReadableNoStep(_step.get, location)
         }
-
         if (thisStep.ancestor(step.get)) {
           if (step.get.primaryInput.isEmpty) {
             throw XProcException.xsPortNotReadableNoPrimaryInput(_step.get, location)
@@ -93,6 +92,10 @@ class Pipe(override val config: XMLCalabashConfig, shortcut: Option[String]) ext
             _port = Some(step.get.primaryOutput.get.port)
           }
         }
+      }
+
+      if (step.isEmpty) {
+        throw XProcException.xsPortNotReadableNoStep(_step.get, location)
       }
 
       if (thisStep == step.get) {

@@ -79,6 +79,9 @@ object XProcException {
   def xiNotJSON(location: Option[Location]): XProcException = internalError(58, location, None)
   def xiNotBinary(location: Option[Location]): XProcException = internalError(59, location, None)
   def xiUnexpectedItem(kind: String, location: Option[Location]): XProcException = internalError(60, location, kind)
+  def xiMaxRegressionsExceededWhile(max: Long, location: Option[Location]): XProcException = internalError(61, location, max)
+  def xiMaxRegressionsExceededUntil(max: Long, location: Option[Location]): XProcException = internalError(62, location, max)
+  def xiAttempToCountByZero(location: Option[Location]): XProcException = internalError(63, location)
 
   def xdContextItemSequence(expr: String, msg: String, location: Option[Location]): XProcException = dynamicError(1, List(expr, msg), location)
   def xdSequenceNotAllowedOnIf(location: Option[Location]): XProcException = dynamicError(5, location)
@@ -105,7 +108,7 @@ object XProcException {
   def xdConflictingNamespaceDeclarations(msg: String, location: Option[Location]): XProcException = dynamicError(34, msg, location)
   def xdBadType(value: String, as: String, location: Option[Location]): XProcException = dynamicError(36, List(value, as), location)
   def xsBadInputMediaType(ctype: MediaType, allowed: List[MediaType], location: Option[Location]): XProcException = dynamicError(38, List(ctype, allowed), location)
-  def xsBadOutputMediaType(ctype: MediaType, allowed: List[MediaType], location: Option[Location]): XProcException = dynamicError(42, List(ctype, allowed), location)
+  def xdBadOutputMediaType(ctype: MediaType, allowed: List[MediaType], location: Option[Location]): XProcException = dynamicError(42, List(ctype, allowed), location)
   def xdNotWFXML(href: String, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, message), location)
   def xdNotWFXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, line, col, message), location)
 
@@ -226,6 +229,7 @@ object XProcException {
   def xcBadHashAlgorithm(algorithm: String, location: Option[Location]): XProcException = stepError((36,4), algorithm, location)
   def xcHashFailed(message: String, location: Option[Location]): XProcException = stepError((36,5), message, location)
   def xcMissingHmacKey(location: Option[Location]): XProcException = stepError((36,6), location)
+  def xcVersionNotAvailable(version: String, location: Option[Location]): XProcException = stepError(38, version, location)
 
   def xcCannotStore(href: URI, location: Option[Location]): XProcException = stepError(50, href, location)
   def xcNotSchemaValid(href: String, message: String, location: Option[Location]): XProcException = stepError(53, List(href, message), location)

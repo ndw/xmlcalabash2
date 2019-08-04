@@ -3,6 +3,7 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{ContainerStart, Node}
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
+import com.xmlcalabash.runtime.params.XPathBindingParams
 import com.xmlcalabash.runtime.{ExprParams, XMLCalabashRuntime, XProcXPathExpression, XProcXPathValue}
 import com.xmlcalabash.util.XProcVarValue
 import com.xmlcalabash.util.xc.ElaboratedPipeline
@@ -40,19 +41,6 @@ class DeclareOption(override val config: XMLCalabashConfig) extends NameBinding(
     _runtimeBindings = bindings
   }
 
-  def computeStatically(): Unit = {
-    // Evaluate it; no reference to context or non-statics is allowed.
-    val exprContext = staticContext.withStatics(inScopeStatics)
-    val expr = new XProcXPathExpression(staticContext, select.get)
-    try {
-      val msg = config.expressionEvaluator.value(expr, List(), exprContext.statics, None)
-      staticValue = msg
-    } catch {
-      case sae: SaxonApiException =>
-        throw XProcException.xsStaticErrorInExpression(select.get, sae.getMessage, exprContext.location)
-    }
-  }
-
   override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     if (static) {
       // Statics have already been evaluated, they don't appear in the graph
@@ -65,7 +53,7 @@ class DeclareOption(override val config: XMLCalabashConfig) extends NameBinding(
       throw new ModelException(ExceptionCode.INTERNAL, "Don't know what to do about opts here", location)
     }
 
-    val params = new ExprParams(collection)
+    val params = new XPathBindingParams(collection)
     var init = if (_runtimeBindings.contains(name)) {
       new XProcXPathValue(staticContext, _runtimeBindings(name), as, _allowedValues, params)
     } else {

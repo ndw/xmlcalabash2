@@ -286,6 +286,48 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
     end()
   }
 
+  def startForUntil(tumble_id: String,
+                    stepName: String): Unit = {
+    val element = XProcConstants.cx_until
+    builder.addStartElement(element)
+    tid(tumble_id)
+    builder.addAttribute(XProcConstants._name, stepName)
+    builder.startContent()
+    openStack.push(element)
+  }
+
+  def endForUntil(): Unit = {
+    end()
+  }
+
+  def startForWhile(tumble_id: String,
+                    stepName: String): Unit = {
+    val element = XProcConstants.cx_while
+    builder.addStartElement(element)
+    tid(tumble_id)
+    builder.addAttribute(XProcConstants._name, stepName)
+    builder.startContent()
+    openStack.push(element)
+  }
+
+  def endForWhile(): Unit = {
+    end()
+  }
+
+  def startForLoop(tumble_id: String,
+                    stepName: String): Unit = {
+    val element = XProcConstants.cx_loop
+    builder.addStartElement(element)
+    tid(tumble_id)
+    builder.addAttribute(XProcConstants._name, stepName)
+    builder.startContent()
+    openStack.push(element)
+  }
+
+  def endForLoop(): Unit = {
+    end()
+  }
+
   def startChoose(tumble_id: String,
                   stepName: String): Unit = {
     val element = XProcConstants.p_choose

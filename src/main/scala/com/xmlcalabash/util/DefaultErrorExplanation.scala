@@ -5,14 +5,16 @@ import java.io.InputStreamReader
 import com.xmlcalabash.config.{ErrorExplanation, XMLCalabashConfig}
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import net.sf.saxon.s9api.QName
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanation {
+  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val messages = ListBuffer.empty[ErrorExplanationTemplate]
 
-  private var code = Option.empty[QName]
+  private var code = Option.empty[String]
   private var variant = 1
   private var message = ""
   private var explanation = ""
@@ -30,23 +32,37 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
     } else {
       if (code.isEmpty) {
         val BareCode = "(\\S+)".r
-        val BareCodeVar = "(\\S+)/(\\d+)".r
-        val ClarkCode = "(\\{.*\\})(\\S+)".r
-        val ClarkCodeVar = "(\\{.*\\})(\\S+)/(\\d+)".r
+        val BareCodeVar = "(\\S+)\\s*/\\s*(\\d+)".r
+        val ClarkCode = "\\{(.*)\\}\\s*(\\S+)".r
+        val ClarkCodeVar = "\\{(.*)\\}\\s*(\\S+)\\s*/\\s*(\\d+)".r
 
-        code = line match {
-          case BareCodeVar(bcode, vcode) =>
-            variant = vcode.toInt
-            Some(new QName(XProcConstants.ns_err, bcode))
-          case BareCode(bcode) =>
-            variant = 1
-            Some(new QName(XProcConstants.ns_err, bcode))
+        val qcode = line match {
           case ClarkCodeVar(namespace, localname, vcode) =>
             variant = vcode.toInt
             Some(new QName(namespace, localname))
           case ClarkCode(namespace, localname) =>
             variant = 1
             Some(new QName(namespace, localname))
+          case BareCodeVar(bcode, vcode) =>
+            variant = vcode.toInt
+            Some(new QName(XProcConstants.ns_err, bcode))
+          case BareCode(bcode) =>
+            variant = 1
+            Some(new QName(XProcConstants.ns_err, bcode))
+          case _  =>
+            logger.info(s"Expected error code on line: $line")
+            None
+        }
+
+        if (qcode.isDefined) {
+          code = Some(qcode.get.getClarkName)
+        } else {
+          // If it's *still* empty, move along
+          if (message == "") {
+            message = line
+          } else {
+            explanation += line + "\n"
+          }
         }
       } else if (message == "") {
         message = line
@@ -79,12 +95,13 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
   }
 
   private def template(code: QName, variant: Int, count: Integer): ErrorExplanationTemplate = {
+    val clark = code.getClarkName
     // Find all the messages with a matching code and variant, with a cardinality <= details.length
-    val templates = messages.filter(_.code == code).filter(_.variant == variant).filter(_.cardinality <= count)
+    val templates = messages.filter(_.code == clark).filter(_.variant == variant).filter(_.cardinality <= count)
 
     if (templates.isEmpty) {
       // Return a default template
-      new ErrorExplanationTemplate(code, 1,"[No explanatory message for " + code + "]", "")
+      new ErrorExplanationTemplate(code.getClarkName, 1,"[No explanatory message for " + code + "]", "")
     } else {
       // Return the one with the highest cardinality.
       templates.maxBy(_.cardinality)
@@ -129,7 +146,7 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
     }
   }
 
-  private class ErrorExplanationTemplate(val code: QName, val variant: Int, val message: String, val explanation: String) {
+  private class ErrorExplanationTemplate(val code: String, val variant: Int, val message: String, val explanation: String) {
     def cardinality: Int = message.count(_=='$')
   }
 

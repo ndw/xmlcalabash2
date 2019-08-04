@@ -5,13 +5,14 @@ import java.net.URI
 import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{UniqueId, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.params.{StepParams, XPathBindingParams}
-import com.xmlcalabash.runtime.{XProcLocation, StaticContext, XMLCalabashRuntime}
+import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime, XProcLocation, XProcXPathExpression}
 import com.xmlcalabash.util.S9Api
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmNode, XdmNodeKind, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -358,6 +359,18 @@ class Artifact(val config: XMLCalabashConfig) {
 
   protected[model] def stepParams(): StepParams = {
     new StepParams(inScopeStatics)
+  }
+
+  def computeStatically(xpathExpression: String): XdmValueItemMessage = {
+    // Evaluate it; no reference to context or non-statics is allowed.
+    val exprContext = staticContext.withStatics(inScopeStatics)
+    val expr = new XProcXPathExpression(staticContext, xpathExpression)
+    try {
+      config.expressionEvaluator.value(expr, List(), exprContext.statics, None)
+    } catch {
+      case sae: SaxonApiException =>
+        throw XProcException.xsStaticErrorInExpression(xpathExpression, sae.getMessage, exprContext.location)
+    }
   }
 
   def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {

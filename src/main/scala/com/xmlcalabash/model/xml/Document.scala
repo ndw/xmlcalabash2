@@ -58,7 +58,6 @@ class Document(override val config: XMLCalabashConfig) extends DataSource(config
     if (allChildren.isEmpty && env.defaultReadablePort.isDefined && !parent.get.isInstanceOf[DeclareInput]) {
       _context_provided = true
       val pipe = new Pipe(config)
-      val drp = env.defaultReadablePort.get
       pipe.link = env.defaultReadablePort.get
       pipe.port = env.defaultReadablePort.get.port
       pipe.step = env.defaultReadablePort.get.step.stepName

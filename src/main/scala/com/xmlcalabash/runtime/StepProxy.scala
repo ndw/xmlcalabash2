@@ -4,7 +4,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, IOException, InputS
 import java.net.URI
 
 import com.jafpl.graph.Location
-import com.jafpl.messages.{BindingMessage, ExceptionMessage, Message, PipelineMessage}
+import com.jafpl.messages.{BindingMessage, ExceptionMessage, ItemMessage, Message, PipelineMessage}
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.{BindingSpecification, DataConsumer, PortCardinality, Step}
 import com.xmlcalabash.config.DocumentRequest
@@ -320,6 +320,16 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
           case _ =>
             throw XProcException.xiInvalidMessage(staticContext.location, message)
         }
+      case item: ItemMessage =>
+        // FIXME: match more types and/or centralize this somewhere
+        val atomic = item.item match {
+          case long: Long => new XdmAtomicValue(long)
+          case int: Int => new XdmAtomicValue(int)
+          case char: Char => new XdmAtomicValue(char)
+          case str: String => new XdmAtomicValue(str)
+          case _ => throw XProcException.xiInvalidMessage(staticContext.location, message)
+        }
+        step.receive(port, atomic, XProcMetadata.XML)
       case _ =>
         throw XProcException.xiInvalidMessage(staticContext.location, message)
     }
@@ -330,7 +340,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     val mtypes = step.signature.output(port, staticContext.location).contentTypes
     if (mtypes.nonEmpty) {
       if (!metadata.contentType.allowed(mtypes)) {
-        throw XProcException.xsBadOutputMediaType(metadata.contentType, mtypes, staticContext.location)
+        throw XProcException.xdBadOutputMediaType(metadata.contentType, mtypes, staticContext.location)
       }
     }
 
