@@ -38,7 +38,11 @@ class ValidateWithRNG() extends DefaultXmlStep {
     Map("source" -> List("application/xml", "text/xml", "*/*+xml"),
         "schema" -> List("application/xml", "text/xml", "*/*+xml", "text/plain")))
 
-  override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
+  override def outputSpec: XmlPortSpecification = new XmlPortSpecification(
+    Map("result" -> PortCardinality.EXACTLY_ONE,
+      "report" -> PortCardinality.ZERO_OR_MORE),
+    Map("result" -> List("application/xml", "text/xml", "*/*+xml"),
+      "report" -> List("application/xml", "text/xml", "*/*+xml")))
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     item match {
@@ -63,8 +67,10 @@ class ValidateWithRNG() extends DefaultXmlStep {
       dtd_id_idref_warnings = booleanBinding(_dtd_id_idref_warnings).getOrElse(false)
     }
 
-    val errors = new Errors(config.config)
-    val listener = new CachingErrorListener(errors)
+    assert_valid = booleanBinding(_assert_valid).getOrElse(true)
+
+    val report = new Errors(config.config)
+    val listener = new CachingErrorListener(report)
     val properties = new PropertyMapBuilder()
     properties.put(ValidateProperty.ERROR_HANDLER, listener)
     properties.put(ValidateProperty.URI_RESOLVER, config.uriResolver)
@@ -94,52 +100,46 @@ class ValidateWithRNG() extends DefaultXmlStep {
       schemaInputSource = S9Api.xdmToInputSource(config.config, schema)
     }
 
+    var except: Option[XProcException] = None
+    var errors = Option.empty[XdmNode]
     val driver = new ValidationDriver(properties.toPropertyMap, sr)
-
-    try {
-      if (driver.loadSchema(schemaInputSource)) {
-        val din = S9Api.xdmToInputSource(config.config, source)
-        if (!driver.validate(din)) {
-          if (assert_valid) {
-            var except: Option[XProcException] = None
-            var errloc: Option[Location] = None
-            for (lex <- listener.exceptions) {
-              lex match {
-                case ex: SAXParseException =>
-                  if (errloc.isEmpty) {
-                    errloc = Some(new XProcLocation(ex))
-                  }
-                  if (except.isEmpty) {
-                    except = Some(XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, lex.getMessage, errloc))
-                  }
-                case _: Exception =>
-                  if (except.isEmpty) {
-                    except = Some(XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, lex.getMessage, location))
-                  }
-              }
+    if (driver.loadSchema(schemaInputSource)) {
+      val din = S9Api.xdmToInputSource(config.config, source)
+      if (!driver.validate(din)) {
+        if (assert_valid) {
+          errors = Some(report.endErrors())
+          var errloc: Option[Location] = None
+          for (lex <- listener.exceptions) {
+            lex match {
+              case ex: SAXParseException =>
+                if (errloc.isEmpty) {
+                  errloc = Some(new XProcLocation(ex))
+                }
+                if (except.isEmpty) {
+                  except = Some(XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, lex.getMessage, errloc))
+                }
+              case _: Exception =>
+                if (except.isEmpty) {
+                  except = Some(XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, lex.getMessage, location))
+                }
             }
-
-            if (except.isEmpty) {
-              except = Some(XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, "RELAX NG validation failed", location))
-            }
-
-            except.get.underlyingCauses = listener.exceptions
-
-            throw except.get
           }
+
+          if (except.isEmpty) {
+            except = Some(XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, "RELAX NG validation failed", location))
+          }
+
+          except.get.underlyingCauses = listener.exceptions
+          except.get.errors = errors.get
+
+          throw except.get
         }
-      } else {
-        throw XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, "Error loading schema", location)
       }
-    } catch {
-      case ex: SAXParseException =>
-        throw new RuntimeException("SAX Parse Exception")
-      case ex: SAXException =>
-        throw new RuntimeException("SAX Exception")
-      case ex: IOException =>
-        throw new RuntimeException("IO Exception")
+    } else {
+      throw XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, "Error loading schema", location)
     }
 
+    consumer.get.receive("report", report.endErrors() , XProcMetadata.XML)
     consumer.get.receive("result", source, sourceMetadata)
   }
 }

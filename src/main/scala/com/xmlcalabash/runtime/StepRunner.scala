@@ -33,8 +33,8 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
     }
     typeMap.put(portSig.port, List("application/octet-stream")) // FIXME: THIS IS A LIE
   }
-
   private val iSpec = new XmlPortSpecification(cardMap.toMap, typeMap.toMap)
+
   cardMap.clear()
   typeMap.clear()
   for (port <- signature.outputPorts) {
@@ -129,6 +129,7 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
     }
 
     runtime.run()
+    println("HELLO")
   }
 
   override def reset(): Unit = {
@@ -150,7 +151,7 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
   }
 
   class ConsumerMap(val result_port: String, val consumer: XProcDataConsumer) extends DataConsumer {
-    override def receive(port: String, message: Message): Unit = {
+    override def consume(port: String, message: Message): Unit = {
       // The data consumer always receives input on its "source" port. We have to construct
       // this consumer so that it knows what output port to deliver to.
 

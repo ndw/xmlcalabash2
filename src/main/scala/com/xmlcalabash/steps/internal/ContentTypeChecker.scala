@@ -38,7 +38,6 @@ class ContentTypeChecker() extends XmlStep {
   protected var selectContext: StaticContext = _
   protected var portName: String = _
   protected var sequence = false
-  protected var documentCount = 0
 
   def location: Option[Location] = _location
 
@@ -161,7 +160,7 @@ class ContentTypeChecker() extends XmlStep {
   }
 
   override def reset(): Unit = {
-    documentCount = 0
+    // nop
   }
 
   override def abort(): Unit = {

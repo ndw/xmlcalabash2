@@ -27,7 +27,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   protected var _visibility = Option.empty[String]
   protected var _allowedValues = Option.empty[List[XdmAtomicValue]]
   protected var _staticValue = Option.empty[XdmValueItemMessage]
-  protected var collection = false
+  protected var collection = List("false")
 
   private var _qnameKeys = false
   private var resolvedStatically = false
@@ -110,7 +110,13 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
     _required = staticContext.parseBoolean(attr(XProcConstants._required))
     _select = attr(XProcConstants._select)
     _visibility = attr(XProcConstants._visibility)
-    collection = staticContext.parseBoolean(attr(XProcConstants._collection)).getOrElse(false)
+
+    val _collection = attr(XProcConstants._collection)
+    if (_collection.isDefined) {
+      collection = staticContext.parseAvt(_collection.get)
+    } else {
+      collection = List("false")
+    }
 
     _href = attr(XProcConstants._href)
     _pipe = attr(XProcConstants._pipe)

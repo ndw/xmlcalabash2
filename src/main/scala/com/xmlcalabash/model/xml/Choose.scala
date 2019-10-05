@@ -14,7 +14,7 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
   private var hasWhen = false
   private var hasOtherwise = false
   protected var ifexpr: Option[String] = None
-  protected var ifcoll: Option[Boolean] = None
+  protected var ifcoll: Option[String] = None
   protected[xml] var p_if = false
 
   override def parse(node: XdmNode): Unit = {
@@ -27,7 +27,7 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
         throw XProcException.xsMissingRequiredAttribute(XProcConstants._test, location)
       }
       if (attributes.contains(XProcConstants._collection)) {
-        ifcoll = staticContext.parseBoolean(attr(XProcConstants._collection))
+        ifcoll = attr(XProcConstants._collection)
       }
     }
 

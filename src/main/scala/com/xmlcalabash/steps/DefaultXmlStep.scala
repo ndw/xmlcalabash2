@@ -282,6 +282,36 @@ class DefaultXmlStep extends XmlStep {
     serializer
   }
 
+  def documentIsText(node: XdmNode): Boolean = {
+    node.getNodeKind match {
+      case XdmNodeKind.DOCUMENT =>
+        var text = true
+        for (child <- S9Api.axis(node, Axis.CHILD)) {
+          text = text && child.getNodeKind == XdmNodeKind.TEXT
+        }
+        text
+      case XdmNodeKind.TEXT =>
+        true
+      case _ =>
+        false
+    }
+  }
+
+  def convertMetadataToText(meta: XProcMetadata): XProcMetadata = {
+    val props = mutable.HashMap.empty[QName,XdmValue]
+    for ((key,value) <- meta.properties) {
+      key match {
+        case XProcConstants._serialization => Unit
+        case XProcConstants._content_type =>
+          props(key) = new XdmAtomicValue("text/plain")
+        case _ =>
+          props(key) = value
+      }
+    }
+
+    new XProcMetadata(MediaType.TEXT, props.toMap)
+  }
+
   override def toString: String = {
     val defStr = super.toString
     if (defStr.startsWith("XXX com.xmlcalabash.steps")) {

@@ -23,6 +23,8 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
   private val _parser   = new Parser(runtimeConfig)
   private val context   = new StaticContext(runtimeConfig)
 
+  runtimeConfig.debugOptions.jafplGraph = None
+
   def pipeline: Option[XdmNode] = _pipeline
   def pipeline_=(tpipe: XdmNode): Unit = {
     if (_pipeline.isEmpty) {
@@ -88,6 +90,9 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
       }
       //println(resultDoc)
 
+      //System.err.println("RESULTDOC:")
+      //System.err.println(resultDoc)
+
       if (_schematron.isDefined) {
         var fail = ""
         val schematest = new Schematron(runtimeConfig)
@@ -103,7 +108,9 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
           new TestResult(true)
         } else {
           println(resultDoc)
-          println(results)
+          for (item <- results) {
+            println(item.getStringValue)
+          }
           if (fail == "") {
             new TestResult(false, "SCHEMATRON")
           } else {

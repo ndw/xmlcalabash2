@@ -84,7 +84,7 @@ class ValidateWithXSD() extends DefaultXmlStep {
 
     try_namespaces = booleanBinding(_try_namespaces).getOrElse(false)
     mode = stringBinding(_mode, mode)
-    assert_valid = booleanBinding(_assert_valid).getOrElse(false)
+    assert_valid = booleanBinding(_assert_valid).getOrElse(true)
     use_location_hints = booleanBinding(_use_location_hints).getOrElse(false)
 
     // Populate the URI cache so that URI references in schema documents will

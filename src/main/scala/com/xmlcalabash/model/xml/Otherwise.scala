@@ -11,7 +11,7 @@ class Otherwise(override val config: XMLCalabashConfig) extends ChooseBranch(con
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
 
-    _collection = Some(false)
+    _collection = Some("false")
     _test = "true()"
     testExpr = new XProcXPathExpression(staticContext, _test)
 

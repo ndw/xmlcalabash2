@@ -63,7 +63,7 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
     }
 
     // Is this sufficient? We don't want to attempt to parse AVTs in JSON!
-    if (ctype.markupContentType || ctype.textContentType) {
+    if (expand_text && (ctype.markupContentType || ctype.textContentType)) {
       findVariablesInTVT(_node, true)
       for (ref <- nameBindings) {
         val binding = env.variable(ref)

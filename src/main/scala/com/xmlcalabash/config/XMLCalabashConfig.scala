@@ -130,9 +130,9 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
   }
 
   def logProductDetails(): Unit = {
-    logger.info(s"$productName version $productVersion with Saxon $saxonVersion")
+    logger.info(s"$productName version $productVersion (with JAFPL $jafplVersion and Saxon $saxonVersion)")
     logger.debug(s"Copyright © 2018, 2019 $vendor; $vendorURI")
-    logger.debug(s"(release id: $productHash; episode: $episode; JAFPL version $jafplVersion)")
+    logger.debug(s"(release id: $productHash; episode: $episode)")
   }
 
   protected[xmlcalabash] def builtinSteps: Option[Library] = _builtinSteps

@@ -270,9 +270,10 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         val collection = if (xpathexpr.params.isDefined) {
           xpathexpr.params.get.collection
         } else {
-          false
+          List()
         }
-        val result = computeValue(xpathexpr.expr, xpathexpr.as, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed, options, collection)
+        val coll_value = false
+        val result = computeValue(xpathexpr.expr, xpathexpr.as, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed, options, coll_value)
         //println(s"${xpathexpr.expr} = $result")
         result
       case _ =>

@@ -12,7 +12,7 @@ class BufferingConsumer extends DataConsumer {
 
   def messages: List[XProcItemMessage] = _items.toList
 
-  override def receive(port: String, message: Message): Unit = {
+  override def consume(port: String, message: Message): Unit = {
     message match {
       case msg: XProcItemMessage =>
         _items += msg

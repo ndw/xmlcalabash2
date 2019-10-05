@@ -32,6 +32,8 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
   protected val bindingsMap = mutable.HashMap.empty[String, Message]
   protected var dynamicContext = new DynamicContext()
   protected var received = mutable.HashMap.empty[String,Long]
+  protected var running = false
+  protected val outputBuffer = mutable.HashMap.empty[String,ListBuffer[(Any, XProcMetadata)]]
 
   def nodeId: String = _id
   def nodeId_=(id: String): Unit = {
@@ -194,6 +196,14 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
       println(p_message.get)
     }
 
+    running = true
+    for (port <- outputBuffer.keySet) {
+      for ((item,meta) <- outputBuffer(port)) {
+        receive(port, item, meta)
+      }
+    }
+    outputBuffer.clear()
+
     // If there are statically computed options for this step, pass them along
     if (params.isDefined && params.get.isInstanceOf[StepParams]) {
       val atomic = params.get.asInstanceOf[StepParams]
@@ -221,6 +231,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
       }
       DynamicContext.withContext(dynamicContext) { step.run(staticContext) }
     } finally {
+      running = false
       var thrown = Option.empty[Exception]
       for (stream <- openStreams) {
         try {
@@ -239,20 +250,24 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
 
   override def reset(): Unit = {
     step.reset()
+    running = false
     bindings.clear()
     bindingsMap.clear()
     received.clear()
+    outputBuffer.clear()
   }
 
   override def abort(): Unit = {
+    running = false
     step.abort()
   }
 
   override def stop(): Unit = {
+    running = false
     step.stop()
   }
 
-  override def receive(port: String, message: Message): Unit = {
+  override def consume(port: String, message: Message): Unit = {
     received.put(port, received.getOrElse(port, 1))
     inputSpec.checkInputCardinality(port, received(port))
 
@@ -336,6 +351,13 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
   }
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
+    if (!running) {
+      val portbuffer = outputBuffer.getOrElse(port, ListBuffer.empty[(Any,XProcMetadata)])
+      portbuffer += Tuple2(item, metadata)
+      outputBuffer.put(port, portbuffer)
+      return
+    }
+
     // Is the content type ok?
     val mtypes = step.signature.output(port, staticContext.location).contentTypes
     if (mtypes.nonEmpty) {
@@ -351,7 +373,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
       case ex: XProcException =>
         // The only way this can happen is if we're in a catch or finally
         // and reading the error port.
-        consumer.get.receive(port, new XdmNodeItemMessage(ex.errors.get, XProcMetadata.XML, staticContext))
+        consumer.get.consume(port, new XdmNodeItemMessage(ex.errors.get, XProcMetadata.XML, staticContext))
       case _ =>
         val contentType = metadata.contentType
         val sendMessage = contentType.classification match {
@@ -361,12 +383,13 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
           case MediaType.TEXT => makeTextMessage(item, metadata)
           case _ => makeBinaryMessage(item,metadata)
         }
-        consumer.get.receive(port, sendMessage)
+        consumer.get.consume(port, sendMessage)
     }
 
 
   }
 
+  @scala.annotation.tailrec
   private def makeXmlMessage(item: Any, metadata: XProcMetadata): Message = {
     item match {
       case value: XdmNode =>
@@ -397,6 +420,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     }
   }
 
+  @scala.annotation.tailrec
   private def makeHtmlMessage(item: Any, metadata: XProcMetadata): Message = {
     item match {
       case value: XdmNode =>
@@ -419,6 +443,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     }
   }
 
+  @scala.annotation.tailrec
   private def makeJsonMessage(item: Any, metadata: XProcMetadata): Message = {
     item match {
       case value: XdmNode =>
@@ -439,6 +464,8 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
         throw new RuntimeException(s"Cannot interpret $item as ${metadata.contentType}")
     }
   }
+
+  @scala.annotation.tailrec
   private def makeTextMessage(item: Any, metadata: XProcMetadata): Message = {
     item match {
       case value: XdmNode =>
@@ -486,6 +513,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     }
   }
 
+  @scala.annotation.tailrec
   private def makeBinaryMessage(item: Any, metadata: XProcMetadata): Message = {
     val tree = new SaxonTreeBuilder(config)
     tree.startDocument(metadata.baseURI)

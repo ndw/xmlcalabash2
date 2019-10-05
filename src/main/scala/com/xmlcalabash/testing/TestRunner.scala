@@ -653,6 +653,9 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
     val result = tester.run()
     result.baseURI = node.getBaseURI
 
+    //System.err.println("RESULT")
+    //System.err.println(result)
+
     if (result.passed) {
       if (expected != "pass") {
         result.passed = false // it was supposed to fail...

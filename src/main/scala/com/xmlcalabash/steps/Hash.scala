@@ -72,11 +72,15 @@ class Hash() extends DefaultXmlStep  with ProcessMatchingNodes {
     matcher = new ProcessMatch(config, this, context)
     matcher.process(source, pattern)
 
-    consumer.get.receive("result", matcher.result, metadata)
+    val result = matcher.result
+    if (documentIsText(result)) {
+      metadata = convertMetadataToText(metadata)
+    }
+
+    consumer.get.receive("result", result, metadata)
   }
 
   override def startDocument(node: XdmNode): Boolean = {
-    metadata = XProcMetadata.TEXT
     matcher.addText(hash)
     false
   }
@@ -87,7 +91,7 @@ class Hash() extends DefaultXmlStep  with ProcessMatchingNodes {
   }
 
   override def endElement(node: XdmNode): Unit = {
-    matcher.addEndElement()
+    // nop
   }
 
   override def endDocument(node: XdmNode): Unit = {

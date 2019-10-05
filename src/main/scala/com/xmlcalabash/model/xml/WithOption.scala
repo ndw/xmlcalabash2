@@ -47,7 +47,8 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
     } else if (_select.isDefined) {
       bindings ++= staticContext.findVariableRefsInString(_select.get)
       if (bindings.isEmpty && parent.get.isInstanceOf[AtomicStep]) {
-        val depends = collection || staticContext.dependsOnContextString(_select.get)
+        //val depends = collection || staticContext.dependsOnContextString(_select.get)
+        val depends = true
         if (!depends) {
           val checkas = if (qnameKeys) {
             None

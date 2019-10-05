@@ -3,6 +3,7 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{ChooseStart, Node}
 import com.jafpl.steps.Manifold
 import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.runtime.params.XPathBindingParams
 import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime, XProcXPathExpression}
 import net.sf.saxon.s9api.QName
 
@@ -10,18 +11,27 @@ import scala.collection.mutable
 
 class ChooseBranch(override val config: XMLCalabashConfig) extends Container(config) with NamedArtifact {
   protected var _test = ""
-  protected var _collection = Option.empty[Boolean]
+  protected var _collection = Option.empty[String]
+  protected var _collAvt = List.empty[String]
   protected var testExpr: XProcXPathExpression = _
 
   def test: String = _test
   protected[model] def test_=(expr: String): Unit = {
     _test = expr
-    val context = new StaticContext(staticContext, this)
-    testExpr = new XProcXPathExpression(context, _test)
+    setTestExpr()
   }
-  def collection: Boolean = _collection.getOrElse(false)
-  protected[model] def collection_=(coll: Boolean): Unit = {
+
+  def collection: String = _collection.getOrElse("false")
+  protected[model] def collection_=(coll: String): Unit = {
     _collection = Some(coll)
+    _collAvt = staticContext.parseAvt(coll)
+    setTestExpr()
+  }
+
+  private def setTestExpr(): Unit = {
+    val context = new StaticContext(staticContext, this)
+    val params = new XPathBindingParams(_collAvt)
+    testExpr = new XProcXPathExpression(context, _test, None, None, Some(params))
   }
 
   override protected[model] def makeStructureExplicit(): Unit = {

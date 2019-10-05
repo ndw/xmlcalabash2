@@ -219,7 +219,7 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
         var pw = new PrintWriter(baos)
         pw.write(graph.get.asXML.toString)
         pw.close()
-        svgGraph(fn, baos)
+        svgGraph(fn, baos, "pgx2dot.xsl")
       case OPENGRAPH =>
         var basefn = openGraph.getOrElse(name)
         if (debugOptions.contains(GRAPH) && graph.isEmpty
@@ -231,7 +231,7 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
         var pw = new PrintWriter(baos)
         pw.write(graph.get.asXML.toString)
         pw.close()
-        svgGraph(fn, baos)
+        svgGraph(fn, baos, "pg2dot.xsl")
       case STACKTRACE =>
         if (stackTrace.isDefined) {
           var basefn = stackTrace.get
@@ -246,18 +246,7 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
     }
   }
 
-
-  private def graphGraph(graph: Graph, baseName: String): Unit = {
-    val fn = if (baseName.contains(".")) {
-      baseName
-    } else {
-      baseName + ".svg"
-    }
-
-  }
-
-
-  private def svgGraph(fn: String, xmlBaos: ByteArrayOutputStream): Unit = {
+  private def svgGraph(fn: String, xmlBaos: ByteArrayOutputStream, style: String): Unit = {
     if (config.debugOptions.graphviz_dot.isEmpty) {
       logger.error(s"GraphViz dot not configured, cannot dump $fn.")
       return
@@ -271,7 +260,7 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
     val graphdoc = builder.build(new SAXSource(new InputSource(bais)))
 
     // Get the stylesheet
-    val stylesheet = getClass.getResourceAsStream("/com/jafpl/stylesheets/pg2dot.xsl")
+    val stylesheet = getClass.getResourceAsStream("/com/jafpl/stylesheets/" + style)
     val compiler = processor.newXsltCompiler()
     compiler.setSchemaAware(processor.isSchemaAware)
     val exec = compiler.compile(new SAXSource(new InputSource(stylesheet)))

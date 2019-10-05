@@ -134,6 +134,13 @@
    <p:option name="new-name" required="true" as="xs:QName"/>
 </p:declare-step>
 
+<p:declare-step type="p:replace">
+  <p:input port="source" primary="true" content-types="xml html"/>
+  <p:input port="replacement" content-types="text xml html"/>
+  <p:output port="result" content-types="text xml html"/>
+  <p:option name="match" required="true" as="xs:string"/>
+</p:declare-step>
+
 <p:declare-step type="p:set-attributes">
   <p:input port="source" primary="true" content-types="xml html"/>
   <p:output port="result" content-types="xml html"/>
@@ -233,8 +240,9 @@
 
 <p:declare-step type="p:validate-with-relax-ng">
   <p:input port="source" primary="true" content-types="xml html"/>
-  <p:input port="schema" content-types="xml text"/>
-  <p:output port="result" content-types="application/xml"/>
+  <p:input port="schema" content-types="xml text application/relax-ng-compact-syntax"/>
+  <p:output port="result" content-types="application/xml" primary="true"/>
+  <p:output port="report" content-types="application/xml"/>
   <p:option name="dtd-attribute-values" select="false()" as="xs:boolean"/>
   <p:option name="dtd-id-idref-warnings" select="false()" as="xs:boolean"/>
   <p:option name="assert-valid" select="true()" as="xs:boolean"/>

@@ -3,22 +3,23 @@ package com.xmlcalabash.model.xml
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.params.XPathBindingParams
-import com.xmlcalabash.runtime.{ExprParams, XProcXPathExpression}
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import net.sf.saxon.s9api.XdmNode
+import net.sf.saxon.s9api.{QName, XdmNode}
+
+import scala.collection.mutable
 
 class When(override val config: XMLCalabashConfig) extends ChooseBranch(config) {
 
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
 
-    _collection = staticContext.parseBoolean(attr(XProcConstants._collection))
+    _collection = attr(XProcConstants._collection)
+    if (_collection.isDefined) {
+      _collAvt = staticContext.parseAvt(_collection.get)
+    }
 
     if (attributes.contains(XProcConstants._test)) {
-      _test = attr(XProcConstants._test).get
-      val params = new XPathBindingParams(collection)
-      testExpr = new XProcXPathExpression(staticContext, _test, None, None, Some(params))
+      test = attr(XProcConstants._test).get
     } else {
       throw XProcException.xsMissingRequiredAttribute(XProcConstants._test, location)
     }
@@ -26,6 +27,26 @@ class When(override val config: XMLCalabashConfig) extends ChooseBranch(config) 
     if (attributes.nonEmpty) {
       val badattr = attributes.keySet.head
       throw XProcException.xsBadAttribute(badattr, location)
+    }
+  }
+
+  override protected[model] def makeBindingsExplicit(): Unit = {
+    super.makeBindingsExplicit()
+
+    val env = environment()
+
+    val bindings = mutable.HashSet.empty[QName]
+    bindings ++= staticContext.findVariableRefsInAvt(_collAvt)
+
+    for (ref <- bindings) {
+      val binding = env.variable(ref)
+      if (binding.isEmpty) {
+        throw new RuntimeException("Reference to undefined variable")
+      }
+      if (!binding.get.static) {
+        val pipe = new NamePipe(config, ref, binding.get.tumble_id, binding.get)
+        addChild(pipe)
+      }
     }
   }
 

@@ -21,10 +21,12 @@ class If(override val config: XMLCalabashConfig) extends Choose(config) {
     }
     val when = new When(config)
     when.test = ifexpr.get
-    when.collection = ifcoll.getOrElse(false)
+    if (ifcoll.isDefined) {
+      when.collection = ifcoll.get
+    }
     for (child <- allChildren) {
       child match {
-        case winput: WithInput => Unit
+        case _: WithInput => Unit
         case _ =>
           when.addChild(child)
       }

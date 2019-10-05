@@ -44,12 +44,6 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   }
 
   def startDocument(baseURI: Option[URI]): Unit = {
-    if (baseURI.isDefined) {
-      trace(s"startDocument: ${baseURI.get}")
-    } else {
-      trace("startDocument")
-    }
-
     _inDocument = true
     seenRoot  = false
     try {
@@ -75,7 +69,6 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   }
 
   def endDocument(): Unit = {
-    trace("endDocument")
     try {
       receiver.setSystemId("http://norman-was-here.com/")
       receiver.endDocument()
@@ -86,7 +79,6 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   }
 
   def addSubtree(node: XdmNode): Unit = {
-    trace(s"addSubTree: ${node.getNodeKind}", s"$node")
     node.getNodeKind match {
       case XdmNodeKind.DOCUMENT =>
         writeChildren(node)
@@ -184,7 +176,6 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   }
 
   def addStartElement(elemName: NodeName, typeCode: SchemaType, nscodes: List[NamespaceBinding]): Unit = {
-    trace(s"addStartElement: $elemName")
     val loc = if (receiver.getSystemId == null) {
       DefaultLocation.voidLocation
     } else {
@@ -202,7 +193,6 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   }
 
   def addNamespace(prefix: String, uri: String) {
-    trace(s"addNamespace: $prefix=$uri")
     val nsbind = new NamespaceBinding(prefix, uri)
     receiver.namespace(nsbind, 0)
   }
@@ -219,7 +209,6 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   }
 
   def addAttribute(xdmAttr: XdmNode, newValue: String) {
-    trace(s"addAttribute $xdmAttr", s"$newValue")
     val inode = xdmAttr.getUnderlyingNode
     val name = xdmAttr.getNodeName
     val attrName = new FingerprintedQName(name.getPrefix, name.getNamespaceURI, name.getLocalName)
@@ -229,13 +218,11 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   }
 
   def addAttribute(elemName: NodeName, typeCode: SimpleType, newValue: String) {
-    trace(s"addAttribute $elemName", s"$newValue")
     val loc = new DefaultLocation(receiver.getSystemId)
     receiver.attribute(elemName, typeCode, newValue, loc, 0)
   }
 
   def addAttribute(attrName: QName, newValue: String) {
-    trace(s"addAttribute $attrName", s"$newValue")
     val loc = new DefaultLocation(receiver.getSystemId)
     val elemName = new FingerprintedQName(attrName.getPrefix, attrName.getNamespaceURI, attrName.getLocalName)
     val typeCode = BuiltInType.getSchemaType(StandardNames.XS_UNTYPED_ATOMIC).asInstanceOf[SimpleType]
@@ -243,39 +230,25 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   }
 
   def startContent() {
-    trace("startContent")
     receiver.startContent()
   }
 
   def addEndElement() {
-    trace("endElement")
     receiver.endElement()
   }
 
   def addComment(comment: String) {
-    trace("addComment", comment)
     val loc = new DefaultLocation(receiver.getSystemId)
     receiver.comment(comment, loc, 0)
   }
 
   def addText(text: String) {
-    trace("addText", text)
     val loc = new DefaultLocation(receiver.getSystemId)
     receiver.characters(text, loc, 0)
   }
 
   def addPI(target: String, data: String) {
-    trace("addPI", s"$target=$data")
     val loc = new DefaultLocation(receiver.getSystemId)
     receiver.processingInstruction(target, data, loc, 0)
-  }
-
-  private def trace(msg: String): Unit = {
-    runtime.trace("info", msg, "TreeConstruction")
-  }
-
-  private def trace(msg: String, detail: String): Unit = {
-    runtime.trace("info", msg, "TreeConstruction")
-    runtime.trace("debug", detail, "TreeConstruction")
   }
 }

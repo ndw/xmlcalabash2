@@ -36,7 +36,7 @@ class DefaultStep extends Step {
     this.consumer = Some(consumer)
   }
 
-  override def receive(port: String, message: Message): Unit = {
+  override def consume(port: String, message: Message): Unit = {
     // nop
   }
 
