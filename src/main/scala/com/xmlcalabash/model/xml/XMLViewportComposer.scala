@@ -3,6 +3,7 @@ package com.xmlcalabash.model.xml
 import com.jafpl.messages.{Message, Metadata}
 import com.jafpl.steps.{ViewportComposer, ViewportItem}
 import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XProcVtExpression, XProcXPathExpression}
@@ -180,7 +181,7 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
           case node: XdmNode =>
             lb += node
           case _ =>
-            throw new RuntimeException("Expected node from viewport")
+            throw XProcException.xdBadViewportResult(context.location)
         }
       }
 

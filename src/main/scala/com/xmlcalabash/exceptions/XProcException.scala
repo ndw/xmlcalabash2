@@ -119,6 +119,7 @@ object XProcException {
   def xdMismatchedContentType(declType: MediaType, propType: MediaType, location: Option[Location]): XProcException = dynamicError(62, List(declType,propType), location)
   def xdNoMarkupAllowed(name: QName, location: Option[Location]): XProcException = dynamicError(63, name, location)
   def xdBadMapKey(key: String, location: Option[Location]): XProcException = dynamicError(70, key, location)
+  def xdBadViewportResult(location: Option[Location]): XProcException = dynamicError(73, location)
   def xdValueNotInList(value: String, location: Option[Location]): XProcException = dynamicError(101, value, location)
 
   def xsLoop(step: String, port: String, location: Option[Location]): XProcException = staticError(1, List(step, port), location)
