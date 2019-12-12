@@ -272,9 +272,8 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         } else {
           List()
         }
-        val coll_value = false
+        val coll_value = collection.nonEmpty && collection.head == "true"
         val result = computeValue(xpathexpr.expr, xpathexpr.as, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed, options, coll_value)
-        //println(s"${xpathexpr.expr} = $result")
         result
       case _ =>
         throw XProcException.xiUnexpectedExprType(xpath.context.location, xpath)

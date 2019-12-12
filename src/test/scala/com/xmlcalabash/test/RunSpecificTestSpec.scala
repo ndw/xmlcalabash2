@@ -6,6 +6,6 @@ class RunSpecificTestSpec extends XProcTestSpec {
   if (Option(System.getenv("TRAVIS")).isDefined) {
     println("A specific test is not run on Travis")
   } else {
-    runtest("Run specific test", "src/test/resources/test-suite/test-suite/tests/ab-err-d0006-004.xml")
+    runtest("Run specific test", "src/test/resources/test-suite/test-suite/tests/ab-choose-039.xml")
   }
 }

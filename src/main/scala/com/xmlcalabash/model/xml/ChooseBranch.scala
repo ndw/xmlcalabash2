@@ -12,7 +12,7 @@ import scala.collection.mutable
 class ChooseBranch(override val config: XMLCalabashConfig) extends Container(config) with NamedArtifact {
   protected var _test = ""
   protected var _collection = Option.empty[String]
-  protected var _collAvt = List.empty[String]
+  protected var _collAvt = List("false")
   protected var testExpr: XProcXPathExpression = _
 
   def test: String = _test
