@@ -8,7 +8,6 @@ import com.jafpl.graph.Location
 import com.xmlcalabash.exceptions.XProcException
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import sun.misc.CRC16
 
 object HashUtils {
   private val HMAC_SHA1_ALGORITHM = "HmacSHA1"
@@ -26,12 +25,6 @@ object HashUtils {
         val crc = new CRC32()
         crc.update(bytes)
         crc.getValue.toHexString
-      case "16" =>
-        val crc = new CRC16()
-        for (b <- bytes) {
-          crc.update(b)
-        }
-        crc.value.toHexString
       case _ =>
         throw XProcException.xcBadCrcVersion(version, location)
     }
