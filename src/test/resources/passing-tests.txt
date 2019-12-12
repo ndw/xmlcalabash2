@@ -82,7 +82,6 @@ ab-choose-036.xml
 ab-choose-037.xml
 ab-choose-038.xml
 ab-choose-039.xml
-ab-choose-039.xml
 ab-choose-041.xml
 ab-choose-042.xml
 ab-choose-043.xml
@@ -96,6 +95,10 @@ ab-choose-050.xml
 ab-choose-051.xml
 ab-choose-052.xml
 ab-choose-053.xml
+ab-choose-054.xml
+ab-choose-055.xml
+ab-choose-056.xml
+ab-choose-057.xml
 ab-connection-001.xml
 ab-connection-002.xml
 ab-connection-004.xml
@@ -169,12 +172,15 @@ ab-delete-019.xml
 ab-delete-020.xml
 ab-delete-021.xml
 ab-doc-prop-004.xml
+ab-doc-prop-005.xml
 ab-doc-prop-006.xml
 ab-doc-prop-008.xml
+ab-doc-prop-011.xml
+ab-doc-prop-012.xml
 ab-doc-prop-013.xml
 ab-doc-prop-015.xml
-ab-document-properties-doc001.xml
-ab-document-properties-doc002.xml
+ab-document-properties-001.xml
+ab-document-properties-002.xml
 ab-drp-context-001.xml
 ab-drp-context-002.xml
 ab-drp-context-003.xml
@@ -287,12 +293,18 @@ ab-if-010.xml
 ab-if-011.xml
 ab-if-012.xml
 ab-if-013.xml
-ab-if-013.xml
 ab-if-014.xml
 ab-if-015.xml
 ab-if-016.xml
 ab-if-017.xml
 ab-if-018.xml
+ab-if-019.xml
+ab-if-020.xml
+ab-if-021.xml
+ab-if-022.xml
+ab-if-023.xml
+ab-if-024.xml
+ab-if-025.xml
 ab-import-001.xml
 ab-import-002.xml
 ab-import-003.xml
@@ -368,6 +380,9 @@ ab-insert-022.xml
 ab-insert-023.xml
 ab-insert-024.xml
 ab-json-join-003.xml
+ab-json-merge-001.xml
+ab-json-merge-004.xml
+ab-json-merge-005.xml
 ab-label-elements-001.xml
 ab-label-elements-002.xml
 ab-label-elements-003.xml
@@ -551,6 +566,7 @@ ab-set-properties-018.xml
 ab-set-properties-019.xml
 ab-set-properties-020.xml
 ab-set-properties-021.xml
+ab-set-properties-029.xml
 ab-static-option-var-002.xml
 ab-static-option-var-003.xml
 ab-static-option-var-004.xml
@@ -744,6 +760,7 @@ ab-validate-with-xsd-010.xml
 ab-validate-with-xsd-011.xml
 ab-validate-with-xsd-012.xml
 ab-validate-with-xsd-013.xml
+ab-validate-with-xsd-014.xml
 ab-variable-001.xml
 ab-variable-003.xml
 ab-variable-006.xml
@@ -768,7 +785,6 @@ ab-variable-021b.xml
 ab-variable-022.xml
 ab-variable-022a.xml
 ab-variable-023.xml
-ab-variable-024.xml
 ab-variable-024.xml
 ab-variable-025.xml
 ab-variable-026.xml
@@ -800,6 +816,7 @@ ab-viewport-015.xml
 ab-viewport-016.xml
 ab-viewport-017.xml
 ab-viewport-018.xml
+ab-viewport-028.xml
 ab-with-input-001.xml
 ab-with-input-004.xml
 ab-with-input-005.xml
@@ -907,7 +924,6 @@ err-xd0063-001.xml
 err-xs0096-001.xml
 inline-avt.xml
 inline-tvt.xml
-nw-collection-001.xml
 nw-collection-001.xml
 nw-collection-002.xml
 nw-collection-003.xml
