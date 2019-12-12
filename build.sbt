@@ -1,7 +1,7 @@
 import java.io.{BufferedReader, InputStreamReader}
 
 lazy val xmlCalabashVersion = "1.99.12"
-lazy val jafplVersion = "0.2.39"
+lazy val jafplVersion = "0.2.40"
 lazy val saxonVersion = "9.9.1-4"
 lazy val useSaxonEE = true
 
@@ -122,15 +122,15 @@ resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 resolvers += "Restlet" at "http://maven.restlet.com"
 
 libraryDependencies ++= Seq(
-  //"org.apache.logging.log4j" % "log4j-api" % "2.11.0",
-  //"org.apache.logging.log4j" % "log4j-core" % "2.11.0",
-  //"org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.11.0",
+  //"org.apache.logging.log4j" % "log4j-api" % "2.12.1",
+  //"org.apache.logging.log4j" % "log4j-core" % "2.12.1",
+  //"org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.12.1",
   //"org.slf4j" % "jcl-over-slf4j" % "1.7.25",
   //"org.slf4j" % "slf4j-api" % "1.7.25",
   "com.typesafe.akka" %% "akka-actor" % "2.5.25",
   //"com.typesafe.akka" %% "akka-slf4j" % "2.5.25",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-  "ch.qos.logback" % "logback-classic" % "1.2.3",
+  //"ch.qos.logback" % "logback-classic" % "1.2.3",
   "com.typesafe.akka" %% "akka-testkit" % "2.5.13" % Test,
   "org.scalactic" %% "scalactic" % "3.0.5",
   "org.scalatest" %% "scalatest" % "3.0.5" % "test",
