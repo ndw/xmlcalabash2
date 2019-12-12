@@ -50,7 +50,7 @@ class CastContentType() extends DefaultXmlStep {
     } else if (castTo.textContentType) {
       castToText(context)
     } else {
-      throw new RuntimeException("impossilbe content type cast")
+      throw new RuntimeException("Impossible content type cast")
     }
   }
 
