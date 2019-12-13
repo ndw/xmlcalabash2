@@ -239,6 +239,8 @@ object XProcException {
   def xcUnsupportedUuidVersion(version: Integer, location: Option[Location]): XProcException = stepError(60, version.toString, location)
   def xcContentTypeNotAllowed(location: Option[Location]): XProcException = stepError(69, location)
   def xcUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = stepError(70, ctype, location)
+  def xcUnrecognizedArchiveFormat(location: Option[Location]): XProcException = stepError((85,1), location)
+  def xcUnknownArchiveFormat(format: QName, location: Option[Location]): XProcException = stepError((85,2), location)
   def xcMultipleTopLevelElements(location: Option[Location]): XProcException = stepError(91, location)
   def xcAttributeNameCollision(qname: QName, location: Option[Location]): XProcException = stepError(92, qname, location)
 

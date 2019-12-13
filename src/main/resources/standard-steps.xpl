@@ -15,6 +15,14 @@
   <p:option name="attribute-value" required="true" as="xs:string"/>
 </p:declare-step>
 
+<p:declare-step type="p:archive-manifest">
+  <p:input port="source" primary="true" content-types="any" sequence="false"/>
+  <p:output port="result" primary="true" content-types="application/xml" sequence="false"/>
+  <p:option name="format" as="xs:QName?"/>                      
+  <p:option name="parameters" as="map(xs:QName, item()*)?"/>    
+  <p:option name="relative-to" as="xs:anyURI?"/>                
+</p:declare-step>
+
 <p:declare-step type="p:cast-content-type">
   <p:input port="source" content-types="*/*"/>
   <p:output port="result" content-types="*/*"/>

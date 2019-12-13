@@ -1,14 +1,3 @@
-ab-archive-manifest-001.xml
-ab-archive-manifest-002.xml
-ab-archive-manifest-003.xml
-ab-archive-manifest-004.xml
-ab-archive-manifest-005.xml
-ab-archive-manifest-006.xml
-ab-archive-manifest-007.xml
-ab-archive-manifest-008.xml
-ab-archive-manifest-009.xml
-ab-archive-manifest-010.xml
-ab-archive-manifest-011.xml
 ab-choose-040.xml
 ab-compress-001.xml
 ab-compress-002.xml

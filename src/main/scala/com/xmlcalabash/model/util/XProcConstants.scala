@@ -143,6 +143,8 @@ object XProcConstants {
   val c_directory = new QName("c", ns_c, "directory")
   val c_file = new QName("c", ns_c, "file")
   val c_other = new QName("c", ns_c, "other")
+  val c_archive = new QName("c", ns_c, "archive")
+  val c_entry = new QName("c", ns_c, "entry")
 
   // Extensions
   val cx_as = new QName("cx", ns_cx, "as")
@@ -159,6 +161,8 @@ object XProcConstants {
   val _byte_order_mark = new QName("", "byte-order-mark")
   val _cdata_section_elements = new QName("", "cdata-section-elements")
   val _code = new QName("", "code")
+  val _comment = new QName("", "comment")
+  val _compressed_size = new QName("", "compressed-size")
   val _doctype_public = new QName("", "doctype-public")
   val _doctype_system = new QName("", "doctype-system")
   val _document_properties = new QName("", "document-properties")
@@ -192,6 +196,7 @@ object XProcConstants {
   val _sequence = new QName("", "sequence")
   val _serialization = new QName("", "serialization")
   val _standalone = new QName("", "standalone")
+  val _size = new QName("", "size")
   val _step = new QName("", "step")
   val _test = new QName("", "test")
   val _type = new QName("", "type")
