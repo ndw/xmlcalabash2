@@ -21,8 +21,9 @@ class ArchiveManifest extends DefaultXmlStep {
   private var source: Any = _
   private var smeta: XProcMetadata = _
 
+  private var format = Option.empty[QName]
   private var parameters = Map.empty[QName, XdmValue]
-  private var relativeTo: URI = _
+  private var relativeTo = Option.empty[URI]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYXML
@@ -43,7 +44,7 @@ class ArchiveManifest extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
-    val format = if (qnameBinding(_format).isDefined) {
+    format = if (qnameBinding(_format).isDefined) {
       qnameBinding(_format)
     } else {
       inferredFormat()
@@ -57,11 +58,7 @@ class ArchiveManifest extends DefaultXmlStep {
       throw XProcException.xcUnknownArchiveFormat(format.get, location)
     }
 
-    relativeTo = if (context.baseURI.isDefined) {
-      context.baseURI.get.resolve(stringBinding(_relativeTo))
-    } else {
-      new URI(stringBinding(_relativeTo))
-    }
+    relativeTo = optionalURIBinding(_relativeTo)
 
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(smeta.baseURI)
@@ -88,7 +85,7 @@ class ArchiveManifest extends DefaultXmlStep {
       case is: InputStream =>
         zipArchiveStream(context, builder, is)
       case _ =>
-        throw XProcException.xiUnexpectedItem(source.toString, context.location)
+        throw XProcException.xcBadArchiveFormat(format.get, location)
     }
   }
 
@@ -99,7 +96,18 @@ class ArchiveManifest extends DefaultXmlStep {
       if (!entry.get.isDirectory) {
         builder.addStartElement(XProcConstants.c_entry)
         builder.addAttribute(XProcConstants._name, entry.get.getName)
-        builder.addAttribute(XProcConstants._href, relativeTo.resolve(entry.get.getName).toASCIIString)
+        if (relativeTo.isDefined) {
+          builder.addAttribute(XProcConstants._href, relativeTo.get.resolve(entry.get.getName).toASCIIString)
+        } else {
+          if (context.baseURI.isDefined) {
+            builder.addAttribute(XProcConstants._href, context.baseURI.get.resolve(entry.get.getName).toASCIIString)
+          } else {
+            // I wouldn't expect this to succeed, as the name is unlikely to be an absolute
+            // URI, but I've run out of options.
+            builder.addAttribute(XProcConstants._href, new URI(entry.get.getName).toASCIIString)
+          }
+        }
+
         archiveAttribute(builder, XProcConstants._comment, Option(entry.get.getComment))
         entry.get.getMethod match {
           case ZipEntry.STORED => archiveAttribute(builder, XProcConstants._method, Some("none"))

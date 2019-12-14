@@ -1,5 +1,7 @@
 package com.xmlcalabash.steps
 
+import java.net.URI
+
 import com.jafpl.graph.Location
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.BindingSpecification
@@ -169,6 +171,15 @@ class DefaultXmlStep extends XmlStep {
       bindings(name).getUnderlyingValue.getStringValue
     } else {
       default
+    }
+  }
+
+  def optionalURIBinding(name: QName): Option[URI] = {
+    if (definedBinding(name)) {
+      val context = bindingContexts(name)
+      Some(context.baseURI.get.resolve(bindings(name).getUnderlyingValue.getStringValue))
+    } else {
+      None
     }
   }
 

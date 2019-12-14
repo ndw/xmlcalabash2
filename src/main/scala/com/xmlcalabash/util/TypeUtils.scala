@@ -160,7 +160,18 @@ class TypeUtils(val processor: Processor, val context: StaticContext) {
       return qnamev
     }
 
-    new XdmAtomicValue(value.getStringValue, xsdtype)
+    try {
+      new XdmAtomicValue(value.getStringValue, xsdtype)
+    } catch {
+      case sae: SaxonApiException =>
+        if (sae.getMessage.contains("Invalid URI")) {
+          throw XProcException.xdInvalidURI(value.getStringValue, context.location)
+        } else {
+          throw(sae)
+        }
+      case ex: Exception =>
+        throw(ex)
+    }
   }
 
   // This was added experimentally to handle lists in literal values for include-filter and exclude-filter.

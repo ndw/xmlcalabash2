@@ -232,8 +232,6 @@ class Artifact(val config: XMLCalabashConfig) {
     _staticContext.location = new XProcLocation(node)
     _staticContext.nsBindings = S9Api.inScopeNamespaces(node)
 
-    println(node, _staticContext, _staticContext.nsBindings)
-
     // Parse attributes
     val aiter = node.axisIterator(Axis.ATTRIBUTE)
     while (aiter.hasNext) {
