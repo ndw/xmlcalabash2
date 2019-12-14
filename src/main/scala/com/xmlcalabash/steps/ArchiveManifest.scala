@@ -1,21 +1,19 @@
 package com.xmlcalabash.steps
 
-import java.io.{FileOutputStream, InputStream}
+import java.io.InputStream
 import java.net.URI
 import java.util.zip.{ZipEntry, ZipInputStream}
 
-import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.{MediaType, S9Api}
-import net.sf.saxon.s9api.{QName, Serializer, XdmNode, XdmValue}
+import com.xmlcalabash.util.MediaType
+import net.sf.saxon.s9api.{QName, XdmValue}
 
 class ArchiveManifest extends DefaultXmlStep {
   private val _zip = new QName("", "zip")
   private val _jar = new QName("", "jar")
 
-  private val _format = new QName("", "format")
   private val _relativeTo = new QName("", "relative-to")
 
   private var source: Any = _
@@ -44,8 +42,8 @@ class ArchiveManifest extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
-    format = if (qnameBinding(_format).isDefined) {
-      qnameBinding(_format)
+    format = if (qnameBinding(XProcConstants._format).isDefined) {
+      qnameBinding(XProcConstants._format)
     } else {
       inferredFormat()
     }

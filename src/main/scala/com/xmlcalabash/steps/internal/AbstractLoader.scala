@@ -1,9 +1,9 @@
 package com.xmlcalabash.steps.internal
 
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.messages.{XProcItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
-import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{DynamicContext, StaticContext, XProcExpression, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.messages.{AnyItemMessage, XProcItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
+import com.xmlcalabash.runtime.{BinaryNode, DynamicContext, StaticContext, XProcExpression, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.steps.DefaultXmlStep
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmItem, XdmMap, XdmNode, XdmValue}
@@ -27,6 +27,11 @@ abstract class AbstractLoader() extends DefaultXmlStep {
         contextItem = Some(new XdmNodeItemMessage(node, meta, context))
       case item: XdmValue =>
         contextItem = Some(new XdmValueItemMessage(item, meta, context))
+      case binary: BinaryNode =>
+        val tree = new SaxonTreeBuilder(config)
+        tree.startDocument(meta.baseURI)
+        tree.endDocument()
+        contextItem = Some(new AnyItemMessage(tree.result, binary, meta, context))
       case item: XProcException =>
         if (item.errors.isDefined) {
           contextItem = Some(new XdmNodeItemMessage(item.errors.get, XProcMetadata.XML, context))

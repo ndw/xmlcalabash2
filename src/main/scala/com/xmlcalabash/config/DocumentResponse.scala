@@ -22,7 +22,7 @@ class DocumentResponse(val value: XdmValue, val contentType: MediaType, val prop
   }
 
   def this(value: XdmValue, shadow: Array[Byte], contentType: MediaType, props: Map[QName,XdmValue]) {
-    this(value, contentType, HashMap.empty[QName,XdmValue])
+    this(value, contentType, props)
     _shadow = Some(shadow)
   }
 

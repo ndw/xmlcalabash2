@@ -170,6 +170,7 @@ object XProcConstants {
   val _escape_uri_attributes = new QName("", "escape-uri-attributes")
   val _exclude_inline_prefixes = new QName("", "exclude-inline-prefixes")
   val _expand_text = new QName("", "expand-text")
+  val _format = new QName("", "format")
   val _href = new QName("", "href")
   val _html_version = new QName("", "html-version")
   val _include_content_type = new QName("", "include-content-type")

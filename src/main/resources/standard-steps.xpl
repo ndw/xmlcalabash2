@@ -30,6 +30,14 @@
   <p:option name="parameters" as="map(xs:QName,item()*)?"/>
 </p:declare-step>
 
+<p:declare-step type="p:compress">
+  <p:input port="source" primary="true" content-types="any" sequence="false"/>
+  <p:output port="result" primary="true" content-types="any" sequence="false"/>
+  <p:option name="format" as="xs:QName" select="'gzip'"/>       
+  <p:option name="serialization" as="map(xs:QName,item()*)?"/>  
+  <p:option name="parameters" as="map(xs:QName, item()*)?"/>    
+</p:declare-step>
+
 <p:declare-step type="p:count">
   <p:input port="source" content-types="*/*" sequence="true"/>
   <p:output port="result" content-types="application/xml"/>
@@ -222,6 +230,14 @@
   <p:input port="source" primary="true" sequence="false" content-types="text"/>
   <p:output port="result" primary="true" sequence="false" content-types="text"/>
   <p:option name="count" required="true" as="xs:integer"/>
+</p:declare-step>
+
+<p:declare-step type="p:uncompress">
+  <p:input port="source" primary="true" content-types="any" sequence="false"/>
+  <p:output port="result" primary="true" content-types="any" sequence="false"/>
+  <p:option name="format" as="xs:QName?"/>                      
+  <p:option name="parameters" as="map(xs:QName,item()*)?"/>     
+  <p:option name="content-type" as="xs:string" select="'application/octet-stream'"/>
 </p:declare-step>
 
 <p:declare-step type="p:unescape-markup">

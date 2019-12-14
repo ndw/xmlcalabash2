@@ -1,5 +1,6 @@
 package com.xmlcalabash.steps
 
+import java.io.{InputStream, OutputStream}
 import java.net.URI
 
 import com.jafpl.graph.Location
@@ -321,6 +322,41 @@ class DefaultXmlStep extends XmlStep {
     }
 
     new XProcMetadata(MediaType.TEXT, props.toMap)
+  }
+
+  def serialize(context: StaticContext, source: Any, metadata: XProcMetadata, output: OutputStream): Unit = {
+    source match {
+      case bn: BinaryNode =>
+        val bytes = new Array[Byte](8192)
+        val stream = bn.stream
+        var count = stream.read(bytes)
+        while (count >= 0) {
+          output.write(bytes, 0, count)
+          count = stream.read(bytes)
+        }
+      case is: InputStream =>
+        val bytes = new Array[Byte](8192)
+        var count = is.read(bytes)
+        while (count >= 0) {
+          output.write(bytes, 0, count)
+          count = is.read(bytes)
+        }
+      case node: XdmNode =>
+        val serialOpts = serializationOptions()
+        val serializer = config.processor.newSerializer(output)
+
+        val contentType = metadata.contentType
+        if (!contentType.xmlContentType && !contentType.htmlContentType) {
+          serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
+        }
+
+        S9Api.configureSerializer(serializer, config.defaultSerializationOptions(contentType))
+        S9Api.configureSerializer(serializer, serialOpts)
+
+        S9Api.serialize(config.config, node, serializer)
+      case _ =>
+        throw XProcException.xiUnexpectedItem(source.toString, context.location)
+    }
   }
 
   override def toString: String = {

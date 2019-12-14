@@ -245,6 +245,11 @@ object XProcException {
   def xcUnknownArchiveFormat(format: QName, location: Option[Location]): XProcException = stepError((85,2), location)
   def xcMultipleTopLevelElements(location: Option[Location]): XProcException = stepError(91, location)
   def xcAttributeNameCollision(qname: QName, location: Option[Location]): XProcException = stepError(92, qname, location)
+  def xcInvalidResultDataFormat(location: Option[Location]): XProcException = stepError(201, location)
+  def xcUnknownCompressionFormat(location: Option[Location]): XProcException = stepError((202,1), location)
+  def xcUnknownCompressionFormat(format: QName, location: Option[Location]): XProcException = stepError((202,2), format, location)
+  def xcUncompressionError(location: Option[Location]): XProcException = stepError((202,3), location)
+
 
   def staticErrorCode(code: Int): QName = {
     new QName("err", XProcConstants.ns_err, "XS%04d".format(code))

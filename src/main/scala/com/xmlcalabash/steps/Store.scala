@@ -38,30 +38,7 @@ class Store extends DefaultXmlStep {
     }
 
     val os = new FileOutputStream(href.getPath)
-    source match {
-      case is: InputStream =>
-        val bytes = new Array[Byte](8192)
-        var count = is.read(bytes)
-        while (count >= 0) {
-          os.write(bytes, 0, count)
-          count = is.read(bytes)
-        }
-      case node: XdmNode =>
-        val serialOpts = serializationOptions()
-        val serializer = config.processor.newSerializer(os)
-
-        val contentType = smeta.contentType
-        if (!contentType.xmlContentType && !contentType.htmlContentType) {
-          serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
-        }
-
-        S9Api.configureSerializer(serializer, config.defaultSerializationOptions(contentType))
-        S9Api.configureSerializer(serializer, serialOpts)
-
-        S9Api.serialize(config.config, node, serializer)
-      case _ =>
-        throw XProcException.xiUnexpectedItem(source.toString, context.location)
-    }
+    serialize(context, source, smeta, os)
     os.close()
 
     val builder = new SaxonTreeBuilder(config)
