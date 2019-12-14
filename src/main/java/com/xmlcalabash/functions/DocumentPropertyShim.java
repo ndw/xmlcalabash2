@@ -10,6 +10,7 @@ import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.Sequence;
 import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.SequenceType;
 
 public class DocumentPropertyShim extends ExtensionFunctionDefinition {
@@ -36,7 +37,7 @@ public class DocumentPropertyShim extends ExtensionFunctionDefinition {
 
     @Override
     public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
-        return SequenceType.SINGLE_ITEM;
+        return SequenceType.OPTIONAL_ITEM;
     }
 
     @Override

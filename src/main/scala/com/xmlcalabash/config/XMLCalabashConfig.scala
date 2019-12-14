@@ -5,7 +5,7 @@ import java.net.URI
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode}
-import com.xmlcalabash.functions.{CwdShim, DocumentPropertiesDocumentShim, DocumentPropertiesShim, DocumentPropertyShim, ForceQNameKeysShim, InjElapsedShim, InjIdShim, InjNameShim, InjTypeShim, IterationPositionShim, IterationSizeShim, SystemPropertyShim}
+import com.xmlcalabash.functions.{CwdShim, DocumentPropertiesShim, DocumentPropertyShim, ForceQNameKeysShim, InjElapsedShim, InjIdShim, InjNameShim, InjTypeShim, IterationPositionShim, IterationSizeShim, SystemPropertyShim}
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.{Container, DeclContainer, Library}
 import com.xmlcalabash.parsers.XPathParser
@@ -390,7 +390,6 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
     processor.registerExtensionFunction(new CwdShim(this))
     processor.registerExtensionFunction(new DocumentPropertiesShim(this))
     processor.registerExtensionFunction(new DocumentPropertyShim(this))
-    processor.registerExtensionFunction(new DocumentPropertiesDocumentShim(this))
     processor.registerExtensionFunction(new ForceQNameKeysShim(this))
     processor.registerExtensionFunction(new InjElapsedShim(this))
     processor.registerExtensionFunction(new InjIdShim(this))

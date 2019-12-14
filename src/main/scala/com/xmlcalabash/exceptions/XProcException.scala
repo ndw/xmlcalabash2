@@ -104,6 +104,7 @@ object XProcException {
 
   def xdNotValidXML(href: String, message: String, location: Option[Location]): XProcException = dynamicError(23, List(href, message), location)
   def xdNotValidXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(23, List(href, line, col, message), location)
+  def xdValueDoesNotSatisfyType(value: String, location: Option[Location]): XProcException = dynamicError(28, value, location)
 
   def xdConflictingNamespaceDeclarations(msg: String, location: Option[Location]): XProcException = dynamicError(34, msg, location)
   def xdBadType(value: String, as: String, location: Option[Location]): XProcException = dynamicError(36, List(value, as), location)
@@ -116,6 +117,7 @@ object XProcException {
   def xdNoMarkupAllowedEncoded(name: QName, location: Option[Location]): XProcException = dynamicError(56, name, location)
   def xdInvalidJson(message: String, location: Option[Location]): XProcException = dynamicError(57, message, location)
   def xdUnsupportedEncoding(encoding: String, location: Option[Location]): XProcException = dynamicError(60, encoding, location)
+  def xdKeyIsInvalidQName(key: String, location: Option[Location]): XProcException = dynamicError(61, key, location)
   def xdMismatchedContentType(declType: MediaType, propType: MediaType, location: Option[Location]): XProcException = dynamicError(62, List(declType,propType), location)
   def xdNoMarkupAllowed(name: QName, location: Option[Location]): XProcException = dynamicError(63, name, location)
   def xdInvalidURI(uri: String, location: Option[Location]): XProcException = dynamicError(64, uri, location)
@@ -245,6 +247,9 @@ object XProcException {
   def xcUnknownArchiveFormat(format: QName, location: Option[Location]): XProcException = stepError((85,2), location)
   def xcMultipleTopLevelElements(location: Option[Location]): XProcException = stepError(91, location)
   def xcAttributeNameCollision(qname: QName, location: Option[Location]): XProcException = stepError(92, qname, location)
+  def xcRejectDuplicateKeys(key: String, location: Option[Location]): XProcException = stepError(106, key, location)
+  def xcInvalidJsonMergeKey(key: String, location: Option[Location]): XProcException = stepError((110,1), key, location)
+  def xcInvalidJsonMergeKey(location: Option[Location]): XProcException = stepError((110,2), location)
   def xcInvalidResultDataFormat(location: Option[Location]): XProcException = stepError(201, location)
   def xcUnknownCompressionFormat(location: Option[Location]): XProcException = stepError((202,1), location)
   def xcUnknownCompressionFormat(format: QName, location: Option[Location]): XProcException = stepError((202,2), format, location)

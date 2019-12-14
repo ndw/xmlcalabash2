@@ -23,9 +23,21 @@ class DocumentProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
       case pval: QNameValue =>
         new QName(pval.getComponent(Component.NAMESPACE).getStringValue, pval.getComponent(Component.LOCALNAME).getStringValue)
       case sval: StringValue =>
-        new QName("", sval.getStringValue)
+        val colonName = sval.getStringValue
+        if (colonName.contains(":")) {
+          val pfx = colonName.substring(0, colonName.indexOf(":"))
+          val local = colonName.substring(colonName.indexOf(":")+1)
+          val uri = Option(staticContext.getNamespaceResolver.getURIForPrefix(pfx, false))
+          if (uri.isDefined) {
+            new QName(pfx, uri.get, local)
+          } else {
+            throw XProcException.xdKeyIsInvalidQName(colonName, None)
+          }
+        } else {
+          new QName("", colonName)
+        }
       case _ =>
-        throw new RuntimeException("Unexected arg to documet property")
+        throw new RuntimeException("Unexected argument to document property")
     }
 
     if (msg.isEmpty) {

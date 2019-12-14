@@ -56,7 +56,7 @@ class XProcVtExpression private(override val context: StaticContext, val params:
         val compiler = config.processor.newXPathCompiler()
         val expr = compiler.compile(xpathexpr).getUnderlyingExpression.getInternalExpression
         val focus = ExpressionTool.dependsOnFocus(expr)
-        print(focus,":",xpathexpr)
+        //print(focus,":",xpathexpr)
       }
       isexpr = !isexpr
     }
