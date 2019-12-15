@@ -125,6 +125,12 @@
   <p:option name="document-properties" as="map(xs:QName,item()*)?"/>
 </p:declare-step>
 
+<p:declare-step type="p:namespace-delete">
+  <p:input port="source" content-types="xml html"/>
+  <p:output port="result" content-types="xml html"/>
+  <p:option name="prefixes" required="true" as="xs:string"/>    
+</p:declare-step>
+
 <p:declare-step type="p:namespace-rename">
   <p:input port="source" content-types="xml html"/>
   <p:output port="result" content-types="xml html"/>

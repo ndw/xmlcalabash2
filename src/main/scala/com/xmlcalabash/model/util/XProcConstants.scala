@@ -187,6 +187,7 @@ object XProcConstants {
   val _override_content_type = new QName("", "override-content-type")
   val _required = new QName("", "required")
   val _parameters = new QName("", "parameters")
+  val _prefixes = new QName("", "prefixes")
   val _properties = new QName("", "properties")
   val _pipe = new QName("", "pipe")
   val _port = new QName("", "port")

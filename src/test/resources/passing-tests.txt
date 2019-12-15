@@ -1,3 +1,17 @@
+ab-namespace-delete-001.xml
+ab-namespace-delete-002.xml
+ab-namespace-delete-003.xml
+ab-namespace-delete-004.xml
+ab-namespace-delete-005.xml
+ab-namespace-delete-006.xml
+ab-namespace-delete-007.xml
+ab-namespace-delete-008.xml
+ab-namespace-delete-009.xml
+ab-namespace-delete-010.xml
+ab-namespace-delete-011.xml
+ab-namespace-delete-012.xml
+ab-namespace-rename-016.xml
+EOF
 ab-json-join-001.xml
 ab-json-join-002.xml
 ab-json-join-003.xml
@@ -31,7 +45,6 @@ ab-json-merge-020.xml
 ab-json-merge-021.xml
 ab-json-merge-022.xml
 ab-json-merge-023.xml
-EOF
 ab-uncompress-001.xml
 ab-uncompress-002.xml
 ab-uncompress-003.xml
