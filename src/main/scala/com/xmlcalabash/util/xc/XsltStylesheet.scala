@@ -126,8 +126,7 @@ class XsltStylesheet(runtime: XMLCalabashRuntime, val bindings: Map[String,Strin
   }
 
   def startSort(select: String, lang: Option[String], order: Option[String],
-           collation: Option[String], stable: Option[String], case_order: Option[String],
-           data_type: Option[String]): Unit = {
+           collation: Option[String], stable: Option[String], case_order: Option[String]): Unit = {
     builder.addStartElement(xsl_sort)
     builder.addAttribute(_select, select)
     if (lang.isDefined) { builder.addAttribute(_lang, lang.get) }
@@ -135,7 +134,6 @@ class XsltStylesheet(runtime: XMLCalabashRuntime, val bindings: Map[String,Strin
     if (collation.isDefined) { builder.addAttribute(_collation, collation.get) }
     if (stable.isDefined) { builder.addAttribute(_stable, stable.get.toString) }
     if (case_order.isDefined) { builder.addAttribute(_case_order, case_order.get) }
-    if (data_type.isDefined) { builder.addAttribute(_data_type, data_type.get) }
     builder.startContent()
     openStack.push(xsl_sort)
   }

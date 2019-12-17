@@ -98,6 +98,7 @@ object XProcException {
   def xdBadValue(value: String, vtype: String, location: Option[Location]): XProcException = dynamicError((19, 1), List(value,vtype), location)
   def xdBadMatchPattern(pattern: String, message: String, location: Option[Location]): XProcException = dynamicError((19, 2), List(pattern, message), location)
   def xdBadVisibility(visibility: String, location: Option[Location]): XProcException = dynamicError((19, 3), visibility, location)
+  def xdBadValue(value: String, location: Option[Location]): XProcException = dynamicError((19, 4), value, location)
 
   def xdNotAuthorized(href: String, message: String, location: Option[Location]): XProcException = dynamicError(21, List(href, message), location)
   def xdGeneralError(message: String, location: Option[Location]): XProcException = dynamicError(30, message, location)
@@ -249,12 +250,13 @@ object XProcException {
   def xcArchiveBadFormat(format: QName, contentType: String, location: Option[Location]): XProcException = stepError((81,2), location)
   def xcArchiveBadURI(uri: URI, location: Option[Location]): XProcException = stepError((84,1), uri, location)
   def xcArchiveBadURI(location: Option[Location]): XProcException = stepError((84,2), location)
-
   def xcUnrecognizedArchiveFormat(location: Option[Location]): XProcException = stepError((85,1), location)
   def xcUnknownArchiveFormat(format: QName, location: Option[Location]): XProcException = stepError((85,2), location)
   def xcArchiveFormatError(format: QName, location: Option[Location]): XProcException = stepError((85,3), location)
   def xcMultipleTopLevelElements(location: Option[Location]): XProcException = stepError(91, location)
   def xcAttributeNameCollision(qname: QName, location: Option[Location]): XProcException = stepError(92, qname, location)
+  def xcSortError(location: Option[Location]): XProcException = stepError(98, location)
+  def xcSortKeyError(location: Option[Location]): XProcException = stepError(99, location)
   def xcArchiveBadManifest(location: Option[Location]): XProcException = stepError(100, location)
   def xcRejectDuplicateKeys(key: String, location: Option[Location]): XProcException = stepError(106, key, location)
   def xcPrefixNotInScope(prefix: String, location: Option[Location]): XProcException = stepError(108, prefix, location)

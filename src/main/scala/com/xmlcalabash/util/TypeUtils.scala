@@ -167,7 +167,7 @@ class TypeUtils(val processor: Processor, val context: StaticContext) {
         if (sae.getMessage.contains("Invalid URI")) {
           throw XProcException.xdInvalidURI(value.getStringValue, context.location)
         } else {
-          throw(sae)
+          throw XProcException.xdBadType(value.getStringValue, xsdtype.toString, context.location)
         }
       case ex: Exception =>
         throw(ex)

@@ -236,18 +236,14 @@
 </p:declare-step>
 
 <p:declare-step type="p:text-sort">
-  <p:input port="source" content-types="text"/>
-  <p:output port="result" content-types="text"/>
-  <p:option name="order" required="false" as="xs:string" select="'ascending'"
-            values="('ascending', 'descending')"/>
-  <p:option name="case-order" required="false" as="xs:string"
-            values="('upper-first', 'lower-first')"/>
-  <p:option name="lang" required="false" as="xs:language"/>
-  <p:option name="data-type" required="false" as="xs:string" select="'text'"
-            values="('text', 'number')"/>
-  <p:option name="collation" required="false" as="xs:string"
-            select="'https://www.w3.org/2005/xpath-functions/collation/codepoint'"/>
-  <p:option name="stable" required="false" as="xs:boolean" select="true()"/>
+  <p:input port="source" primary="true" sequence="false" content-types="text"/>
+  <p:output port="result" primary="true" sequence="false" content-types="text"/>
+  <p:option name="sort-key" as="xs:string" select="'.'"/>       <!-- XPathExpression -->
+  <p:option name="order" as="xs:string" select="'ascending'" values="('ascending', 'descending')"/>
+  <p:option name="case-order" as="xs:string?" values="('upper-first', 'lower-first')"/>
+  <p:option name="lang" as="xs:language?"/>                     
+  <p:option name="collation" as="xs:string" select="'http://www.w3.org/2005/xpath-functions/collation/codepoint'"/>
+  <p:option name="stable" as="xs:boolean" select="true()"/>     
 </p:declare-step>
 
 <p:declare-step type="p:text-tail">
