@@ -359,6 +359,15 @@ class DefaultXmlStep extends XmlStep {
     }
   }
 
+  def resolveURI(baseURI: URI, relative: String): URI = {
+    try {
+      baseURI.resolve(relative)
+    } catch {
+      case _: Exception =>
+        throw XProcException.xdInvalidURI(relative, location)
+    }
+  }
+
   override def toString: String = {
     val defStr = super.toString
     if (defStr.startsWith("XXX com.xmlcalabash.steps")) {

@@ -65,7 +65,11 @@ class XProcMetadata(private val initialContentType: Option[MediaType],
     if (_contentType.isEmpty) {
       if (_properties.contains(XProcConstants._content_type)) {
         val value = _properties(XProcConstants._content_type)
-        _contentType = Some(MediaType.parse(value.itemAt(0).getStringValue)) // FIXME: what about a sequence?
+        if (value.size == 0) {
+          _contentType = Some(MediaType.OCTET_STREAM)
+        } else {
+          _contentType = Some(MediaType.parse(value.itemAt(0).getStringValue)) // FIXME: what about a sequence?
+        }
       } else {
         _contentType = Some(MediaType.OCTET_STREAM)
       }
@@ -78,7 +82,11 @@ class XProcMetadata(private val initialContentType: Option[MediaType],
     if (_baseURI.isEmpty) {
       if (_properties.contains(XProcConstants._base_uri)) {
         val value = _properties(XProcConstants._base_uri)
-        _baseURI = Some(new URI(value.itemAt(0).getStringValue)) // FIXME: what about a sequence?
+        if (value.size() == 0) {
+          _baseURI = None
+        } else {
+          _baseURI = Some(new URI(value.itemAt(0).getStringValue)) // FIXME: what about a sequence?
+        }
       }
     }
 

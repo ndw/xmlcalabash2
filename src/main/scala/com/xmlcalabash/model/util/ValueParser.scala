@@ -181,8 +181,8 @@ object ValueParser {
     params.toMap
   }
 
-  def parseDocumentProperties(value: XdmItem, location: Option[Location]): Map[QName, XdmItem] = {
-    val params = mutable.HashMap.empty[QName, XdmItem]
+  def parseDocumentProperties(value: XdmItem, location: Option[Location]): Map[QName, XdmValue] = {
+    val params = mutable.HashMap.empty[QName, XdmValue]
 
     value match {
       case map: XdmMap =>
@@ -202,17 +202,7 @@ object ValueParser {
               throw XProcException.xdBadMapKey(key.getStringValue, location)
           }
 
-          var count = 0
-          val viter = value.iterator()
-          while (viter.hasNext) {
-            val item = viter.next()
-            params.put(qkey, item)
-            count += 1
-
-            if (count > 1) {
-              throw XProcException.xiDocPropsValueNotAtomic(location, item)
-            }
-          }
+          params.put(qkey, value)
         }
       case _ =>
         throw XProcException.xiDocPropsNotMap(location, value)

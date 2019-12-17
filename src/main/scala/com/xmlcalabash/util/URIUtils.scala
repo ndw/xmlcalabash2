@@ -3,6 +3,8 @@ package com.xmlcalabash.util
 import java.io.File
 import java.net.URI
 
+import com.xmlcalabash.exceptions.XProcException
+
 object URIUtils {
   def homeAsURI: URI = {
     dirAsURI(System.getProperty("user.home"))

@@ -1,8 +1,7 @@
 package com.xmlcalabash.runtime
 
-import java.io.{ByteArrayInputStream, File, FileInputStream, FileOutputStream, InputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileInputStream, FileOutputStream, InputStream}
 
-import org.apache.http.util.ByteArrayBuffer
 import org.slf4j.{Logger, LoggerFactory}
 
 class BinaryNode(config: XMLCalabashRuntime, private val rawValue: Any) {
@@ -11,6 +10,14 @@ class BinaryNode(config: XMLCalabashRuntime, private val rawValue: Any) {
   private var cacheFile = Option.empty[File]
 
   rawValue match {
+    case stream: ByteArrayOutputStream =>
+      val bytes = stream.toByteArray
+      if (bytes.length > 1024000) {
+        makeFile(new ByteArrayInputStream(bytes))
+      } else {
+        logger.trace(s"Storing ${bytes.length} bytes)")
+        cacheBytes = Some(bytes)
+      }
     case bytes: Array[Byte] =>
       if (bytes.length > 1024000) {
         makeFile(new ByteArrayInputStream(bytes))
@@ -33,7 +40,17 @@ class BinaryNode(config: XMLCalabashRuntime, private val rawValue: Any) {
     } else if (cacheFile.isDefined) {
       new FileInputStream(cacheFile.get)
     } else {
-      throw new RuntimeException(s"No way to convert ${rawValue.getClass.getName} to a stream")
+      throw new RuntimeException(s"No InputStream support for BinaryNode raw value: ${rawValue.getClass.getName}")
+    }
+  }
+
+  // If you attempt to access a file, we force the binary node into one
+  def file: File = {
+    if (cacheFile.isDefined) {
+      cacheFile.get
+    } else {
+      makeFile(stream)
+      cacheFile.get
     }
   }
 
@@ -54,6 +71,7 @@ class BinaryNode(config: XMLCalabashRuntime, private val rawValue: Any) {
     fos.close()
     stream.close()
     logger.trace(s"Storing $totBytes bytes bytes in $tempFile")
+    cacheBytes = None
     cacheFile = Some(tempFile)
   }
 }

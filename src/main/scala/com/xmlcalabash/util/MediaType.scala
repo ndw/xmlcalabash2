@@ -13,6 +13,7 @@ object MediaType {
   val XML  = new MediaType("application", "xml")
   val JSON = new MediaType("application", "json")
   val HTML = new MediaType("text", "html")
+  val ZIP = new MediaType("application", "zip")
 
   val MATCH_XML: Array[MediaType] = Array(
     MediaType.parse("application/xml"),

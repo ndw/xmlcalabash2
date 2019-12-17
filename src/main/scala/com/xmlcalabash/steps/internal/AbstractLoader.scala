@@ -15,7 +15,7 @@ abstract class AbstractLoader() extends DefaultXmlStep {
   protected var _document_properties = Option.empty[String]
   protected var contextItem = Option.empty[XProcItemMessage]
   protected var msgBindings = mutable.HashMap.empty[String, XProcItemMessage]
-  protected var docProps = Map.empty[QName, XdmItem]
+  protected var docProps = Map.empty[QName, XdmValue]
   protected var exprContext: StaticContext = _
   protected var contentType: MediaType = _
   protected var disabled = false

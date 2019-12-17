@@ -103,18 +103,18 @@ object Environment {
         // If we fell off the bottom of this loop, something has gone terribly wrong
         throw new RuntimeException("Fell off ancestor list in computing environment")
 
-      case step: Container =>
+      case xstep: Container =>
         // DeclareStep is special; if it's the last ancestor, then it's the root of
         // the pipeline and that doesn't get to read its own inputs. If it's not
         // the root, then we're setting up the environment for one of its contained
         // steps.
 
         // This step is in the environment
-        env.addStep(step)
+        env.addStep(xstep)
 
         if (next.isDefined) {
           // Its inputs are readable
-          for (port <- step.children[DeclareInput]) {
+          for (port <- xstep.children[DeclareInput]) {
             if (port.primary) {
               env.defaultReadablePort =  port
             }
@@ -122,11 +122,11 @@ object Environment {
           }
 
           // Its options are in-scope
-          for (option <- step.children[DeclareOption]) {
+          for (option <- xstep.children[DeclareOption]) {
             env.addVariable(option)
           }
 
-          step match {
+          xstep match {
             // Choose, when, etc., aren't ordinary container steps
             case container: Choose => Unit
             //case container: When => Unit
@@ -136,12 +136,12 @@ object Environment {
             //case container: Finally => Unit
             case _ =>
               // Entering a declare-step resets the default readable port
-              if (step.isInstanceOf[DeclareStep]) {
-                env.defaultReadablePort = step.primaryInput
+              if (xstep.isInstanceOf[DeclareStep]) {
+                env.defaultReadablePort = xstep.primaryInput
               }
 
               // The outputs of all contained steps are mutually readable
-              for (child <- step.allChildren) {
+              for (child <- xstep.allChildren) {
                 child match {
                   case decl: DeclareStep => Unit // these don't count
                   case childstep: Container =>
@@ -177,11 +177,11 @@ object Environment {
         }
 
         // Now walk down to the next ancestor, calculating the drp
-        for (child <- step.allChildren) {
+        for (child <- xstep.allChildren) {
           if (next.get == child) {
             return walk(env, ancestors.tail)
           }
-          step match {
+          xstep match {
             // The children of choose and try aren't ordinary children
             case container: Choose => Unit
             case container: Try => Unit
@@ -239,9 +239,20 @@ object Environment {
         // If we got here, something has gone terribly wrong
         throw new RuntimeException("Input with children?")
 
-      case input: DeclareOutput =>
+      case output: DeclareOutput =>
         if (next.isEmpty) {
           // This is us.
+          // The default readable port from here is the primary output
+          // of the last step in the pipeline, if the last step has
+          // a primary output.
+          var lastchild = Option.empty[Step]
+          for (child <- output.parent.get.children[Step]) {
+            lastchild = Some(child)
+          }
+          if (lastchild.isDefined) {
+            env.defaultReadablePort = lastchild.get.primaryOutput
+          }
+
           return env
         }
 

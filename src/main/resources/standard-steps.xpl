@@ -15,6 +15,21 @@
   <p:option name="attribute-value" required="true" as="xs:string"/>
 </p:declare-step>
 
+<p:declare-step type="p:archive">
+  <p:input port="source" primary="true" content-types="any" sequence="true"/>
+  <p:input port="manifest" content-types="application/xml" sequence="true">
+    <p:empty/>
+  </p:input>
+  <p:input port="archive" content-types="any" sequence="true">
+    <p:empty/>
+  </p:input>
+  <p:output port="result" primary="true" content-types="any" sequence="false"/>
+  <p:output port="report" content-types="application/xml" sequence="false"/>
+  <p:option name="format" as="xs:QName" select="'zip'"/>        
+  <p:option name="relative-to" as="xs:anyURI?"/>                
+  <p:option name="parameters" as="map(xs:QName, item()*)?"/>    
+</p:declare-step>
+
 <p:declare-step type="p:archive-manifest">
   <p:input port="source" primary="true" content-types="any" sequence="false"/>
   <p:output port="result" primary="true" content-types="application/xml" sequence="false"/>
@@ -239,6 +254,16 @@
   <p:input port="source" primary="true" sequence="false" content-types="text"/>
   <p:output port="result" primary="true" sequence="false" content-types="text"/>
   <p:option name="count" required="true" as="xs:integer"/>
+</p:declare-step>
+
+<p:declare-step type="p:unarchive">
+  <p:input port="source" primary="true" content-types="any" sequence="false"/>
+  <p:output port="result" primary="true" content-types="any" sequence="true"/>
+  <p:option name="include-filter" as="xs:string*"/>             <!-- RegularExpression -->
+  <p:option name="exclude-filter" as="xs:string*"/>             <!-- RegularExpression -->
+  <p:option name="format" as="xs:QName?"/>                      
+  <p:option name="parameters" as="map(xs:QName, item()*)?"/>    
+  <p:option name="relative-to" as="xs:anyURI?"/>                
 </p:declare-step>
 
 <p:declare-step type="p:uncompress">

@@ -242,20 +242,31 @@ object XProcException {
   def xcUnsupportedUuidVersion(version: Integer, location: Option[Location]): XProcException = stepError(60, version.toString, location)
   def xcContentTypeNotAllowed(location: Option[Location]): XProcException = stepError(69, location)
   def xcUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = stepError(70, ctype, location)
-  def xcBadArchiveFormat(format: QName, location: Option[Location]): XProcException = stepError(81, format, location)
+  def xcArchiveInvalidParameterValue(parameter: String, value: String, location: Option[Location]): XProcException = stepError(79, List(parameter, value), location)
+  def xcArchiveTooManyArchives(location: Option[Location]): XProcException = stepError((80,1), location)
+  def xcArchiveTooFewArchives(location: Option[Location]): XProcException = stepError((80,2), location)
+  def xcArchiveBadFormat(format: QName, location: Option[Location]): XProcException = stepError((81,1), format, location)
+  def xcArchiveBadFormat(format: QName, contentType: String, location: Option[Location]): XProcException = stepError((81,2), location)
+  def xcArchiveBadURI(uri: URI, location: Option[Location]): XProcException = stepError((84,1), uri, location)
+  def xcArchiveBadURI(location: Option[Location]): XProcException = stepError((84,2), location)
+
   def xcUnrecognizedArchiveFormat(location: Option[Location]): XProcException = stepError((85,1), location)
   def xcUnknownArchiveFormat(format: QName, location: Option[Location]): XProcException = stepError((85,2), location)
+  def xcArchiveFormatError(format: QName, location: Option[Location]): XProcException = stepError((85,3), location)
   def xcMultipleTopLevelElements(location: Option[Location]): XProcException = stepError(91, location)
   def xcAttributeNameCollision(qname: QName, location: Option[Location]): XProcException = stepError(92, qname, location)
+  def xcArchiveBadManifest(location: Option[Location]): XProcException = stepError(100, location)
   def xcRejectDuplicateKeys(key: String, location: Option[Location]): XProcException = stepError(106, key, location)
   def xcPrefixNotInScope(prefix: String, location: Option[Location]): XProcException = stepError(108, prefix, location)
   def xcNamespaceDeleteCollision(uri: String, location: Option[Location]): XProcException = stepError(109, uri, location)
   def xcInvalidJsonMergeKey(key: String, location: Option[Location]): XProcException = stepError((110,1), key, location)
   def xcInvalidJsonMergeKey(location: Option[Location]): XProcException = stepError((110,2), location)
+  def xcArchiveTooManyManifests(location: Option[Location]): XProcException = stepError(112, location)
   def xcInvalidResultDataFormat(location: Option[Location]): XProcException = stepError(201, location)
   def xcUnknownCompressionFormat(location: Option[Location]): XProcException = stepError((202,1), location)
   def xcUnknownCompressionFormat(format: QName, location: Option[Location]): XProcException = stepError((202,2), format, location)
   def xcUncompressionError(location: Option[Location]): XProcException = stepError((202,3), location)
+
 
 
   def staticErrorCode(code: Int): QName = {

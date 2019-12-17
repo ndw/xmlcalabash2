@@ -127,6 +127,7 @@ libraryDependencies ++= Seq(
   //"org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.12.1",
   //"org.slf4j" % "jcl-over-slf4j" % "1.7.25",
   //"org.slf4j" % "slf4j-api" % "1.7.25",
+  "org.apache.commons" % "commons-compress" % "1.19",
   "com.typesafe.akka" %% "akka-actor" % "2.5.25",
   //"com.typesafe.akka" %% "akka-slf4j" % "2.5.25",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
