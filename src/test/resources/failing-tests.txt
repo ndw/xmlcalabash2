@@ -137,15 +137,6 @@ ab-step-available-023.xml
 ab-step-available-024.xml
 ab-store-001.xml
 ab-store-002.xml
-ab-string-replace-001.xml
-ab-string-replace-002.xml
-ab-string-replace-003.xml
-ab-string-replace-004.xml
-ab-string-replace-005.xml
-ab-string-replace-006.xml
-ab-string-replace-007.xml
-ab-string-replace-008.xml
-ab-string-replace-009.xml
 ab-system-property-010.xml
 ab-system-property-011.xml
 ab-text-count-004.xml

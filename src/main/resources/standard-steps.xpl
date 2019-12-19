@@ -208,11 +208,18 @@
 </p:declare-step>
 
 <p:declare-step type="p:store">
-     <p:input port="source" content-types="any"/>
-     <p:output port="result" content-types="any" primary="true"/>
-     <p:output port="result-uri" content-types="application/xml"/>
-     <p:option name="href" required="true" as="xs:anyURI"/>
-     <p:option name="serialization" as="map(xs:QName,item()*)?"/>
+  <p:input port="source" content-types="any"/>
+  <p:output port="result" content-types="any" primary="true"/>
+  <p:output port="result-uri" content-types="application/xml"/>
+  <p:option name="href" required="true" as="xs:anyURI"/>
+  <p:option name="serialization" as="map(xs:QName,item()*)?"/>
+</p:declare-step>
+
+<p:declare-step type="p:string-replace">
+  <p:input port="source" content-types="xml html"/>
+  <p:output port="result" content-types="text xml html"/>
+  <p:option name="match" required="true" as="xs:string"/>       <!-- XSLTSelectionPattern -->
+  <p:option name="replace" required="true" as="xs:string"/>     <!-- XPathExpression -->
 </p:declare-step>
 
 <p:declare-step type="p:text-count">

@@ -3,10 +3,9 @@ package com.xmlcalabash.steps
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
-import net.sf.saxon.s9api.{QName, XdmNode}
+import net.sf.saxon.s9api.XdmNode
 
 class Delete() extends DefaultXmlStep  with ProcessMatchingNodes {
-  private val _position = new QName("", "position")
   private var source: XdmNode = _
   private var source_metadata: XProcMetadata = _
   private var pattern: String = _
