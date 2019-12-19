@@ -339,6 +339,14 @@
   <p:option name="version" as="xs:string"/>
 </p:declare-step>
 
+<p:declare-step type="p:wrap">
+  <p:input port="source" content-types="xml html"/>
+  <p:output port="result" content-types="application/xml"/>
+  <p:option name="wrapper" required="true" as="xs:QName"/>      
+  <p:option name="match" required="true" as="xs:string"/>       <!-- XSLTSelectionPattern -->
+  <p:option name="group-adjacent" as="xs:string?"/>             <!-- XPathExpression -->
+</p:declare-step>
+
 <p:declare-step type="p:wrap-sequence">
   <p:input port="source" content-types="application/xml */*+xml text/*" sequence="true"/>
   <p:output port="result" sequence="true" content-types="application/xml"/>

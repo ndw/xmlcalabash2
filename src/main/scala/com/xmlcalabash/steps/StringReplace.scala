@@ -1,12 +1,9 @@
 package com.xmlcalabash.steps
 
 import com.jafpl.steps.PortCardinality
-import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
-import net.sf.saxon.om.NodeInfo
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode, XdmValue}
-import net.sf.saxon.tree.iter.ManualIterator
+import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 
 class StringReplace() extends DefaultXmlStep with ProcessMatchingNodes {
   private val _replace = new QName("", "replace")

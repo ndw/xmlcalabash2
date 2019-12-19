@@ -8,7 +8,7 @@ import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime}
 import net.sf.saxon.`type`.BuiltInAtomicType
 import net.sf.saxon.ma.map.MapItem
-import net.sf.saxon.om.{FingerprintedQName, InscopeNamespaceResolver, NameOfNode, NamespaceBinding}
+import net.sf.saxon.om.{FingerprintedQName, InscopeNamespaceResolver, Item, NameOfNode, NamespaceBinding}
 import net.sf.saxon.s9api._
 import net.sf.saxon.tree.util.NamespaceIterator
 import net.sf.saxon.value.QNameValue
@@ -29,6 +29,9 @@ object S9Api {
   val COLON = new XdmAtomicValue(":")
   val SPACE = new XdmAtomicValue(" ")
   val NULL = new XdmAtomicValue("null")
+
+  val vara = new QName("", "vara")
+  val varb = new QName("", "varb")
 
   def axis(node: XdmNode, axis: Axis): List[XdmNode] = {
     val lb = ListBuffer.empty[XdmNode]
@@ -370,5 +373,19 @@ object S9Api {
       case _ =>
         tree.addSubtree(node)
     }
+  }
+
+  def xpathEqual(config: XMLCalabashRuntime, left: XdmItem, right: XdmItem): Boolean = {
+    val xcomp = config.processor.newXPathCompiler()
+    xcomp.declareVariable(vara)
+    xcomp.declareVariable(varb)
+    val xexec = xcomp.compile("$vara = $varb")
+    val selector = xexec.load()
+    selector.setVariable(vara, left)
+    selector.setVariable(varb, right)
+
+    val values = selector.iterator()
+    val item = values.next.asInstanceOf[XdmAtomicValue]
+    item.getBooleanValue
   }
 }
