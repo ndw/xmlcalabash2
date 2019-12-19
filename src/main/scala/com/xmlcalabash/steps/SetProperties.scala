@@ -1,9 +1,11 @@
 package com.xmlcalabash.steps
 
+import java.net.URI
+
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
-import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode, XdmValue}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -43,6 +45,16 @@ class SetProperties() extends DefaultXmlStep {
         throw XProcException.xcContentTypeNotAllowed(context.location)
       }
       newprops.put(qname, value)
+    }
+
+    // The base URI is special; make sure it's not some bogus string
+    if (newprops.contains(XProcConstants._base_uri)) {
+      val uri = if (context.baseURI.isDefined) {
+        resolveURI(context.baseURI.get, newprops(XProcConstants._base_uri).toString)
+      } else {
+        new URI(newprops(XProcConstants._base_uri).toString)
+      }
+      newprops.put(XProcConstants._base_uri, new XdmAtomicValue(uri))
     }
 
     val newmeta = new XProcMetadata(metadata.contentType, newprops.toMap)

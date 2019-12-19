@@ -11,7 +11,6 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime._
 import com.xmlcalabash.util.{MediaType, S9Api}
-import net.sf.saxon.ma.map.MapItem
 import net.sf.saxon.s9api._
 import net.sf.saxon.value.QNameValue
 import org.slf4j.{Logger, LoggerFactory}
