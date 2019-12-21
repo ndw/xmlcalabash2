@@ -96,7 +96,7 @@ class Unarchive extends DefaultXmlStep {
       case bn: BinaryNode =>
         unzipFile(context, bn.file)
       case _ =>
-        throw XProcException.xcArchiveBadFormat(format.get, location)
+        throw XProcException.xcArchiveFormatError(format.get, location)
     }
   }
 

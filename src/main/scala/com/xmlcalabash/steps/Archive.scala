@@ -201,7 +201,7 @@ class Archive extends DefaultXmlStep {
               throw ex
           }
         case _ =>
-          throw XProcException.xcArchiveBadFormat(format.get, location)
+          throw XProcException.xcArchiveFormatError(format.get, location)
       }
     }
 

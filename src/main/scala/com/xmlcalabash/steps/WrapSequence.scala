@@ -6,8 +6,9 @@ import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecificati
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.expr.LastPositionFinder
 import net.sf.saxon.om.{Item, NodeInfo}
-import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
+import net.sf.saxon.s9api.{QName, XdmItem, XdmNode, XdmValue}
 import net.sf.saxon.tree.iter.ManualIterator
+import net.sf.saxon.value.SequenceExtent
 
 import scala.collection.mutable.ListBuffer
 
@@ -64,16 +65,19 @@ class WrapSequence extends DefaultXmlStep {
 
   def runAdjacent(staticContext: StaticContext) {
     var inGroup = false
-    var lastValue: Item[_] = null
+    var lastValue: XdmValue = null
     var builder: SaxonTreeBuilder = null
 
     index = 0
     for (item <- inputs) {
       index += 1
       val thisValue = adjacentValue(item)
+      var equal = false
 
       if (Option(lastValue).isDefined) {
-        if (lastValue.getStringValue == thisValue.getStringValue) {
+        equal = S9Api.xpathDeepEqual(config, lastValue, thisValue)
+
+        if (equal) {
           builder.addSubtree(item)
         } else {
           if (inGroup) {
@@ -85,7 +89,7 @@ class WrapSequence extends DefaultXmlStep {
         }
       }
 
-      if (Option(lastValue).isEmpty || lastValue.getStringValue != thisValue.getStringValue) {
+      if (Option(lastValue).isEmpty || !equal) {
         lastValue = thisValue
         inGroup = true
         builder = new SaxonTreeBuilder(config)
@@ -104,7 +108,7 @@ class WrapSequence extends DefaultXmlStep {
     }
   }
 
-  private def adjacentValue(node: XdmNode): Item[_] = {
+  private def adjacentValue(node: XdmNode): XdmValue = {
     val compiler = config.processor.newXPathCompiler()
     compiler.setBaseURI(groupAdjacentContext.get.baseURI.get)
     for ((pfx, uri) <- bindingContexts(_group_adjacent).nsBindings) {
@@ -119,17 +123,8 @@ class WrapSequence extends DefaultXmlStep {
     val fakeIterator = new ManualIterator[NodeInfo](node.getUnderlyingNode, index)
     fakeIterator.setLastPositionFinder(fakeLastPositionFinder)
     context.setCurrentIterator(fakeIterator)
-    val iter = expr.iterate(dyncontext)
-    val value = Option(iter.next())
 
-    if (value.isEmpty) {
-      throw new RuntimeException("group-adjacent returned nothing?")
-    } else {
-      if (Option(iter.next()).isDefined) {
-        throw new RuntimeException("group-adjacent returned a sequence")
-      }
-      value.get.asInstanceOf[Item[_]]
-    }
+    XdmValue.wrap(expr.iterate(dyncontext).materialize())
   }
 
   override def reset(): Unit = {

@@ -19,8 +19,18 @@ class TextLines() extends DefaultXmlStep {
     item match {
       case node: XdmNode =>
         text = node
-        if (text.getStringValue != "") {
-          lines ++= text.getStringValue.split('\n')
+        val svalue = text.getStringValue
+        if (svalue != "") {
+          lines ++= svalue.split('\n')
+          // String.split() doesn't include trailing empty lines, but we need them.
+          var pos = svalue.length - 1
+          if (svalue.charAt(pos) == '\n') {
+            pos -= 1
+          }
+          while (pos >= 0 && svalue.charAt(pos) == '\n') {
+            lines += ""
+            pos -= 1
+          }
         }
       case _ =>
         throw XProcException.xiUnexpectedItem(item.toString, location)

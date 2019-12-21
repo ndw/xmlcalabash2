@@ -1,3 +1,6 @@
+ab-archive-manifest-012.xml
+ab-archive-manifest-013.xml
+ab-archive-manifest-014.xml
 ab-choose-040.xml
 ab-connection-003.xml
 ab-connection-010.xml
@@ -37,6 +40,7 @@ ab-for-each-016.xml
 ab-inline-002.xml
 ab-inline-003.xml
 ab-inline-007.xml
+ab-input-002.xml
 ab-insert-025.xml
 ab-insert-026.xml
 ab-json-join-006.xml
@@ -137,6 +141,7 @@ ab-step-available-023.xml
 ab-step-available-024.xml
 ab-store-001.xml
 ab-store-002.xml
+ab-subpipeline-001.xml
 ab-system-property-010.xml
 ab-system-property-011.xml
 ab-text-count-004.xml
@@ -176,6 +181,9 @@ ab-unarchive-015.xml
 ab-unarchive-016.xml
 ab-unarchive-017.xml
 ab-unarchive-018.xml
+ab-unarchive-019.xml
+ab-unarchive-020.xml
+ab-unarchive-021.xml
 ab-unescape-markup-003.xml
 ab-unescape-markup-004.xml
 ab-unescape-markup-005.xml
@@ -243,6 +251,7 @@ ab-with-input-select-012.xml
 ab-with-input-select-013.xml
 ab-with-option-001.xml
 ab-with-option-004.xml
+ab-wrap-sequence-014.xml
 ab-xinclude-001.xml
 ab-xinclude-002.xml
 ab-xinclude-003.xml

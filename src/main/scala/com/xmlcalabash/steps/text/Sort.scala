@@ -1,10 +1,13 @@
 package com.xmlcalabash.steps.text
 
 import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
 import com.xmlcalabash.util.xc.XsltStylesheet
+import javax.xml.transform.{ErrorListener, TransformerException}
 import net.sf.saxon.s9api.{QName, SaxonApiException, XdmDestination}
+import net.sf.saxon.trans.XPathException
 
 class Sort() extends TextLines {
   private val _sort_key = new QName("", "sort-key")
@@ -16,6 +19,9 @@ class Sort() extends TextLines {
 
   private val _sort = new QName("", "sort")
   private val _line = new QName("", "line")
+
+  private val elistener = new SortErrorListener()
+  private var goesBang = Option.empty[XProcException]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.TEXTSOURCE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.TEXTRESULT
@@ -60,28 +66,65 @@ class Sort() extends TextLines {
     val processor = config.processor
     val compiler = processor.newXsltCompiler()
     compiler.setSchemaAware(processor.isSchemaAware)
+    compiler.setErrorListener(elistener)
 
     val exec = try {
       compiler.compile(stylesheet.asSource())
     } catch {
       case ex: SaxonApiException =>
-        throw XProcException.xcSortKeyError(location)
+        if (goesBang.isDefined) {
+          throw goesBang.get
+        } else {
+          throw XProcException.xdStepFailed(ex.getMessage, location)
+        }
     }
 
     val transformer = exec.load()
     transformer.setInitialTemplate(_sort)
+    transformer.setErrorListener(elistener)
 
     val result = new XdmDestination()
     transformer.setDestination(result)
     try {
       transformer.transform()
     } catch {
-      case _: SaxonApiException =>
-        throw XProcException.xcSortError(location)
+      case ex: SaxonApiException =>
+        if (goesBang.isDefined) {
+          throw goesBang.get
+        } else {
+          throw XProcException.xdStepFailed(ex.getMessage, location)
+        }
     }
 
     val xformed = result.getXdmNode
 
     consumer.get.receive("result", xformed, new XProcMetadata(MediaType.TEXT))
+  }
+
+  override def reset(): Unit = {
+    super.reset()
+    goesBang = None
+  }
+
+  private class SortErrorListener() extends ErrorListener {
+    override def warning(e: TransformerException): Unit = Unit
+
+    override def error(e: TransformerException): Unit = {
+      goesBang = Some(XProcException.xcSortError(e.getMessage, location))
+    }
+
+    override def fatalError(e: TransformerException): Unit = {
+      e match {
+        case xpe: XPathException =>
+          if (xpe.getErrorCodeQName == XProcException.xtte(1020)) {
+            goesBang = Some(XProcException.xcSortKeyError(location))
+          }
+        case _ => Unit
+      }
+
+      if (goesBang.isEmpty) {
+        goesBang = Some(XProcException.xdStepFailed(e.getMessage, location))
+      }
+    }
   }
 }

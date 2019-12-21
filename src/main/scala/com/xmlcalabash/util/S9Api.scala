@@ -375,11 +375,25 @@ object S9Api {
     }
   }
 
-  def xpathEqual(config: XMLCalabashRuntime, left: XdmItem, right: XdmItem): Boolean = {
+  def xpathEqual(config: XMLCalabashRuntime, left: XdmValue, right: XdmValue): Boolean = {
     val xcomp = config.processor.newXPathCompiler()
     xcomp.declareVariable(vara)
     xcomp.declareVariable(varb)
     val xexec = xcomp.compile("$vara = $varb")
+    val selector = xexec.load()
+    selector.setVariable(vara, left)
+    selector.setVariable(varb, right)
+
+    val values = selector.iterator()
+    val item = values.next.asInstanceOf[XdmAtomicValue]
+    item.getBooleanValue
+  }
+
+  def xpathDeepEqual(config: XMLCalabashRuntime, left: XdmValue, right: XdmValue): Boolean = {
+    val xcomp = config.processor.newXPathCompiler()
+    xcomp.declareVariable(vara)
+    xcomp.declareVariable(varb)
+    val xexec = xcomp.compile("deep-equal($vara,$varb)")
     val selector = xexec.load()
     selector.setVariable(vara, left)
     selector.setVariable(varb, right)

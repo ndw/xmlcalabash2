@@ -83,7 +83,7 @@ class ArchiveManifest extends DefaultXmlStep {
       case bn: BinaryNode =>
         zipArchiveFile(context, builder, bn.file)
       case _ =>
-        throw XProcException.xcArchiveBadFormat(format.get, location)
+        throw XProcException.xcArchiveFormatError(format.get, location)
     }
   }
 

@@ -9,6 +9,7 @@ import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.model.xml.Artifact
 import com.xmlcalabash.runtime.{StaticContext, XProcExpression}
 import com.xmlcalabash.util.MediaType
+import net.sf.saxon.om.StructuredQName
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable.ListBuffer
@@ -17,6 +18,14 @@ object XProcException {
   val xd0011 = new QName("err", XProcConstants.ns_err, "XD0011")
   val xc0070 = new QName("err", XProcConstants.ns_err, "XC0070")
   val xs0107 = new QName("err", XProcConstants.ns_err, "XS0107")
+
+  def xtde(errNo: Int): StructuredQName = {
+    new StructuredQName("err", XProcConstants.ns_xqt_errors, f"XTDE$errNo%04d")
+  }
+
+  def xtte(errNo: Int): StructuredQName = {
+    new StructuredQName("err", XProcConstants.ns_xqt_errors, f"XTTE$errNo%04d")
+  }
 
   def xiUnkExprType(location: Option[Location]): XProcException = internalError(1, location)
   def xiInvalidMessage(location: Option[Location], message: Message): XProcException = internalError(2, location, message)
@@ -107,6 +116,7 @@ object XProcException {
   def xdNotValidXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(23, List(href, line, col, message), location)
   def xdValueDoesNotSatisfyType(value: String, location: Option[Location]): XProcException = dynamicError(28, value, location)
 
+  def xdStepFailed(msg: String, location: Option[Location]): XProcException = dynamicError(30, msg, location)
   def xdConflictingNamespaceDeclarations(msg: String, location: Option[Location]): XProcException = dynamicError(34, msg, location)
   def xdBadType(value: String, as: String, location: Option[Location]): XProcException = dynamicError(36, List(value, as), location)
   def xsBadInputMediaType(ctype: MediaType, allowed: List[MediaType], location: Option[Location]): XProcException = dynamicError(38, List(ctype, allowed), location)
@@ -246,8 +256,6 @@ object XProcException {
   def xcArchiveInvalidParameterValue(parameter: String, value: String, location: Option[Location]): XProcException = stepError(79, List(parameter, value), location)
   def xcArchiveTooManyArchives(location: Option[Location]): XProcException = stepError((80,1), location)
   def xcArchiveTooFewArchives(location: Option[Location]): XProcException = stepError((80,2), location)
-  def xcArchiveBadFormat(format: QName, location: Option[Location]): XProcException = stepError((81,1), format, location)
-  def xcArchiveBadFormat(format: QName, contentType: String, location: Option[Location]): XProcException = stepError((81,2), location)
   def xcArchiveBadURI(uri: URI, location: Option[Location]): XProcException = stepError((84,1), uri, location)
   def xcArchiveBadURI(location: Option[Location]): XProcException = stepError((84,2), location)
   def xcUnrecognizedArchiveFormat(location: Option[Location]): XProcException = stepError((85,1), location)
@@ -255,7 +263,7 @@ object XProcException {
   def xcArchiveFormatError(format: QName, location: Option[Location]): XProcException = stepError((85,3), location)
   def xcMultipleTopLevelElements(location: Option[Location]): XProcException = stepError(91, location)
   def xcAttributeNameCollision(qname: QName, location: Option[Location]): XProcException = stepError(92, qname, location)
-  def xcSortError(location: Option[Location]): XProcException = stepError(98, location)
+  def xcSortError(msg: String, location: Option[Location]): XProcException = stepError(98, msg, location)
   def xcSortKeyError(location: Option[Location]): XProcException = stepError(99, location)
   def xcArchiveBadManifest(location: Option[Location]): XProcException = stepError(100, location)
   def xcRejectDuplicateKeys(key: String, location: Option[Location]): XProcException = stepError(106, key, location)
