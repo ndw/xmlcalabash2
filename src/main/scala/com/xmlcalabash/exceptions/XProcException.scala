@@ -233,6 +233,7 @@ object XProcException {
     except
   }
 
+  def xcXQueryVersionNotAvailable(version: String, location: Option[Location]): XProcException = stepError(9, version, location)
   def xcBadRenamePI(name: QName, location: Option[Location]): XProcException = stepError(13, name, location)
   def xcInvalidSelection(pattern: String, nodeType: String, location: Option[Location]): XProcException = stepError(23, List(pattern, nodeType), location)
   def xcBadPosition(pattern: String, position: String, location: Option[Location]): XProcException = stepError(24, List(pattern, position), location)
@@ -263,9 +264,12 @@ object XProcException {
   def xcArchiveFormatError(format: QName, location: Option[Location]): XProcException = stepError((85,3), location)
   def xcMultipleTopLevelElements(location: Option[Location]): XProcException = stepError(91, location)
   def xcAttributeNameCollision(qname: QName, location: Option[Location]): XProcException = stepError(92, qname, location)
+  def xcXsltCompileError(msg: String, location: Option[Location]): XProcException = stepError(93, msg, location)
   def xcSortError(msg: String, location: Option[Location]): XProcException = stepError(98, msg, location)
   def xcSortKeyError(location: Option[Location]): XProcException = stepError(99, location)
   def xcArchiveBadManifest(location: Option[Location]): XProcException = stepError(100, location)
+  def xcXQueryCompileError(msg: String, location: Option[Location]): XProcException = stepError(103, msg, location)
+  def xcXQueryEvalError(msg: String, location: Option[Location]): XProcException = stepError(104, msg, location)
   def xcRejectDuplicateKeys(key: String, location: Option[Location]): XProcException = stepError(106, key, location)
   def xcPrefixNotInScope(prefix: String, location: Option[Location]): XProcException = stepError(108, prefix, location)
   def xcNamespaceDeleteCollision(uri: String, location: Option[Location]): XProcException = stepError(109, uri, location)

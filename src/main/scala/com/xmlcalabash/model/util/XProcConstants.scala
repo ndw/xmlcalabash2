@@ -137,6 +137,7 @@ object XProcConstants {
   val c_message = new QName("c", ns_c, "message")
   val c_param_set = new QName("c", ns_c, "param-set")
   val c_param = new QName("c", ns_c, "param")
+  val c_query = new QName("c", ns_c, "query")
   val c_document_properties = new QName("c", ns_c, "document-properties")
   val c_property = new QName("c", ns_c, "property")
   val c_result = new QName("c", ns_c, "result")

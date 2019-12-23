@@ -125,7 +125,7 @@ class InlineLoader() extends AbstractLoader {
       return
     }
 
-    if (contentType.xmlContentType) {
+    if (contentType.xmlContentType || contentType.htmlContentType) {
       val builder = new SaxonTreeBuilder(config)
       builder.startDocument(node.getBaseURI)
       builder.startContent()
@@ -135,36 +135,6 @@ class InlineLoader() extends AbstractLoader {
       val result = builder.result
       val metadata = new XProcMetadata(contentType, props.toMap)
       consumer.get.receive("result", result, metadata)
-    } else if (contentType.htmlContentType) {
-      val builder = new SaxonTreeBuilder(config)
-      builder.startDocument(node.getBaseURI)
-      builder.startContent()
-      // FIXME: trim whitespace
-      expandTVT(node, builder, expandText)
-      builder.endDocument()
-      val result = builder.result
-
-      val baos = new ByteArrayOutputStream()
-      val serializer = config.config.processor.newSerializer(baos)
-      S9Api.serialize(config.config, result, serializer)
-      val stream = new ByteArrayInputStream(baos.toByteArray)
-
-      val request = new DocumentRequest(node.getBaseURI, contentType, exprContext.location)
-      request.baseURI = node.getBaseURI
-      val response = config.documentManager.parse(request, stream)
-
-      for ((name, value) <- response.props) {
-        props.put(name, value)
-      }
-
-      val metadata = new XProcMetadata(response.contentType, props.toMap)
-
-      response.value match {
-        case node: XdmNode =>
-          consumer.get.receive("result", node, metadata)
-        case _ =>
-          throw new RuntimeException("Unexpected node type from parseHtml")
-      }
     } else if (contentType.jsonContentType) {
       val text = if (expandText) {
         val builder = new SaxonTreeBuilder(config)

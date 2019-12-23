@@ -36,8 +36,8 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
   private var _open_graph = Option.empty[String]
 
   private var debugOptions = mutable.HashSet.empty[String]
-  private var dumped = mutable.HashMap.empty[DeclareStep,mutable.HashSet[String]]
-  private var dumpCount = mutable.HashMap.empty[DeclareStep,mutable.HashMap[String,Long]]
+  private val dumped = mutable.HashMap.empty[DeclareStep,mutable.HashSet[String]]
+  private val dumpCount = mutable.HashMap.empty[DeclareStep,mutable.HashMap[String,Long]]
 
   def injectables: List[String] = _injectables.toList
   def injectables_=(list: List[String]): Unit = {
@@ -114,7 +114,7 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
     }
 
     if (stackTrace.isDefined) {
-      var basefn = stackTrace.get
+      val basefn = stackTrace.get
       val fn = s"$outputDirectory/$basefn.txt"
       val fos = new FileOutputStream(new File(fn))
       val pos = new PrintStream(fos)
@@ -150,9 +150,12 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
   }
 
   private def dump(decl: DeclareStep, opt: String, graph: Option[Graph], exception: Option[Exception]): Unit = {
+    /*
     if (!debugOptions.contains(opt)) {
       return
     }
+     */
+
     val output = dumped.getOrElse(decl, mutable.HashSet.empty[String])
     if (output.contains(opt)) {
       return
@@ -179,7 +182,7 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
     opt match {
       case TREE =>
         if (tree.isDefined) {
-          var basefn = tree.getOrElse(name)
+          val basefn = tree.getOrElse(name)
           val fn = s"$outputDirectory/$basefn$ext.txt"
           val fos = new FileOutputStream(new File(fn))
           val psout = new PrintStream(fos)
@@ -193,48 +196,50 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
           }
         }
       case XMLTREE =>
-        var basefn = xmlTree.getOrElse(name)
+        val basefn = xmlTree.getOrElse(name)
         val fn = s"$outputDirectory/$basefn$ext.xml"
         val fos = new FileOutputStream(new File(fn))
-        var pw = new PrintWriter(fos)
+        val pw = new PrintWriter(fos)
         pw.write(decl.xdump.toString)
         pw.close()
         fos.close()
       case GRAPH =>
-        var basefn = graph.getOrElse(name)
+        val basefn = graph.getOrElse(name)
         val fn = s"$outputDirectory/$basefn$ext.svg"
         val baos = new ByteArrayOutputStream()
-        var pw = new PrintWriter(baos)
+        val pw = new PrintWriter(baos)
         pw.write(decl.xdump.toString)
         pw.close()
         svgPipeline(fn, baos)
       case JAFPLGRAPH =>
-        var basefn = jafplGraph.getOrElse(name)
+        val basefn = jafplGraph.getOrElse(name)
         if (debugOptions.contains(GRAPH) && graph.isEmpty
           || debugOptions.contains(OPENGRAPH) && openGraph.isEmpty) {
-          ext = "_jafpl$ext"
+          ext = s"_jafpl$ext"
         }
         val fn = s"$outputDirectory/$basefn$ext.svg"
         val baos = new ByteArrayOutputStream()
-        var pw = new PrintWriter(baos)
+        val pw = new PrintWriter(baos)
         pw.write(graph.get.asXML.toString)
+        //val xxx = graph.get.asXML.toString()
         pw.close()
         svgGraph(fn, baos, "pgx2dot.xsl")
       case OPENGRAPH =>
-        var basefn = openGraph.getOrElse(name)
+        val basefn = openGraph.getOrElse(name)
         if (debugOptions.contains(GRAPH) && graph.isEmpty
           || debugOptions.contains(JAFPLGRAPH) && jafplGraph.isEmpty) {
-          ext = "_open$ext"
+          ext = s"_open$ext"
         }
         val fn = s"$outputDirectory/$basefn$ext.svg"
         val baos = new ByteArrayOutputStream()
-        var pw = new PrintWriter(baos)
+        val pw = new PrintWriter(baos)
         pw.write(graph.get.asXML.toString)
+        //val xxx = graph.get.asXML.toString()
         pw.close()
         svgGraph(fn, baos, "pg2dot.xsl")
       case STACKTRACE =>
         if (stackTrace.isDefined) {
-          var basefn = stackTrace.get
+          val basefn = stackTrace.get
           val fn = s"$outputDirectory/$basefn$ext.txt"
           val fos = new FileOutputStream(new File(fn))
           val pos = new PrintStream(fos)

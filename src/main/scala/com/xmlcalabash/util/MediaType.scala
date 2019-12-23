@@ -1,5 +1,7 @@
 package com.xmlcalabash.util
 
+import java.net.{URI, URLConnection}
+
 import com.xmlcalabash.exceptions.XProcException
 
 import scala.collection.mutable.ListBuffer
@@ -29,6 +31,8 @@ object MediaType {
   val MATCH_TEXT: Array[MediaType] = Array(
     MediaType.parse("text/*"),
     MediaType.parse("application/relax-ng-compact-syntax"),
+    MediaType.parse("application/xquery"),
+    MediaType.parse("application/javascript"),
     MediaType.parse("-text/html"),
     MediaType.parse("-text/xml")
   )

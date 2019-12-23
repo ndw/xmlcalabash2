@@ -354,6 +354,14 @@
   <p:option name="group-adjacent" as="xs:string" cx:as="XPathExpression"/>
 </p:declare-step>
 
+<p:declare-step type="p:xquery">
+  <p:input port="source" content-types="any" sequence="true" primary="true"/>
+  <p:input port="query" content-types="text xml"/>
+  <p:output port="result" sequence="true" content-types="any"/>
+  <p:option name="parameters" as="map(xs:QName,item()*)?"/>     
+  <p:option name="version" as="xs:string?"/>                    
+</p:declare-step>
+
 <p:declare-step type="p:xslt">
   <p:input port="source" content-types="application/xml text/xml */*+xml" sequence="true" primary="true"/>
   <p:input port="stylesheet" content-types="application/xml text/xml */*+xml"/>

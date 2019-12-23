@@ -3,13 +3,15 @@ package com.xmlcalabash.steps
 import java.net.URI
 
 import com.jafpl.steps.PortCardinality
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, XProcCollectionFinder}
-import javax.xml.transform.SourceLocator
+import javax.xml.transform.{ErrorListener, SourceLocator, TransformerException}
 import net.sf.saxon.event.{PipelineConfiguration, Receiver}
 import net.sf.saxon.s9api.{Destination, MessageListener, QName, ValidationMode, XdmAtomicValue, XdmDestination, XdmNode, XdmValue}
 import net.sf.saxon.serialize.SerializationProperties
+import net.sf.saxon.trans.XPathException
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -28,6 +30,7 @@ class Xslt extends DefaultXmlStep {
   private var parameters = Map.empty[QName, XdmValue]
   private var version = Option.empty[String]
 
+  private var goesBang = Option.empty[XProcException]
   private val outputProperties = mutable.HashMap.empty[QName, XdmValue]
 
   private val secondaryResults = mutable.HashMap.empty[URI, XdmDestination]
@@ -85,6 +88,10 @@ class Xslt extends DefaultXmlStep {
       version = Option(root.get.getAttributeValue(XProcConstants._version))
     }
 
+    if (version.isEmpty || (version.get != "2.0" && version.get != "3.0")) {
+      throw XProcException.xcVersionNotAvailable(version.getOrElse(""), location)
+    }
+
     val runtime = this.config.config
     val processor = runtime.processor
     val config = processor.getUnderlyingConfiguration
@@ -99,7 +106,13 @@ class Xslt extends DefaultXmlStep {
 
     val compiler = processor.newXsltCompiler()
     compiler.setSchemaAware(processor.isSchemaAware)
-    val exec = compiler.compile(stylesheet.get.asSource())
+    compiler.setErrorListener(new MyErrorListener(true))
+    val exec = try {
+      compiler.compile(stylesheet.get.asSource())
+    } catch {
+      case e: Exception =>
+        throw goesBang.getOrElse(e)
+    }
     val transformer = exec.load()
 
     for ((param, value) <- parameters) {
@@ -145,7 +158,12 @@ class Xslt extends DefaultXmlStep {
     }
   }
 
-  class MyDestination(val destination: XdmDestination, map: mutable.HashMap[QName,XdmValue]) extends XdmDestination {
+  override def reset(): Unit = {
+    super.reset()
+    goesBang = None
+  }
+
+  private class MyDestination(val destination: XdmDestination, map: mutable.HashMap[QName,XdmValue]) extends XdmDestination {
     override def setDestinationBaseURI(baseURI: URI): Unit = {
       destination.setDestinationBaseURI(baseURI)
     }
@@ -195,7 +213,7 @@ class Xslt extends DefaultXmlStep {
     }
   }
 
-  class CatchMessages extends MessageListener {
+  private class CatchMessages extends MessageListener {
     override def message(content: XdmNode, terminate: Boolean, locator: SourceLocator): Unit = {
       val treeWriter = new SaxonTreeBuilder(config)
       treeWriter.startDocument(content.getBaseURI)
@@ -210,4 +228,15 @@ class Xslt extends DefaultXmlStep {
     }
   }
 
+  private class MyErrorListener(val compileTime: Boolean) extends ErrorListener {
+    override def warning(e: TransformerException): Unit = Unit
+
+    override def error(e: TransformerException): Unit = {
+      goesBang = Some(XProcException.xcXsltCompileError(e.getMessage, location))
+    }
+
+    override def fatalError(e: TransformerException): Unit = {
+      goesBang = Some(XProcException.xcXsltCompileError(e.getMessage, location))
+    }
+  }
 }
