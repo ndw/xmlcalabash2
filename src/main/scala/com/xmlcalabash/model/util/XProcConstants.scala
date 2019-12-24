@@ -18,6 +18,7 @@ object XProcConstants {
   val UNKNOWN = new QName("", "UNKNOWN")
 
   val xml_base = new QName("xml", ns_xml, "base")
+  val xml_lang = new QName("xml", ns_xml, "lang")
   val xml_id = new QName("xml", ns_xml, "id")
 
   val p_catch = new QName("p", ns_p, "catch")

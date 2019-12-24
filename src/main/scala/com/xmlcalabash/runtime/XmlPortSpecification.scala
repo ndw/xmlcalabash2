@@ -67,6 +67,11 @@ object XmlPortSpecification {
     Map("result"->PortCardinality.EXACTLY_ONE),
     Map("result" -> List("application/xml")))
 
+  /** Allow a single XML or HTML document on the `source` port. */
+  val MARKUPSOURCE: XmlPortSpecification = new XmlPortSpecification(
+    Map("source"->PortCardinality.EXACTLY_ONE),
+    Map("source"->List("application/xml", "text/html")))
+
   /** Allow a single JSON document on the `result` port. */
   val JSONRESULT: XmlPortSpecification = new XmlPortSpecification(
     Map("result"->PortCardinality.EXACTLY_ONE),

@@ -15,7 +15,6 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 object TypeUtils {
-
   def castAsXml(value: Any): XdmValue = {
     if (value == null) {
       return XdmEmptySequence.getInstance()
@@ -122,6 +121,8 @@ object TypeUtils {
 }
 
 class TypeUtils(val processor: Processor, val context: StaticContext) {
+  private val err_XD0045 = new QName(XProcConstants.ns_err, "XD0045")
+
   def this(config: XMLCalabashConfig, context: StaticContext) = {
     this(config.processor, context)
   }
@@ -341,5 +342,30 @@ class TypeUtils(val processor: Processor, val context: StaticContext) {
           throw new RuntimeException(s"Unexpected cardinality $card")
       }
     }
+  }
+
+  def checkType(value: String, dtype: QName): Unit = {
+    checkType(value, dtype, None, err_XD0045)
+  }
+
+  def checkType(value: String, dtype: QName, node: Option[XdmNode]): Unit = {
+    checkType(value, dtype, node, err_XD0045)
+  }
+
+  def checkType(value: String, dtype: QName, node: Option[XdmNode], code: QName): Unit = {
+    if (XProcConstants.xs_string == dtype || XProcConstants.xs_untypedAtomic == dtype) {
+      return
+    }
+
+    if (XProcConstants.xs_QName == dtype) {
+      if (node.isDefined) {
+        new QName(value, node.get)
+      } else {
+        new QName(value)
+      }
+    }
+
+    val itype = typeFactory.getAtomicType(dtype)
+    new XdmAtomicValue(value, itype)
   }
 }

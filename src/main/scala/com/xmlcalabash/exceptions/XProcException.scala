@@ -281,7 +281,20 @@ object XProcException {
   def xcUnknownCompressionFormat(format: QName, location: Option[Location]): XProcException = stepError((202,2), format, location)
   def xcUncompressionError(location: Option[Location]): XProcException = stepError((202,3), location)
 
-
+  def xcXIncludeFallbackPlacement(location: Option[Location]): XProcException = stepError(999, location)
+  def xcXIncludeMultipleFallback(location: Option[Location]): XProcException = stepError(999, location)
+  def xcXIncludeInvalidAccept(accept: String, location: Option[Location]): XProcException = stepError(999, accept, location)
+  def xcXIncludeInvalidAcceptLang(accept: String, location: Option[Location]): XProcException = stepError(999, accept, location)
+  def xcXIncludeInvalidElement(name: QName, location: Option[Location]): XProcException = stepError(999, name, location)
+  def xcXPointerError(msg: String): XProcException = stepError(999, msg, None)
+  def xcUnparseableXPointer(xptr: String): XProcException = stepError(999, xptr, None)
+  def xcXPointerMalformedSearch(select: String, msg: String): XProcException = stepError(999, List(select, msg), None)
+  def xcXPointerNotFound(select: String): XProcException = stepError(999, select, None)
+  def xcXPointerUnparseableXmlnsScheme(data: String): XProcException = stepError(999, data, None)
+  def xcXPointerUnparseableElementScheme(data: String): XProcException = stepError(999, data, None)
+  def xcInvalidTrim(trim: String): XProcException = stepError(999, trim, None)
+  def xcXIncludeLoop(href: String, location: Option[Location]): XProcException = stepError(29, href, location)
+  def xcXIncludeResourceError(href: String, location: Option[Location]): XProcException = stepError(29, href, location)
 
   def staticErrorCode(code: Int): QName = {
     new QName("err", XProcConstants.ns_err, "XS%04d".format(code))

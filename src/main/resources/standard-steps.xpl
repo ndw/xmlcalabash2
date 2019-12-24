@@ -354,6 +354,13 @@
   <p:option name="group-adjacent" as="xs:string" cx:as="XPathExpression"/>
 </p:declare-step>
 
+<p:declare-step type="p:xinclude">
+  <p:input port="source" content-types="xml html"/>
+  <p:output port="result" content-types="xml html"/>
+  <p:option name="fixup-xml-base" as="xs:boolean" select="false()"/>
+  <p:option name="fixup-xml-lang" as="xs:boolean" select="false()"/>
+</p:declare-step>
+
 <p:declare-step type="p:xquery">
   <p:input port="source" content-types="any" sequence="true" primary="true"/>
   <p:input port="query" content-types="text xml"/>
