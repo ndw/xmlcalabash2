@@ -18,9 +18,23 @@ object DynamicContext {
 }
 
 class DynamicContext() {
+  private var _artifact = Option.empty[Artifact]
+  private var _iterationPosition = 1L
+  private var _iterationSize = 1L
+  private val _documents = mutable.HashMap.empty[Any,Message]
+  private val _imessages = mutable.HashMap.empty[Message,Any]
+  private val _messages = mutable.HashMap.empty[Message,XdmValue]
+  private var _location = Option.empty[Location]
+  private var _baseURI = Option.empty[URI]
+  private var _injElapsed = Option.empty[Double]
+  private var _injName = Option.empty[String]
+  private var _injId = Option.empty[String]
+  private var _injType = Option.empty[QName]
+
   def this(artifact: Option[Artifact]) {
     this()
 
+    _artifact = artifact
     var found = false
     var p: Option[Artifact] = artifact
     while (!found && p.isDefined) {
@@ -37,17 +51,7 @@ class DynamicContext() {
     }
   }
 
-  private var _iterationPosition = 1L
-  private var _iterationSize = 1L
-  private val _documents = mutable.HashMap.empty[Any,Message]
-  private val _imessages = mutable.HashMap.empty[Message,Any]
-  private val _messages = mutable.HashMap.empty[Message,XdmValue]
-  private var _location = Option.empty[Location]
-  private var _baseURI = Option.empty[URI]
-  private var _injElapsed = Option.empty[Double]
-  private var _injName = Option.empty[String]
-  private var _injId = Option.empty[String]
-  private var _injType = Option.empty[QName]
+  def artifact: Option[Artifact] = _artifact
 
   def iterationPosition: Long = _iterationPosition
   def iterationSize: Long = _iterationSize

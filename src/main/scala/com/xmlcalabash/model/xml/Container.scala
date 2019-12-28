@@ -15,7 +15,11 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
   def atomic: Boolean = {
     for (child <- allChildren) {
       child match {
-        case _: AtomicStep => return false
+        case _: AtomicStep =>
+          // Synthetic children (inline-loader, etc.) don't count
+          if (!child.synthetic) {
+            return false
+          }
         case _: Container => return false
         case _ => Unit
       }
