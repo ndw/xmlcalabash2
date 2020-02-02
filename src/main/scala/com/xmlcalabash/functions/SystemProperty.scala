@@ -8,6 +8,8 @@ import net.sf.saxon.om.{Item, Sequence, StructuredQName}
 import net.sf.saxon.value.StringValue
 
 class SystemProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
+  private val _localhost = "http://localhost/"
+
   def call(staticContext: StaticContext, context: XPathContext, arguments: Array[Sequence[_]]): Sequence[_] = {
     val exprEval = runtime.expressionEvaluator
     if (exprEval.dynContext == null) {
@@ -72,6 +74,8 @@ class SystemProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
           case _ =>
             Unit
         }
+      case _localhost =>
+        value = System.getProperty(local)
       case _ =>
         Unit
     }

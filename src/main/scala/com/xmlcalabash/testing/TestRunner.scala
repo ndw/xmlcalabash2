@@ -46,6 +46,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
   private val tsns = "http://xproc.org/ns/testsuite/3.0"
   private val t_test_suite = new QName(tsns, "test-suite")
   private val t_div = new QName(tsns, "div")
+  private val t_property= new QName(tsns, "property")
   private val t_info= new QName(tsns, "info")
   private val t_title = new QName(tsns, "title")
   private val t_description = new QName(tsns, "description")
@@ -610,6 +611,16 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
               throw new TestException(s"Failed to load binding for $name")
             }
             bindings.put(qname, value.get)
+          } else if (child.getNodeName == t_property) {
+            val name = child.getAttributeValue(_name)
+            val value = child.getAttributeValue(_value)
+            if (name == null) {
+              throw new TestException("Property has no name")
+            }
+            if (value == null) {
+              throw new TestException("Property has no value")
+            }
+            System.setProperty(name, value)
           } else if (child.getNodeName == t_info || child.getNodeName == t_title || child.getNodeName == t_description) {
             Unit
           } else {

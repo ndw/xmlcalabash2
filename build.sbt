@@ -183,7 +183,7 @@ libraryDependencies +=
     ExclusionRule(organization = "commons-logging")
   )
 
-dependencyOverrides += "net.sf.saxon" % "Saxon-HE" % "9.9.1-4"
+dependencyOverrides += "net.sf.saxon" % "Saxon-HE" % saxonVersion
 dependencyOverrides += "xml-apis" % "xml-apis" % "1.3.04"
 
 mappings in (Compile, packageBin) := {

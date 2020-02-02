@@ -370,15 +370,16 @@
 </p:declare-step>
 
 <p:declare-step type="p:xslt">
-  <p:input port="source" content-types="application/xml text/xml */*+xml" sequence="true" primary="true"/>
-  <p:input port="stylesheet" content-types="application/xml text/xml */*+xml"/>
-  <p:output port="result" primary="true" sequence="true" content-types="*/*"/>
-  <p:output port="secondary" sequence="true"/>
-  <p:option name="parameters" as="map(xs:QName,item()*)?"/>
-  <p:option name="initial-mode" as="xs:QName"/>
-  <p:option name="template-name" as="xs:QName"/>
-  <p:option name="output-base-uri" as="xs:anyURI"/>
-  <p:option name="version" as="xs:string"/>
+  <p:input port="source" content-types="any" sequence="true" primary="true"/>
+  <p:input port="stylesheet" content-types="xml"/>
+  <p:output port="result" primary="true" sequence="true" content-types="any"/>
+  <p:output port="secondary" sequence="true" content-types="any"/>
+  <p:option name="parameters" as="map(xs:QName,item()*)?"/>     
+  <p:option name="global-context-item" as="item()?"/>           
+  <p:option name="initial-mode" as="xs:QName?"/>                
+  <p:option name="template-name" as="xs:QName?"/>               
+  <p:option name="output-base-uri" as="xs:anyURI?"/>            
+  <p:option name="version" as="xs:string?"/>        
 </p:declare-step>
 
 <!-- ============================================================ -->

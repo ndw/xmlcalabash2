@@ -63,7 +63,7 @@ class CastContentType() extends DefaultXmlStep {
       case MediaType.HTML =>
         consumer.get.receive("result", item.get, new XProcMetadata(castTo, metadata.get.properties))
       case MediaType.TEXT =>
-        val text = item.asInstanceOf[XdmNode].getStringValue
+        val text = item.get.asInstanceOf[XdmNode].getStringValue
         val bais = new ByteArrayInputStream(text.getBytes("UTF-8"))
         val baseURI = metadata.get.baseURI.getOrElse(new URI(""))
         val req = new DocumentRequest(baseURI, contentType)
