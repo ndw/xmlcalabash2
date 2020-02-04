@@ -148,6 +148,8 @@ libraryDependencies ++= Seq(
   "org.relaxng" % "jing" % "20181222",
   "nu.validator" % "htmlparser" % "1.4.12",
   "com.atlassian.commonmark" % "commonmark" % "0.12.1",
+  "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.10.2",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.2",
   "com.jafpl" % "jafpl_2.12" % jafplVersion
 )
 

@@ -2,6 +2,7 @@ package com.xmlcalabash.runtime
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileInputStream, FileOutputStream, InputStream}
 
+import org.apache.http.util.ByteArrayBuffer
 import org.slf4j.{Logger, LoggerFactory}
 
 class BinaryNode(config: XMLCalabashRuntime, private val rawValue: Any) {
@@ -33,6 +34,27 @@ class BinaryNode(config: XMLCalabashRuntime, private val rawValue: Any) {
   }
 
   def value: Any = rawValue
+
+  def bytes: Array[Byte] = {
+    if (cacheBytes.isDefined) {
+      cacheBytes.get
+    } else if (cacheFile.isDefined) {
+      val stream = new FileInputStream(cacheFile.get)
+      val pagesize = 4096
+      val buffer = new ByteArrayBuffer(pagesize)
+      val tmp = new Array[Byte](4096)
+      var length = 0
+      length = stream.read(tmp)
+      while (length >= 0) {
+        buffer.append(tmp, 0, length)
+        length = stream.read(tmp)
+      }
+      stream.close()
+      buffer.toByteArray
+    } else {
+      throw new RuntimeException(s"No bytes support for BinaryNode raw value: ${rawValue.getClass.getName}")
+    }
+  }
 
   def stream: InputStream = {
     if (cacheBytes.isDefined) {

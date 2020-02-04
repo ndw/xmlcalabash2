@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmMap, XdmValue}
 
@@ -82,6 +82,12 @@ class Load() extends DefaultXmlStep {
 
     val result = config.documentManager.parse(request)
 
-    consumer.get.receive("result", result.value, new XProcMetadata(result.contentType, result.props))
+    // This feels like it's in the wrong place; like it should be centralized somehow...
+    if (result.shadow.isDefined) {
+      val node = new BinaryNode(config, result.shadow.get)
+      consumer.get.receive("result", node, new XProcMetadata(result.contentType, result.props))
+    } else {
+      consumer.get.receive("result", result.value, new XProcMetadata(result.contentType, result.props))
+    }
   }
 }

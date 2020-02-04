@@ -6,6 +6,8 @@ import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZonedDateTime}
 import java.util.Date
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.{DocumentManager, DocumentRequest, DocumentResponse, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
@@ -26,12 +28,15 @@ import org.apache.http.util.ByteArrayBuffer
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.helpers.XMLReaderFactory
 import org.xml.sax.{InputSource, SAXException}
+import org.yaml.snakeyaml.Yaml
 
 import scala.collection.mutable
 import scala.xml.SAXParseException
 
 class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentManager {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
+
+  protected val TRANSPARENT_YAML = false
 
   override def parse(request: DocumentRequest): DocumentResponse = {
     val baseURI = if (request.baseURI.isDefined) {
@@ -263,17 +268,29 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
 
       new DocumentResponse(node, contentType, props)
 
-    } else if (contentType.jsonContentType) {
+    } else if (contentType.jsonContentType || (TRANSPARENT_YAML && contentType.yamlContentType)) {
       val encoding = contentType.charset.getOrElse("UTF-8") // FIXME: What should the default be?
       val bytes = streamToByteArray(stream)
+
+      var json = new String(bytes, encoding)
+      var respContentType = contentType
+
+      if (contentType.yamlContentType) {
+        // Wait! That JSON is really YAML.
+        val yamlReader = new ObjectMapper(new YAMLFactory())
+        val obj = yamlReader.readValue(json, classOf[Object])
+        val jsonWriter = new ObjectMapper()
+        json = jsonWriter.writeValueAsString(obj)
+        respContentType = MediaType.JSON
+      }
 
       val context = new StaticContext(xmlCalabash)
       val expr = new XProcXPathExpression(context, "parse-json($json)")
       val bindingsMap = mutable.HashMap.empty[String, Message]
-      val vmsg = new XdmValueItemMessage(new XdmAtomicValue(new String(bytes, encoding)), XProcMetadata.JSON, context)
+      val vmsg = new XdmValueItemMessage(new XdmAtomicValue(json), XProcMetadata.JSON, context)
       bindingsMap.put("{}json", vmsg)
       val smsg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
-      new DocumentResponse(smsg.item, contentType, props)
+      new DocumentResponse(smsg.item, respContentType, props)
 
     } else if (contentType.textContentType) {
       val encoding = contentType.charset.getOrElse("UTF-8") // FIXME: What should the default be?

@@ -14,6 +14,7 @@ object MediaType {
   val TEXT = new MediaType("text", "plain")
   val XML  = new MediaType("application", "xml")
   val JSON = new MediaType("application", "json")
+  val YAML = new MediaType("application", "vnd.yaml")
   val HTML = new MediaType("text", "html")
   val ZIP = new MediaType("application", "zip")
 
@@ -39,6 +40,10 @@ object MediaType {
 
   val MATCH_JSON: Array[MediaType] = Array(
     MediaType.parse("application/json")
+  )
+
+  val MATCH_YAML: Array[MediaType] = Array(
+    MediaType.parse("application/vnd.yaml")
   )
 
   val MATCH_ANY: Array[MediaType] = Array(
@@ -142,6 +147,8 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
       MediaType.TEXT
     } else if (jsonContentType) {
       MediaType.JSON
+    } else if (yamlContentType) {
+      MediaType.YAML
     } else {
       MediaType.OCTET_STREAM
     }
@@ -159,6 +166,11 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
 
   def jsonContentType: Boolean = {
     val mtype = matchingMediaType(MediaType.MATCH_JSON)
+    mtype.isDefined && mtype.get.inclusive
+  }
+
+  def yamlContentType: Boolean = {
+    val mtype = matchingMediaType(MediaType.MATCH_YAML)
     mtype.isDefined && mtype.get.inclusive
   }
 
