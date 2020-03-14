@@ -253,9 +253,12 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
           var s = ""
           var pos = 0
           while (viter.hasNext) {
+            // Why did I think there needed to be spaces here?
+            /*
             if (pos > 0) {
               s += " "
             }
+             */
             s += viter.next().getStringValue
             pos += 1
           }

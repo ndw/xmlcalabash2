@@ -122,7 +122,7 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
     val params = new XPathBindingParams(statics.toMap, collection)
     val init = if (_avt.isDefined) {
       val expr = staticContext.parseAvt(_avt.get)
-      new XProcVtExpression(staticContext, expr)
+      new XProcVtExpression(staticContext, expr, true)
     } else {
       val params = new XPathBindingParams(collection)
       new XProcXPathExpression(staticContext, _select.getOrElse("()"), as, _allowedValues, params)

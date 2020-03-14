@@ -364,17 +364,6 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
     contentType
   }
 
-  private def parseHtml(request: DocumentRequest): DocumentResponse = {
-    val baseURI = if (request.baseURI.isDefined) {
-      request.baseURI.get
-    } else {
-      xmlCalabash.staticBaseURI
-    }
-    val uri = baseURI.resolve(request.href)
-    val src = new InputSource(uri.toASCIIString)
-    parseHtml(request, src)
-  }
-
   private def parseHtml(request: DocumentRequest, isource: InputSource): DocumentResponse = {
     val htmlBuilder = new HtmlDocumentBuilder(XmlViolationPolicy.ALTER_INFOSET)
     htmlBuilder.setEntityResolver(xmlCalabash.entityResolver)

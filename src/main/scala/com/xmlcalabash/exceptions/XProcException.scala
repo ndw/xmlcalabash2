@@ -278,6 +278,7 @@ object XProcException {
   def xcInvalidJsonMergeKey(key: String, location: Option[Location]): XProcException = stepError((110,1), key, location)
   def xcInvalidJsonMergeKey(location: Option[Location]): XProcException = stepError((110,2), location)
   def xcArchiveTooManyManifests(location: Option[Location]): XProcException = stepError(112, location)
+  def xcHttpAssertFailed(assert: String, location: Option[Location]): XProcException = stepError(126, assert, location)
   def xcInvalidResultDataFormat(location: Option[Location]): XProcException = stepError(201, location)
   def xcUnknownCompressionFormat(location: Option[Location]): XProcException = stepError((202,1), location)
   def xcUnknownCompressionFormat(format: QName, location: Option[Location]): XProcException = stepError((202,2), format, location)

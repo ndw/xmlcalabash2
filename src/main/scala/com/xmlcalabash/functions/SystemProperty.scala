@@ -74,7 +74,7 @@ class SystemProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
           case _ =>
             Unit
         }
-      case _localhost =>
+      case `_localhost` =>
         value = System.getProperty(local)
       case _ =>
         Unit

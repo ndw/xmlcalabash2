@@ -319,6 +319,9 @@ Multiple top-level elements are not allowed in p:escape-markup.
 XC0092
 Attribute name collision: “$1”
 
+XC0126
+Assertion failed: “$1”
+
 {http://xmlcalabash.com/ns/extensions}XI0016
 No input specified for pipeline port “$1”.
 

@@ -34,6 +34,7 @@ json-output-string-value.xml
 json-output-string.xml
 json-output-text-node.xml
 p-load-001.xml
+system-property-001.xml
 text-output-bytes.xml
 text-output-element-node.xml
 text-output-map-value.xml

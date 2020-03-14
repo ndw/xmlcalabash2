@@ -40,7 +40,7 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   }
 
   def startDocument(baseURI: URI): Unit = {
-    startDocument(Some(baseURI))
+    startDocument(Option(baseURI))
   }
 
   def startDocument(baseURI: Option[URI]): Unit = {

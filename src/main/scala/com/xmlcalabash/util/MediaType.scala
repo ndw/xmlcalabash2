@@ -17,6 +17,7 @@ object MediaType {
   val YAML = new MediaType("application", "vnd.yaml")
   val HTML = new MediaType("text", "html")
   val ZIP = new MediaType("application", "zip")
+  val MULTIPART = new MediaType("multipart", "*")
 
   val MATCH_XML: Array[MediaType] = Array(
     MediaType.parse("application/xml"),
@@ -231,15 +232,20 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
     allowed
   }
 
-  def charset: Option[String] = {
+  def paramValue(name: String): Option[String] = {
+    val start = name + "="
     if (param.isDefined) {
       for (param <- param.get) {
-        if (param.startsWith("charset=")) {
-          return Some(param.substring(8))
+        if (param.startsWith(start)) {
+          return Some(param.substring(start.length))
         }
       }
     }
     None
+  }
+
+  def charset: Option[String] = {
+    paramValue("charset")
   }
 
   override def toString: String = {

@@ -20,6 +20,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class Xslt extends DefaultXmlStep {
+  private val _global_context_item = new QName("", "global-context-item")
   private val _initial_mode = new QName("", "initial-mode")
   private val _template_name = new QName("", "template-name")
   private val _output_base_uri = new QName("", "output-base-uri")
@@ -27,6 +28,7 @@ class Xslt extends DefaultXmlStep {
   private var stylesheet = Option.empty[XdmNode]
   private val defaultCollection = ListBuffer.empty[XdmNode]
 
+  private var globalContextItem = Option.empty[XdmValue]
   private var initialMode = Option.empty[QName]
   private var templateName = Option.empty[QName]
   private var outputBaseURI = Option.empty[String]
@@ -69,14 +71,18 @@ class Xslt extends DefaultXmlStep {
       value.size() match {
         case 0 => Unit
         case 1 =>
-          val str = value.getUnderlyingValue.getStringValue
-          variable match {
-            case `_initial_mode` => initialMode = Some(ValueParser.parseQName(str, context))
-            case `_template_name` => templateName = Some(ValueParser.parseQName(str, context))
-            case `_output_base_uri` => outputBaseURI = Some(str)
-            case XProcConstants._version => version = Some(str)
-            case _ =>
-              logger.info("Ignoring unexpected option to p:xslt: " + variable)
+          if (variable == _global_context_item) {
+            globalContextItem = Some(value)
+          } else {
+            val str = value.getUnderlyingValue.getStringValue
+            variable match {
+              case `_initial_mode` => initialMode = Some(ValueParser.parseQName(str, context))
+              case `_template_name` => templateName = Some(ValueParser.parseQName(str, context))
+              case `_output_base_uri` => outputBaseURI = Some(str)
+              case XProcConstants._version => version = Some(str)
+              case _ =>
+                logger.info("Ignoring unexpected option to p:xslt: " + variable)
+            }
           }
         case _ =>
           throw new RuntimeException(s"The value of $variable may not be a sequence")
@@ -117,29 +123,31 @@ class Xslt extends DefaultXmlStep {
       case e: Exception =>
         throw goesBang.getOrElse(e)
     }
-    val transformer = exec.load()
+    val transformer = exec.load30()
 
-    for ((param, value) <- parameters) {
-      transformer.setParameter(param, value)
-    }
+    //transformer.setStylesheetParameters(parameters)
 
+    /*
     if (document.isDefined) {
       transformer.setInitialContextNode(document.get)
     }
+     */
 
     transformer.setMessageListener(new CatchMessages())
     //transformer.setResultDocumentHandler(new ResultDocumentHandler())
     transformer.getUnderlyingController.setResultDocumentResolver(new MyResultDocumentResolver)
 
-    transformer.setDestination(new MyDestination(outputProperties))
+    //transformer.setDestination(new MyDestination(outputProperties))
 
     if (initialMode.isDefined) {
       transformer.setInitialMode(initialMode.get)
     }
 
+    /*
     if (templateName.isDefined) {
       transformer.setInitialTemplate(templateName.get)
     }
+     */
 
     if (outputBaseURI.isDefined) {
       transformer.setBaseOutputURI(outputBaseURI.get)
@@ -149,7 +157,14 @@ class Xslt extends DefaultXmlStep {
     // FIXME: transformer.getUnderlyingController().setUnparsedTextURIResolver(unparsedTextURIResolver)
 
     try {
-      transformer.transform()
+      if (templateName.isDefined) {
+        if (globalContextItem.isDefined) {
+          transformer.setGlobalContextItem(globalContextItem.get.asInstanceOf[XdmItem])
+        }
+        transformer.callTemplate(templateName.get, new MyDestination(outputProperties))
+      } else if (globalContextItem.isDefined) {
+        transformer.applyTemplates(globalContextItem.get, new MyDestination(outputProperties))
+      }
     } catch {
       case sae: Exception =>
         // Compile time exceptions are caught
@@ -170,7 +185,8 @@ class Xslt extends DefaultXmlStep {
       case raw: RawDestination =>
         val iter = raw.getXdmValue.iterator()
         while (iter.hasNext) {
-          consume(iter.next(), "result", outputProperties.toMap)
+          val next = iter.next()
+          consume(next, "result", outputProperties.toMap)
         }
       case xdm: XdmDestination =>
         consume(xdm.getXdmNode, "result",  outputProperties.toMap)
@@ -258,7 +274,7 @@ class Xslt extends DefaultXmlStep {
         }
       }
 
-      val dest = if (tree.getOrElse("no") == "yes") {
+      val dest = if (tree.getOrElse("yes") == "yes") {
         new XdmDestination()
       } else {
         new RawDestination()

@@ -150,11 +150,9 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
   }
 
   private def dump(decl: DeclareStep, opt: String, graph: Option[Graph], exception: Option[Exception]): Unit = {
-    /*
     if (!debugOptions.contains(opt)) {
       return
     }
-     */
 
     val output = dumped.getOrElse(decl, mutable.HashSet.empty[String])
     if (output.contains(opt)) {
