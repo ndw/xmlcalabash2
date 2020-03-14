@@ -248,6 +248,24 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
     paramValue("charset")
   }
 
+  // https://alvinalexander.com/scala/how-to-define-equals-hashcode-methods-in-scala-object-equality
+  private def canEqual(obj: Any): Boolean = obj.isInstanceOf[MediaType]
+  override def equals(mtype: Any): Boolean =
+    mtype match {
+      case that: MediaType =>
+        that.canEqual(this) &&
+          this.mediaType == that.mediaType &&
+          this.mediaSubtype == that.mediaSubtype
+      case _ => false
+    }
+  override def hashCode(): Int = {
+    val prime = 41
+    var result = 1
+    result = prime * result + mediaType.hashCode
+    result = prime * result + mediaSubtype.hashCode
+    result
+  }
+
   override def toString: String = {
     var ctype = if (inclusive) {
       ""

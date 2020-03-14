@@ -364,12 +364,17 @@ class CastContentType() extends DefaultXmlStep {
           if (encoding != "base64") {
             throw new UnsupportedOperationException(s"Decoding $encoding data is not supported")
           }
-          val contentType = Option(root.get.getAttributeValue(XProcConstants._content_type))
-          if (contentType.isEmpty) {
+          val cdataContentType = Option(root.get.getAttributeValue(XProcConstants._content_type))
+          if (cdataContentType.isEmpty) {
             throw XProcException.xcContentTypeMissing(location)
           }
-          if (contentType.get != "application/octet-stream") {
-            throw new UnsupportedOperationException(s"Unsupported content-type on c:data, $contentType")
+          val ctype = MediaType.parse(cdataContentType).get
+          if (ctype.classification != MediaType.OCTET_STREAM) {
+            throw new UnsupportedOperationException(s"Unsupported content-type on c:data, $cdataContentType")
+          }
+
+          if (contentType != ctype) {
+            throw XProcException.xcDifferentContentTypes(contentType.toString, ctype.toString, location)
           }
 
           try {
