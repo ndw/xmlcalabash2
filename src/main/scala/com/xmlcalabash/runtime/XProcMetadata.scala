@@ -92,4 +92,18 @@ class XProcMetadata(private val initialContentType: Option[MediaType],
 
     _baseURI
   }
+
+  def castTo(contentType: MediaType): XProcMetadata = {
+    castTo(contentType, List())
+  }
+
+  def castTo(contentType: MediaType, except: List[QName]): XProcMetadata = {
+    val prop = mutable.HashMap.empty[QName,XdmValue]
+    for ((key,value) <- properties) {
+      if (! except.contains(key)) {
+        prop.put(key, value)
+      }
+    }
+    new XProcMetadata(contentType, prop.toMap)
+  }
 }

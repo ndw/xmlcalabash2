@@ -7,14 +7,13 @@ import java.util.Base64
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.jafpl.messages.Message
-import com.xmlcalabash.config.{DocumentRequest, DocumentResponse}
+import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils, ValueUtils}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode, XdmValue}
-import org.apache.http.util.ByteArrayBuffer
 
 import scala.collection.mutable
 
@@ -290,6 +289,29 @@ class CastContentType() extends DefaultXmlStep {
   }
 
   def castToHTML(context: StaticContext): Unit = {
-    throw new UnsupportedOperationException("Casting to HTML hasn't been implemented")
+    val contentType = metadata.get.contentType
+
+    contentType.classification match {
+      case MediaType.TEXT =>
+        throw new UnsupportedOperationException("Can't cast from TEXT to HTML")
+
+      case MediaType.XML =>
+        consumer.get.receive("result", item.get, metadata.get.castTo(castTo, List(XProcConstants._serialization)))
+
+      case MediaType.HTML =>
+        consumer.get.receive("result", item.get, new XProcMetadata(castTo, metadata.get.properties))
+
+      case MediaType.JSON =>
+        throw new UnsupportedOperationException("Can't cast from JSON to HTML")
+
+      case MediaType.YAML =>
+        throw new UnsupportedOperationException("Can't cast from YAML to HTML")
+
+      case MediaType.OCTET_STREAM =>
+        throw new UnsupportedOperationException("Can't cast from binary to HTML")
+
+      case _ =>
+        throw new UnsupportedOperationException("Can't cast from unknown to HTML")
+    }
   }
 }
