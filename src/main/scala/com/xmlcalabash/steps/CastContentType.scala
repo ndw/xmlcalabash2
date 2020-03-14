@@ -13,7 +13,7 @@ import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils, ValueUtils}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
 
@@ -139,15 +139,15 @@ class CastContentType() extends DefaultXmlStep {
         consumer.get.receive("result", item.get, new XProcMetadata(castTo, metadata.get.properties))
 
       case MediaType.XML =>
-        serializeNodes(item.asInstanceOf[XdmNode], contentType)
+        serializeNodes(item.get.asInstanceOf[XdmNode], contentType)
 
       case MediaType.HTML =>
-        serializeNodes(item.asInstanceOf[XdmNode], contentType)
+        serializeNodes(item.get.asInstanceOf[XdmNode], contentType)
 
       case MediaType.JSON =>
-        var expr = new XProcXPathExpression(context, "serialize($map, map {\"method\": \"json\"})")
+        val expr = new XProcXPathExpression(context, "serialize($map, map {\"method\": \"json\"})")
         val bindingsMap = mutable.HashMap.empty[String, Message]
-        var vmsg = new XdmValueItemMessage(item.get.asInstanceOf[XdmValue], XProcMetadata.XML, context)
+        val vmsg = new XdmValueItemMessage(item.get.asInstanceOf[XdmValue], XProcMetadata.XML, context)
         bindingsMap.put("{}map", vmsg)
         var smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
 
@@ -168,7 +168,6 @@ class CastContentType() extends DefaultXmlStep {
         val stream = item.get.asInstanceOf[BinaryNode].stream
         val bos = new ByteArrayOutputStream()
         var totBytes = 0L
-        val pagesize = 4096
         val tmp = new Array[Byte](4096)
         var length = 0
         length = stream.read(tmp)
@@ -194,7 +193,9 @@ class CastContentType() extends DefaultXmlStep {
 
   private def serializeNodes(item: XdmNode, contentType: MediaType): Unit = {
     val serialOpts = mutable.HashMap.empty[QName, String]
-    if (parameters.isDefined) {
+    serialOpts.put(XProcConstants._omit_xml_declaration, "true")
+    // If parameters is defined, it's either a map or the empty sequence
+    if (parameters.isDefined && parameters.get.isInstanceOf[Map[Any,Any]]) {
       val opts = TypeUtils.castAsScala(parameters.get).asInstanceOf[Map[Any, Any]]
       for (opt <- opts.keySet) {
         opt match {
@@ -220,7 +221,9 @@ class CastContentType() extends DefaultXmlStep {
     builder.startDocument(metadata.get.baseURI)
     builder.addText(stream.toString("UTF-8"))
     builder.endDocument()
-    consumer.get.receive("result", builder.result, new XProcMetadata(castTo, metadata.get.properties))
+
+    val meta = metadata.get.castTo(castTo, List(XProcConstants._serialization))
+    consumer.get.receive("result", builder.result, meta)
   }
 
   def castToJSON(context: StaticContext): Unit = {
@@ -247,6 +250,18 @@ class CastContentType() extends DefaultXmlStep {
           smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
 
           consumer.get.receive("result", smsg.item, metadata.get.castTo(castTo, List(XProcConstants._serialization)))
+        } else if (root.get.getNodeName == XProcConstants.c_param_set) {
+          var map = new XdmMap()
+          for (child <- S9Api.axis(root.get, Axis.CHILD)) {
+            if (child.getNodeKind == XdmNodeKind.ELEMENT && child.getNodeName == XProcConstants.c_param) {
+              val ns = Option(child.getAttributeValue(XProcConstants._namespace)).getOrElse("")
+              val local = Option(child.getAttributeValue(XProcConstants._name)).get
+              val name = new QName("", ns, local)
+              val value = Option(child.getAttributeValue(XProcConstants._value)).getOrElse("")
+              map = map.put(new XdmAtomicValue(name), new XdmAtomicValue(value))
+            }
+          }
+          consumer.get.receive("result", map, metadata.get.castTo(castTo, List(XProcConstants._serialization)))
         } else {
           throw new UnsupportedOperationException("Can't cast from XML to JSON")
         }
