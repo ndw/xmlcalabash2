@@ -231,7 +231,25 @@ class CastContentType() extends DefaultXmlStep {
         throw new UnsupportedOperationException("Can't cast from TEXT to JSON")
 
       case MediaType.XML =>
-        throw new UnsupportedOperationException("Can't cast from XML to JSON")
+        val root = S9Api.documentElement(item.get.asInstanceOf[XdmNode])
+        if (root.get.getNodeName == XProcConstants.fn_map
+            || root.get.getNodeName == XProcConstants.fn_array) {
+          var expr = new XProcXPathExpression(context, "xml-to-json($xml)")
+          val bindingsMap = mutable.HashMap.empty[String, Message]
+          var vmsg = new XdmValueItemMessage(item.get.asInstanceOf[XdmNode], XProcMetadata.XML, context)
+          bindingsMap.put("{}xml", vmsg)
+          var smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+
+          expr = new XProcXPathExpression(context, "parse-json($json)")
+          bindingsMap.clear()
+          vmsg = new XdmValueItemMessage(smsg.item, XProcMetadata.TEXT, context)
+          bindingsMap.put("{}json", vmsg)
+          smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+
+          consumer.get.receive("result", smsg.item, metadata.get.castTo(castTo, List(XProcConstants._serialization)))
+        } else {
+          throw new UnsupportedOperationException("Can't cast from XML to JSON")
+        }
 
       case MediaType.HTML =>
         throw new UnsupportedOperationException("Can't cast from HTML to JSON")

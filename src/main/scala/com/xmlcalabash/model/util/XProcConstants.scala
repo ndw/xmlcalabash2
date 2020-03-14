@@ -14,12 +14,16 @@ object XProcConstants {
   val ns_xml = "http://www.w3.org/XML/1998/namespace"
   val ns_xmlns = "http://www.w3.org/2000/xmlns/"
   val ns_xqt_errors = "http://www.w3.org/2005/xqt-errors"
+  val ns_fn = "http://www.w3.org/2005/xpath-functions"
 
   val UNKNOWN = new QName("", "UNKNOWN")
 
   val xml_base = new QName("xml", ns_xml, "base")
   val xml_lang = new QName("xml", ns_xml, "lang")
   val xml_id = new QName("xml", ns_xml, "id")
+
+  val fn_map = new QName("fn", ns_fn, "map")
+  val fn_array = new QName("fn", ns_fn, "array")
 
   val p_catch = new QName("p", ns_p, "catch")
   val p_choose = new QName("p", ns_p, "choose")
