@@ -35,10 +35,12 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
 
-    _contentType = MediaType.parse(attributes.get(XProcConstants._content_type))
-    _documentProperties = attr(XProcConstants._document_properties)
-    _encoding = attr(XProcConstants._encoding)
-    _exclude_inline_prefixes = attr(XProcConstants._exclude_inline_prefixes)
+    if (node.getNodeName == XProcConstants.p_inline) {
+      _contentType = MediaType.parse(attributes.get(XProcConstants._content_type))
+      _documentProperties = attr(XProcConstants._document_properties)
+      _encoding = attr(XProcConstants._encoding)
+      _exclude_inline_prefixes = attr(XProcConstants._exclude_inline_prefixes)
+    }
   }
 
   override protected[model] def makeBindingsExplicit(): Unit = {

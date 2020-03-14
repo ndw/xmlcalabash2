@@ -50,6 +50,8 @@ class CastContentType() extends DefaultXmlStep {
       castToHTML(context)
     } else if (castTo.textContentType) {
       castToText(context)
+    } else if (castTo.classification == MediaType.OCTET_STREAM) {
+      castToBinary(context)
     } else {
       throw new RuntimeException("Impossible content type cast")
     }
@@ -345,6 +347,51 @@ class CastContentType() extends DefaultXmlStep {
 
       case _ =>
         throw new UnsupportedOperationException("Can't cast from unknown to HTML")
+    }
+  }
+
+  def castToBinary(context: StaticContext): Unit = {
+    val contentType = metadata.get.contentType
+
+    contentType.classification match {
+      case MediaType.TEXT =>
+        throw new UnsupportedOperationException("Can't cast from TEXT to binary")
+
+      case MediaType.XML =>
+        val root = S9Api.documentElement(item.get.asInstanceOf[XdmNode])
+        if (root.get.getNodeName == XProcConstants.c_data) {
+          val encoding = Option(root.get.getAttributeValue(XProcConstants._encoding)).getOrElse("base64")
+          if (encoding != "base64") {
+            throw new UnsupportedOperationException(s"Decoding $encoding data is not supported")
+          }
+          val contentType = Option(root.get.getAttributeValue(XProcConstants._content_type)).getOrElse("application/octet-stream")
+          if (contentType != "application/octet-stream") {
+            throw new UnsupportedOperationException(s"Unsupported content-type on c:data, $contentType")
+          }
+
+          try {
+            val bytes = Base64.getDecoder.decode(root.get.getStringValue)
+            val meta = metadata.get.castTo(castTo, List(XProcConstants._serialization))
+            consumer.get.receive("result", bytes, meta)
+          } catch {
+            case iae: IllegalArgumentException =>
+              throw XProcException.xcInvalidBase64(iae.getMessage, location)
+          }
+        } else {
+          throw new UnsupportedOperationException("Can't cast from XML to binary")
+        }
+
+      case MediaType.HTML =>
+        throw new UnsupportedOperationException("Can't cast from HTML to binary")
+
+      case MediaType.JSON =>
+        throw new UnsupportedOperationException("Can't cast from JSON to binary")
+
+      case MediaType.YAML =>
+        throw new UnsupportedOperationException("Can't cast from YAML to binary")
+
+      case MediaType.OCTET_STREAM =>
+        consumer.get.receive("result", item.get, metadata.get)
     }
   }
 }
