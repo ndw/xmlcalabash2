@@ -69,9 +69,9 @@ class CastContentType() extends DefaultXmlStep {
         val text = item.get.asInstanceOf[XdmNode].getStringValue
         val bais = new ByteArrayInputStream(text.getBytes("UTF-8"))
         val baseURI = metadata.get.baseURI.getOrElse(new URI(""))
-        val req = new DocumentRequest(baseURI, contentType)
+        val req = new DocumentRequest(baseURI, castTo)
         val resp = config.documentManager.parse(req, bais)
-        consumer.get.receive("result", resp.value, new XProcMetadata(castTo, metadata.get.properties))
+        consumer.get.receive("result", resp.value, metadata.get.castTo(castTo))
       case MediaType.JSON =>
         // Step 1, convert the map into a JSON text string
         var expr = new XProcXPathExpression(context, "serialize($map, map {\"method\": \"json\"})")
