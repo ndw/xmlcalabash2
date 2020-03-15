@@ -171,6 +171,7 @@ object XProcException {
   def xsPipeWithoutPortOrPrimaryOutput(location: Option[Location]): XProcException = staticError((67,2), location)
 
   def xsUnsupportedEncoding(encoding: String, location: Option[Location]): XProcException = staticError(69, encoding, location)
+  def xsNotAStep(name: String, location: Option[Location]): XProcException = staticError(73, name, location)
   def xsMissingWhen(location: Option[Location]): XProcException = staticError(74, location)
   def xsMissingTryCatch(location: Option[Location]): XProcException = staticError(75, location)
 
@@ -194,6 +195,7 @@ object XProcException {
   def xsNoSelectOnStaticOption(location: Option[Location]): XProcException = staticError(93, None, location)
   def xsNoSelectOnVariable(location: Option[Location]): XProcException = staticError(94, None, location)
   def xsInvalidSequenceType(seqType: String, errMsg: String, location: Option[Location]): XProcException = staticError(96, List(seqType, errMsg), location)
+  def xsXProcNamespaceError(attrName: QName, location: Option[Location]): XProcException = staticError(97, attrName, location)
 
   //def xsElementNotAllowed(element: QName, message: String, location: Option[Location]): XProcException = staticError(100, List(element, message), location)
 

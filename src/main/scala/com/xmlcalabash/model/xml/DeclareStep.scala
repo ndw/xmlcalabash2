@@ -1,5 +1,6 @@
 package com.xmlcalabash.model.xml
 
+import com.jafpl.exceptions.JafplLoopDetected
 import com.jafpl.steps.{Manifold, PortCardinality, PortSpecification}
 import com.xmlcalabash.config.{OptionSignature, PortSignature, StepSignature, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
@@ -302,7 +303,12 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
       }
     }
 
-    runtime.init(this)
+    try {
+      runtime.init(this)
+    } catch {
+      case loop: JafplLoopDetected =>
+        throw XProcException.xsLoop("???", "???", location)
+    }
     runtime
   }
 

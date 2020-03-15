@@ -240,6 +240,7 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
   }
 
   override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+    super.graphEdges(runtime, parent)
     for (child <- allChildren) {
       child.graphEdges(runtime, _graphNode.get)
     }

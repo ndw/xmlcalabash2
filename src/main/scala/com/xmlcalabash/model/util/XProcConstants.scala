@@ -61,6 +61,7 @@ object XProcConstants {
 
   val p_iteration_size = new QName("p", ns_p, "iteration-size")
   val p_iteration_position = new QName("p", ns_p, "iteration-position")
+  val p_depends = new QName("p", ns_p, "depends")
 
   val p_injectable = new QName("p", ns_p, "injectable")
   val p_start = new QName("p", ns_p, "start")
@@ -169,6 +170,7 @@ object XProcConstants {
   val _code = new QName("", "code")
   val _comment = new QName("", "comment")
   val _compressed_size = new QName("", "compressed-size")
+  val _depends = new QName("", "depends")
   val _doctype_public = new QName("", "doctype-public")
   val _doctype_system = new QName("", "doctype-system")
   val _document_properties = new QName("", "document-properties")

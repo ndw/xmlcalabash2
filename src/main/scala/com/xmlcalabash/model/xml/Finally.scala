@@ -43,6 +43,8 @@ class Finally(override val config: XMLCalabashConfig) extends Container(config) 
   }
 
   override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+    super.graphEdges(runtime, parent)
+
     for (child <- allChildren) {
       child.graphEdges(runtime, _graphNode.get)
     }

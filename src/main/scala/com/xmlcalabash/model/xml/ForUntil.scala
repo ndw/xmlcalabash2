@@ -123,6 +123,8 @@ class ForUntil(override val config: XMLCalabashConfig) extends Container(config)
   }
 
   override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+    super.graphEdges(runtime, parent)
+
     val winput = firstWithInput
     if (winput.isDefined) {
       for (pipe <- winput.get.children[Pipe]) {

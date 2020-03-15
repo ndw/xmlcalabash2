@@ -114,6 +114,8 @@ class ChooseBranch(override val config: XMLCalabashConfig) extends Container(con
   }
 
   override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+    super.graphEdges(runtime, parent)
+
     for (child <- allChildren) {
       child match {
         case winput: WithInput =>

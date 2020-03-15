@@ -344,6 +344,15 @@ class TypeUtils(val processor: Processor, val context: StaticContext) {
     }
   }
 
+  def valueMatchesType(value: String, dtype: QName): Boolean = {
+    try {
+      checkType(value, dtype)
+      true
+    } catch {
+      case _: Exception => false
+    }
+  }
+
   def checkType(value: String, dtype: QName): Unit = {
     checkType(value, dtype, None, err_XD0045)
   }

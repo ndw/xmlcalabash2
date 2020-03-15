@@ -114,6 +114,18 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
       _inScopeDynamics.put(dbinding.name, dbinding)
     }
 
+    if (depends.nonEmpty) {
+      val env = environment()
+      for (stepName <- depends) {
+        val step = env.step(stepName)
+        if (step.isEmpty) {
+          throw XProcException.xsNotAStep(stepName, location)
+        } else {
+          dependSteps += step.get
+        }
+      }
+    }
+
     if (atomic) {
       return
     }
