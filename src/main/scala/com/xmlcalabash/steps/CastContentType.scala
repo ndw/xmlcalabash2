@@ -346,10 +346,10 @@ class CastContentType() extends DefaultXmlStep {
         consumer.get.receive("result", resp.value, metadata.get.castTo(castTo))
 
       case MediaType.XML =>
-        consumer.get.receive("result", item.get, metadata.get.castTo(castTo, List()))
+        consumer.get.receive("result", item.get, metadata.get.castTo(castTo))
 
       case MediaType.HTML =>
-        consumer.get.receive("result", item.get, new XProcMetadata(castTo, metadata.get.castTo(castTo)))
+        consumer.get.receive("result", item.get, metadata.get.castTo(castTo, List()))
 
       case MediaType.JSON =>
         throw new UnsupportedOperationException("Can't cast from JSON to HTML")
