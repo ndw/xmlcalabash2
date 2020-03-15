@@ -94,7 +94,7 @@ class XProcMetadata(private val initialContentType: Option[MediaType],
   }
 
   def castTo(contentType: MediaType): XProcMetadata = {
-    castTo(contentType, List())
+    castTo(contentType, List(XProcConstants._serialization))
   }
 
   def castTo(contentType: MediaType, except: List[QName]): XProcMetadata = {

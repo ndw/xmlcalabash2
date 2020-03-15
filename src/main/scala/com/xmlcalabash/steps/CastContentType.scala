@@ -64,7 +64,7 @@ class CastContentType() extends DefaultXmlStep {
       case MediaType.XML =>
         consumer.get.receive("result", item.get, new XProcMetadata(castTo, metadata.get.properties))
       case MediaType.HTML =>
-        consumer.get.receive("result", item.get, new XProcMetadata(castTo, metadata.get.properties))
+        consumer.get.receive("result", item.get, metadata.get.castTo(castTo))
       case MediaType.TEXT =>
         val text = item.get.asInstanceOf[XdmNode].getStringValue
         val bais = new ByteArrayInputStream(text.getBytes("UTF-8"))
@@ -224,8 +224,7 @@ class CastContentType() extends DefaultXmlStep {
     builder.addText(stream.toString("UTF-8"))
     builder.endDocument()
 
-    val meta = metadata.get.castTo(castTo, List(XProcConstants._serialization))
-    consumer.get.receive("result", builder.result, meta)
+    consumer.get.receive("result", builder.result, metadata.get.castTo(castTo))
   }
 
   def castToJSON(context: StaticContext): Unit = {
@@ -251,7 +250,7 @@ class CastContentType() extends DefaultXmlStep {
           bindingsMap.put("{}json", vmsg)
           smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
 
-          consumer.get.receive("result", smsg.item, metadata.get.castTo(castTo, List(XProcConstants._serialization)))
+          consumer.get.receive("result", smsg.item, metadata.get.castTo(castTo))
         } else if (root.get.getNodeName == XProcConstants.c_param_set) {
           var map = new XdmMap()
           for (child <- S9Api.axis(root.get, Axis.CHILD)) {
@@ -263,7 +262,7 @@ class CastContentType() extends DefaultXmlStep {
               map = map.put(new XdmAtomicValue(name), new XdmAtomicValue(value))
             }
           }
-          consumer.get.receive("result", map, metadata.get.castTo(castTo, List(XProcConstants._serialization)))
+          consumer.get.receive("result", map, metadata.get.castTo(castTo))
         } else {
           throw new UnsupportedOperationException("Can't cast from XML to JSON")
         }
@@ -331,10 +330,10 @@ class CastContentType() extends DefaultXmlStep {
         throw new UnsupportedOperationException("Can't cast from TEXT to HTML")
 
       case MediaType.XML =>
-        consumer.get.receive("result", item.get, metadata.get.castTo(castTo, List(XProcConstants._serialization)))
+        consumer.get.receive("result", item.get, metadata.get.castTo(castTo, List()))
 
       case MediaType.HTML =>
-        consumer.get.receive("result", item.get, new XProcMetadata(castTo, metadata.get.properties))
+        consumer.get.receive("result", item.get, new XProcMetadata(castTo, metadata.get.castTo(castTo)))
 
       case MediaType.JSON =>
         throw new UnsupportedOperationException("Can't cast from JSON to HTML")
@@ -373,13 +372,13 @@ class CastContentType() extends DefaultXmlStep {
             throw new UnsupportedOperationException(s"Unsupported content-type on c:data, $cdataContentType")
           }
 
-          if (contentType != ctype) {
+          if (castTo != ctype) {
             throw XProcException.xcDifferentContentTypes(contentType.toString, ctype.toString, location)
           }
 
           try {
             val bytes = Base64.getDecoder.decode(root.get.getStringValue)
-            val meta = metadata.get.castTo(castTo, List(XProcConstants._serialization))
+            val meta = metadata.get.castTo(castTo)
             consumer.get.receive("result", bytes, meta)
           } catch {
             case iae: IllegalArgumentException =>
