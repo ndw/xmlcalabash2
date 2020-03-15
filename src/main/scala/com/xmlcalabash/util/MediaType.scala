@@ -40,7 +40,8 @@ object MediaType {
   )
 
   val MATCH_JSON: Array[MediaType] = Array(
-    MediaType.parse("application/json")
+    MediaType.parse("application/json"),
+    MediaType.parse("*/*+json")
   )
 
   val MATCH_YAML: Array[MediaType] = Array(
