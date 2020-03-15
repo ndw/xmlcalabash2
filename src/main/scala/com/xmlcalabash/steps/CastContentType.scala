@@ -332,7 +332,12 @@ class CastContentType() extends DefaultXmlStep {
 
     contentType.classification match {
       case MediaType.TEXT =>
-        throw new UnsupportedOperationException("Can't cast from TEXT to HTML")
+        val text = item.get.asInstanceOf[XdmNode].getStringValue
+        val bais = new ByteArrayInputStream(text.getBytes("UTF-8"))
+        val baseURI = metadata.get.baseURI.getOrElse(new URI(""))
+        val req = new DocumentRequest(baseURI, castTo)
+        val resp = config.documentManager.parse(req, bais)
+        consumer.get.receive("result", resp.value, metadata.get.castTo(castTo))
 
       case MediaType.XML =>
         consumer.get.receive("result", item.get, metadata.get.castTo(castTo, List()))
