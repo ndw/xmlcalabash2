@@ -13,7 +13,7 @@ import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils, ValueUtils}
-import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
 
@@ -70,8 +70,13 @@ class CastContentType() extends DefaultXmlStep {
         val bais = new ByteArrayInputStream(text.getBytes("UTF-8"))
         val baseURI = metadata.get.baseURI.getOrElse(new URI(""))
         val req = new DocumentRequest(baseURI, castTo)
-        val resp = config.documentManager.parse(req, bais)
-        consumer.get.receive("result", resp.value, metadata.get.castTo(castTo))
+        try {
+          val resp = config.documentManager.parse(req, bais)
+          consumer.get.receive("result", resp.value, metadata.get.castTo(castTo))
+        } catch {
+          case sae: SaxonApiException =>
+            throw XProcException.xdNotWFXML("", sae.getMessage, location)
+        }
       case MediaType.JSON =>
         // Step 1, convert the map into a JSON text string
         var expr = new XProcXPathExpression(context, "serialize($map, map {\"method\": \"json\"})")
