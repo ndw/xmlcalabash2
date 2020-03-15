@@ -111,7 +111,6 @@ class Step(override val config: XMLCalabashConfig) extends Artifact(config) with
   }
 
   override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
-    System.err.println(s"graph edges for $this")
     if (depends.nonEmpty) {
       val thisNode = _graphNode.get
       for (step <- dependSteps) {
