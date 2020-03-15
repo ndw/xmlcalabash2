@@ -87,7 +87,7 @@ class CastContentType() extends DefaultXmlStep {
         bindingsMap.put("{}json", vmsg)
         smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
 
-        consumer.get.receive("result", smsg.item, new XProcMetadata(castTo, metadata.get.properties))
+        consumer.get.receive("result", smsg.item, metadata.get.castTo(castTo))
       case MediaType.OCTET_STREAM =>
         val builder = new SaxonTreeBuilder(config)
 
