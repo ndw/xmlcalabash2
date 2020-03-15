@@ -157,7 +157,7 @@ class CastContentType() extends DefaultXmlStep {
         builder.startDocument(metadata.get.baseURI)
         builder.addText(smsg.item.toString)
         builder.endDocument()
-        consumer.get.receive("result", builder.result, new XProcMetadata(castTo, metadata.get.properties))
+        consumer.get.receive("result", builder.result, metadata.get.castTo(castTo))
 
       case MediaType.OCTET_STREAM =>
         val builder = new SaxonTreeBuilder(config)
