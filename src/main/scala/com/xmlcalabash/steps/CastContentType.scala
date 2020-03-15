@@ -134,7 +134,7 @@ class CastContentType() extends DefaultXmlStep {
         builder.endDocument()
 
         val doc = builder.result
-        consumer.get.receive("result", doc, new XProcMetadata(castTo, metadata.get.properties))
+        consumer.get.receive("result", doc, metadata.get.castTo(castTo))
     }
   }
 
