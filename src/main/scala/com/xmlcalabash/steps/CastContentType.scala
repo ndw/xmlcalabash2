@@ -237,7 +237,13 @@ class CastContentType() extends DefaultXmlStep {
 
     contentType.classification match {
       case MediaType.TEXT =>
-        throw new UnsupportedOperationException("Can't cast from TEXT to JSON")
+        val expr = new XProcXPathExpression(context, "parse-json($json)")
+        val bindingsMap = mutable.HashMap.empty[String, Message]
+        val vmsg = new XdmValueItemMessage(item.get.asInstanceOf[XdmNode], XProcMetadata.TEXT, context)
+        bindingsMap.put("{}json", vmsg)
+        val smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+
+        consumer.get.receive("result", smsg.item, metadata.get.castTo(castTo))
 
       case MediaType.XML =>
         val root = S9Api.documentElement(item.get.asInstanceOf[XdmNode])
