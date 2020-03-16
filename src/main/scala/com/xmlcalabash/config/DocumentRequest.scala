@@ -9,25 +9,27 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.immutable.HashMap
 
-class DocumentRequest(val href: URI, val contentType: Option[MediaType], val location: Option[Location], val dtdValidate: Boolean) {
+class DocumentRequest(val href: Option[URI], val contentType: Option[MediaType], val location: Option[Location], val dtdValidate: Boolean) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   private var _baseURI: Option[URI] = None
-  private var _dtdValidate: Option[Boolean] = None
-  private var _location: Option[Location] = None
   private var _params: Option[Map[QName,XdmValue]] = None
   private var _docprops: Option[Map[QName,XdmValue]] = None
 
   def this(href: URI) {
-    this(href, None, None, false)
+    this(Some(href), None, None, false)
   }
 
   def this(href: URI, contentType: MediaType) {
-    this(href, Some(contentType), None, false)
+    this(Some(href), Some(contentType), None, false)
   }
 
   def this(href: URI, contentType: MediaType, location: Option[Location]) {
-    this(href, Some(contentType), location, false)
+    this(Some(href), Some(contentType), location, false)
+  }
+
+  def this(href: URI, contentType: Option[MediaType], location: Option[Location], validate: Boolean) {
+    this(Some(href), contentType, location, validate)
   }
 
   def baseURI: Option[URI] = _baseURI

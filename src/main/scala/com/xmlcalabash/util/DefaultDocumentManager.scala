@@ -45,7 +45,11 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       xmlCalabash.staticBaseURI
     }
 
-    val ehref = URIUtils.encode(request.href)
+    if (request.href.isEmpty) {
+      throw new RuntimeException("Document manager error: no URI and no input stream")
+    }
+
+    val ehref = URIUtils.encode(request.href.get)
     logger.trace("Attempting to parse: " + ehref + " (" + URIUtils.encode(baseURI) + ")")
 
     var href: Option[URI] = None
@@ -201,7 +205,11 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       new DocumentResponse(value, contentType, props)
     } else if (contentType.xmlContentType) {
       val source = new SAXSource(new InputSource(stream))
-      source.setSystemId(request.href.toASCIIString)
+
+      if (request.href.isDefined) {
+        source.setSystemId(request.href.get.toASCIIString)
+      }
+
       var reader = source.asInstanceOf[SAXSource].getXMLReader
       if (reader == null) {
         try {
@@ -233,12 +241,16 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
         builder.build(source)
       } catch {
         case sae: SaxonApiException =>
-          val href = request.href.toASCIIString
+          val href = if (request.href.isDefined) {
+            request.href.get.toASCIIString
+          } else {
+            ""
+          }
           val msg = sae.getMessage
           if (msg.contains("validation")) {
             throw validationError(request, sae, listener.exceptions)
           } else if (msg.contains("HTTP response code: 403 ")) {
-            throw XProcException.xdNotAuthorized(request.href.toASCIIString, msg, None)
+            throw XProcException.xdNotAuthorized(href, msg, None)
           } else {
             // Let's try to do better about error locations.
             if (Option(sae.getCause).isDefined) {
@@ -380,7 +392,12 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       case parseError(uri, line, col, msg) =>
         XProcException.xdNotWFXML(uri, line.toLong, col.toLong, msg, request.location)
       case _ =>
-        XProcException.xdNotWFXML(request.href.toASCIIString, message, request.location)
+        val href = if (request.href.isDefined) {
+          request.href.get.toASCIIString
+        } else {
+          ""
+        }
+        XProcException.xdNotWFXML(href, message, request.location)
     }
 
     cause match {
@@ -394,8 +411,14 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
   }
 
   private def validationError(request: DocumentRequest, sae: SaxonApiException, exceptions: List[Exception]): XProcException = {
+    val href = if (request.href.isDefined) {
+      request.href.get.toASCIIString
+    } else {
+      ""
+    }
+
     val except = if (exceptions.isEmpty) {
-      XProcException.xdNotValidXML(request.href.toASCIIString, sae.getMessage, request.location)
+      XProcException.xdNotValidXML(href, sae.getMessage, request.location)
     } else {
       val err = exceptions.head
       err match {
@@ -405,10 +428,10 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
             case sxp: SAXParseException =>
               XProcException.xdNotValidXML(sxp.getSystemId, sxp.getLineNumber, sxp.getColumnNumber, sxp.getMessage, request.location)
             case _ =>
-              XProcException.xdNotValidXML(request.href.toASCIIString, err.getMessage, request.location)
+              XProcException.xdNotValidXML(href, err.getMessage, request.location)
           }
         case _ =>
-          XProcException.xdNotValidXML(request.href.toASCIIString, err.getMessage, request.location)
+          XProcException.xdNotValidXML(href, err.getMessage, request.location)
       }
     }
 

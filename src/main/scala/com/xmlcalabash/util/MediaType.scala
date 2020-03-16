@@ -140,6 +140,36 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
     this(mediaType, mediaSubtype, Some(suffix), true, None)
   }
 
+  def discardParams(exclude: List[String]): MediaType = {
+    if (param.isEmpty) {
+      return this
+    }
+
+    var found = false
+    val newParam = ListBuffer.empty[String]
+    for (aparam <- param.get) {
+      var pmatch = false
+      for (excl <- exclude) {
+        val pstr = s"$excl="
+        pmatch = pmatch || aparam.startsWith(pstr)
+      }
+      found = found || pmatch
+      if (!pmatch) {
+        newParam += aparam
+      }
+    }
+
+    if (found) {
+      if (newParam.isEmpty) {
+        new MediaType(mediaType, mediaSubtype, suffix, inclusive, None)
+      } else {
+        new MediaType(mediaType, mediaSubtype, suffix, inclusive, Some(newParam.toArray[String]))
+      }
+    } else {
+      this
+    }
+  }
+
   def classification: MediaType = {
     if (xmlContentType) {
       MediaType.XML
