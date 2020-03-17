@@ -25,7 +25,6 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
   private val typeUtils = new TypeUtils(config)
   private var _id: String = _
   private val openStreams = ListBuffer.empty[InputStream]
-  private var p_message = Option.empty[String]
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[DataConsumer] = None
   protected val bindings = mutable.HashSet.empty[QName]
@@ -117,12 +116,13 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
       val ns = step.signature.stepType.get.getNamespaceURI
       if ((ns == XProcConstants.ns_p && qname == XProcConstants._message)
         || (ns != XProcConstants.ns_p && qname == XProcConstants.p_message)) {
-        p_message = Some(bindmsg.message.toString)
+        // [p:]message is static
+        println(bindmsg.message.toString)
         return
       }
     } else {
       if (qname == XProcConstants.p_message) {
-        p_message = Some(bindmsg.message.toString)
+        println(bindmsg.message.toString)
         return
       }
     }
@@ -176,7 +176,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
 
   override def initialize(config: RuntimeConfiguration): Unit = {
     config match {
-      case saxon: XMLCalabashRuntime => Unit
+      case _: XMLCalabashRuntime => Unit
       case _ => throw XProcException.xiNotXMLCalabash()
     }
 
@@ -192,10 +192,6 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
   }
 
   override def run(): Unit = {
-    if (p_message.isDefined) {
-      println(p_message.get)
-    }
-
     running = true
     for (port <- outputBuffer.keySet) {
       for ((item,meta) <- outputBuffer(port)) {

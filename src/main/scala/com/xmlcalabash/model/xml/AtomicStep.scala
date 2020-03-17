@@ -4,6 +4,7 @@ import com.jafpl.graph.{ContainerStart, Node}
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.params.StepParams
 import com.xmlcalabash.runtime.{ImplParams, StepExecutable, StepProxy, StepRunner, StepWrapper, XMLCalabashRuntime, XmlStep}
 import com.xmlcalabash.steps.internal.{DocumentLoader, InlineLoader}
@@ -105,13 +106,13 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
             woption.qnameKeys = doption.forceQNameKeys
 
             dtype.getItemType.getUnderlyingItemType match {
-              case map: MapType =>
-                woption.select = attributes(doption.name)
+              case _: MapType =>
+                woption.select = attr(doption.name).get
               case _ =>
-                woption.avt = attributes(doption.name)
+                woption.avt = attr(doption.name).get
             }
           } else {
-            woption.avt = attributes(doption.name)
+            woption.avt = attr(doption.name).get
           }
 
           found = Some(woption)
@@ -155,6 +156,27 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
         throw XProcException.xsDupWithOptionName(woption.name, location)
       }
       seenOption += woption.name
+    }
+
+    // Now that we've checked the options, we can add an extra one.
+    // If @p:message is given, treat it like a with-option (even though
+    // it cannot be specified in that form).
+    var msgName = if (stepType.getNamespaceURI == XProcConstants.ns_p) {
+      XProcConstants._message
+    } else {
+      XProcConstants.p_message
+    }
+
+    if (attributes.contains(msgName)) {
+      val woption = new WithOption(config, msgName)
+      woption.staticContext = staticContext
+      woption.avt = attr(msgName).get
+      addChild(woption)
+    }
+
+    if (attributes.nonEmpty) {
+      val badattr = attributes.keySet.head
+      throw XProcException.xsBadAttribute(badattr, location)
     }
   }
 

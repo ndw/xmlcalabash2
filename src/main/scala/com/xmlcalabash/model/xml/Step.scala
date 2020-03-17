@@ -16,6 +16,7 @@ class Step(override val config: XMLCalabashConfig) extends Artifact(config) with
   protected[model] def stepName_=(name: String): Unit = {
     _name = Some(name)
   }
+
   protected[xml] var _depends = List.empty[String]
   def depends: List[String] = _depends
 
