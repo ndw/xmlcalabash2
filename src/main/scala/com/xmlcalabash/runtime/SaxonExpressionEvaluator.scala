@@ -184,15 +184,21 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
     val xdmval = value(xpath, context, bindings, params).item.asInstanceOf[XdmValue]
 
     if (xdmval.size() == 0) {
+      //System.err.println(s"$xpath = false")
       return false
     }
 
     if (xdmval.size() == 1) {
       xdmval.itemAt(0) match {
-        case atomic: XdmAtomicValue => atomic.getBooleanValue
-        case _ => true
+        case atomic: XdmAtomicValue =>
+          //System.err.println(s"$xpath = ${atomic.getBooleanValue}")
+          atomic.getBooleanValue
+        case _ =>
+          //System.err.println(s"$xpath = true")
+          true
       }
     } else {
+      //System.err.println(s"$xpath = true")
       true
     }
   }
