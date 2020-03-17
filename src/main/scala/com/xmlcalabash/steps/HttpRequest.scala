@@ -25,7 +25,7 @@ import nu.validator.htmlparser.dom.HtmlDocumentBuilder
 import org.apache.http.client.config.{CookieSpecs, RequestConfig}
 import org.apache.http.client.methods.{HttpGet, HttpPost, HttpUriRequest}
 import org.apache.http.client.protocol.HttpClientContext
-import org.apache.http.entity.ContentType
+import org.apache.http.entity.{ContentType, StringEntity}
 import org.apache.http.impl.client.{HttpClientBuilder, StandardHttpRequestRetryHandler}
 import org.apache.http.util.ByteArrayBuffer
 import org.apache.http.{Consts, Header, HttpResponse}
@@ -221,22 +221,6 @@ class HttpRequest() extends DefaultXmlStep {
       readMultipartEntity()
     } else {
       readSinglepartEntity()
-      /*
-      val stream = httpResult.getEntity.getContent
-
-      // FIXME: refactor this with DefaultDocumentManager somehow
-      if (contentType.htmlContentType) {
-        readHtmlEntity()
-      } else if (contentType.xmlContentType) {
-        readXmlEntity()
-      } else if (contentType.jsonContentType) {
-        readJsonEntity()
-      } else if (contentType.textContentType) {
-        readTextEntity()
-      } else {
-        readBinaryEntity()
-      }
-       */
     }
   }
 
@@ -256,148 +240,9 @@ class HttpRequest() extends DefaultXmlStep {
     }
   }
 
-  private def readHtmlEntity(): Unit = {
-    val stream = httpResult.getEntity.getContent
-    val htmlBuilder = new HtmlDocumentBuilder(XmlViolationPolicy.ALTER_INFOSET)
-    htmlBuilder.setEntityResolver(config.entityResolver)
-    val html = htmlBuilder.parse(stream)
-    val builder = config.processor.newDocumentBuilder()
-    val node = builder.build(new DOMSource(html))
-
-    val meta = entityMetadata()
-    consumer.get.receive("result", node, meta)
-  }
-
-  private def readXmlEntity(): Unit = {
-    val stream = httpResult.getEntity.getContent
-    val source = new SAXSource(new InputSource(stream))
-    source.setSystemId(href.toASCIIString)
-    var reader = source.asInstanceOf[SAXSource].getXMLReader
-    if (reader == null) {
-      try {
-        reader = XMLReaderFactory.createXMLReader
-        source.asInstanceOf[SAXSource].setXMLReader(reader)
-        reader.setEntityResolver(config.entityResolver)
-      } catch {
-        case _: SAXException => Unit
-      }
-    }
-
-    // Is this necessary? I'm carefully synchronizing calls that mess with the
-    // configuration's error listener.
-
-    val errors = new Errors(config.config)
-    val listener = new CachingErrorListener(errors)
-    val saxonConfig = config.processor.getUnderlyingConfiguration
-    saxonConfig.synchronized {
-      listener.chainedListener = saxonConfig.getErrorListener
-      saxonConfig.setErrorListener(listener)
-    }
-
-    val builder = config.processor.newDocumentBuilder
-    builder.setDTDValidation(false)
-    builder.setLineNumbering(true)
-
-    val node = try {
-      builder.build(source)
-    } catch {
-      case sae: SaxonApiException =>
-        val msg = sae.getMessage
-        if (msg.contains("HTTP response code: 403 ")) {
-          throw XProcException.xdNotAuthorized(href.toASCIIString, msg, None)
-        } else {
-          throw XProcException.xdNotWFXML(href.toASCIIString, msg, location)
-        }
-    } finally {
-      saxonConfig.synchronized {
-        saxonConfig.setErrorListener(listener.chainedListener.get)
-      }
-    }
-
-    val meta = entityMetadata()
-    consumer.get.receive("result", node, meta)
-  }
-
-  private def readJsonEntity(): Unit = {
-    val contentType = getFullContentType
-    val cs = Option(ContentType.getOrDefault(httpResult.getEntity).getCharset)
-    val charset = cs.getOrElse(Consts.UTF_8).name
-
-    val stream = httpResult.getEntity.getContent
-    val bytes = streamToByteArray(stream)
-
-    var json = new String(bytes, charset)
-    var respContentType = contentType
-
-    if (contentType.yamlContentType) {
-      // Wait! That JSON is really YAML.
-      val yamlReader = new ObjectMapper(new YAMLFactory())
-      val obj = yamlReader.readValue(json, classOf[Object])
-      val jsonWriter = new ObjectMapper()
-      json = jsonWriter.writeValueAsString(obj)
-      respContentType = MediaType.JSON
-    }
-
-    val context = new StaticContext(config)
-    val expr = new XProcXPathExpression(context, "parse-json($json)")
-    val bindingsMap = mutable.HashMap.empty[String, Message]
-    val vmsg = new XdmValueItemMessage(new XdmAtomicValue(json), XProcMetadata.JSON, context)
-    bindingsMap.put("{}json", vmsg)
-    val smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
-
-    val meta = entityMetadata()
-    consumer.get.receive("result", smsg.item, meta)
-  }
-
-  private def streamToByteArray(stream: InputStream): Array[Byte] = {
-    val pagesize = 4096
-    val buffer = new ByteArrayBuffer(pagesize)
-    val tmp = new Array[Byte](4096)
-    var length = 0
-    length = stream.read(tmp)
-    while (length >= 0) {
-      buffer.append(tmp, 0, length)
-      length = stream.read(tmp)
-    }
-    buffer.toByteArray
-  }
-
-  private def readTextEntity(): Unit = {
-    val contentType = getFullContentType
-    val cs = Option(ContentType.getOrDefault(httpResult.getEntity).getCharset)
-    val charset = cs.getOrElse(Consts.UTF_8).name
-
-    val stream = httpResult.getEntity.getContent
-    val bytes = streamToByteArray(stream)
-
-    val builder = new SaxonTreeBuilder(config)
-    builder.startDocument(href)
-
-    try {
-      builder.addText(new String(bytes, charset))
-    } catch {
-      case ex: UnsupportedEncodingException =>
-        throw XProcException.xdUnsupportedEncoding(charset, location)
-    }
-
-    builder.endDocument()
-
-    val meta = entityMetadata()
-    consumer.get.receive("result", builder.result, meta)
-  }
-
-  private def readBinaryEntity(): Unit = {
-    val contentType = getFullContentType
-    val stream = httpResult.getEntity.getContent
-
-    val meta = entityMetadata()
-    consumer.get.receive("result", streamToByteArray(stream), meta)
-  }
-
   private def readMultipartEntity(): Unit = {
     val contentType = getFullContentType
     val boundary = contentType.paramValue("boundary")
-    val cs = Option(ContentType.getOrDefault(httpResult.getEntity).getCharset)
 
     val reader = new MIMEReader(httpResult.getEntity.getContent, boundary.get)
     while (reader.readHeaders()) {
@@ -438,25 +283,7 @@ class HttpRequest() extends DefaultXmlStep {
       if (elems == null || elems.isEmpty) {
         None
       } else {
-        Some(elems(0).getName)
-      }
-    }
-  }
-
-  private def getContentCharset(header: Option[Header]): Option[String] = {
-    if (header.isEmpty) {
-      None
-    } else {
-      val elems = header.get.getElements
-      if (elems == null || elems.isEmpty) {
-        None
-      } else {
-        val cpair = Option(elems(0).getParameterByName("charset"))
-        if (cpair.isEmpty) {
-          Some("US-ASCII")
-        } else {
-          Some(cpair.get.getValue)
-        }
+        Some(elems(0).toString)
       }
     }
   }
@@ -542,6 +369,10 @@ class HttpRequest() extends DefaultXmlStep {
   private def doPost(): HttpUriRequest = {
     val method = new HttpPost(href)
     // FIXME: deal with headers
+
+    method.addHeader("content-type", "application/xml")
+    method.setEntity(new StringEntity("<doc/>"))
+
     method
   }
 

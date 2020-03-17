@@ -305,20 +305,36 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       new DocumentResponse(smsg.item, respContentType, props)
 
     } else if (contentType.textContentType) {
-      val encoding = contentType.charset.getOrElse("UTF-8") // FIXME: What should the default be?
+      val encoding = contentType.charset.getOrElse("UTF-8") // FIXME: Is this the right default?
       val bytes = streamToByteArray(stream)
+
+      val rawString = try {
+        new String(bytes, encoding)
+      } catch {
+        case _: UnsupportedEncodingException =>
+          throw XProcException.xdUnsupportedEncoding(encoding, request.location)
+      }
+      val slen = rawString.length
+
+      // Convert \r\n to \n, convert \r's in other contexts to \n
+      // I don't understand why this is necessary. It didn't seem to be necessary in XML Calabash 1.0...
+      // This is making a lot of string copies and is probably slow.
+      val sbuf = new mutable.StringBuilder()
+      var lidx = 0
+      var idx = rawString.indexOf('\r')
+      while (idx > 0) {
+        sbuf ++= rawString.substring(lidx, idx)
+        if (slen <= idx+1 || rawString.substring(idx+1, idx+2) != "\n") {
+          sbuf ++= "\n"
+        }
+        lidx = idx + 1
+        idx = rawString.indexOf('\r', lidx)
+      }
+      sbuf ++= rawString.substring(lidx)
 
       val builder = new SaxonTreeBuilder(xmlCalabash)
       builder.startDocument(request.href)
-
-      try {
-        builder.addText(new String(bytes, encoding))
-      } catch {
-        case ex: UnsupportedEncodingException =>
-          throw XProcException.xdUnsupportedEncoding(encoding, request.location)
-      }
-
-
+      builder.addText(sbuf.toString)
       builder.endDocument()
       new DocumentResponse(builder.result, contentType, props)
 
