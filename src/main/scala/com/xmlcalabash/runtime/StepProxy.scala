@@ -32,6 +32,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
   protected var dynamicContext = new DynamicContext()
   protected var received = mutable.HashMap.empty[String,Long]
   protected var running = false
+  protected val inputBuffer = mutable.HashMap.empty[String,ListBuffer[Message]]
   protected val outputBuffer = mutable.HashMap.empty[String,ListBuffer[(Any, XProcMetadata)]]
 
   def nodeId: String = _id
@@ -116,13 +117,12 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
       val ns = step.signature.stepType.get.getNamespaceURI
       if ((ns == XProcConstants.ns_p && qname == XProcConstants._message)
         || (ns != XProcConstants.ns_p && qname == XProcConstants.p_message)) {
-        // [p:]message is static
-        println(bindmsg.message.toString)
+        System.err.println(bindmsg.message.toString)
         return
       }
     } else {
       if (qname == XProcConstants.p_message) {
-        println(bindmsg.message.toString)
+        System.err.println(bindmsg.message.toString)
         return
       }
     }
@@ -193,6 +193,14 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
 
   override def run(): Unit = {
     running = true
+
+    for (port <- inputBuffer.keySet) {
+      for (message <- inputBuffer(port)) {
+        processInput(port, message)
+      }
+    }
+    inputBuffer.clear()
+
     for (port <- outputBuffer.keySet) {
       for ((item,meta) <- outputBuffer(port)) {
         receive(port, item, meta)
@@ -251,6 +259,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     bindingsMap.clear()
     received.clear()
     outputBuffer.clear()
+    inputBuffer.clear()
   }
 
   override def abort(): Unit = {
@@ -264,6 +273,17 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
   }
 
   override def consume(port: String, message: Message): Unit = {
+    // We have to buffer inputs because they may arrive before we begin running.
+    // If we're in a choose or other optional construct, we must not process
+    // them before we've been selected to run.
+    if (!inputBuffer.contains(port)) {
+      val lb = ListBuffer.empty[Message]
+      inputBuffer.put(port, lb)
+    }
+    inputBuffer(port) += message
+  }
+
+  private def processInput(port: String, message: Message): Unit = {
     received.put(port, received.getOrElse(port, 1))
     inputSpec.checkInputCardinality(port, received(port))
 
