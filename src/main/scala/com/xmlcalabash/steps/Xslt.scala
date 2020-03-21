@@ -12,7 +12,7 @@ import net.sf.saxon.event.{PipelineConfiguration, Receiver}
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.functions.ResolveURI
 import net.sf.saxon.lib.{ResultDocumentResolver, SaxonOutputKeys}
-import net.sf.saxon.s9api.{Destination, MessageListener, QName, RawDestination, ValidationMode, XdmAtomicValue, XdmDestination, XdmItem, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, Destination, MessageListener, QName, RawDestination, ValidationMode, XdmAtomicValue, XdmDestination, XdmEmptySequence, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.serialize.SerializationProperties
 
 import scala.collection.JavaConverters._
@@ -26,7 +26,7 @@ class Xslt extends DefaultXmlStep {
   private val _output_base_uri = new QName("", "output-base-uri")
 
   private var stylesheet = Option.empty[XdmNode]
-  private val defaultCollection = ListBuffer.empty[XdmNode]
+  private val inputSequence = ListBuffer.empty[XdmItem]
 
   private var globalContextItem = Option.empty[XdmValue]
   private var initialMode = Option.empty[QName]
@@ -42,6 +42,8 @@ class Xslt extends DefaultXmlStep {
   private val secondaryResults = mutable.HashMap.empty[URI, Destination]
   private val secondaryOutputProperties = mutable.HashMap.empty[URI, Map[QName, XdmValue]]
 
+  import scala.collection.JavaConverters._
+
   override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
     Map("source" -> PortCardinality.ZERO_OR_MORE, "stylesheet" -> PortCardinality.EXACTLY_ONE),
     Map("source" -> List("application/xml", "text/plain"), "stylesheet" -> List("application/xml"))
@@ -55,7 +57,7 @@ class Xslt extends DefaultXmlStep {
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     port match {
-      case "source" => defaultCollection += item.asInstanceOf[XdmNode]
+      case "source" => inputSequence += item.asInstanceOf[XdmItem]
       case "stylesheet" => stylesheet = Some(item.asInstanceOf[XdmNode])
       case _ => Unit
     }
@@ -91,7 +93,7 @@ class Xslt extends DefaultXmlStep {
   }
 
   override def run(staticContext: StaticContext): Unit = {
-    val document: Option[XdmNode] = defaultCollection.headOption
+    val document: Option[XdmValue] = inputSequence.headOption
 
     if (version.isEmpty && stylesheet.isDefined) {
       val root = S9Api.documentElement(stylesheet.get)
@@ -111,8 +113,17 @@ class Xslt extends DefaultXmlStep {
     val collectionFinder = config.getCollectionFinder
     val unparsedTextURIResolver = config.getUnparsedTextURIResolver
 
-    config.setDefaultCollection(XProcCollectionFinder.DEFAULT)
-    config.setCollectionFinder(new XProcCollectionFinder(runtime, defaultCollection.toList, collectionFinder))
+    if (templateName.isDefined || version.get != "3.0") {
+      config.setDefaultCollection(XProcCollectionFinder.DEFAULT)
+      val docs = ListBuffer.empty[XdmNode]
+      for (value <- inputSequence) {
+        value match {
+          case node: XdmNode => docs += node
+          case _ => Unit
+        }
+      }
+      config.setCollectionFinder(new XProcCollectionFinder(runtime, docs.toList, collectionFinder))
+    }
 
     val compiler = processor.newXsltCompiler()
     compiler.setSchemaAware(processor.isSchemaAware)
@@ -127,11 +138,11 @@ class Xslt extends DefaultXmlStep {
 
     //transformer.setStylesheetParameters(parameters)
 
-    /*
-    if (document.isDefined) {
-      transformer.setInitialContextNode(document.get)
+    var inputSelection = Option.empty[XdmValue]
+    if (globalContextItem.isEmpty && document.isDefined) {
+      val iter = inputSequence.iterator.asJava
+      inputSelection = Some(new XdmValue(iter))
     }
-     */
 
     transformer.setMessageListener(new CatchMessages())
     //transformer.setResultDocumentHandler(new ResultDocumentHandler())
@@ -157,13 +168,20 @@ class Xslt extends DefaultXmlStep {
     // FIXME: transformer.getUnderlyingController().setUnparsedTextURIResolver(unparsedTextURIResolver)
 
     try {
-      if (templateName.isDefined) {
-        if (globalContextItem.isDefined) {
-          transformer.setGlobalContextItem(globalContextItem.get.asInstanceOf[XdmItem])
+      val destination = new MyDestination(outputProperties)
+      if (globalContextItem.isDefined) {
+        transformer.setGlobalContextItem(globalContextItem.get.asInstanceOf[XdmItem])
+        if (templateName.isDefined) {
+          transformer.callTemplate(templateName.get, destination)
+        } else {
+          transformer.applyTemplates(globalContextItem.get, destination)
         }
-        transformer.callTemplate(templateName.get, new MyDestination(outputProperties))
-      } else if (globalContextItem.isDefined) {
-        transformer.applyTemplates(globalContextItem.get, new MyDestination(outputProperties))
+      } else {
+        if (inputSelection.isDefined) {
+          transformer.applyTemplates(inputSelection.get, destination)
+        } else {
+          transformer.applyTemplates(XdmEmptySequence.getInstance, destination)
+        }
       }
     } catch {
       case sae: Exception =>
@@ -189,7 +207,8 @@ class Xslt extends DefaultXmlStep {
           consume(next, "result", outputProperties.toMap)
         }
       case xdm: XdmDestination =>
-        consume(xdm.getXdmNode, "result",  outputProperties.toMap)
+        val tree = xdm.getXdmNode
+        consume(tree, "result",  outputProperties.toMap)
     }
 
     for ((uri, destination) <- secondaryResults) {
@@ -218,6 +237,16 @@ class Xslt extends DefaultXmlStep {
     item match {
       case node: XdmNode =>
         node.getNodeKind match {
+          case XdmNodeKind.DOCUMENT =>
+            var textOnly = true
+            for (child <- S9Api.axis(node, Axis.CHILD)) {
+              textOnly = textOnly && child.getNodeKind == XdmNodeKind.TEXT
+            }
+            ctype = if (textOnly) {
+              MediaType.TEXT
+            } else {
+              MediaType.XML
+            }
           case XdmNodeKind.TEXT =>
             ctype = MediaType.TEXT // or nodes
           case _ =>
