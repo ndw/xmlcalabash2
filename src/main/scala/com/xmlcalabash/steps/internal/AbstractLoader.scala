@@ -5,7 +5,7 @@ import com.xmlcalabash.messages.{AnyItemMessage, XProcItemMessage, XdmNodeItemMe
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, DynamicContext, StaticContext, XProcExpression, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.steps.DefaultXmlStep
-import com.xmlcalabash.util.MediaType
+import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmMap, XdmNode, XdmValue}
 
 import scala.collection.mutable
@@ -73,7 +73,7 @@ abstract class AbstractLoader() extends DefaultXmlStep {
       val result = xpathValue(expr)
       docProps = result match {
         case map: XdmMap =>
-          ValueParser.parseDocumentProperties(map, location)
+          ValueParser.parseDocumentProperties(map, exprContext, location)
         case _ =>
           throw XProcException.xsBadTypeValue("document-properties", "map", location)
       }

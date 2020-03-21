@@ -83,7 +83,7 @@ class ContentTypeChecker() extends XmlStep {
     if (allowedTypes.nonEmpty) {
       val allowed = meta.contentType.allowed(allowedTypes)
       if (!allowed) {
-        throw XProcException.xsBadInputMediaType(meta.contentType, allowedTypes, location)
+        throw XProcException.xdBadInputMediaType(meta.contentType, allowedTypes, location)
       }
     }
 

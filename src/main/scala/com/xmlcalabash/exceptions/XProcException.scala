@@ -119,7 +119,7 @@ object XProcException {
   def xdStepFailed(msg: String, location: Option[Location]): XProcException = dynamicError(30, msg, location)
   def xdConflictingNamespaceDeclarations(msg: String, location: Option[Location]): XProcException = dynamicError(34, msg, location)
   def xdBadType(value: String, as: String, location: Option[Location]): XProcException = dynamicError(36, List(value, as), location)
-  def xsBadInputMediaType(ctype: MediaType, allowed: List[MediaType], location: Option[Location]): XProcException = dynamicError(38, List(ctype, allowed), location)
+  def xdBadInputMediaType(ctype: MediaType, allowed: List[MediaType], location: Option[Location]): XProcException = dynamicError(38, List(ctype, allowed), location)
   def xdBadOutputMediaType(ctype: MediaType, allowed: List[MediaType], location: Option[Location]): XProcException = dynamicError(42, List(ctype, allowed), location)
   def xdNotWFXML(href: String, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, message), location)
   def xdNotWFXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, line, col, message), location)
@@ -235,11 +235,13 @@ object XProcException {
     except
   }
 
+  def xcHttpBadAuth(msg: String, location: Option[Location]): XProcException = stepError(3, msg, location)
   def xcXQueryVersionNotAvailable(version: String, location: Option[Location]): XProcException = stepError(9, version, location)
   def xcBadRenamePI(name: QName, location: Option[Location]): XProcException = stepError(13, name, location)
   def xcInvalidSelection(pattern: String, nodeType: String, location: Option[Location]): XProcException = stepError(23, List(pattern, nodeType), location)
   def xcBadPosition(pattern: String, position: String, location: Option[Location]): XProcException = stepError(24, List(pattern, position), location)
   def xcBadChildPosition(pattern: String, position: String, location: Option[Location]): XProcException = stepError(25, List(pattern, position), location)
+  def xcHttpCantInterpret(msg: String, location: Option[Location]): XProcException = stepError(30, msg, location)
 
   def xcBadCrcVersion(version: String, location: Option[Location]): XProcException = stepError((36,1), version, location)
   def xcBadMdVersion(version: String, location: Option[Location]): XProcException = stepError((36,2), version, location)
@@ -283,6 +285,11 @@ object XProcException {
   def xcInvalidJsonMergeKey(key: String, location: Option[Location]): XProcException = stepError((110,1), key, location)
   def xcInvalidJsonMergeKey(location: Option[Location]): XProcException = stepError((110,2), location)
   def xcArchiveTooManyManifests(location: Option[Location]): XProcException = stepError(112, location)
+  def xcHttpInvalidAuth(name: String, value: String, location: Option[Location]): XProcException = stepError(123, List(name, value), location)
+  def xcHttpInvalidParameter(name: String, value: String, location: Option[Location]): XProcException = stepError(124, List(name, value), location)
+  def xcHttpMultipartForbidden(location: Option[Location]): XProcException = stepError(125, location)
+  def xcHttpDuplicateHeader(name: String, location: Option[Location]): XProcException = stepError(127, name, location)
+  def xcMultipartRequired(contentType: String, location: Option[Location]): XProcException = stepError(133, contentType, location)
   def xcHttpAssertFailed(assert: String, location: Option[Location]): XProcException = stepError(126, assert, location)
   def xcInvalidResultDataFormat(location: Option[Location]): XProcException = stepError(201, location)
   def xcUnknownCompressionFormat(location: Option[Location]): XProcException = stepError((202,1), location)

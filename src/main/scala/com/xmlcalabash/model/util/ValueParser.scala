@@ -181,7 +181,7 @@ object ValueParser {
     params.toMap
   }
 
-  def parseDocumentProperties(value: XdmItem, location: Option[Location]): Map[QName, XdmValue] = {
+  def parseDocumentProperties(value: XdmItem, context: StaticContext, location: Option[Location]): Map[QName, XdmValue] = {
     val params = mutable.HashMap.empty[QName, XdmValue]
 
     value match {
@@ -197,7 +197,7 @@ object ValueParser {
             case XProcConstants.xs_QName =>
               key.getQNameValue
             case XProcConstants.xs_string =>
-              new QName("", key.getStringValue)
+              ValueParser.parseQName(key.getStringValue, context)
             case _ =>
               throw XProcException.xdBadMapKey(key.getStringValue, location)
           }

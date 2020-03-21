@@ -5,6 +5,7 @@ import net.sf.saxon.s9api.QName
 object XProcConstants {
   val ns_p   = "http://www.w3.org/ns/xproc"
   val ns_c   = "http://www.w3.org/ns/xproc-step"
+  val ns_chttp = "http://www.w3.org/ns/xproc-http"
   val ns_err = "http://www.w3.org/ns/xproc-error"
   val ns_xs  = "http://www.w3.org/2001/XMLSchema"
   val ns_cx  = "http://xmlcalabash.com/ns/extensions"
@@ -164,6 +165,7 @@ object XProcConstants {
   val cx_empty_loader = new QName("cx", ns_cx, "empty-loader")
   val cx_use_default_input = new QName("cx", ns_cx, "use-default-input")
 
+  val _accept_multipart = new QName("", "accept-multipart")
   val _as = new QName("", "as")
   val _byte_order_mark = new QName("", "byte-order-mark")
   val _cdata_section_elements = new QName("", "cdata-section-elements")
@@ -178,9 +180,12 @@ object XProcConstants {
   val _escape_uri_attributes = new QName("", "escape-uri-attributes")
   val _exclude_inline_prefixes = new QName("", "exclude-inline-prefixes")
   val _expand_text = new QName("", "expand-text")
+  val _fail_on_timeout = new QName("", "fail-on-timeout")
+  val _follow_redirect = new QName("", "follow-redirect")
   val _format = new QName("", "format")
   val _href = new QName("", "href")
   val _html_version = new QName("", "html-version")
+  val _http_version = new QName("", "http-version")
   val _include_content_type = new QName("", "include-content-type")
   val _include_filter = new QName("", "include-filter")
   val _exclude_filter = new QName("", "exclude-filter")
@@ -195,9 +200,12 @@ object XProcConstants {
   val _namespace = new QName("", "namespace")
   val _normalization_form = new QName("", "normalization-form")
   val _omit_xml_declaration = new QName("", "omit-xml-declaration")
+  val _override_content_encoding = new QName("", "override-content-encoding")
   val _override_content_type = new QName("", "override-content-type")
   val _required = new QName("", "required")
   val _parameters = new QName("", "parameters")
+  val _permit_expired_ssl_certificate = new QName("", "permit-expired-ssl-certificate")
+  val _permit_untrusted_ssl_certificate = new QName("", "permit-untrusted-ssl-certificate")
   val _prefixes = new QName("", "prefixes")
   val _properties = new QName("", "properties")
   val _pipe = new QName("", "pipe")
@@ -206,12 +214,16 @@ object XProcConstants {
   val _psvi_required = new QName("", "psvi-required")
   val _select = new QName("", "select")
   val _static = new QName("", "static")
+  val _status_only = new QName("", "status-only")
+  val _send_body_anyway = new QName("", "send-body-anyway")
   val _sequence = new QName("", "sequence")
   val _serialization = new QName("", "serialization")
   val _standalone = new QName("", "standalone")
   val _size = new QName("", "size")
   val _step = new QName("", "step")
+  val _suppress_cookies = new QName("", "suppress-cookies")
   val _test = new QName("", "test")
+  val _timeout = new QName("", "timeout")
   val _type = new QName("", "type")
   val _undeclare_prefixes = new QName("", "undeclare-prefixes")
   val _value = new QName("", "value")

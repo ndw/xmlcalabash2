@@ -4,10 +4,12 @@ import java.io.{InputStream, OutputStream}
 import java.net.URI
 
 import com.jafpl.graph.Location
+import com.jafpl.messages.Message
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.BindingSpecification
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime._
 import com.xmlcalabash.util.{MediaType, S9Api}
@@ -53,7 +55,7 @@ class DefaultXmlStep extends XmlStep {
   protected var consumer: Option[XProcDataConsumer] = None
   protected var config: XMLCalabashRuntime = _
   protected val bindingContexts = mutable.HashMap.empty[QName, StaticContext]
-  protected val bindings = mutable.HashMap.empty[QName,XdmValue]
+  protected val bindings = mutable.HashMap.empty[QName, XdmValue]
 
   def location: Option[Location] = _location
 
@@ -62,8 +64,11 @@ class DefaultXmlStep extends XmlStep {
   override def setLocation(location: Location): Unit = {
     _location = Some(location)
   }
+
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
+
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.NONE
+
   override def bindingSpec: BindingSpecification = BindingSpecification.ANY
 
   override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
@@ -131,12 +136,12 @@ class DefaultXmlStep extends XmlStep {
 
     if (textOnly) {
       val props = mutable.HashMap.empty[QName, XdmValue]
-      for ((name,value) <- metadata.properties) {
+      for ((name, value) <- metadata.properties) {
         name match {
           case XProcConstants._serialization => Unit
           case XProcConstants._content_type =>
             props.put(name, new XdmAtomicValue("text/plain"))
-          case _ => props.put(name,value)
+          case _ => props.put(name, value)
         }
       }
       new XProcMetadata(MediaType.TEXT, props.toMap)
@@ -266,13 +271,13 @@ class DefaultXmlStep extends XmlStep {
     serializer.setOutputProperty(Serializer.Property.ENCODING, encoding)
 
 
-    for ((qname,property) <- stringMapping) {
+    for ((qname, property) <- stringMapping) {
       if (options.string(qname).isDefined) {
         serializer.setOutputProperty(property, options.string(qname).get)
       }
     }
 
-    for ((qname,property) <- booleanMapping) {
+    for ((qname, property) <- booleanMapping) {
       if (options.string(qname).isDefined) {
         serializer.setOutputProperty(property, options.boolean(qname).get)
       }
@@ -309,8 +314,8 @@ class DefaultXmlStep extends XmlStep {
   }
 
   def convertMetadataToText(meta: XProcMetadata): XProcMetadata = {
-    val props = mutable.HashMap.empty[QName,XdmValue]
-    for ((key,value) <- meta.properties) {
+    val props = mutable.HashMap.empty[QName, XdmValue]
+    for ((key, value) <- meta.properties) {
       key match {
         case XProcConstants._serialization => Unit
         case XProcConstants._content_type =>
@@ -353,9 +358,22 @@ class DefaultXmlStep extends XmlStep {
         S9Api.configureSerializer(serializer, serialOpts)
 
         S9Api.serialize(config.config, node, serializer)
+      case _: XdmMap =>
+        serializeJson(context, source, metadata, output)
+      case _: XdmArray =>
+        serializeJson(context, source, metadata, output)
       case _ =>
         throw XProcException.xiUnexpectedItem(source.toString, context.location)
     }
+  }
+
+  private def serializeJson(context: StaticContext, source: Any, metadata: XProcMetadata, output: OutputStream): Unit = {
+    val expr = new XProcXPathExpression(context, "serialize($map, map {\"method\": \"json\"})")
+    val bindingsMap = mutable.HashMap.empty[String, Message]
+    val vmsg = new XdmValueItemMessage(source.asInstanceOf[XdmValue], XProcMetadata.TEXT, context)
+    bindingsMap.put("{}map", vmsg)
+    val smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+    output.write(smsg.item.toString.getBytes())
   }
 
   def resolveURI(baseURI: URI, relative: String): URI = {

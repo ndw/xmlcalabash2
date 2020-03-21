@@ -197,7 +197,7 @@ object S9Api {
           val key = new QName(qvalue.getPrefix, qvalue.getNamespaceURI, qvalue.getLocalName)
           map = map.put(new XdmAtomicValue(key), XdmValue.wrap(pair.value))
         case _ =>
-          // FIXME: not sure this works (given that it doesn't work for QNameValues
+          // FIXME: not sure this works (given that it doesn't work for QNameValues)
           map = map.put(pair.key.asInstanceOf[XdmAtomicValue], XdmValue.wrap(pair.value))
       }
     }

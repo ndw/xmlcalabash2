@@ -302,7 +302,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
       }
 
       if (ctype.isDefined && !ctype.get.allowed(mtypes)) {
-        throw XProcException.xsBadInputMediaType(ctype.get, mtypes, staticContext.location)
+        throw XProcException.xdBadInputMediaType(ctype.get, mtypes, staticContext.location)
       }
     }
 

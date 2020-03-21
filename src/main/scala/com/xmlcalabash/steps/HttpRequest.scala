@@ -1,36 +1,29 @@
 package com.xmlcalabash.steps
 
-import java.io.{InputStream, UnsupportedEncodingException}
+import java.io.ByteArrayOutputStream
 import java.net.URI
 import java.time.Instant
 import java.time.format.{DateTimeFormatter, DateTimeParseException}
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.jafpl.messages.Message
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
+import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
-import com.xmlcalabash.util.xc.Errors
-import com.xmlcalabash.util.{CachingErrorListener, MIMEReader, MediaType}
-import javax.xml.transform.dom.DOMSource
-import javax.xml.transform.sax.SAXSource
-import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmMap, XdmValue}
-import nu.validator.htmlparser.common.XmlViolationPolicy
-import nu.validator.htmlparser.dom.HtmlDocumentBuilder
+import com.xmlcalabash.util.{MIMEReader, MediaType}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmValue}
+import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
+import org.apache.http.client.CredentialsProvider
 import org.apache.http.client.config.{CookieSpecs, RequestConfig}
-import org.apache.http.client.methods.{HttpGet, HttpPost, HttpUriRequest}
+import org.apache.http.client.methods.{HttpGet, HttpPost, HttpRequestBase}
 import org.apache.http.client.protocol.HttpClientContext
-import org.apache.http.entity.{ContentType, StringEntity}
-import org.apache.http.impl.client.{HttpClientBuilder, StandardHttpRequestRetryHandler}
-import org.apache.http.util.ByteArrayBuffer
-import org.apache.http.{Consts, Header, HttpResponse}
-import org.xml.sax.helpers.XMLReaderFactory
-import org.xml.sax.{InputSource, SAXException}
+import org.apache.http.entity.ByteArrayEntity
+import org.apache.http.impl.auth.DigestScheme
+import org.apache.http.impl.client.{BasicCredentialsProvider, HttpClientBuilder, StandardHttpRequestRetryHandler}
+import org.apache.http.{Header, HttpResponse, ProtocolVersion}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -46,13 +39,34 @@ class HttpRequest() extends DefaultXmlStep {
   private var context: StaticContext = _
   private var href: URI = _
   private var method = ""
-  private var headers = mutable.HashMap.empty[String,String]
-  private var auth = mutable.HashMap.empty[String, XdmValue]
-  private var parameters = Map.empty[QName, XdmValue]
+  private val headers = mutable.HashMap.empty[String,String]
+  private val auth = mutable.HashMap.empty[String, XdmValue]
+  private val parameters = mutable.HashMap.empty[QName, XdmValue]
   private var assert = ""
   private var builder: HttpClientBuilder = _
   private var httpResult: HttpResponse = _
   private var finalURI: URI = _
+
+  // Parameters
+  private var httpVersion = Option.empty[ProtocolVersion]
+  private var overrideContentType = Option.empty[MediaType]
+  private var acceptMultipart = true
+  private var overrideContentEncoding = Option.empty[String]
+  private var permitExpiredSslCertificate = false
+  private var permitUntrustedSslCertificate = false
+  private var followRedirectCount = -1
+  private var timeout = 0
+  private var failOnTimeout = false
+  private var statusOnly = false
+  private var suppressCookies = false
+  private var sendBodyAnyway = false
+
+  // Authentication
+  private var username = Option.empty[String]
+  private var password = Option.empty[String]
+  private var authmethod = Option.empty[String]
+  private var sendauth = false
+  private var usercreds = Option.empty[UsernamePasswordCredentials]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCESEQ
   override def outputSpec: XmlPortSpecification = new XmlPortSpecification(
@@ -72,7 +86,7 @@ class HttpRequest() extends DefaultXmlStep {
     method = ""
     headers.clear()
     auth.clear()
-    parameters = Map.empty[QName, XdmValue]
+    parameters.clear()
     assert = ""
     builder = HttpClientBuilder.create()
     httpResult = null
@@ -135,7 +149,7 @@ class HttpRequest() extends DefaultXmlStep {
             throw new IllegalArgumentException("Headers is not a map(xs:string,xs:string)")
         }
       case `_parameters` =>
-        parameters = ValueParser.parseParameters(value, context)
+        parameters ++= ValueParser.parseParameters(value, context)
       case `_assert` =>
         assert = value.getUnderlyingValue.getStringValue
       case _ => Unit
@@ -145,6 +159,78 @@ class HttpRequest() extends DefaultXmlStep {
   override def run(ctx: StaticContext): Unit = {
     context = ctx
 
+    // Check parameters
+    for ((name, value) <- parameters) {
+      name match {
+        case XProcConstants._http_version =>
+          parameterHttpVersion(value)
+        case XProcConstants._override_content_type =>
+          parameterOverrideContentType(value)
+        case XProcConstants._accept_multipart =>
+          acceptMultipart = booleanParameter(name.getLocalName, value)
+        case XProcConstants._timeout =>
+          timeout = integerParameter(name.getLocalName, value)
+          if (timeout < 0) {
+            throw XProcException.xcHttpInvalidParameter(name.getLocalName, value.toString, location)
+          }
+        case XProcConstants._permit_expired_ssl_certificate =>
+          permitExpiredSslCertificate = booleanParameter(name.getLocalName, value)
+        case XProcConstants._permit_untrusted_ssl_certificate =>
+          permitUntrustedSslCertificate = booleanParameter(name.getLocalName, value)
+        case XProcConstants._override_content_encoding =>
+          overrideContentEncoding = Some(stringParameter(name.getLocalName, value))
+        case XProcConstants._follow_redirect =>
+          followRedirectCount = integerParameter(name.getLocalName, value)
+        case XProcConstants._fail_on_timeout =>
+          failOnTimeout = booleanParameter(name.getLocalName, value)
+        case XProcConstants._status_only =>
+          statusOnly = booleanParameter(name.getLocalName, value)
+        case XProcConstants._suppress_cookies =>
+          suppressCookies = booleanParameter(name.getLocalName, value)
+        case XProcConstants._send_body_anyway =>
+          sendBodyAnyway = booleanParameter(name.getLocalName, value)
+        case _ =>
+          logger.debug(s"Unexpected http-request parameter: ${name.getLocalName}")
+      }
+    }
+
+    // Check auth
+    for ((name, value) <- auth) {
+      name match {
+        case "username" =>
+          username = Some(stringAuth(name, value))
+        case "password" =>
+          password = Some(stringAuth(name, value))
+        case "auth-method" =>
+          authmethod = Some(stringAuth(name, value).toLowerCase)
+        case "send-authorization" =>
+          sendauth = booleanAuth(name, value)
+        case _ =>
+          logger.debug(s"Unexpected http-request authentication parameter: $name")
+      }
+    }
+
+    if (password.isDefined && username.isEmpty) {
+      throw XProcException.xcHttpBadAuth("username must be specified if password is specified", location)
+    }
+
+    if (username.isDefined) {
+      if (password.isEmpty) {
+        password = Some("")
+      }
+      usercreds = Some(new UsernamePasswordCredentials(username.get, password.get))
+    }
+
+    if (username.isDefined && authmethod.isEmpty) {
+      throw XProcException.xcHttpBadAuth("auth-method must be specified", location)
+    }
+
+    if (authmethod.isDefined) {
+      if (authmethod.get != "basic" && authmethod.get != "digest") {
+        throw XProcException.xcHttpBadAuth("auth-method must be 'basic' or 'digest'", location)
+      }
+    }
+
     if (href.getScheme == "file") {
       doFile()
     } else if (href.getScheme == "http" || href.getScheme == "https") {
@@ -152,6 +238,116 @@ class HttpRequest() extends DefaultXmlStep {
     } else {
       throw new RuntimeException("Unsupported URI scheme: " + href.toASCIIString)
     }
+  }
+
+  private def parameterOverrideContentType(value: XdmValue): Unit = {
+    try {
+      overrideContentType = Some(MediaType.parse(value.toString))
+    } catch {
+      case _: Exception =>
+        throw XProcException.xcHttpInvalidParameter("override-content-type", value.toString, location)
+    }
+  }
+
+  private def parameterHttpVersion(value: XdmValue): Unit = {
+    if (!value.isInstanceOf[XdmAtomicValue]) {
+      throw XProcException.xcHttpInvalidParameter("http-version", value.toString, location)
+    }
+
+    val atomicValue = value.asInstanceOf[XdmAtomicValue]
+    val vtype = atomicValue.getTypeName
+    if (vtype != XProcConstants.xs_string) {
+      throw XProcException.xcHttpInvalidParameter("http-version", value.toString, location)
+    }
+
+    var majVer = 0
+    var minVer = 0
+
+    try {
+      val double = value.toString.toDouble // Ok, it's a number
+      var str = value.toString
+      if (str.indexOf(".") < 0) {
+        str += ".0"
+      }
+      val pos = str.indexOf(".")
+      majVer = str.substring(0, pos).toInt
+      minVer = str.substring(pos+1).toInt
+    } catch {
+      case _: Exception =>
+        throw XProcException.xcHttpInvalidParameter("http-version", value.toString, location)
+    }
+
+    httpVersion = Some(new ProtocolVersion(href.getScheme, minVer, majVer))
+  }
+
+  private def booleanParameter(name: String, value: XdmValue): Boolean = {
+    if (!value.isInstanceOf[XdmAtomicValue]) {
+      throw XProcException.xcHttpInvalidParameter(name, value.toString, location)
+    }
+
+    val atomicValue = value.asInstanceOf[XdmAtomicValue]
+    val vtype = atomicValue.getTypeName
+    if (vtype != XProcConstants.xs_boolean) {
+      throw XProcException.xcHttpInvalidParameter(name, value.toString, location)
+    }
+
+    atomicValue.getBooleanValue
+  }
+
+  private def integerParameter(name: String, value: XdmValue): Int = {
+    if (!value.isInstanceOf[XdmAtomicValue]) {
+      throw XProcException.xcHttpInvalidParameter(name, value.toString, location)
+    }
+
+    val atomicValue = value.asInstanceOf[XdmAtomicValue]
+    val vtype = atomicValue.getTypeName
+    if (vtype != XProcConstants.xs_integer) {
+      throw XProcException.xcHttpInvalidParameter(name, value.toString, location)
+    }
+
+    atomicValue.toString.toInt
+  }
+
+  private def stringParameter(name: String, value: XdmValue): String = {
+    if (!value.isInstanceOf[XdmAtomicValue]) {
+      throw XProcException.xcHttpInvalidParameter(name, value.toString, location)
+    }
+
+    val atomicValue = value.asInstanceOf[XdmAtomicValue]
+    val vtype = atomicValue.getTypeName
+    if (vtype != XProcConstants.xs_string) {
+      throw XProcException.xcHttpInvalidParameter(name, value.toString, location)
+    }
+
+    atomicValue.toString
+  }
+
+  private def stringAuth(name: String, value: XdmValue): String = {
+    if (!value.isInstanceOf[XdmAtomicValue]) {
+      throw XProcException.xcHttpInvalidAuth(name, value.toString, location)
+    }
+
+    val atomicValue = value.asInstanceOf[XdmAtomicValue]
+    val vtype = atomicValue.getTypeName
+    if (vtype != XProcConstants.xs_string) {
+      throw XProcException.xcHttpInvalidAuth(name, value.toString, location)
+    }
+
+    atomicValue.toString
+  }
+
+  private def booleanAuth(name: String, value: XdmValue): Boolean = {
+    if (!value.isInstanceOf[XdmAtomicValue]) {
+      throw XProcException.xcHttpInvalidAuth(name, value.toString, location)
+    }
+
+    val atomicValue = value.asInstanceOf[XdmAtomicValue]
+    val vtype = atomicValue.getTypeName
+    if (vtype != XProcConstants.xs_boolean) {
+      throw XProcException.xcHttpInvalidAuth(name, value.toString, location)
+    }
+
+    atomicValue.getBooleanValue
   }
 
   private def doHttp(): Unit = {
@@ -183,9 +379,28 @@ class HttpRequest() extends DefaultXmlStep {
     builder.setRetryHandler(new StandardHttpRequestRetryHandler(3, false))
     // FIXME: deal with proxy
 
+    var provider = Option.empty[CredentialsProvider]
+    if (usercreds.isDefined) {
+      if (authmethod.get == "basic") {
+        val basic = new BasicCredentialsProvider()
+        basic.setCredentials(AuthScope.ANY, usercreds.get)
+        provider = Some(basic)
+      } else { // digest
+        throw new UnsupportedOperationException("Can't handle digest auth yet")
+      }
+    }
+
+    if (provider.isDefined) {
+      builder.setDefaultCredentialsProvider(provider.get)
+    }
     val httpClient = builder.build()
+
     if (Option(httpClient).isEmpty) {
       throw new RuntimeException("HTTP requests have been disabled")
+    }
+
+    if (httpVersion.isDefined) {
+      httpRequest.setProtocolVersion(httpVersion.get)
     }
 
     httpResult = httpClient.execute(httpRequest, localContext)
@@ -218,9 +433,16 @@ class HttpRequest() extends DefaultXmlStep {
 
     val contentType = getFullContentType
     if (contentType.matches(MediaType.MULTIPART)) {
-      readMultipartEntity()
+      if (!acceptMultipart) {
+        throw XProcException.xcHttpMultipartForbidden(location)
+      }
+      if (!statusOnly) {
+        readMultipartEntity()
+      }
     } else {
-      readSinglepartEntity()
+      if (!statusOnly) {
+        readSinglepartEntity()
+      }
     }
   }
 
@@ -228,7 +450,16 @@ class HttpRequest() extends DefaultXmlStep {
     val stream = httpResult.getEntity.getContent
     val contentType = getFullContentType
     val request = new DocumentRequest(finalURI, contentType, location)
-    val result = config.documentManager.parse(request, stream)
+    val result = try {
+      config.documentManager.parse(request, stream)
+    } catch {
+      case ex: Exception =>
+        if (overrideContentType.isDefined) {
+          throw XProcException.xcHttpCantInterpret(ex.getMessage, location)
+        } else {
+          throw ex
+        }
+    }
 
     val meta = entityMetadata()
 
@@ -289,6 +520,10 @@ class HttpRequest() extends DefaultXmlStep {
   }
 
   private def getFullContentType: MediaType = {
+    if (overrideContentType.isDefined) {
+      return overrideContentType.get
+    }
+
     val ctype = httpResult.getLastHeader("Content-Type")
     if (Option(ctype).isEmpty) {
       return MediaType.OCTET_STREAM
@@ -333,8 +568,13 @@ class HttpRequest() extends DefaultXmlStep {
         }
 
         if (key == XProcConstants._content_type) {
-          ctype = MediaType.parse(header.getValue).discardParams(List("charset"))
-          value = new XdmAtomicValue(ctype.toString)
+          if (overrideContentType.isDefined) {
+            ctype = overrideContentType.get
+            value = new XdmAtomicValue(overrideContentType.get.toString)
+          } else {
+            ctype = MediaType.parse(header.getValue).discardParams(List("charset"))
+            value = new XdmAtomicValue(ctype.toString)
+          }
         }
 
         props.put(key, value)
@@ -360,23 +600,92 @@ class HttpRequest() extends DefaultXmlStep {
     report.put(new XdmAtomicValue("headers"), headers)
   }
 
-  private def doGet(): HttpUriRequest = {
-    val method = new HttpGet(href)
-    // FIXME: deal with headers
-    method
+  private def normalizedHeaders: Map[String,String] = {
+    val normHeaders = mutable.HashMap.empty[String,String]
+
+    for ((name,value) <- headers) {
+      if (normHeaders.contains(name.toLowerCase)) {
+        throw XProcException.xcHttpDuplicateHeader(name.toLowerCase, location)
+      }
+      normHeaders.put(name.toLowerCase, value)
+    }
+    normHeaders.clear()
+
+    if (sources.size == 1) {
+      if (sourceMeta.head.property("content-type").isDefined) {
+        normHeaders.put("content-type", sourceMeta.head.property("content-type").get.toString)
+      }
+    }
+
+    for ((name,value) <- headers) {
+      normHeaders.put(name.toLowerCase, value)
+    }
+
+    if (sources.size == 1) {
+      for ((name, value) <- sourceMeta.head.properties) {
+        if (name.getNamespaceURI == XProcConstants.ns_chttp) {
+          val key = name.getLocalName.toLowerCase
+          if (!normHeaders.contains(key)) {
+            normHeaders.put(name.getLocalName, value.toString)
+          }
+        }
+      }
+    }
+
+    normHeaders.toMap
   }
 
-  private def doPost(): HttpUriRequest = {
-    val method = new HttpPost(href)
-    // FIXME: deal with headers
+  private def doGet(): HttpRequestBase = {
+    val request = new HttpGet(href)
+    for ((name,value) <- normalizedHeaders) {
+      request.addHeader(name, value)
+    }
+    request
+  }
 
-    method.addHeader("content-type", "application/xml")
-    method.setEntity(new StringEntity("<doc/>"))
+  private def doPost(): HttpRequestBase = {
+    val normHeaders = normalizedHeaders
+    val contentType = if (normHeaders.contains("content-type")) {
+      if (sources.size > 1 && !normHeaders("content-type").startsWith("multipart/")) {
+        throw XProcException.xcMultipartRequired(normHeaders("content-type"), location)
+      }
+      normHeaders("content-type")
+    } else {
+      if (sources.size > 1) {
+        "multipart/mixed"
+      } else {
+        "application/octet-stream"
+      }
+    }
 
-    method
+    if (contentType.startsWith("multipart/")) {
+      return doMultipartPost()
+    }
+
+    val request = new HttpPost(href)
+    for ((name,value) <- normHeaders) {
+      request.addHeader(name, value)
+    }
+
+    if (sources.nonEmpty) {
+      val os = new ByteArrayOutputStream()
+      serialize(context, sources.head, sourceMeta.head, os)
+      os.close()
+      request.setEntity(new ByteArrayEntity(os.toByteArray))
+    }
+
+    request
+  }
+
+  private def doMultipartPost(): HttpRequestBase = {
+    val request = new HttpPost(href)
+    for ((name,value) <- normalizedHeaders) {
+      request.addHeader(name, value)
+    }
+    throw new UnsupportedOperationException("Multipart post is not implemented yet")
   }
 
   private def doFile(): Unit = {
-    throw new RuntimeException("Unsupported URI scheme: " + href.toASCIIString)
+    throw new UnsupportedOperationException("Unsupported URI scheme: " + href.toASCIIString)
   }
 }

@@ -147,9 +147,12 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
             props.put(XProcConstants._base_uri, new XdmAtomicValue(href.toASCIIString))
           }
           props.put(XProcConstants._content_type, new XdmAtomicValue(contentType.toString))
+
+          /* this causes problems if you turn around and POST this document (content-length can't be specified twice)
           if (responseEntity.get.getContentLength >= 0) {
             props.put(XProcConstants._content_length, new XdmAtomicValue(responseEntity.get.getContentLength))
           }
+           */
 
           for (header <- response.getAllHeaders) {
             val name = header.getName.toLowerCase
