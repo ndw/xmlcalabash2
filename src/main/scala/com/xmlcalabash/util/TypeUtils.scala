@@ -147,7 +147,7 @@ class TypeUtils(val processor: Processor, val context: StaticContext) {
   }
 
   def castAtomicAs(value: XdmAtomicValue, xsdtype: ItemType, context: StaticContext): XdmAtomicValue = {
-    if ((xsdtype == ItemType.UNTYPED_ATOMIC) || (xsdtype == ItemType.STRING)) {
+    if ((xsdtype == ItemType.UNTYPED_ATOMIC) || (xsdtype == ItemType.STRING || (xsdtype == ItemType.ANY_ITEM))) {
       return value
     }
 

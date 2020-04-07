@@ -12,10 +12,10 @@ import net.sf.saxon.event.{PipelineConfiguration, Receiver}
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.functions.ResolveURI
 import net.sf.saxon.lib.{ResultDocumentResolver, SaxonOutputKeys}
-import net.sf.saxon.s9api.{Axis, Destination, MessageListener, QName, RawDestination, ValidationMode, XdmAtomicValue, XdmDestination, XdmEmptySequence, XdmItem, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, Destination, MessageListener, QName, RawDestination, ValidationMode, XdmAtomicValue, XdmDestination, XdmEmptySequence, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.serialize.SerializationProperties
+import net.sf.saxon.trans.XPathException
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -136,32 +136,42 @@ class Xslt extends DefaultXmlStep {
     }
     val transformer = exec.load30()
 
-    //transformer.setStylesheetParameters(parameters)
+    transformer.setStylesheetParameters(mapAsJavaMap(parameters))
 
-    var inputSelection = Option.empty[XdmValue]
-    if (globalContextItem.isEmpty && document.isDefined) {
+    val inputSelection = if (document.isDefined) {
       val iter = inputSequence.iterator.asJava
-      inputSelection = Some(new XdmValue(iter))
+      new XdmValue(iter)
+    } else {
+      XdmEmptySequence.getInstance
     }
 
     transformer.setMessageListener(new CatchMessages())
+
     //transformer.setResultDocumentHandler(new ResultDocumentHandler())
     transformer.getUnderlyingController.setResultDocumentResolver(new MyResultDocumentResolver)
 
     //transformer.setDestination(new MyDestination(outputProperties))
 
     if (initialMode.isDefined) {
-      transformer.setInitialMode(initialMode.get)
+      try {
+        transformer.setInitialMode(initialMode.get)
+      } catch {
+        case iae: IllegalArgumentException =>
+          throw XProcException.xcXsltNoMode(initialMode.get, iae.getMessage, location)
+      }
     }
-
-    /*
-    if (templateName.isDefined) {
-      transformer.setInitialTemplate(templateName.get)
-    }
-     */
 
     if (outputBaseURI.isDefined) {
-      transformer.setBaseOutputURI(outputBaseURI.get)
+      if (staticContext.baseURI.isDefined) {
+        transformer.setBaseOutputURI(staticContext.baseURI.get.resolve(outputBaseURI.get).toASCIIString)
+      } else {
+        transformer.setBaseOutputURI(outputBaseURI.get)
+      }
+    } else {
+      if (inputSequence.nonEmpty && inputSequence.head.isInstanceOf[XdmNode]) {
+        val base = inputSequence.head.asInstanceOf[XdmNode].getBaseURI
+        transformer.setBaseOutputURI(base.toASCIIString)
+      }
     }
 
     transformer.setSchemaValidationMode(ValidationMode.DEFAULT)
@@ -171,17 +181,11 @@ class Xslt extends DefaultXmlStep {
       val destination = new MyDestination(outputProperties)
       if (globalContextItem.isDefined) {
         transformer.setGlobalContextItem(globalContextItem.get.asInstanceOf[XdmItem])
-        if (templateName.isDefined) {
-          transformer.callTemplate(templateName.get, destination)
-        } else {
-          transformer.applyTemplates(globalContextItem.get, destination)
-        }
+      }
+      if (templateName.isDefined) {
+        transformer.callTemplate(templateName.get, destination)
       } else {
-        if (inputSelection.isDefined) {
-          transformer.applyTemplates(inputSelection.get, destination)
-        } else {
-          transformer.applyTemplates(XdmEmptySequence.getInstance, destination)
-        }
+        transformer.applyTemplates(inputSelection, destination)
       }
     } catch {
       case sae: Exception =>
@@ -190,11 +194,29 @@ class Xslt extends DefaultXmlStep {
           throw goesBang.get
         }
         // Runtime ones are not
-        if (sae.getMessage.contains("terminated by xsl:message")) {
-          throw XProcException.xcXsltUserTermination(sae.getMessage, location)
+        val cause = if (Option(sae.getCause).isDefined) {
+          sae.getCause match {
+            case xe: XPathException =>
+              Some(new QName(xe.getErrorCodeNamespace, xe.getErrorCodeLocalPart))
+            case _ =>
+              None
+          }
         } else {
-          throw XProcException.xcXsltRuntimeError(sae.getMessage, location)
+          None
         }
+
+        if (cause.isDefined) {
+          cause.get match {
+            case XProcConstants.err_XTMM9000 =>
+              throw XProcException.xcXsltUserTermination(sae.getMessage, location)
+            case XProcConstants.err_XTDE0040 =>
+              throw XProcException.xcXsltNoTemplate(templateName.get, location)
+            case _ =>
+              throw XProcException.xcXsltRuntimeError(cause.get, sae.getMessage, location)
+          }
+        }
+
+        throw XProcException.xcXsltRuntimeError(XProcConstants.err_XC0095, sae.getMessage, location)
     }
 
     // FIXME: try/finally restore the output URI resolver and collection URI finder
@@ -204,11 +226,19 @@ class Xslt extends DefaultXmlStep {
         val iter = raw.getXdmValue.iterator()
         while (iter.hasNext) {
           val next = iter.next()
-          consume(next, "result", outputProperties.toMap)
+          val prop = outputProperties.clone()
+          next match {
+            case node: XdmNode =>
+              prop(XProcConstants._base_uri) = new XdmAtomicValue(node.getBaseURI)
+            case _ => Unit
+          }
+          consume(next, "result", prop.toMap)
         }
       case xdm: XdmDestination =>
         val tree = xdm.getXdmNode
-        consume(tree, "result",  outputProperties.toMap)
+        val prop = outputProperties.clone()
+        prop(XProcConstants._base_uri) = new XdmAtomicValue(tree.getBaseURI)
+        consume(tree, "result",  prop.toMap)
     }
 
     for ((uri, destination) <- secondaryResults) {
@@ -217,10 +247,12 @@ class Xslt extends DefaultXmlStep {
         case raw: RawDestination =>
           val iter = raw.getXdmValue.iterator()
           while (iter.hasNext) {
-            consume(iter.next(), "secondary", props + Tuple2(XProcConstants._base_uri, new XdmAtomicValue(uri)))
+            val next = iter.next()
+            consume(next, "secondary", props + Tuple2(XProcConstants._base_uri, new XdmAtomicValue(uri)))
           }
         case xdm: XdmDestination =>
-          consume(xdm.getXdmNode, "secondary", props + Tuple2(XProcConstants._base_uri, new XdmAtomicValue(uri)))
+          val tree = xdm.getXdmNode
+          consume(tree, "secondary", props + Tuple2(XProcConstants._base_uri, new XdmAtomicValue(uri)))
       }
     }
   }
@@ -230,9 +262,26 @@ class Xslt extends DefaultXmlStep {
     goesBang = None
   }
 
-  private def consume(item: XdmItem, port: String, prop: Map[QName,XdmValue]): Unit = {
+  private def consume(item: XdmItem, port: String, sprop: Map[QName,XdmValue]): Unit = {
     var outputItem = item
-    var ctype = MediaType.JSON // items are JSON by default
+    var ctype = Option.empty[MediaType]
+
+    var serialization = new XdmMap()
+    for ((key, value) <- sprop) {
+      serialization = serialization.put(new XdmAtomicValue(key), value)
+    }
+
+    val dprop = mutable.HashMap.empty[QName, XdmValue]
+    dprop.put(XProcConstants._serialization, serialization)
+
+    if (sprop.contains(XProcConstants._method)) {
+      sprop(XProcConstants._method).toString match {
+        case "html" => ctype = Some(MediaType.HTML)
+        case "xhtml" => ctype = Some(MediaType.XHTML)
+        case "text" => ctype = Some(MediaType.TEXT)
+        case _ => Unit
+      }
+    }
 
     item match {
       case node: XdmNode =>
@@ -242,15 +291,21 @@ class Xslt extends DefaultXmlStep {
             for (child <- S9Api.axis(node, Axis.CHILD)) {
               textOnly = textOnly && child.getNodeKind == XdmNodeKind.TEXT
             }
-            ctype = if (textOnly) {
-              MediaType.TEXT
-            } else {
-              MediaType.XML
+            if (ctype.isEmpty) {
+              ctype = if (textOnly) {
+                Some(MediaType.TEXT)
+              } else {
+                Some(MediaType.XML)
+              }
             }
           case XdmNodeKind.TEXT =>
-            ctype = MediaType.TEXT // or nodes
+            if (ctype.isEmpty) {
+              ctype = Some(MediaType.TEXT)
+            }
           case _ =>
-            ctype = MediaType.XML // of any sort
+            if (ctype.isEmpty) {
+              ctype = Some(MediaType.XML)
+            }
         }
 
         if (node.getNodeKind != XdmNodeKind.DOCUMENT) {
@@ -262,12 +317,13 @@ class Xslt extends DefaultXmlStep {
         }
 
       case _: XdmAtomicValue =>
-        // nop; atomic values are JSON
+        ctype = Some(MediaType.JSON)
 
       // explicitly not catching _ because I want anything else to fail
     }
 
-    consumer.get.receive(port, outputItem, new XProcMetadata(ctype, prop))
+    val mtype = new XProcMetadata(ctype, dprop.toMap)
+    consumer.get.receive(port, outputItem, mtype)
   }
 
   private class MyDestination(map: mutable.HashMap[QName,XdmValue]) extends RawDestination {

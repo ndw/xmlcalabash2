@@ -46,7 +46,13 @@ class DataSource(override val config: XMLCalabashConfig) extends Artifact(config
     loader.addChild(woutput)
 
     val step = if (parent.get.isInstanceOf[WithInput]) {
-      parent.get.parent.get
+      val p = parent.get.parent.get
+      // Hack for inline inside with-option
+      if (p.isInstanceOf[WithOption]) {
+        p.parent.get
+      } else {
+        p
+      }
     } else {
       parent.get
     }

@@ -272,4 +272,9 @@ object XProcConstants {
   val p_inline_expand_text = new QName("p", ns_p, "inline-expand-text")
   val p_message = new QName("p", ns_p, "message")
   val p_exclude_inline_prefixes = new QName( "p", ns_p,"exclude-inline-prefixes")
+
+  val err_XC0095 = new QName(ns_err, "XC0095")
+  val err_XTMM9000 = new QName(ns_xqt_errors, "XTMM9000")
+  val err_XTDE0040 = new QName(ns_xqt_errors, "XTDE0040")
+
 }

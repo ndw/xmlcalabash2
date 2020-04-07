@@ -236,6 +236,7 @@ object XProcException {
   }
 
   def xcHttpBadAuth(msg: String, location: Option[Location]): XProcException = stepError(3, msg, location)
+  def xcXsltNoMode(mode: QName, msg: String, location: Option[Location]): XProcException = stepError(8, List(mode, msg), location)
   def xcXQueryVersionNotAvailable(version: String, location: Option[Location]): XProcException = stepError(9, version, location)
   def xcBadRenamePI(name: QName, location: Option[Location]): XProcException = stepError(13, name, location)
   def xcInvalidSelection(pattern: String, nodeType: String, location: Option[Location]): XProcException = stepError(23, List(pattern, nodeType), location)
@@ -254,6 +255,7 @@ object XProcException {
   def xcCannotStore(href: URI, location: Option[Location]): XProcException = stepError(50, href, location)
   def xcNotSchemaValid(href: String, message: String, location: Option[Location]): XProcException = stepError(53, List(href, message), location)
   def xcNotSchemaValid(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = stepError(53, List(href, line, col, message), location)
+  def xcXsltNoTemplate(template: QName, location: Option[Location]): XProcException = stepError(56, template, location)
   def xcCannotAddNamespaces(name: QName, location: Option[Location]): XProcException = stepError(59, name, location)
   def xcUnsupportedUuidVersion(version: Integer, location: Option[Location]): XProcException = stepError(60, version.toString, location)
   def xcContentTypeNotAllowed(location: Option[Location]): XProcException = stepError(69, location)
@@ -272,7 +274,7 @@ object XProcException {
   def xcMultipleTopLevelElements(location: Option[Location]): XProcException = stepError(91, location)
   def xcAttributeNameCollision(qname: QName, location: Option[Location]): XProcException = stepError(92, qname, location)
   def xcXsltCompileError(msg: String, location: Option[Location]): XProcException = stepError(93, msg, location)
-  def xcXsltRuntimeError(msg: String, location: Option[Location]): XProcException = stepError(95, msg, location)
+  def xcXsltRuntimeError(code: QName, msg: String, location: Option[Location]): XProcException = stepError(95, msg, location)
   def xcXsltUserTermination(msg: String, location: Option[Location]): XProcException = stepError(96, msg, location)
   def xcSortError(msg: String, location: Option[Location]): XProcException = stepError(98, msg, location)
   def xcSortKeyError(location: Option[Location]): XProcException = stepError(99, location)

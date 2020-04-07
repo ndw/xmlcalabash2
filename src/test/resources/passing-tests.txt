@@ -1,4 +1,3 @@
-EOF
 ab-add-attribute-001.xml
 ab-add-attribute-002.xml
 ab-add-attribute-003.xml

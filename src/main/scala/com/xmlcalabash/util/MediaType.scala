@@ -16,6 +16,7 @@ object MediaType {
   val JSON = new MediaType("application", "json")
   val YAML = new MediaType("application", "vnd.yaml")
   val HTML = new MediaType("text", "html")
+  val XHTML = new MediaType("application", "xhtml+xml")
   val ZIP = new MediaType("application", "zip")
   val MULTIPART = new MediaType("multipart", "*")
 
