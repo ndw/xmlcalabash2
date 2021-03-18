@@ -1,57 +1,70 @@
 package com.xmlcalabash.parsers
 
-// This file was generated on Wed Aug 30, 2017 07:49 (UTC-05) by REx v5.45 which is Copyright (c) 1979-2017 by Gunther Rademacher <grd@gmx.net>
-// REx command line: xpath-31.ebnf -ll 3 -scala -tree
+// This file was generated on Thu Mar 18, 2021 17:28 (UTC) by REx v5.52 which is Copyright (c) 1979-2020 by Gunther Rademacher <grd@gmx.net>
+// REx command line: XPath31.ebnf -ll 3 -scala -tree
 
-import scala.collection.mutable.ArrayBuffer
+import collection.mutable.ArrayBuffer
 
-class XPath31() {
-  def this(string: String, eh: XPath31.EventHandler) {
+class XPath31 {
+
+  def this(string: String, eh: XPath31.EventHandler) = {
     this
     initialize(string, eh)
   }
 
-  def initialize(string: String, eh: XPath31.EventHandler) {
-    eventHandler = eh
-    input = string
-    size = input.length
+  def initialize(source: String, parsingEventHandler: XPath31.EventHandler): Unit = {
+    eventHandler = parsingEventHandler
+    input = source
+    size = source.length
     reset(0, 0, 0)
   }
 
-  def reset(l: Int, b: Int, e: Int) {
-    b0 = b; e0 = b
+  def getInput: String = {
+    return input
+  }
+
+  def getTokenOffset: Int = {
+    return b0
+  }
+
+  def getTokenEnd: Int = {
+    return e0
+  }
+
+  def reset(l: Int, b: Int, e: Int): Unit = {
+            b0 = b; e0 = b
     l1 = l; b1 = b; e1 = e
-    l2 = 0
-    l3 = 0
+    l2 = 0; b2 = 0; e2 = 0
+    l3 = 0; b3 = 0; e3 = 0
     end = e
     eventHandler.reset(input)
   }
 
-  def reset {
+  def reset: Unit = {
     reset(0, 0, 0)
   }
 
-  def parse_XPath {
+  def parse_XPath: Unit = {
     eventHandler.startNonterminal("XPath", e0)
     lookahead1W(53)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_Expr
     consume(11)                     // EOF
     eventHandler.endNonterminal("XPath", e0)
   }
 
-  private def parse_ParamList {
+  private def parse_ParamList: Unit = {
     eventHandler.startNonterminal("ParamList", e0)
     parse_Param
     var c1 = true
@@ -70,19 +83,19 @@ class XPath31() {
     eventHandler.endNonterminal("ParamList", e0)
   }
 
-  private def parse_Param {
+  private def parse_Param: Unit = {
     eventHandler.startNonterminal("Param", e0)
     consume(15)                     // '$'
     lookahead1W(42)                 // URIQualifiedName | QName^Token | S^WS | '(:' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_EQName
     lookahead1W(21)                 // S^WS | '(:' | ')' | ',' | 'as'
@@ -93,27 +106,27 @@ class XPath31() {
     eventHandler.endNonterminal("Param", e0)
   }
 
-  private def parse_FunctionBody {
+  private def parse_FunctionBody: Unit = {
     eventHandler.startNonterminal("FunctionBody", e0)
     parse_EnclosedExpr
     eventHandler.endNonterminal("FunctionBody", e0)
   }
 
-  private def parse_EnclosedExpr {
+  private def parse_EnclosedExpr: Unit = {
     eventHandler.startNonterminal("EnclosedExpr", e0)
     consume(104)                    // '{'
     lookahead1W(56)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union' | '}'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union' | '}'
     if (l1 != 107) {                // '}'
       whitespace
       parse_Expr
@@ -122,7 +135,7 @@ class XPath31() {
     eventHandler.endNonterminal("EnclosedExpr", e0)
   }
 
-  private def parse_Expr {
+  private def parse_Expr: Unit = {
     eventHandler.startNonterminal("Expr", e0)
     parse_ExprSingle
     var c1 = true
@@ -133,17 +146,17 @@ class XPath31() {
       else {
         consume(21)                 // ','
         lookahead1W(53)             // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-        // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-        // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-        // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-        // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_ExprSingle
       }
@@ -151,65 +164,65 @@ class XPath31() {
     eventHandler.endNonterminal("Expr", e0)
   }
 
-  private def parse_ExprSingle {
+  private def parse_ExprSingle: Unit = {
     eventHandler.startNonterminal("ExprSingle", e0)
     l1 match {
-      case 70 =>                      // 'if'
-        lookahead2W(34)               // S^WS | EOF | '!' | '!=' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' |
-      // ':' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' |
-      // 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
-      // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
-      // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
-      case 61                         // 'every'
-           | 65                         // 'for'
-           | 77                         // 'let'
-           | 96 =>                      // 'some'
-        lookahead2W(40)               // S^WS | EOF | '!' | '!=' | '#' | '$' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' |
-      // '/' | '//' | ':' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' |
-      // ']' | 'and' | 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' |
-      // 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' |
-      // 'or' | 'return' | 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
-      case _ =>
-        lk = l1
+    case 70 =>                      // 'if'
+      lookahead2W(34)               // S^WS | EOF | '!' | '!=' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' |
+                                    // ':' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' |
+                                    // 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
+                                    // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
+                                    // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
+    case 61                         // 'every'
+       | 65                         // 'for'
+       | 77                         // 'let'
+       | 96 =>                      // 'some'
+      lookahead2W(40)               // S^WS | EOF | '!' | '!=' | '#' | '$' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' |
+                                    // '/' | '//' | ':' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' |
+                                    // ']' | 'and' | 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' |
+                                    // 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' |
+                                    // 'or' | 'return' | 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
+    case _ =>
+      lk = l1
     }
     lk match {
-      case 1985 =>                    // 'for' '$'
-        parse_ForExpr
-      case 1997 =>                    // 'let' '$'
-        parse_LetExpr
-      case 1981                       // 'every' '$'
-           | 2016 =>                    // 'some' '$'
-        parse_QuantifiedExpr
-      case 2118 =>                    // 'if' '('
-        parse_IfExpr
-      case _ =>
-        parse_OrExpr
+    case 1985 =>                    // 'for' '$'
+      parse_ForExpr
+    case 1997 =>                    // 'let' '$'
+      parse_LetExpr
+    case 1981                       // 'every' '$'
+       | 2016 =>                    // 'some' '$'
+      parse_QuantifiedExpr
+    case 2118 =>                    // 'if' '('
+      parse_IfExpr
+    case _ =>
+      parse_OrExpr
     }
     eventHandler.endNonterminal("ExprSingle", e0)
   }
 
-  private def parse_ForExpr {
+  private def parse_ForExpr: Unit = {
     eventHandler.startNonterminal("ForExpr", e0)
     parse_SimpleForClause
     consume(91)                     // 'return'
     lookahead1W(53)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_ExprSingle
     eventHandler.endNonterminal("ForExpr", e0)
   }
 
-  private def parse_SimpleForClause {
+  private def parse_SimpleForClause: Unit = {
     eventHandler.startNonterminal("SimpleForClause", e0)
     consume(65)                     // 'for'
     lookahead1W(2)                  // S^WS | '$' | '(:'
@@ -230,62 +243,62 @@ class XPath31() {
     eventHandler.endNonterminal("SimpleForClause", e0)
   }
 
-  private def parse_SimpleForBinding {
+  private def parse_SimpleForBinding: Unit = {
     eventHandler.startNonterminal("SimpleForBinding", e0)
     consume(15)                     // '$'
     lookahead1W(42)                 // URIQualifiedName | QName^Token | S^WS | '(:' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_VarName
     lookahead1W(10)                 // S^WS | '(:' | 'in'
     consume(71)                     // 'in'
     lookahead1W(53)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_ExprSingle
     eventHandler.endNonterminal("SimpleForBinding", e0)
   }
 
-  private def parse_LetExpr {
+  private def parse_LetExpr: Unit = {
     eventHandler.startNonterminal("LetExpr", e0)
     parse_SimpleLetClause
     consume(91)                     // 'return'
     lookahead1W(53)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_ExprSingle
     eventHandler.endNonterminal("LetExpr", e0)
   }
 
-  private def parse_SimpleLetClause {
+  private def parse_SimpleLetClause: Unit = {
     eventHandler.startNonterminal("SimpleLetClause", e0)
     consume(77)                     // 'let'
     lookahead1W(2)                  // S^WS | '$' | '(:'
@@ -306,76 +319,76 @@ class XPath31() {
     eventHandler.endNonterminal("SimpleLetClause", e0)
   }
 
-  private def parse_SimpleLetBinding {
+  private def parse_SimpleLetBinding: Unit = {
     eventHandler.startNonterminal("SimpleLetBinding", e0)
     consume(15)                     // '$'
     lookahead1W(42)                 // URIQualifiedName | QName^Token | S^WS | '(:' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_VarName
     lookahead1W(8)                  // S^WS | '(:' | ':='
     consume(30)                     // ':='
     lookahead1W(53)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_ExprSingle
     eventHandler.endNonterminal("SimpleLetBinding", e0)
   }
 
-  private def parse_QuantifiedExpr {
+  private def parse_QuantifiedExpr: Unit = {
     eventHandler.startNonterminal("QuantifiedExpr", e0)
     l1 match {
-      case 96 =>                      // 'some'
-        consume(96)                   // 'some'
-      case _ =>
-        consume(61)                   // 'every'
+    case 96 =>                      // 'some'
+      consume(96)                   // 'some'
+    case _ =>
+      consume(61)                   // 'every'
     }
     lookahead1W(2)                  // S^WS | '$' | '(:'
     consume(15)                     // '$'
     lookahead1W(42)                 // URIQualifiedName | QName^Token | S^WS | '(:' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_VarName
     lookahead1W(10)                 // S^WS | '(:' | 'in'
     consume(71)                     // 'in'
     lookahead1W(53)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_ExprSingle
     var c1 = true
@@ -388,108 +401,108 @@ class XPath31() {
         lookahead1W(2)              // S^WS | '$' | '(:'
         consume(15)                 // '$'
         lookahead1W(42)             // URIQualifiedName | QName^Token | S^WS | '(:' | 'ancestor' | 'ancestor-or-self' |
-        // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-        // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-        // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_VarName
         lookahead1W(10)             // S^WS | '(:' | 'in'
         consume(71)                 // 'in'
         lookahead1W(53)             // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-        // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-        // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-        // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-        // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_ExprSingle
       }
     }
     consume(92)                     // 'satisfies'
     lookahead1W(53)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_ExprSingle
     eventHandler.endNonterminal("QuantifiedExpr", e0)
   }
 
-  private def parse_IfExpr {
+  private def parse_IfExpr: Unit = {
     eventHandler.startNonterminal("IfExpr", e0)
     consume(70)                     // 'if'
     lookahead1W(3)                  // S^WS | '(' | '(:'
     consume(16)                     // '('
     lookahead1W(53)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_Expr
     consume(18)                     // ')'
     lookahead1W(12)                 // S^WS | '(:' | 'then'
     consume(99)                     // 'then'
     lookahead1W(53)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_ExprSingle
     consume(58)                     // 'else'
     lookahead1W(53)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_ExprSingle
     eventHandler.endNonterminal("IfExpr", e0)
   }
 
-  private def parse_OrExpr {
+  private def parse_OrExpr: Unit = {
     eventHandler.startNonterminal("OrExpr", e0)
     parse_AndExpr
     var c1 = true
@@ -500,17 +513,17 @@ class XPath31() {
       else {
         consume(86)                 // 'or'
         lookahead1W(53)             // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-        // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-        // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-        // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-        // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_AndExpr
       }
@@ -518,7 +531,7 @@ class XPath31() {
     eventHandler.endNonterminal("OrExpr", e0)
   }
 
-  private def parse_AndExpr {
+  private def parse_AndExpr: Unit = {
     eventHandler.startNonterminal("AndExpr", e0)
     parse_ComparisonExpr
     var c1 = true
@@ -529,17 +542,17 @@ class XPath31() {
       else {
         consume(45)                 // 'and'
         lookahead1W(53)             // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-        // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-        // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-        // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-        // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_ComparisonExpr
       }
@@ -547,57 +560,57 @@ class XPath31() {
     eventHandler.endNonterminal("AndExpr", e0)
   }
 
-  private def parse_ComparisonExpr {
+  private def parse_ComparisonExpr: Unit = {
     eventHandler.startNonterminal("ComparisonExpr", e0)
     parse_StringConcatExpr
     if (l1 != 11                    // EOF
-      && l1 != 18                    // ')'
-      && l1 != 21                    // ','
-      && l1 != 27                    // ':'
-      && l1 != 42                    // ']'
-      && l1 != 45                    // 'and'
-      && l1 != 58                    // 'else'
-      && l1 != 86                    // 'or'
-      && l1 != 91                    // 'return'
-      && l1 != 92                    // 'satisfies'
-      && l1 != 107) {                // '}'
+     && l1 != 18                    // ')'
+     && l1 != 21                    // ','
+     && l1 != 27                    // ':'
+     && l1 != 42                    // ']'
+     && l1 != 45                    // 'and'
+     && l1 != 58                    // 'else'
+     && l1 != 86                    // 'or'
+     && l1 != 91                    // 'return'
+     && l1 != 92                    // 'satisfies'
+     && l1 != 107) {                // '}'
       l1 match {
-        case 60                       // 'eq'
-             | 67                       // 'ge'
-             | 68                       // 'gt'
-             | 76                       // 'le'
-             | 78                       // 'lt'
-             | 83 =>                    // 'ne'
-          whitespace
-          parse_ValueComp
-        case 32                       // '<<'
-             | 38                       // '>>'
-             | 74 =>                    // 'is'
-          whitespace
-          parse_NodeComp
-        case _ =>
-          whitespace
-          parse_GeneralComp
+      case 60                       // 'eq'
+         | 67                       // 'ge'
+         | 68                       // 'gt'
+         | 76                       // 'le'
+         | 78                       // 'lt'
+         | 83 =>                    // 'ne'
+        whitespace
+        parse_ValueComp
+      case 32                       // '<<'
+         | 38                       // '>>'
+         | 74 =>                    // 'is'
+        whitespace
+        parse_NodeComp
+      case _ =>
+        whitespace
+        parse_GeneralComp
       }
       lookahead1W(53)               // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-      // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-      // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-      // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-      // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-      // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-      // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-      // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-      // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-      // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-      // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-      // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
       whitespace
       parse_StringConcatExpr
     }
     eventHandler.endNonterminal("ComparisonExpr", e0)
   }
 
-  private def parse_StringConcatExpr {
+  private def parse_StringConcatExpr: Unit = {
     eventHandler.startNonterminal("StringConcatExpr", e0)
     parse_RangeExpr
     var c1 = true
@@ -608,17 +621,17 @@ class XPath31() {
       else {
         consume(106)                // '||'
         lookahead1W(53)             // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-        // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-        // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-        // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-        // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_RangeExpr
       }
@@ -626,57 +639,57 @@ class XPath31() {
     eventHandler.endNonterminal("StringConcatExpr", e0)
   }
 
-  private def parse_RangeExpr {
+  private def parse_RangeExpr: Unit = {
     eventHandler.startNonterminal("RangeExpr", e0)
     parse_AdditiveExpr
     if (l1 == 100) {                // 'to'
       consume(100)                  // 'to'
       lookahead1W(53)               // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-      // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-      // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-      // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-      // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-      // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-      // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-      // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-      // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-      // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-      // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-      // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
       whitespace
       parse_AdditiveExpr
     }
     eventHandler.endNonterminal("RangeExpr", e0)
   }
 
-  private def parse_AdditiveExpr {
+  private def parse_AdditiveExpr: Unit = {
     eventHandler.startNonterminal("AdditiveExpr", e0)
     parse_MultiplicativeExpr
     var c1 = true
     while (c1) {
       if (l1 != 20                  // '+'
-        && l1 != 22) {               // '-'
+       && l1 != 22) {               // '-'
         c1 = false
       }
       else {
         l1 match {
-          case 20 =>                  // '+'
-            consume(20)               // '+'
-          case _ =>
-            consume(22)               // '-'
+        case 20 =>                  // '+'
+          consume(20)               // '+'
+        case _ =>
+          consume(22)               // '-'
         }
         lookahead1W(53)             // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-        // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-        // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-        // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-        // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_MultiplicativeExpr
       }
@@ -684,40 +697,40 @@ class XPath31() {
     eventHandler.endNonterminal("AdditiveExpr", e0)
   }
 
-  private def parse_MultiplicativeExpr {
+  private def parse_MultiplicativeExpr: Unit = {
     eventHandler.startNonterminal("MultiplicativeExpr", e0)
     parse_UnionExpr
     var c1 = true
     while (c1) {
       if (l1 != 19                  // '*'
-        && l1 != 55                  // 'div'
-        && l1 != 69                  // 'idiv'
-        && l1 != 80) {               // 'mod'
+       && l1 != 55                  // 'div'
+       && l1 != 69                  // 'idiv'
+       && l1 != 80) {               // 'mod'
         c1 = false
       }
       else {
         l1 match {
-          case 19 =>                  // '*'
-            consume(19)               // '*'
-          case 55 =>                  // 'div'
-            consume(55)               // 'div'
-          case 69 =>                  // 'idiv'
-            consume(69)               // 'idiv'
-          case _ =>
-            consume(80)               // 'mod'
+        case 19 =>                  // '*'
+          consume(19)               // '*'
+        case 55 =>                  // 'div'
+          consume(55)               // 'div'
+        case 69 =>                  // 'idiv'
+          consume(69)               // 'idiv'
+        case _ =>
+          consume(80)               // 'mod'
         }
         lookahead1W(53)             // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-        // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-        // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-        // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-        // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_UnionExpr
       }
@@ -725,34 +738,34 @@ class XPath31() {
     eventHandler.endNonterminal("MultiplicativeExpr", e0)
   }
 
-  private def parse_UnionExpr {
+  private def parse_UnionExpr: Unit = {
     eventHandler.startNonterminal("UnionExpr", e0)
     parse_IntersectExceptExpr
     var c1 = true
     while (c1) {
       if (l1 != 103                 // 'union'
-        && l1 != 105) {              // '|'
+       && l1 != 105) {              // '|'
         c1 = false
       }
       else {
         l1 match {
-          case 103 =>                 // 'union'
-            consume(103)              // 'union'
-          case _ =>
-            consume(105)              // '|'
+        case 103 =>                 // 'union'
+          consume(103)              // 'union'
+        case _ =>
+          consume(105)              // '|'
         }
         lookahead1W(53)             // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-        // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-        // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-        // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-        // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_IntersectExceptExpr
       }
@@ -760,38 +773,38 @@ class XPath31() {
     eventHandler.endNonterminal("UnionExpr", e0)
   }
 
-  private def parse_IntersectExceptExpr {
+  private def parse_IntersectExceptExpr: Unit = {
     eventHandler.startNonterminal("IntersectExceptExpr", e0)
     parse_InstanceofExpr
     var c1 = true
     while (c1) {
       lookahead1W(25)               // S^WS | EOF | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | ':' | '<' | '<<' |
-      // '<=' | '=' | '>' | '>=' | '>>' | ']' | 'and' | 'div' | 'else' | 'eq' | 'except' |
-      // 'ge' | 'gt' | 'idiv' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' |
-      // 'return' | 'satisfies' | 'to' | 'union' | '|' | '||' | '}'
+                                    // '<=' | '=' | '>' | '>=' | '>>' | ']' | 'and' | 'div' | 'else' | 'eq' | 'except' |
+                                    // 'ge' | 'gt' | 'idiv' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' |
+                                    // 'return' | 'satisfies' | 'to' | 'union' | '|' | '||' | '}'
       if (l1 != 62                  // 'except'
-        && l1 != 73) {               // 'intersect'
+       && l1 != 73) {               // 'intersect'
         c1 = false
       }
       else {
         l1 match {
-          case 73 =>                  // 'intersect'
-            consume(73)               // 'intersect'
-          case _ =>
-            consume(62)               // 'except'
+        case 73 =>                  // 'intersect'
+          consume(73)               // 'intersect'
+        case _ =>
+          consume(62)               // 'except'
         }
         lookahead1W(53)             // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-        // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-        // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-        // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-        // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_InstanceofExpr
       }
@@ -799,90 +812,90 @@ class XPath31() {
     eventHandler.endNonterminal("IntersectExceptExpr", e0)
   }
 
-  private def parse_InstanceofExpr {
+  private def parse_InstanceofExpr: Unit = {
     eventHandler.startNonterminal("InstanceofExpr", e0)
     parse_TreatExpr
     lookahead1W(26)                 // S^WS | EOF | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | ':' | '<' | '<<' |
-    // '<=' | '=' | '>' | '>=' | '>>' | ']' | 'and' | 'div' | 'else' | 'eq' | 'except' |
-    // 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' |
-    // 'ne' | 'or' | 'return' | 'satisfies' | 'to' | 'union' | '|' | '||' | '}'
+                                    // '<=' | '=' | '>' | '>=' | '>>' | ']' | 'and' | 'div' | 'else' | 'eq' | 'except' |
+                                    // 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' |
+                                    // 'ne' | 'or' | 'return' | 'satisfies' | 'to' | 'union' | '|' | '||' | '}'
     if (l1 == 72) {                 // 'instance'
       consume(72)                   // 'instance'
       lookahead1W(11)               // S^WS | '(:' | 'of'
       consume(85)                   // 'of'
       lookahead1W(44)               // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | 'ancestor' |
-      // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-      // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-      // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-      // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-      // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-      // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-      // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-      // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-      // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
       whitespace
       parse_SequenceType
     }
     eventHandler.endNonterminal("InstanceofExpr", e0)
   }
 
-  private def parse_TreatExpr {
+  private def parse_TreatExpr: Unit = {
     eventHandler.startNonterminal("TreatExpr", e0)
     parse_CastableExpr
     lookahead1W(27)                 // S^WS | EOF | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | ':' | '<' | '<<' |
-    // '<=' | '=' | '>' | '>=' | '>>' | ']' | 'and' | 'div' | 'else' | 'eq' | 'except' |
-    // 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' |
-    // 'ne' | 'or' | 'return' | 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' |
-    // '}'
+                                    // '<=' | '=' | '>' | '>=' | '>>' | ']' | 'and' | 'div' | 'else' | 'eq' | 'except' |
+                                    // 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' |
+                                    // 'ne' | 'or' | 'return' | 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' |
+                                    // '}'
     if (l1 == 101) {                // 'treat'
       consume(101)                  // 'treat'
       lookahead1W(9)                // S^WS | '(:' | 'as'
       consume(47)                   // 'as'
       lookahead1W(44)               // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | 'ancestor' |
-      // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-      // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-      // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-      // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-      // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-      // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-      // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-      // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-      // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
       whitespace
       parse_SequenceType
     }
     eventHandler.endNonterminal("TreatExpr", e0)
   }
 
-  private def parse_CastableExpr {
+  private def parse_CastableExpr: Unit = {
     eventHandler.startNonterminal("CastableExpr", e0)
     parse_CastExpr
     lookahead1W(29)                 // S^WS | EOF | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | ':' | '<' | '<<' |
-    // '<=' | '=' | '>' | '>=' | '>>' | ']' | 'and' | 'castable' | 'div' | 'else' |
-    // 'eq' | 'except' | 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' |
-    // 'lt' | 'mod' | 'ne' | 'or' | 'return' | 'satisfies' | 'to' | 'treat' | 'union' |
-    // '|' | '||' | '}'
+                                    // '<=' | '=' | '>' | '>=' | '>>' | ']' | 'and' | 'castable' | 'div' | 'else' |
+                                    // 'eq' | 'except' | 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' |
+                                    // 'lt' | 'mod' | 'ne' | 'or' | 'return' | 'satisfies' | 'to' | 'treat' | 'union' |
+                                    // '|' | '||' | '}'
     if (l1 == 50) {                 // 'castable'
       consume(50)                   // 'castable'
       lookahead1W(9)                // S^WS | '(:' | 'as'
       consume(47)                   // 'as'
       lookahead1W(42)               // URIQualifiedName | QName^Token | S^WS | '(:' | 'ancestor' | 'ancestor-or-self' |
-      // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-      // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-      // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-      // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-      // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-      // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-      // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-      // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-      // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
       whitespace
       parse_SingleType
     }
     eventHandler.endNonterminal("CastableExpr", e0)
   }
 
-  private def parse_CastExpr {
+  private def parse_CastExpr: Unit = {
     eventHandler.startNonterminal("CastExpr", e0)
     parse_ArrowExpr
     if (l1 == 49) {                 // 'cast'
@@ -890,46 +903,46 @@ class XPath31() {
       lookahead1W(9)                // S^WS | '(:' | 'as'
       consume(47)                   // 'as'
       lookahead1W(42)               // URIQualifiedName | QName^Token | S^WS | '(:' | 'ancestor' | 'ancestor-or-self' |
-      // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-      // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-      // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-      // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-      // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-      // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-      // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-      // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-      // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
       whitespace
       parse_SingleType
     }
     eventHandler.endNonterminal("CastExpr", e0)
   }
 
-  private def parse_ArrowExpr {
+  private def parse_ArrowExpr: Unit = {
     eventHandler.startNonterminal("ArrowExpr", e0)
     parse_UnaryExpr
     var c1 = true
     while (c1) {
       lookahead1W(32)               // S^WS | EOF | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | ':' | '<' | '<<' |
-      // '<=' | '=' | '=>' | '>' | '>=' | '>>' | ']' | 'and' | 'cast' | 'castable' |
-      // 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' | 'instance' |
-      // 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' | 'satisfies' |
-      // 'to' | 'treat' | 'union' | '|' | '||' | '}'
+                                    // '<=' | '=' | '=>' | '>' | '>=' | '>>' | ']' | 'and' | 'cast' | 'castable' |
+                                    // 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' | 'instance' |
+                                    // 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' | 'satisfies' |
+                                    // 'to' | 'treat' | 'union' | '|' | '||' | '}'
       if (l1 != 35) {               // '=>'
         c1 = false
       }
       else {
         consume(35)                 // '=>'
         lookahead1W(46)             // URIQualifiedName | QName^Token | S^WS | '$' | '(' | '(:' | 'ancestor' |
-        // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-        // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-        // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-        // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-        // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-        // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-        // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-        // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-        // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_ArrowFunctionSpecifier
         lookahead1W(3)              // S^WS | '(' | '(:'
@@ -940,32 +953,32 @@ class XPath31() {
     eventHandler.endNonterminal("ArrowExpr", e0)
   }
 
-  private def parse_UnaryExpr {
+  private def parse_UnaryExpr: Unit = {
     eventHandler.startNonterminal("UnaryExpr", e0)
     var c1 = true
     while (c1) {
       lookahead1W(53)               // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-      // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-      // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-      // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-      // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-      // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-      // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-      // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-      // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-      // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-      // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-      // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
       if (l1 != 20                  // '+'
-        && l1 != 22) {               // '-'
+       && l1 != 22) {               // '-'
         c1 = false
       }
       else {
         l1 match {
-          case 22 =>                  // '-'
-            consume(22)               // '-'
-          case _ =>
-            consume(20)               // '+'
+        case 22 =>                  // '-'
+          consume(22)               // '-'
+        case _ =>
+          consume(20)               // '+'
         }
       }
     }
@@ -974,64 +987,64 @@ class XPath31() {
     eventHandler.endNonterminal("UnaryExpr", e0)
   }
 
-  private def parse_ValueExpr {
+  private def parse_ValueExpr: Unit = {
     eventHandler.startNonterminal("ValueExpr", e0)
     parse_SimpleMapExpr
     eventHandler.endNonterminal("ValueExpr", e0)
   }
 
-  private def parse_GeneralComp {
+  private def parse_GeneralComp: Unit = {
     eventHandler.startNonterminal("GeneralComp", e0)
     l1 match {
-      case 34 =>                      // '='
-        consume(34)                   // '='
-      case 13 =>                      // '!='
-        consume(13)                   // '!='
-      case 31 =>                      // '<'
-        consume(31)                   // '<'
-      case 33 =>                      // '<='
-        consume(33)                   // '<='
-      case 36 =>                      // '>'
-        consume(36)                   // '>'
-      case _ =>
-        consume(37)                   // '>='
+    case 34 =>                      // '='
+      consume(34)                   // '='
+    case 13 =>                      // '!='
+      consume(13)                   // '!='
+    case 31 =>                      // '<'
+      consume(31)                   // '<'
+    case 33 =>                      // '<='
+      consume(33)                   // '<='
+    case 36 =>                      // '>'
+      consume(36)                   // '>'
+    case _ =>
+      consume(37)                   // '>='
     }
     eventHandler.endNonterminal("GeneralComp", e0)
   }
 
-  private def parse_ValueComp {
+  private def parse_ValueComp: Unit = {
     eventHandler.startNonterminal("ValueComp", e0)
     l1 match {
-      case 60 =>                      // 'eq'
-        consume(60)                   // 'eq'
-      case 83 =>                      // 'ne'
-        consume(83)                   // 'ne'
-      case 78 =>                      // 'lt'
-        consume(78)                   // 'lt'
-      case 76 =>                      // 'le'
-        consume(76)                   // 'le'
-      case 68 =>                      // 'gt'
-        consume(68)                   // 'gt'
-      case _ =>
-        consume(67)                   // 'ge'
+    case 60 =>                      // 'eq'
+      consume(60)                   // 'eq'
+    case 83 =>                      // 'ne'
+      consume(83)                   // 'ne'
+    case 78 =>                      // 'lt'
+      consume(78)                   // 'lt'
+    case 76 =>                      // 'le'
+      consume(76)                   // 'le'
+    case 68 =>                      // 'gt'
+      consume(68)                   // 'gt'
+    case _ =>
+      consume(67)                   // 'ge'
     }
     eventHandler.endNonterminal("ValueComp", e0)
   }
 
-  private def parse_NodeComp {
+  private def parse_NodeComp: Unit = {
     eventHandler.startNonterminal("NodeComp", e0)
     l1 match {
-      case 74 =>                      // 'is'
-        consume(74)                   // 'is'
-      case 32 =>                      // '<<'
-        consume(32)                   // '<<'
-      case _ =>
-        consume(38)                   // '>>'
+    case 74 =>                      // 'is'
+      consume(74)                   // 'is'
+    case 32 =>                      // '<<'
+      consume(32)                   // '<<'
+    case _ =>
+      consume(38)                   // '>>'
     }
     eventHandler.endNonterminal("NodeComp", e0)
   }
 
-  private def parse_SimpleMapExpr {
+  private def parse_SimpleMapExpr: Unit = {
     eventHandler.startNonterminal("SimpleMapExpr", e0)
     parse_PathExpr
     var c1 = true
@@ -1042,17 +1055,17 @@ class XPath31() {
       else {
         consume(12)                 // '!'
         lookahead1W(52)             // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '.' |
-        // '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' | 'and' |
-        // 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-        // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-        // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '.' |
+                                    // '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' | 'and' |
+                                    // 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_PathExpr
       }
@@ -1060,101 +1073,101 @@ class XPath31() {
     eventHandler.endNonterminal("SimpleMapExpr", e0)
   }
 
-  private def parse_PathExpr {
+  private def parse_PathExpr: Unit = {
     eventHandler.startNonterminal("PathExpr", e0)
     l1 match {
-      case 25 =>                      // '/'
-        consume(25)                   // '/'
-        lookahead1W(57)               // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | QName^Token | S^WS | Wildcard | EOF | '!' | '!=' | '$' | '(' |
-        // '(:' | ')' | '*' | '+' | ',' | '-' | '.' | '..' | ':' | '<' | '<<' | '<=' | '=' |
-        // '=>' | '>' | '>=' | '>>' | '?' | '@' | '[' | ']' | 'ancestor' |
-        // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-        // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-        // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-        // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-        // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-        // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-        // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-        // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-        // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union' | '|' |
-        // '||' | '}'
-        l1 match {
-          case 11                       // EOF
-               | 12                       // '!'
-               | 13                       // '!='
-               | 18                       // ')'
-               | 19                       // '*'
-               | 20                       // '+'
-               | 21                       // ','
-               | 22                       // '-'
-               | 27                       // ':'
-               | 31                       // '<'
-               | 32                       // '<<'
-               | 33                       // '<='
-               | 34                       // '='
-               | 35                       // '=>'
-               | 36                       // '>'
-               | 37                       // '>='
-               | 38                       // '>>'
-               | 42                       // ']'
-               | 105                      // '|'
-               | 106                      // '||'
-               | 107 =>                   // '}'
-          case _ =>
-            whitespace
-            parse_RelativePathExpr
-        }
-      case 26 =>                      // '//'
-        consume(26)                   // '//'
-        lookahead1W(51)               // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '.' |
-        // '..' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' | 'and' | 'array' |
-        // 'attribute' | 'cast' | 'castable' | 'child' | 'comment' | 'descendant' |
-        // 'descendant-or-self' | 'div' | 'document-node' | 'element' | 'else' |
-        // 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+    case 25 =>                      // '/'
+      consume(25)                   // '/'
+      lookahead1W(57)               // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | EOF | '!' | '!=' | '$' | '(' |
+                                    // '(:' | ')' | '*' | '+' | ',' | '-' | '.' | '..' | ':' | '<' | '<<' | '<=' | '=' |
+                                    // '=>' | '>' | '>=' | '>>' | '?' | '@' | '[' | ']' | 'ancestor' |
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union' | '|' |
+                                    // '||' | '}'
+      l1 match {
+      case 11                       // EOF
+         | 12                       // '!'
+         | 13                       // '!='
+         | 18                       // ')'
+         | 19                       // '*'
+         | 20                       // '+'
+         | 21                       // ','
+         | 22                       // '-'
+         | 27                       // ':'
+         | 31                       // '<'
+         | 32                       // '<<'
+         | 33                       // '<='
+         | 34                       // '='
+         | 35                       // '=>'
+         | 36                       // '>'
+         | 37                       // '>='
+         | 38                       // '>>'
+         | 42                       // ']'
+         | 105                      // '|'
+         | 106                      // '||'
+         | 107 =>                   // '}'
+      case _ =>
         whitespace
         parse_RelativePathExpr
-      case _ =>
-        parse_RelativePathExpr
+      }
+    case 26 =>                      // '//'
+      consume(26)                   // '//'
+      lookahead1W(51)               // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '.' |
+                                    // '..' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' | 'and' | 'array' |
+                                    // 'attribute' | 'cast' | 'castable' | 'child' | 'comment' | 'descendant' |
+                                    // 'descendant-or-self' | 'div' | 'document-node' | 'element' | 'else' |
+                                    // 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
+      whitespace
+      parse_RelativePathExpr
+    case _ =>
+      parse_RelativePathExpr
     }
     eventHandler.endNonterminal("PathExpr", e0)
   }
 
-  private def parse_RelativePathExpr {
+  private def parse_RelativePathExpr: Unit = {
     eventHandler.startNonterminal("RelativePathExpr", e0)
     parse_StepExpr
     var c1 = true
     while (c1) {
       if (l1 != 25                  // '/'
-        && l1 != 26) {               // '//'
+       && l1 != 26) {               // '//'
         c1 = false
       }
       else {
         l1 match {
-          case 25 =>                  // '/'
-            consume(25)               // '/'
-          case _ =>
-            consume(26)               // '//'
+        case 25 =>                  // '/'
+          consume(25)               // '/'
+        case _ =>
+          consume(26)               // '//'
         }
         lookahead1W(51)             // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '.' |
-        // '..' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' | 'and' | 'array' |
-        // 'attribute' | 'cast' | 'castable' | 'child' | 'comment' | 'descendant' |
-        // 'descendant-or-self' | 'div' | 'document-node' | 'element' | 'else' |
-        // 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '.' |
+                                    // '..' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' | 'and' | 'array' |
+                                    // 'attribute' | 'cast' | 'castable' | 'child' | 'comment' | 'descendant' |
+                                    // 'descendant-or-self' | 'div' | 'document-node' | 'element' | 'else' |
+                                    // 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_StepExpr
       }
@@ -1162,479 +1175,479 @@ class XPath31() {
     eventHandler.endNonterminal("RelativePathExpr", e0)
   }
 
-  private def parse_StepExpr {
+  private def parse_StepExpr: Unit = {
     eventHandler.startNonterminal("StepExpr", e0)
     l1 match {
-      case 66 =>                      // 'function'
-        lookahead2W(34)               // S^WS | EOF | '!' | '!=' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' |
-      // ':' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' |
-      // 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
-      // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
-      // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
-      case 46                         // 'array'
-           | 79 =>                      // 'map'
-        lookahead2W(36)               // S^WS | EOF | '!' | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' | ':' |
-      // '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' | 'cast' |
-      // 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
-      // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
-      // 'satisfies' | 'to' | 'treat' | 'union' | '{' | '|' | '||' | '}'
-      case 43                         // 'ancestor'
-           | 44                         // 'ancestor-or-self'
-           | 51                         // 'child'
-           | 53                         // 'descendant'
-           | 54                         // 'descendant-or-self'
-           | 63                         // 'following'
-           | 64                         // 'following-sibling'
-           | 81                         // 'namespace'
-           | 87                         // 'parent'
-           | 88                         // 'preceding'
-           | 89                         // 'preceding-sibling'
-           | 95 =>                      // 'self'
-        lookahead2W(41)               // S^WS | EOF | '!' | '!=' | '#' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' |
-      // '//' | ':' | '::' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' |
-      // ']' | 'and' | 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' |
-      // 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' |
-      // 'or' | 'return' | 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
-      case 5                          // URIQualifiedName
-           | 7                          // QName^Token
-           | 45                         // 'and'
-           | 49                         // 'cast'
-           | 50                         // 'castable'
-           | 55                         // 'div'
-           | 58                         // 'else'
-           | 60                         // 'eq'
-           | 61                         // 'every'
-           | 62                         // 'except'
-           | 65                         // 'for'
-           | 67                         // 'ge'
-           | 68                         // 'gt'
-           | 69                         // 'idiv'
-           | 72                         // 'instance'
-           | 73                         // 'intersect'
-           | 74                         // 'is'
-           | 76                         // 'le'
-           | 77                         // 'let'
-           | 78                         // 'lt'
-           | 80                         // 'mod'
-           | 83                         // 'ne'
-           | 86                         // 'or'
-           | 91                         // 'return'
-           | 92                         // 'satisfies'
-           | 96                         // 'some'
-           | 100                        // 'to'
-           | 101                        // 'treat'
-           | 103 =>                     // 'union'
-        lookahead2W(37)               // S^WS | EOF | '!' | '!=' | '#' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' |
-      // '//' | ':' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' |
-      // 'and' | 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' |
-      // 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' |
-      // 'return' | 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
-      case _ =>
-        lk = l1
+    case 66 =>                      // 'function'
+      lookahead2W(34)               // S^WS | EOF | '!' | '!=' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' |
+                                    // ':' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' |
+                                    // 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
+                                    // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
+                                    // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
+    case 46                         // 'array'
+       | 79 =>                      // 'map'
+      lookahead2W(36)               // S^WS | EOF | '!' | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' | ':' |
+                                    // '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' | 'cast' |
+                                    // 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
+                                    // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
+                                    // 'satisfies' | 'to' | 'treat' | 'union' | '{' | '|' | '||' | '}'
+    case 43                         // 'ancestor'
+       | 44                         // 'ancestor-or-self'
+       | 51                         // 'child'
+       | 53                         // 'descendant'
+       | 54                         // 'descendant-or-self'
+       | 63                         // 'following'
+       | 64                         // 'following-sibling'
+       | 81                         // 'namespace'
+       | 87                         // 'parent'
+       | 88                         // 'preceding'
+       | 89                         // 'preceding-sibling'
+       | 95 =>                      // 'self'
+      lookahead2W(41)               // S^WS | EOF | '!' | '!=' | '#' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' |
+                                    // '//' | ':' | '::' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' |
+                                    // ']' | 'and' | 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' |
+                                    // 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' |
+                                    // 'or' | 'return' | 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
+    case 5                          // URIQualifiedName
+       | 7                          // QName^Token
+       | 45                         // 'and'
+       | 49                         // 'cast'
+       | 50                         // 'castable'
+       | 55                         // 'div'
+       | 58                         // 'else'
+       | 60                         // 'eq'
+       | 61                         // 'every'
+       | 62                         // 'except'
+       | 65                         // 'for'
+       | 67                         // 'ge'
+       | 68                         // 'gt'
+       | 69                         // 'idiv'
+       | 72                         // 'instance'
+       | 73                         // 'intersect'
+       | 74                         // 'is'
+       | 76                         // 'le'
+       | 77                         // 'let'
+       | 78                         // 'lt'
+       | 80                         // 'mod'
+       | 83                         // 'ne'
+       | 86                         // 'or'
+       | 91                         // 'return'
+       | 92                         // 'satisfies'
+       | 96                         // 'some'
+       | 100                        // 'to'
+       | 101                        // 'treat'
+       | 103 =>                     // 'union'
+      lookahead2W(37)               // S^WS | EOF | '!' | '!=' | '#' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' |
+                                    // '//' | ':' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' |
+                                    // 'and' | 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' |
+                                    // 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' |
+                                    // 'return' | 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
+    case _ =>
+      lk = l1
     }
     lk match {
-      case 1                          // IntegerLiteral
-           | 2                          // DecimalLiteral
-           | 3                          // DoubleLiteral
-           | 4                          // StringLiteral
-           | 15                         // '$'
-           | 16                         // '('
-           | 23                         // '.'
-           | 39                         // '?'
-           | 41                         // '['
-           | 1797                       // URIQualifiedName '#'
-           | 1799                       // QName^Token '#'
-           | 1835                       // 'ancestor' '#'
-           | 1836                       // 'ancestor-or-self' '#'
-           | 1837                       // 'and' '#'
-           | 1841                       // 'cast' '#'
-           | 1842                       // 'castable' '#'
-           | 1843                       // 'child' '#'
-           | 1845                       // 'descendant' '#'
-           | 1846                       // 'descendant-or-self' '#'
-           | 1847                       // 'div' '#'
-           | 1850                       // 'else' '#'
-           | 1852                       // 'eq' '#'
-           | 1853                       // 'every' '#'
-           | 1854                       // 'except' '#'
-           | 1855                       // 'following' '#'
-           | 1856                       // 'following-sibling' '#'
-           | 1857                       // 'for' '#'
-           | 1859                       // 'ge' '#'
-           | 1860                       // 'gt' '#'
-           | 1861                       // 'idiv' '#'
-           | 1864                       // 'instance' '#'
-           | 1865                       // 'intersect' '#'
-           | 1866                       // 'is' '#'
-           | 1868                       // 'le' '#'
-           | 1869                       // 'let' '#'
-           | 1870                       // 'lt' '#'
-           | 1872                       // 'mod' '#'
-           | 1873                       // 'namespace' '#'
-           | 1875                       // 'ne' '#'
-           | 1878                       // 'or' '#'
-           | 1879                       // 'parent' '#'
-           | 1880                       // 'preceding' '#'
-           | 1881                       // 'preceding-sibling' '#'
-           | 1883                       // 'return' '#'
-           | 1884                       // 'satisfies' '#'
-           | 1887                       // 'self' '#'
-           | 1888                       // 'some' '#'
-           | 1892                       // 'to' '#'
-           | 1893                       // 'treat' '#'
-           | 1895                       // 'union' '#'
-           | 2053                       // URIQualifiedName '('
-           | 2055                       // QName^Token '('
-           | 2091                       // 'ancestor' '('
-           | 2092                       // 'ancestor-or-self' '('
-           | 2093                       // 'and' '('
-           | 2097                       // 'cast' '('
-           | 2098                       // 'castable' '('
-           | 2099                       // 'child' '('
-           | 2101                       // 'descendant' '('
-           | 2102                       // 'descendant-or-self' '('
-           | 2103                       // 'div' '('
-           | 2106                       // 'else' '('
-           | 2108                       // 'eq' '('
-           | 2109                       // 'every' '('
-           | 2110                       // 'except' '('
-           | 2111                       // 'following' '('
-           | 2112                       // 'following-sibling' '('
-           | 2113                       // 'for' '('
-           | 2114                       // 'function' '('
-           | 2115                       // 'ge' '('
-           | 2116                       // 'gt' '('
-           | 2117                       // 'idiv' '('
-           | 2120                       // 'instance' '('
-           | 2121                       // 'intersect' '('
-           | 2122                       // 'is' '('
-           | 2124                       // 'le' '('
-           | 2125                       // 'let' '('
-           | 2126                       // 'lt' '('
-           | 2128                       // 'mod' '('
-           | 2129                       // 'namespace' '('
-           | 2131                       // 'ne' '('
-           | 2134                       // 'or' '('
-           | 2135                       // 'parent' '('
-           | 2136                       // 'preceding' '('
-           | 2137                       // 'preceding-sibling' '('
-           | 2139                       // 'return' '('
-           | 2140                       // 'satisfies' '('
-           | 2143                       // 'self' '('
-           | 2144                       // 'some' '('
-           | 2148                       // 'to' '('
-           | 2149                       // 'treat' '('
-           | 2151                       // 'union' '('
-           | 13358                      // 'array' '{'
-           | 13391 =>                   // 'map' '{'
-        parse_PostfixExpr
-      case _ =>
-        parse_AxisStep
+    case 1                          // IntegerLiteral
+       | 2                          // DecimalLiteral
+       | 3                          // DoubleLiteral
+       | 4                          // StringLiteral
+       | 15                         // '$'
+       | 16                         // '('
+       | 23                         // '.'
+       | 39                         // '?'
+       | 41                         // '['
+       | 1797                       // URIQualifiedName '#'
+       | 1799                       // QName^Token '#'
+       | 1835                       // 'ancestor' '#'
+       | 1836                       // 'ancestor-or-self' '#'
+       | 1837                       // 'and' '#'
+       | 1841                       // 'cast' '#'
+       | 1842                       // 'castable' '#'
+       | 1843                       // 'child' '#'
+       | 1845                       // 'descendant' '#'
+       | 1846                       // 'descendant-or-self' '#'
+       | 1847                       // 'div' '#'
+       | 1850                       // 'else' '#'
+       | 1852                       // 'eq' '#'
+       | 1853                       // 'every' '#'
+       | 1854                       // 'except' '#'
+       | 1855                       // 'following' '#'
+       | 1856                       // 'following-sibling' '#'
+       | 1857                       // 'for' '#'
+       | 1859                       // 'ge' '#'
+       | 1860                       // 'gt' '#'
+       | 1861                       // 'idiv' '#'
+       | 1864                       // 'instance' '#'
+       | 1865                       // 'intersect' '#'
+       | 1866                       // 'is' '#'
+       | 1868                       // 'le' '#'
+       | 1869                       // 'let' '#'
+       | 1870                       // 'lt' '#'
+       | 1872                       // 'mod' '#'
+       | 1873                       // 'namespace' '#'
+       | 1875                       // 'ne' '#'
+       | 1878                       // 'or' '#'
+       | 1879                       // 'parent' '#'
+       | 1880                       // 'preceding' '#'
+       | 1881                       // 'preceding-sibling' '#'
+       | 1883                       // 'return' '#'
+       | 1884                       // 'satisfies' '#'
+       | 1887                       // 'self' '#'
+       | 1888                       // 'some' '#'
+       | 1892                       // 'to' '#'
+       | 1893                       // 'treat' '#'
+       | 1895                       // 'union' '#'
+       | 2053                       // URIQualifiedName '('
+       | 2055                       // QName^Token '('
+       | 2091                       // 'ancestor' '('
+       | 2092                       // 'ancestor-or-self' '('
+       | 2093                       // 'and' '('
+       | 2097                       // 'cast' '('
+       | 2098                       // 'castable' '('
+       | 2099                       // 'child' '('
+       | 2101                       // 'descendant' '('
+       | 2102                       // 'descendant-or-self' '('
+       | 2103                       // 'div' '('
+       | 2106                       // 'else' '('
+       | 2108                       // 'eq' '('
+       | 2109                       // 'every' '('
+       | 2110                       // 'except' '('
+       | 2111                       // 'following' '('
+       | 2112                       // 'following-sibling' '('
+       | 2113                       // 'for' '('
+       | 2114                       // 'function' '('
+       | 2115                       // 'ge' '('
+       | 2116                       // 'gt' '('
+       | 2117                       // 'idiv' '('
+       | 2120                       // 'instance' '('
+       | 2121                       // 'intersect' '('
+       | 2122                       // 'is' '('
+       | 2124                       // 'le' '('
+       | 2125                       // 'let' '('
+       | 2126                       // 'lt' '('
+       | 2128                       // 'mod' '('
+       | 2129                       // 'namespace' '('
+       | 2131                       // 'ne' '('
+       | 2134                       // 'or' '('
+       | 2135                       // 'parent' '('
+       | 2136                       // 'preceding' '('
+       | 2137                       // 'preceding-sibling' '('
+       | 2139                       // 'return' '('
+       | 2140                       // 'satisfies' '('
+       | 2143                       // 'self' '('
+       | 2144                       // 'some' '('
+       | 2148                       // 'to' '('
+       | 2149                       // 'treat' '('
+       | 2151                       // 'union' '('
+       | 13358                      // 'array' '{'
+       | 13391 =>                   // 'map' '{'
+      parse_PostfixExpr
+    case _ =>
+      parse_AxisStep
     }
     eventHandler.endNonterminal("StepExpr", e0)
   }
 
-  private def parse_AxisStep {
+  private def parse_AxisStep: Unit = {
     eventHandler.startNonterminal("AxisStep", e0)
     l1 match {
-      case 43                         // 'ancestor'
-           | 44                         // 'ancestor-or-self'
-           | 87                         // 'parent'
-           | 88                         // 'preceding'
-           | 89 =>                      // 'preceding-sibling'
-        lookahead2W(35)               // S^WS | EOF | '!' | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' | ':' |
-      // '::' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' |
-      // 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
-      // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
-      // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
-      case _ =>
-        lk = l1
+    case 43                         // 'ancestor'
+       | 44                         // 'ancestor-or-self'
+       | 87                         // 'parent'
+       | 88                         // 'preceding'
+       | 89 =>                      // 'preceding-sibling'
+      lookahead2W(35)               // S^WS | EOF | '!' | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' | ':' |
+                                    // '::' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' |
+                                    // 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
+                                    // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
+                                    // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
+    case _ =>
+      lk = l1
     }
     lk match {
-      case 24                         // '..'
-           | 3755                       // 'ancestor' '::'
-           | 3756                       // 'ancestor-or-self' '::'
-           | 3799                       // 'parent' '::'
-           | 3800                       // 'preceding' '::'
-           | 3801 =>                    // 'preceding-sibling' '::'
-        parse_ReverseStep
-      case _ =>
-        parse_ForwardStep
+    case 24                         // '..'
+       | 3755                       // 'ancestor' '::'
+       | 3756                       // 'ancestor-or-self' '::'
+       | 3799                       // 'parent' '::'
+       | 3800                       // 'preceding' '::'
+       | 3801 =>                    // 'preceding-sibling' '::'
+      parse_ReverseStep
+    case _ =>
+      parse_ForwardStep
     }
     lookahead1W(33)                 // S^WS | EOF | '!' | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' | ':' |
-    // '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' | 'cast' |
-    // 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
-    // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
-    // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
+                                    // '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' | 'cast' |
+                                    // 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
+                                    // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
+                                    // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
     whitespace
     parse_PredicateList
     eventHandler.endNonterminal("AxisStep", e0)
   }
 
-  private def parse_ForwardStep {
+  private def parse_ForwardStep: Unit = {
     eventHandler.startNonterminal("ForwardStep", e0)
     l1 match {
-      case 48 =>                      // 'attribute'
-        lookahead2W(38)               // S^WS | EOF | '!' | '!=' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' |
-      // ':' | '::' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' |
-      // 'and' | 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' |
-      // 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' |
-      // 'return' | 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
-      case 51                         // 'child'
-           | 53                         // 'descendant'
-           | 54                         // 'descendant-or-self'
-           | 63                         // 'following'
-           | 64                         // 'following-sibling'
-           | 81                         // 'namespace'
-           | 95 =>                      // 'self'
-        lookahead2W(35)               // S^WS | EOF | '!' | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' | ':' |
-      // '::' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' |
-      // 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
-      // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
-      // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
-      case _ =>
-        lk = l1
+    case 48 =>                      // 'attribute'
+      lookahead2W(38)               // S^WS | EOF | '!' | '!=' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' |
+                                    // ':' | '::' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' |
+                                    // 'and' | 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' |
+                                    // 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' |
+                                    // 'return' | 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
+    case 51                         // 'child'
+       | 53                         // 'descendant'
+       | 54                         // 'descendant-or-self'
+       | 63                         // 'following'
+       | 64                         // 'following-sibling'
+       | 81                         // 'namespace'
+       | 95 =>                      // 'self'
+      lookahead2W(35)               // S^WS | EOF | '!' | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' | ':' |
+                                    // '::' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' |
+                                    // 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
+                                    // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
+                                    // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
+    case _ =>
+      lk = l1
     }
     lk match {
-      case 3760                       // 'attribute' '::'
-           | 3763                       // 'child' '::'
-           | 3765                       // 'descendant' '::'
-           | 3766                       // 'descendant-or-self' '::'
-           | 3775                       // 'following' '::'
-           | 3776                       // 'following-sibling' '::'
-           | 3793                       // 'namespace' '::'
-           | 3807 =>                    // 'self' '::'
-        parse_ForwardAxis
-        lookahead1W(43)               // URIQualifiedName | QName^Token | S^WS | Wildcard | '(:' | 'ancestor' |
-        // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-        // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-        // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-        // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-        // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-        // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-        // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-        // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-        // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
-        whitespace
-        parse_NodeTest
-      case _ =>
-        parse_AbbrevForwardStep
+    case 3760                       // 'attribute' '::'
+       | 3763                       // 'child' '::'
+       | 3765                       // 'descendant' '::'
+       | 3766                       // 'descendant-or-self' '::'
+       | 3775                       // 'following' '::'
+       | 3776                       // 'following-sibling' '::'
+       | 3793                       // 'namespace' '::'
+       | 3807 =>                    // 'self' '::'
+      parse_ForwardAxis
+      lookahead1W(43)               // URIQualifiedName | QName^Token | S^WS | Wildcard | '(:' | 'ancestor' |
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+      whitespace
+      parse_NodeTest
+    case _ =>
+      parse_AbbrevForwardStep
     }
     eventHandler.endNonterminal("ForwardStep", e0)
   }
 
-  private def parse_ForwardAxis {
+  private def parse_ForwardAxis: Unit = {
     eventHandler.startNonterminal("ForwardAxis", e0)
     l1 match {
-      case 51 =>                      // 'child'
-        consume(51)                   // 'child'
-        lookahead1W(7)                // S^WS | '(:' | '::'
-        consume(29)                   // '::'
-      case 53 =>                      // 'descendant'
-        consume(53)                   // 'descendant'
-        lookahead1W(7)                // S^WS | '(:' | '::'
-        consume(29)                   // '::'
-      case 48 =>                      // 'attribute'
-        consume(48)                   // 'attribute'
-        lookahead1W(7)                // S^WS | '(:' | '::'
-        consume(29)                   // '::'
-      case 95 =>                      // 'self'
-        consume(95)                   // 'self'
-        lookahead1W(7)                // S^WS | '(:' | '::'
-        consume(29)                   // '::'
-      case 54 =>                      // 'descendant-or-self'
-        consume(54)                   // 'descendant-or-self'
-        lookahead1W(7)                // S^WS | '(:' | '::'
-        consume(29)                   // '::'
-      case 64 =>                      // 'following-sibling'
-        consume(64)                   // 'following-sibling'
-        lookahead1W(7)                // S^WS | '(:' | '::'
-        consume(29)                   // '::'
-      case 63 =>                      // 'following'
-        consume(63)                   // 'following'
-        lookahead1W(7)                // S^WS | '(:' | '::'
-        consume(29)                   // '::'
-      case _ =>
-        consume(81)                   // 'namespace'
-        lookahead1W(7)                // S^WS | '(:' | '::'
-        consume(29)                   // '::'
+    case 51 =>                      // 'child'
+      consume(51)                   // 'child'
+      lookahead1W(7)                // S^WS | '(:' | '::'
+      consume(29)                   // '::'
+    case 53 =>                      // 'descendant'
+      consume(53)                   // 'descendant'
+      lookahead1W(7)                // S^WS | '(:' | '::'
+      consume(29)                   // '::'
+    case 48 =>                      // 'attribute'
+      consume(48)                   // 'attribute'
+      lookahead1W(7)                // S^WS | '(:' | '::'
+      consume(29)                   // '::'
+    case 95 =>                      // 'self'
+      consume(95)                   // 'self'
+      lookahead1W(7)                // S^WS | '(:' | '::'
+      consume(29)                   // '::'
+    case 54 =>                      // 'descendant-or-self'
+      consume(54)                   // 'descendant-or-self'
+      lookahead1W(7)                // S^WS | '(:' | '::'
+      consume(29)                   // '::'
+    case 64 =>                      // 'following-sibling'
+      consume(64)                   // 'following-sibling'
+      lookahead1W(7)                // S^WS | '(:' | '::'
+      consume(29)                   // '::'
+    case 63 =>                      // 'following'
+      consume(63)                   // 'following'
+      lookahead1W(7)                // S^WS | '(:' | '::'
+      consume(29)                   // '::'
+    case _ =>
+      consume(81)                   // 'namespace'
+      lookahead1W(7)                // S^WS | '(:' | '::'
+      consume(29)                   // '::'
     }
     eventHandler.endNonterminal("ForwardAxis", e0)
   }
 
-  private def parse_AbbrevForwardStep {
+  private def parse_AbbrevForwardStep: Unit = {
     eventHandler.startNonterminal("AbbrevForwardStep", e0)
     if (l1 == 40) {                 // '@'
       consume(40)                   // '@'
     }
     lookahead1W(43)                 // URIQualifiedName | QName^Token | S^WS | Wildcard | '(:' | 'ancestor' |
-    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_NodeTest
     eventHandler.endNonterminal("AbbrevForwardStep", e0)
   }
 
-  private def parse_ReverseStep {
+  private def parse_ReverseStep: Unit = {
     eventHandler.startNonterminal("ReverseStep", e0)
     l1 match {
-      case 24 =>                      // '..'
-        parse_AbbrevReverseStep
-      case _ =>
-        parse_ReverseAxis
-        lookahead1W(43)               // URIQualifiedName | QName^Token | S^WS | Wildcard | '(:' | 'ancestor' |
-        // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-        // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-        // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-        // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-        // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-        // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-        // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-        // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-        // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
-        whitespace
-        parse_NodeTest
+    case 24 =>                      // '..'
+      parse_AbbrevReverseStep
+    case _ =>
+      parse_ReverseAxis
+      lookahead1W(43)               // URIQualifiedName | QName^Token | S^WS | Wildcard | '(:' | 'ancestor' |
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+      whitespace
+      parse_NodeTest
     }
     eventHandler.endNonterminal("ReverseStep", e0)
   }
 
-  private def parse_ReverseAxis {
+  private def parse_ReverseAxis: Unit = {
     eventHandler.startNonterminal("ReverseAxis", e0)
     l1 match {
-      case 87 =>                      // 'parent'
-        consume(87)                   // 'parent'
-        lookahead1W(7)                // S^WS | '(:' | '::'
-        consume(29)                   // '::'
-      case 43 =>                      // 'ancestor'
-        consume(43)                   // 'ancestor'
-        lookahead1W(7)                // S^WS | '(:' | '::'
-        consume(29)                   // '::'
-      case 89 =>                      // 'preceding-sibling'
-        consume(89)                   // 'preceding-sibling'
-        lookahead1W(7)                // S^WS | '(:' | '::'
-        consume(29)                   // '::'
-      case 88 =>                      // 'preceding'
-        consume(88)                   // 'preceding'
-        lookahead1W(7)                // S^WS | '(:' | '::'
-        consume(29)                   // '::'
-      case _ =>
-        consume(44)                   // 'ancestor-or-self'
-        lookahead1W(7)                // S^WS | '(:' | '::'
-        consume(29)                   // '::'
+    case 87 =>                      // 'parent'
+      consume(87)                   // 'parent'
+      lookahead1W(7)                // S^WS | '(:' | '::'
+      consume(29)                   // '::'
+    case 43 =>                      // 'ancestor'
+      consume(43)                   // 'ancestor'
+      lookahead1W(7)                // S^WS | '(:' | '::'
+      consume(29)                   // '::'
+    case 89 =>                      // 'preceding-sibling'
+      consume(89)                   // 'preceding-sibling'
+      lookahead1W(7)                // S^WS | '(:' | '::'
+      consume(29)                   // '::'
+    case 88 =>                      // 'preceding'
+      consume(88)                   // 'preceding'
+      lookahead1W(7)                // S^WS | '(:' | '::'
+      consume(29)                   // '::'
+    case _ =>
+      consume(44)                   // 'ancestor-or-self'
+      lookahead1W(7)                // S^WS | '(:' | '::'
+      consume(29)                   // '::'
     }
     eventHandler.endNonterminal("ReverseAxis", e0)
   }
 
-  private def parse_AbbrevReverseStep {
+  private def parse_AbbrevReverseStep: Unit = {
     eventHandler.startNonterminal("AbbrevReverseStep", e0)
     consume(24)                     // '..'
     eventHandler.endNonterminal("AbbrevReverseStep", e0)
   }
 
-  private def parse_NodeTest {
+  private def parse_NodeTest: Unit = {
     eventHandler.startNonterminal("NodeTest", e0)
     l1 match {
-      case 48                         // 'attribute'
-           | 52                         // 'comment'
-           | 56                         // 'document-node'
-           | 57                         // 'element'
-           | 82                         // 'namespace-node'
-           | 84                         // 'node'
-           | 90                         // 'processing-instruction'
-           | 93                         // 'schema-attribute'
-           | 94                         // 'schema-element'
-           | 98 =>                      // 'text'
-        lookahead2W(34)               // S^WS | EOF | '!' | '!=' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' |
-      // ':' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' |
-      // 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
-      // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
-      // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
-      case _ =>
-        lk = l1
+    case 48                         // 'attribute'
+       | 52                         // 'comment'
+       | 56                         // 'document-node'
+       | 57                         // 'element'
+       | 82                         // 'namespace-node'
+       | 84                         // 'node'
+       | 90                         // 'processing-instruction'
+       | 93                         // 'schema-attribute'
+       | 94                         // 'schema-element'
+       | 98 =>                      // 'text'
+      lookahead2W(34)               // S^WS | EOF | '!' | '!=' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' |
+                                    // ':' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' |
+                                    // 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
+                                    // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
+                                    // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
+    case _ =>
+      lk = l1
     }
     lk match {
-      case 2096                       // 'attribute' '('
-           | 2100                       // 'comment' '('
-           | 2104                       // 'document-node' '('
-           | 2105                       // 'element' '('
-           | 2130                       // 'namespace-node' '('
-           | 2132                       // 'node' '('
-           | 2138                       // 'processing-instruction' '('
-           | 2141                       // 'schema-attribute' '('
-           | 2142                       // 'schema-element' '('
-           | 2146 =>                    // 'text' '('
-        parse_KindTest
-      case _ =>
-        parse_NameTest
+    case 2096                       // 'attribute' '('
+       | 2100                       // 'comment' '('
+       | 2104                       // 'document-node' '('
+       | 2105                       // 'element' '('
+       | 2130                       // 'namespace-node' '('
+       | 2132                       // 'node' '('
+       | 2138                       // 'processing-instruction' '('
+       | 2141                       // 'schema-attribute' '('
+       | 2142                       // 'schema-element' '('
+       | 2146 =>                    // 'text' '('
+      parse_KindTest
+    case _ =>
+      parse_NameTest
     }
     eventHandler.endNonterminal("NodeTest", e0)
   }
 
-  private def parse_NameTest {
+  private def parse_NameTest: Unit = {
     eventHandler.startNonterminal("NameTest", e0)
     l1 match {
-      case 10 =>                      // Wildcard
-        consume(10)                   // Wildcard
-      case _ =>
-        parse_EQName
+    case 10 =>                      // Wildcard
+      consume(10)                   // Wildcard
+    case _ =>
+      parse_EQName
     }
     eventHandler.endNonterminal("NameTest", e0)
   }
 
-  private def parse_PostfixExpr {
+  private def parse_PostfixExpr: Unit = {
     eventHandler.startNonterminal("PostfixExpr", e0)
     parse_PrimaryExpr
     var c1 = true
     while (c1) {
       lookahead1W(39)               // S^WS | EOF | '!' | '!=' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' |
-      // ':' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '?' | '[' | ']' |
-      // 'and' | 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' |
-      // 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' |
-      // 'return' | 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
+                                    // ':' | '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '?' | '[' | ']' |
+                                    // 'and' | 'cast' | 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' |
+                                    // 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' |
+                                    // 'return' | 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
       if (l1 != 16                  // '('
-        && l1 != 39                  // '?'
-        && l1 != 41) {               // '['
+       && l1 != 39                  // '?'
+       && l1 != 41) {               // '['
         c1 = false
       }
       else {
         l1 match {
-          case 41 =>                  // '['
-            whitespace
-            parse_Predicate
-          case 16 =>                  // '('
-            whitespace
-            parse_ArgumentList
-          case _ =>
-            whitespace
-            parse_Lookup
+        case 41 =>                  // '['
+          whitespace
+          parse_Predicate
+        case 16 =>                  // '('
+          whitespace
+          parse_ArgumentList
+        case _ =>
+          whitespace
+          parse_Lookup
         }
       }
     }
     eventHandler.endNonterminal("PostfixExpr", e0)
   }
 
-  private def parse_ArgumentList {
+  private def parse_ArgumentList: Unit = {
     eventHandler.startNonterminal("ArgumentList", e0)
     consume(16)                     // '('
     lookahead1W(54)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | ')' | '+' |
-    // '-' | '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' |
-    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | ')' | '+' |
+                                    // '-' | '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' |
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
     if (l1 != 18) {                 // ')'
       whitespace
       parse_Argument
@@ -1647,17 +1660,17 @@ class XPath31() {
         else {
           consume(21)               // ','
           lookahead1W(53)           // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-          // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-          // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-          // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-          // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-          // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-          // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-          // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-          // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-          // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-          // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-          // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
           whitespace
           parse_Argument
         }
@@ -1667,15 +1680,15 @@ class XPath31() {
     eventHandler.endNonterminal("ArgumentList", e0)
   }
 
-  private def parse_PredicateList {
+  private def parse_PredicateList: Unit = {
     eventHandler.startNonterminal("PredicateList", e0)
     var c1 = true
     while (c1) {
       lookahead1W(33)               // S^WS | EOF | '!' | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | '/' | '//' | ':' |
-      // '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' | 'cast' |
-      // 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
-      // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
-      // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
+                                    // '<' | '<<' | '<=' | '=' | '=>' | '>' | '>=' | '>>' | '[' | ']' | 'and' | 'cast' |
+                                    // 'castable' | 'div' | 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' |
+                                    // 'instance' | 'intersect' | 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' |
+                                    // 'satisfies' | 'to' | 'treat' | 'union' | '|' | '||' | '}'
       if (l1 != 41) {               // '['
         c1 = false
       }
@@ -1687,28 +1700,28 @@ class XPath31() {
     eventHandler.endNonterminal("PredicateList", e0)
   }
 
-  private def parse_Predicate {
+  private def parse_Predicate: Unit = {
     eventHandler.startNonterminal("Predicate", e0)
     consume(41)                     // '['
     lookahead1W(53)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_Expr
     consume(42)                     // ']'
     eventHandler.endNonterminal("Predicate", e0)
   }
 
-  private def parse_Lookup {
+  private def parse_Lookup: Unit = {
     eventHandler.startNonterminal("Lookup", e0)
     consume(39)                     // '?'
     lookahead1W(23)                 // IntegerLiteral | NCName | S^WS | '(' | '(:' | '*'
@@ -1717,212 +1730,212 @@ class XPath31() {
     eventHandler.endNonterminal("Lookup", e0)
   }
 
-  private def parse_KeySpecifier {
+  private def parse_KeySpecifier: Unit = {
     eventHandler.startNonterminal("KeySpecifier", e0)
     l1 match {
-      case 6 =>                       // NCName
-        consume(6)                    // NCName
-      case 1 =>                       // IntegerLiteral
-        consume(1)                    // IntegerLiteral
-      case 16 =>                      // '('
-        parse_ParenthesizedExpr
-      case _ =>
-        consume(19)                   // '*'
+    case 6 =>                       // NCName
+      consume(6)                    // NCName
+    case 1 =>                       // IntegerLiteral
+      consume(1)                    // IntegerLiteral
+    case 16 =>                      // '('
+      parse_ParenthesizedExpr
+    case _ =>
+      consume(19)                   // '*'
     }
     eventHandler.endNonterminal("KeySpecifier", e0)
   }
 
-  private def parse_ArrowFunctionSpecifier {
+  private def parse_ArrowFunctionSpecifier: Unit = {
     eventHandler.startNonterminal("ArrowFunctionSpecifier", e0)
     l1 match {
-      case 15 =>                      // '$'
-        parse_VarRef
-      case 16 =>                      // '('
-        parse_ParenthesizedExpr
-      case _ =>
-        parse_EQName
+    case 15 =>                      // '$'
+      parse_VarRef
+    case 16 =>                      // '('
+      parse_ParenthesizedExpr
+    case _ =>
+      parse_EQName
     }
     eventHandler.endNonterminal("ArrowFunctionSpecifier", e0)
   }
 
-  private def parse_PrimaryExpr {
+  private def parse_PrimaryExpr: Unit = {
     eventHandler.startNonterminal("PrimaryExpr", e0)
     l1 match {
-      case 5                          // URIQualifiedName
-           | 7                          // QName^Token
-           | 43                         // 'ancestor'
-           | 44                         // 'ancestor-or-self'
-           | 45                         // 'and'
-           | 49                         // 'cast'
-           | 50                         // 'castable'
-           | 51                         // 'child'
-           | 53                         // 'descendant'
-           | 54                         // 'descendant-or-self'
-           | 55                         // 'div'
-           | 58                         // 'else'
-           | 60                         // 'eq'
-           | 61                         // 'every'
-           | 62                         // 'except'
-           | 63                         // 'following'
-           | 64                         // 'following-sibling'
-           | 65                         // 'for'
-           | 67                         // 'ge'
-           | 68                         // 'gt'
-           | 69                         // 'idiv'
-           | 72                         // 'instance'
-           | 73                         // 'intersect'
-           | 74                         // 'is'
-           | 76                         // 'le'
-           | 77                         // 'let'
-           | 78                         // 'lt'
-           | 80                         // 'mod'
-           | 81                         // 'namespace'
-           | 83                         // 'ne'
-           | 86                         // 'or'
-           | 87                         // 'parent'
-           | 88                         // 'preceding'
-           | 89                         // 'preceding-sibling'
-           | 91                         // 'return'
-           | 92                         // 'satisfies'
-           | 95                         // 'self'
-           | 96                         // 'some'
-           | 100                        // 'to'
-           | 101                        // 'treat'
-           | 103 =>                     // 'union'
-        lookahead2W(15)               // S^WS | '#' | '(' | '(:'
-      case _ =>
-        lk = l1
+    case 5                          // URIQualifiedName
+       | 7                          // QName^Token
+       | 43                         // 'ancestor'
+       | 44                         // 'ancestor-or-self'
+       | 45                         // 'and'
+       | 49                         // 'cast'
+       | 50                         // 'castable'
+       | 51                         // 'child'
+       | 53                         // 'descendant'
+       | 54                         // 'descendant-or-self'
+       | 55                         // 'div'
+       | 58                         // 'else'
+       | 60                         // 'eq'
+       | 61                         // 'every'
+       | 62                         // 'except'
+       | 63                         // 'following'
+       | 64                         // 'following-sibling'
+       | 65                         // 'for'
+       | 67                         // 'ge'
+       | 68                         // 'gt'
+       | 69                         // 'idiv'
+       | 72                         // 'instance'
+       | 73                         // 'intersect'
+       | 74                         // 'is'
+       | 76                         // 'le'
+       | 77                         // 'let'
+       | 78                         // 'lt'
+       | 80                         // 'mod'
+       | 81                         // 'namespace'
+       | 83                         // 'ne'
+       | 86                         // 'or'
+       | 87                         // 'parent'
+       | 88                         // 'preceding'
+       | 89                         // 'preceding-sibling'
+       | 91                         // 'return'
+       | 92                         // 'satisfies'
+       | 95                         // 'self'
+       | 96                         // 'some'
+       | 100                        // 'to'
+       | 101                        // 'treat'
+       | 103 =>                     // 'union'
+      lookahead2W(15)               // S^WS | '#' | '(' | '(:'
+    case _ =>
+      lk = l1
     }
     lk match {
-      case 1                          // IntegerLiteral
-           | 2                          // DecimalLiteral
-           | 3                          // DoubleLiteral
-           | 4 =>                       // StringLiteral
-        parse_Literal
-      case 15 =>                      // '$'
-        parse_VarRef
-      case 16 =>                      // '('
-        parse_ParenthesizedExpr
-      case 23 =>                      // '.'
-        parse_ContextItemExpr
-      case 2053                       // URIQualifiedName '('
-           | 2055                       // QName^Token '('
-           | 2091                       // 'ancestor' '('
-           | 2092                       // 'ancestor-or-self' '('
-           | 2093                       // 'and' '('
-           | 2097                       // 'cast' '('
-           | 2098                       // 'castable' '('
-           | 2099                       // 'child' '('
-           | 2101                       // 'descendant' '('
-           | 2102                       // 'descendant-or-self' '('
-           | 2103                       // 'div' '('
-           | 2106                       // 'else' '('
-           | 2108                       // 'eq' '('
-           | 2109                       // 'every' '('
-           | 2110                       // 'except' '('
-           | 2111                       // 'following' '('
-           | 2112                       // 'following-sibling' '('
-           | 2113                       // 'for' '('
-           | 2115                       // 'ge' '('
-           | 2116                       // 'gt' '('
-           | 2117                       // 'idiv' '('
-           | 2120                       // 'instance' '('
-           | 2121                       // 'intersect' '('
-           | 2122                       // 'is' '('
-           | 2124                       // 'le' '('
-           | 2125                       // 'let' '('
-           | 2126                       // 'lt' '('
-           | 2128                       // 'mod' '('
-           | 2129                       // 'namespace' '('
-           | 2131                       // 'ne' '('
-           | 2134                       // 'or' '('
-           | 2135                       // 'parent' '('
-           | 2136                       // 'preceding' '('
-           | 2137                       // 'preceding-sibling' '('
-           | 2139                       // 'return' '('
-           | 2140                       // 'satisfies' '('
-           | 2143                       // 'self' '('
-           | 2144                       // 'some' '('
-           | 2148                       // 'to' '('
-           | 2149                       // 'treat' '('
-           | 2151 =>                    // 'union' '('
-        parse_FunctionCall
-      case 79 =>                      // 'map'
-        parse_MapConstructor
-      case 41                         // '['
-           | 46 =>                      // 'array'
-        parse_ArrayConstructor
-      case 39 =>                      // '?'
-        parse_UnaryLookup
-      case _ =>
-        parse_FunctionItemExpr
+    case 1                          // IntegerLiteral
+       | 2                          // DecimalLiteral
+       | 3                          // DoubleLiteral
+       | 4 =>                       // StringLiteral
+      parse_Literal
+    case 15 =>                      // '$'
+      parse_VarRef
+    case 16 =>                      // '('
+      parse_ParenthesizedExpr
+    case 23 =>                      // '.'
+      parse_ContextItemExpr
+    case 2053                       // URIQualifiedName '('
+       | 2055                       // QName^Token '('
+       | 2091                       // 'ancestor' '('
+       | 2092                       // 'ancestor-or-self' '('
+       | 2093                       // 'and' '('
+       | 2097                       // 'cast' '('
+       | 2098                       // 'castable' '('
+       | 2099                       // 'child' '('
+       | 2101                       // 'descendant' '('
+       | 2102                       // 'descendant-or-self' '('
+       | 2103                       // 'div' '('
+       | 2106                       // 'else' '('
+       | 2108                       // 'eq' '('
+       | 2109                       // 'every' '('
+       | 2110                       // 'except' '('
+       | 2111                       // 'following' '('
+       | 2112                       // 'following-sibling' '('
+       | 2113                       // 'for' '('
+       | 2115                       // 'ge' '('
+       | 2116                       // 'gt' '('
+       | 2117                       // 'idiv' '('
+       | 2120                       // 'instance' '('
+       | 2121                       // 'intersect' '('
+       | 2122                       // 'is' '('
+       | 2124                       // 'le' '('
+       | 2125                       // 'let' '('
+       | 2126                       // 'lt' '('
+       | 2128                       // 'mod' '('
+       | 2129                       // 'namespace' '('
+       | 2131                       // 'ne' '('
+       | 2134                       // 'or' '('
+       | 2135                       // 'parent' '('
+       | 2136                       // 'preceding' '('
+       | 2137                       // 'preceding-sibling' '('
+       | 2139                       // 'return' '('
+       | 2140                       // 'satisfies' '('
+       | 2143                       // 'self' '('
+       | 2144                       // 'some' '('
+       | 2148                       // 'to' '('
+       | 2149                       // 'treat' '('
+       | 2151 =>                    // 'union' '('
+      parse_FunctionCall
+    case 79 =>                      // 'map'
+      parse_MapConstructor
+    case 41                         // '['
+       | 46 =>                      // 'array'
+      parse_ArrayConstructor
+    case 39 =>                      // '?'
+      parse_UnaryLookup
+    case _ =>
+      parse_FunctionItemExpr
     }
     eventHandler.endNonterminal("PrimaryExpr", e0)
   }
 
-  private def parse_Literal {
+  private def parse_Literal: Unit = {
     eventHandler.startNonterminal("Literal", e0)
     l1 match {
-      case 4 =>                       // StringLiteral
-        consume(4)                    // StringLiteral
-      case _ =>
-        parse_NumericLiteral
+    case 4 =>                       // StringLiteral
+      consume(4)                    // StringLiteral
+    case _ =>
+      parse_NumericLiteral
     }
     eventHandler.endNonterminal("Literal", e0)
   }
 
-  private def parse_NumericLiteral {
+  private def parse_NumericLiteral: Unit = {
     eventHandler.startNonterminal("NumericLiteral", e0)
     l1 match {
-      case 1 =>                       // IntegerLiteral
-        consume(1)                    // IntegerLiteral
-      case 2 =>                       // DecimalLiteral
-        consume(2)                    // DecimalLiteral
-      case _ =>
-        consume(3)                    // DoubleLiteral
+    case 1 =>                       // IntegerLiteral
+      consume(1)                    // IntegerLiteral
+    case 2 =>                       // DecimalLiteral
+      consume(2)                    // DecimalLiteral
+    case _ =>
+      consume(3)                    // DoubleLiteral
     }
     eventHandler.endNonterminal("NumericLiteral", e0)
   }
 
-  private def parse_VarRef {
+  private def parse_VarRef: Unit = {
     eventHandler.startNonterminal("VarRef", e0)
     consume(15)                     // '$'
     lookahead1W(42)                 // URIQualifiedName | QName^Token | S^WS | '(:' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_VarName
     eventHandler.endNonterminal("VarRef", e0)
   }
 
-  private def parse_VarName {
+  private def parse_VarName: Unit = {
     eventHandler.startNonterminal("VarName", e0)
     parse_EQName
     eventHandler.endNonterminal("VarName", e0)
   }
 
-  private def parse_ParenthesizedExpr {
+  private def parse_ParenthesizedExpr: Unit = {
     eventHandler.startNonterminal("ParenthesizedExpr", e0)
     consume(16)                     // '('
     lookahead1W(54)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | ')' | '+' |
-    // '-' | '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' |
-    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | ')' | '+' |
+                                    // '-' | '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' |
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
     if (l1 != 18) {                 // ')'
       whitespace
       parse_Expr
@@ -1931,13 +1944,13 @@ class XPath31() {
     eventHandler.endNonterminal("ParenthesizedExpr", e0)
   }
 
-  private def parse_ContextItemExpr {
+  private def parse_ContextItemExpr: Unit = {
     eventHandler.startNonterminal("ContextItemExpr", e0)
     consume(23)                     // '.'
     eventHandler.endNonterminal("ContextItemExpr", e0)
   }
 
-  private def parse_FunctionCall {
+  private def parse_FunctionCall: Unit = {
     eventHandler.startNonterminal("FunctionCall", e0)
     parse_FunctionEQName
     lookahead1W(3)                  // S^WS | '(' | '(:'
@@ -1946,42 +1959,42 @@ class XPath31() {
     eventHandler.endNonterminal("FunctionCall", e0)
   }
 
-  private def parse_Argument {
+  private def parse_Argument: Unit = {
     eventHandler.startNonterminal("Argument", e0)
     l1 match {
-      case 39 =>                      // '?'
-        lookahead2W(24)               // IntegerLiteral | NCName | S^WS | '(' | '(:' | ')' | '*' | ','
-      case _ =>
-        lk = l1
+    case 39 =>                      // '?'
+      lookahead2W(24)               // IntegerLiteral | NCName | S^WS | '(' | '(:' | ')' | '*' | ','
+    case _ =>
+      lk = l1
     }
     lk match {
-      case 2343                       // '?' ')'
-           | 2727 =>                    // '?' ','
-        parse_ArgumentPlaceholder
-      case _ =>
-        parse_ExprSingle
+    case 2343                       // '?' ')'
+       | 2727 =>                    // '?' ','
+      parse_ArgumentPlaceholder
+    case _ =>
+      parse_ExprSingle
     }
     eventHandler.endNonterminal("Argument", e0)
   }
 
-  private def parse_ArgumentPlaceholder {
+  private def parse_ArgumentPlaceholder: Unit = {
     eventHandler.startNonterminal("ArgumentPlaceholder", e0)
     consume(39)                     // '?'
     eventHandler.endNonterminal("ArgumentPlaceholder", e0)
   }
 
-  private def parse_FunctionItemExpr {
+  private def parse_FunctionItemExpr: Unit = {
     eventHandler.startNonterminal("FunctionItemExpr", e0)
     l1 match {
-      case 66 =>                      // 'function'
-        parse_InlineFunctionExpr
-      case _ =>
-        parse_NamedFunctionRef
+    case 66 =>                      // 'function'
+      parse_InlineFunctionExpr
+    case _ =>
+      parse_NamedFunctionRef
     }
     eventHandler.endNonterminal("FunctionItemExpr", e0)
   }
 
-  private def parse_NamedFunctionRef {
+  private def parse_NamedFunctionRef: Unit = {
     eventHandler.startNonterminal("NamedFunctionRef", e0)
     parse_FunctionEQName
     lookahead1W(1)                  // S^WS | '#' | '(:'
@@ -1991,7 +2004,7 @@ class XPath31() {
     eventHandler.endNonterminal("NamedFunctionRef", e0)
   }
 
-  private def parse_InlineFunctionExpr {
+  private def parse_InlineFunctionExpr: Unit = {
     eventHandler.startNonterminal("InlineFunctionExpr", e0)
     consume(66)                     // 'function'
     lookahead1W(3)                  // S^WS | '(' | '(:'
@@ -2006,15 +2019,15 @@ class XPath31() {
     if (l1 == 47) {                 // 'as'
       consume(47)                   // 'as'
       lookahead1W(44)               // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | 'ancestor' |
-      // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-      // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-      // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-      // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-      // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-      // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-      // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-      // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-      // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
       whitespace
       parse_SequenceType
     }
@@ -2024,23 +2037,23 @@ class XPath31() {
     eventHandler.endNonterminal("InlineFunctionExpr", e0)
   }
 
-  private def parse_MapConstructor {
+  private def parse_MapConstructor: Unit = {
     eventHandler.startNonterminal("MapConstructor", e0)
     consume(79)                     // 'map'
     lookahead1W(13)                 // S^WS | '(:' | '{'
     consume(104)                    // '{'
     lookahead1W(56)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union' | '}'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union' | '}'
     if (l1 != 107) {                // '}'
       whitespace
       parse_MapConstructorEntry
@@ -2052,17 +2065,17 @@ class XPath31() {
         else {
           consume(21)               // ','
           lookahead1W(53)           // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-          // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-          // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-          // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-          // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-          // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-          // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-          // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-          // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-          // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-          // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-          // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
           whitespace
           parse_MapConstructorEntry
         }
@@ -2072,65 +2085,65 @@ class XPath31() {
     eventHandler.endNonterminal("MapConstructor", e0)
   }
 
-  private def parse_MapConstructorEntry {
+  private def parse_MapConstructorEntry: Unit = {
     eventHandler.startNonterminal("MapConstructorEntry", e0)
     parse_MapKeyExpr
     consume(27)                     // ':'
     lookahead1W(53)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_MapValueExpr
     eventHandler.endNonterminal("MapConstructorEntry", e0)
   }
 
-  private def parse_MapKeyExpr {
+  private def parse_MapKeyExpr: Unit = {
     eventHandler.startNonterminal("MapKeyExpr", e0)
     parse_ExprSingle
     eventHandler.endNonterminal("MapKeyExpr", e0)
   }
 
-  private def parse_MapValueExpr {
+  private def parse_MapValueExpr: Unit = {
     eventHandler.startNonterminal("MapValueExpr", e0)
     parse_ExprSingle
     eventHandler.endNonterminal("MapValueExpr", e0)
   }
 
-  private def parse_ArrayConstructor {
+  private def parse_ArrayConstructor: Unit = {
     eventHandler.startNonterminal("ArrayConstructor", e0)
     l1 match {
-      case 41 =>                      // '['
-        parse_SquareArrayConstructor
-      case _ =>
-        parse_CurlyArrayConstructor
+    case 41 =>                      // '['
+      parse_SquareArrayConstructor
+    case _ =>
+      parse_CurlyArrayConstructor
     }
     eventHandler.endNonterminal("ArrayConstructor", e0)
   }
 
-  private def parse_SquareArrayConstructor {
+  private def parse_SquareArrayConstructor: Unit = {
     eventHandler.startNonterminal("SquareArrayConstructor", e0)
     consume(41)                     // '['
     lookahead1W(55)                 // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | ']' | 'ancestor' |
-    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | ']' | 'ancestor' |
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
     if (l1 != 42) {                 // ']'
       whitespace
       parse_ExprSingle
@@ -2142,17 +2155,17 @@ class XPath31() {
         else {
           consume(21)               // ','
           lookahead1W(53)           // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-          // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
-          // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
-          // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-          // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-          // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-          // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-          // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-          // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-          // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-          // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-          // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // URIQualifiedName | QName^Token | S^WS | Wildcard | '$' | '(' | '(:' | '+' | '-' |
+                                    // '.' | '..' | '/' | '//' | '?' | '@' | '[' | 'ancestor' | 'ancestor-or-self' |
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
           whitespace
           parse_ExprSingle
         }
@@ -2162,7 +2175,7 @@ class XPath31() {
     eventHandler.endNonterminal("SquareArrayConstructor", e0)
   }
 
-  private def parse_CurlyArrayConstructor {
+  private def parse_CurlyArrayConstructor: Unit = {
     eventHandler.startNonterminal("CurlyArrayConstructor", e0)
     consume(46)                     // 'array'
     lookahead1W(13)                 // S^WS | '(:' | '{'
@@ -2171,7 +2184,7 @@ class XPath31() {
     eventHandler.endNonterminal("CurlyArrayConstructor", e0)
   }
 
-  private def parse_UnaryLookup {
+  private def parse_UnaryLookup: Unit = {
     eventHandler.startNonterminal("UnaryLookup", e0)
     consume(39)                     // '?'
     lookahead1W(23)                 // IntegerLiteral | NCName | S^WS | '(' | '(:' | '*'
@@ -2180,180 +2193,180 @@ class XPath31() {
     eventHandler.endNonterminal("UnaryLookup", e0)
   }
 
-  private def parse_SingleType {
+  private def parse_SingleType: Unit = {
     eventHandler.startNonterminal("SingleType", e0)
     parse_SimpleTypeName
     lookahead1W(31)                 // S^WS | EOF | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | ':' | '<' | '<<' |
-    // '<=' | '=' | '>' | '>=' | '>>' | '?' | ']' | 'and' | 'castable' | 'div' |
-    // 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' |
-    // 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' | 'satisfies' | 'to' |
-    // 'treat' | 'union' | '|' | '||' | '}'
+                                    // '<=' | '=' | '>' | '>=' | '>>' | '?' | ']' | 'and' | 'castable' | 'div' |
+                                    // 'else' | 'eq' | 'except' | 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' |
+                                    // 'is' | 'le' | 'lt' | 'mod' | 'ne' | 'or' | 'return' | 'satisfies' | 'to' |
+                                    // 'treat' | 'union' | '|' | '||' | '}'
     if (l1 == 39) {                 // '?'
       consume(39)                   // '?'
     }
     eventHandler.endNonterminal("SingleType", e0)
   }
 
-  private def parse_TypeDeclaration {
+  private def parse_TypeDeclaration: Unit = {
     eventHandler.startNonterminal("TypeDeclaration", e0)
     consume(47)                     // 'as'
     lookahead1W(44)                 // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | 'ancestor' |
-    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_SequenceType
     eventHandler.endNonterminal("TypeDeclaration", e0)
   }
 
-  private def parse_SequenceType {
+  private def parse_SequenceType: Unit = {
     eventHandler.startNonterminal("SequenceType", e0)
     l1 match {
-      case 59 =>                      // 'empty-sequence'
-        lookahead2W(30)               // S^WS | EOF | '!=' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | ':' | '<' | '<<' |
-      // '<=' | '=' | '>' | '>=' | '>>' | '?' | ']' | 'and' | 'div' | 'else' | 'eq' |
-      // 'except' | 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' |
-      // 'mod' | 'ne' | 'or' | 'return' | 'satisfies' | 'to' | 'union' | '{' | '|' |
-      // '||' | '}'
-      case _ =>
-        lk = l1
+    case 59 =>                      // 'empty-sequence'
+      lookahead2W(30)               // S^WS | EOF | '!=' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | ':' | '<' | '<<' |
+                                    // '<=' | '=' | '>' | '>=' | '>>' | '?' | ']' | 'and' | 'div' | 'else' | 'eq' |
+                                    // 'except' | 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' |
+                                    // 'mod' | 'ne' | 'or' | 'return' | 'satisfies' | 'to' | 'union' | '{' | '|' |
+                                    // '||' | '}'
+    case _ =>
+      lk = l1
     }
     lk match {
-      case 2107 =>                    // 'empty-sequence' '('
-        consume(59)                   // 'empty-sequence'
-        lookahead1W(3)                // S^WS | '(' | '(:'
-        consume(16)                   // '('
-        lookahead1W(4)                // S^WS | '(:' | ')'
-        consume(18)                   // ')'
+    case 2107 =>                    // 'empty-sequence' '('
+      consume(59)                   // 'empty-sequence'
+      lookahead1W(3)                // S^WS | '(' | '(:'
+      consume(16)                   // '('
+      lookahead1W(4)                // S^WS | '(:' | ')'
+      consume(18)                   // ')'
+    case _ =>
+      parse_ItemType
+      lookahead1W(28)               // S^WS | EOF | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | ':' | '<' | '<<' |
+                                    // '<=' | '=' | '>' | '>=' | '>>' | '?' | ']' | 'and' | 'div' | 'else' | 'eq' |
+                                    // 'except' | 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' |
+                                    // 'mod' | 'ne' | 'or' | 'return' | 'satisfies' | 'to' | 'union' | '{' | '|' |
+                                    // '||' | '}'
+      l1 match {
+      case 19                       // '*'
+         | 20                       // '+'
+         | 39 =>                    // '?'
+        whitespace
+        parse_OccurrenceIndicator
       case _ =>
-        parse_ItemType
-        lookahead1W(28)               // S^WS | EOF | '!=' | '(:' | ')' | '*' | '+' | ',' | '-' | ':' | '<' | '<<' |
-        // '<=' | '=' | '>' | '>=' | '>>' | '?' | ']' | 'and' | 'div' | 'else' | 'eq' |
-        // 'except' | 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' |
-        // 'mod' | 'ne' | 'or' | 'return' | 'satisfies' | 'to' | 'union' | '{' | '|' |
-        // '||' | '}'
-        l1 match {
-          case 19                       // '*'
-               | 20                       // '+'
-               | 39 =>                    // '?'
-            whitespace
-            parse_OccurrenceIndicator
-          case _ =>
-        }
+      }
     }
     eventHandler.endNonterminal("SequenceType", e0)
   }
 
-  private def parse_OccurrenceIndicator {
+  private def parse_OccurrenceIndicator: Unit = {
     eventHandler.startNonterminal("OccurrenceIndicator", e0)
     l1 match {
-      case 39 =>                      // '?'
-        consume(39)                   // '?'
-      case 19 =>                      // '*'
-        consume(19)                   // '*'
-      case _ =>
-        consume(20)                   // '+'
+    case 39 =>                      // '?'
+      consume(39)                   // '?'
+    case 19 =>                      // '*'
+      consume(19)                   // '*'
+    case _ =>
+      consume(20)                   // '+'
     }
     eventHandler.endNonterminal("OccurrenceIndicator", e0)
   }
 
-  private def parse_ItemType {
+  private def parse_ItemType: Unit = {
     eventHandler.startNonterminal("ItemType", e0)
     l1 match {
-      case 46                         // 'array'
-           | 48                         // 'attribute'
-           | 52                         // 'comment'
-           | 56                         // 'document-node'
-           | 57                         // 'element'
-           | 66                         // 'function'
-           | 75                         // 'item'
-           | 79                         // 'map'
-           | 82                         // 'namespace-node'
-           | 84                         // 'node'
-           | 90                         // 'processing-instruction'
-           | 93                         // 'schema-attribute'
-           | 94                         // 'schema-element'
-           | 98 =>                      // 'text'
-        lookahead2W(30)               // S^WS | EOF | '!=' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | ':' | '<' | '<<' |
-      // '<=' | '=' | '>' | '>=' | '>>' | '?' | ']' | 'and' | 'div' | 'else' | 'eq' |
-      // 'except' | 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' |
-      // 'mod' | 'ne' | 'or' | 'return' | 'satisfies' | 'to' | 'union' | '{' | '|' |
-      // '||' | '}'
-      case _ =>
-        lk = l1
+    case 46                         // 'array'
+       | 48                         // 'attribute'
+       | 52                         // 'comment'
+       | 56                         // 'document-node'
+       | 57                         // 'element'
+       | 66                         // 'function'
+       | 75                         // 'item'
+       | 79                         // 'map'
+       | 82                         // 'namespace-node'
+       | 84                         // 'node'
+       | 90                         // 'processing-instruction'
+       | 93                         // 'schema-attribute'
+       | 94                         // 'schema-element'
+       | 98 =>                      // 'text'
+      lookahead2W(30)               // S^WS | EOF | '!=' | '(' | '(:' | ')' | '*' | '+' | ',' | '-' | ':' | '<' | '<<' |
+                                    // '<=' | '=' | '>' | '>=' | '>>' | '?' | ']' | 'and' | 'div' | 'else' | 'eq' |
+                                    // 'except' | 'ge' | 'gt' | 'idiv' | 'instance' | 'intersect' | 'is' | 'le' | 'lt' |
+                                    // 'mod' | 'ne' | 'or' | 'return' | 'satisfies' | 'to' | 'union' | '{' | '|' |
+                                    // '||' | '}'
+    case _ =>
+      lk = l1
     }
     lk match {
-      case 2096                       // 'attribute' '('
-           | 2100                       // 'comment' '('
-           | 2104                       // 'document-node' '('
-           | 2105                       // 'element' '('
-           | 2130                       // 'namespace-node' '('
-           | 2132                       // 'node' '('
-           | 2138                       // 'processing-instruction' '('
-           | 2141                       // 'schema-attribute' '('
-           | 2142                       // 'schema-element' '('
-           | 2146 =>                    // 'text' '('
-        parse_KindTest
-      case 2123 =>                    // 'item' '('
-        consume(75)                   // 'item'
-        lookahead1W(3)                // S^WS | '(' | '(:'
-        consume(16)                   // '('
-        lookahead1W(4)                // S^WS | '(:' | ')'
-        consume(18)                   // ')'
-      case 2114 =>                    // 'function' '('
-        parse_FunctionTest
-      case 2127 =>                    // 'map' '('
-        parse_MapTest
-      case 2094 =>                    // 'array' '('
-        parse_ArrayTest
-      case 16 =>                      // '('
-        parse_ParenthesizedItemType
-      case _ =>
-        parse_AtomicOrUnionType
+    case 2096                       // 'attribute' '('
+       | 2100                       // 'comment' '('
+       | 2104                       // 'document-node' '('
+       | 2105                       // 'element' '('
+       | 2130                       // 'namespace-node' '('
+       | 2132                       // 'node' '('
+       | 2138                       // 'processing-instruction' '('
+       | 2141                       // 'schema-attribute' '('
+       | 2142                       // 'schema-element' '('
+       | 2146 =>                    // 'text' '('
+      parse_KindTest
+    case 2123 =>                    // 'item' '('
+      consume(75)                   // 'item'
+      lookahead1W(3)                // S^WS | '(' | '(:'
+      consume(16)                   // '('
+      lookahead1W(4)                // S^WS | '(:' | ')'
+      consume(18)                   // ')'
+    case 2114 =>                    // 'function' '('
+      parse_FunctionTest
+    case 2127 =>                    // 'map' '('
+      parse_MapTest
+    case 2094 =>                    // 'array' '('
+      parse_ArrayTest
+    case 16 =>                      // '('
+      parse_ParenthesizedItemType
+    case _ =>
+      parse_AtomicOrUnionType
     }
     eventHandler.endNonterminal("ItemType", e0)
   }
 
-  private def parse_AtomicOrUnionType {
+  private def parse_AtomicOrUnionType: Unit = {
     eventHandler.startNonterminal("AtomicOrUnionType", e0)
     parse_EQName
     eventHandler.endNonterminal("AtomicOrUnionType", e0)
   }
 
-  private def parse_KindTest {
+  private def parse_KindTest: Unit = {
     eventHandler.startNonterminal("KindTest", e0)
     l1 match {
-      case 56 =>                      // 'document-node'
-        parse_DocumentTest
-      case 57 =>                      // 'element'
-        parse_ElementTest
-      case 48 =>                      // 'attribute'
-        parse_AttributeTest
-      case 94 =>                      // 'schema-element'
-        parse_SchemaElementTest
-      case 93 =>                      // 'schema-attribute'
-        parse_SchemaAttributeTest
-      case 90 =>                      // 'processing-instruction'
-        parse_PITest
-      case 52 =>                      // 'comment'
-        parse_CommentTest
-      case 98 =>                      // 'text'
-        parse_TextTest
-      case 82 =>                      // 'namespace-node'
-        parse_NamespaceNodeTest
-      case _ =>
-        parse_AnyKindTest
+    case 56 =>                      // 'document-node'
+      parse_DocumentTest
+    case 57 =>                      // 'element'
+      parse_ElementTest
+    case 48 =>                      // 'attribute'
+      parse_AttributeTest
+    case 94 =>                      // 'schema-element'
+      parse_SchemaElementTest
+    case 93 =>                      // 'schema-attribute'
+      parse_SchemaAttributeTest
+    case 90 =>                      // 'processing-instruction'
+      parse_PITest
+    case 52 =>                      // 'comment'
+      parse_CommentTest
+    case 98 =>                      // 'text'
+      parse_TextTest
+    case 82 =>                      // 'namespace-node'
+      parse_NamespaceNodeTest
+    case _ =>
+      parse_AnyKindTest
     }
     eventHandler.endNonterminal("KindTest", e0)
   }
 
-  private def parse_AnyKindTest {
+  private def parse_AnyKindTest: Unit = {
     eventHandler.startNonterminal("AnyKindTest", e0)
     consume(84)                     // 'node'
     lookahead1W(3)                  // S^WS | '(' | '(:'
@@ -2363,7 +2376,7 @@ class XPath31() {
     eventHandler.endNonterminal("AnyKindTest", e0)
   }
 
-  private def parse_DocumentTest {
+  private def parse_DocumentTest: Unit = {
     eventHandler.startNonterminal("DocumentTest", e0)
     consume(56)                     // 'document-node'
     lookahead1W(3)                  // S^WS | '(' | '(:'
@@ -2371,12 +2384,12 @@ class XPath31() {
     lookahead1W(22)                 // S^WS | '(:' | ')' | 'element' | 'schema-element'
     if (l1 != 18) {                 // ')'
       l1 match {
-        case 57 =>                    // 'element'
-          whitespace
-          parse_ElementTest
-        case _ =>
-          whitespace
-          parse_SchemaElementTest
+      case 57 =>                    // 'element'
+        whitespace
+        parse_ElementTest
+      case _ =>
+        whitespace
+        parse_SchemaElementTest
       }
     }
     lookahead1W(4)                  // S^WS | '(:' | ')'
@@ -2384,7 +2397,7 @@ class XPath31() {
     eventHandler.endNonterminal("DocumentTest", e0)
   }
 
-  private def parse_TextTest {
+  private def parse_TextTest: Unit = {
     eventHandler.startNonterminal("TextTest", e0)
     consume(98)                     // 'text'
     lookahead1W(3)                  // S^WS | '(' | '(:'
@@ -2394,7 +2407,7 @@ class XPath31() {
     eventHandler.endNonterminal("TextTest", e0)
   }
 
-  private def parse_CommentTest {
+  private def parse_CommentTest: Unit = {
     eventHandler.startNonterminal("CommentTest", e0)
     consume(52)                     // 'comment'
     lookahead1W(3)                  // S^WS | '(' | '(:'
@@ -2404,7 +2417,7 @@ class XPath31() {
     eventHandler.endNonterminal("CommentTest", e0)
   }
 
-  private def parse_NamespaceNodeTest {
+  private def parse_NamespaceNodeTest: Unit = {
     eventHandler.startNonterminal("NamespaceNodeTest", e0)
     consume(82)                     // 'namespace-node'
     lookahead1W(3)                  // S^WS | '(' | '(:'
@@ -2414,7 +2427,7 @@ class XPath31() {
     eventHandler.endNonterminal("NamespaceNodeTest", e0)
   }
 
-  private def parse_PITest {
+  private def parse_PITest: Unit = {
     eventHandler.startNonterminal("PITest", e0)
     consume(90)                     // 'processing-instruction'
     lookahead1W(3)                  // S^WS | '(' | '(:'
@@ -2422,10 +2435,10 @@ class XPath31() {
     lookahead1W(20)                 // StringLiteral | NCName | S^WS | '(:' | ')'
     if (l1 != 18) {                 // ')'
       l1 match {
-        case 6 =>                     // NCName
-          consume(6)                  // NCName
-        case _ =>
-          consume(4)                  // StringLiteral
+      case 6 =>                     // NCName
+        consume(6)                  // NCName
+      case _ =>
+        consume(4)                  // StringLiteral
       }
     }
     lookahead1W(4)                  // S^WS | '(:' | ')'
@@ -2433,21 +2446,21 @@ class XPath31() {
     eventHandler.endNonterminal("PITest", e0)
   }
 
-  private def parse_AttributeTest {
+  private def parse_AttributeTest: Unit = {
     eventHandler.startNonterminal("AttributeTest", e0)
     consume(48)                     // 'attribute'
     lookahead1W(3)                  // S^WS | '(' | '(:'
     consume(16)                     // '('
     lookahead1W(49)                 // URIQualifiedName | QName^Token | S^WS | '(:' | ')' | '*' | 'ancestor' |
-    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
     if (l1 != 18) {                 // ')'
       whitespace
       parse_AttribNameOrWildcard
@@ -2455,15 +2468,15 @@ class XPath31() {
       if (l1 == 21) {               // ','
         consume(21)                 // ','
         lookahead1W(42)             // URIQualifiedName | QName^Token | S^WS | '(:' | 'ancestor' | 'ancestor-or-self' |
-        // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-        // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-        // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_TypeName
       }
@@ -2473,32 +2486,32 @@ class XPath31() {
     eventHandler.endNonterminal("AttributeTest", e0)
   }
 
-  private def parse_AttribNameOrWildcard {
+  private def parse_AttribNameOrWildcard: Unit = {
     eventHandler.startNonterminal("AttribNameOrWildcard", e0)
     l1 match {
-      case 19 =>                      // '*'
-        consume(19)                   // '*'
-      case _ =>
-        parse_AttributeName
+    case 19 =>                      // '*'
+      consume(19)                   // '*'
+    case _ =>
+      parse_AttributeName
     }
     eventHandler.endNonterminal("AttribNameOrWildcard", e0)
   }
 
-  private def parse_SchemaAttributeTest {
+  private def parse_SchemaAttributeTest: Unit = {
     eventHandler.startNonterminal("SchemaAttributeTest", e0)
     consume(93)                     // 'schema-attribute'
     lookahead1W(3)                  // S^WS | '(' | '(:'
     consume(16)                     // '('
     lookahead1W(42)                 // URIQualifiedName | QName^Token | S^WS | '(:' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_AttributeDeclaration
     lookahead1W(4)                  // S^WS | '(:' | ')'
@@ -2506,27 +2519,27 @@ class XPath31() {
     eventHandler.endNonterminal("SchemaAttributeTest", e0)
   }
 
-  private def parse_AttributeDeclaration {
+  private def parse_AttributeDeclaration: Unit = {
     eventHandler.startNonterminal("AttributeDeclaration", e0)
     parse_AttributeName
     eventHandler.endNonterminal("AttributeDeclaration", e0)
   }
 
-  private def parse_ElementTest {
+  private def parse_ElementTest: Unit = {
     eventHandler.startNonterminal("ElementTest", e0)
     consume(57)                     // 'element'
     lookahead1W(3)                  // S^WS | '(' | '(:'
     consume(16)                     // '('
     lookahead1W(49)                 // URIQualifiedName | QName^Token | S^WS | '(:' | ')' | '*' | 'ancestor' |
-    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
     if (l1 != 18) {                 // ')'
       whitespace
       parse_ElementNameOrWildcard
@@ -2534,15 +2547,15 @@ class XPath31() {
       if (l1 == 21) {               // ','
         consume(21)                 // ','
         lookahead1W(42)             // URIQualifiedName | QName^Token | S^WS | '(:' | 'ancestor' | 'ancestor-or-self' |
-        // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-        // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-        // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-        // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-        // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-        // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-        // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-        // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-        // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
         whitespace
         parse_TypeName
         lookahead1W(18)             // S^WS | '(:' | ')' | '?'
@@ -2556,32 +2569,32 @@ class XPath31() {
     eventHandler.endNonterminal("ElementTest", e0)
   }
 
-  private def parse_ElementNameOrWildcard {
+  private def parse_ElementNameOrWildcard: Unit = {
     eventHandler.startNonterminal("ElementNameOrWildcard", e0)
     l1 match {
-      case 19 =>                      // '*'
-        consume(19)                   // '*'
-      case _ =>
-        parse_ElementName
+    case 19 =>                      // '*'
+      consume(19)                   // '*'
+    case _ =>
+      parse_ElementName
     }
     eventHandler.endNonterminal("ElementNameOrWildcard", e0)
   }
 
-  private def parse_SchemaElementTest {
+  private def parse_SchemaElementTest: Unit = {
     eventHandler.startNonterminal("SchemaElementTest", e0)
     consume(94)                     // 'schema-element'
     lookahead1W(3)                  // S^WS | '(' | '(:'
     consume(16)                     // '('
     lookahead1W(42)                 // URIQualifiedName | QName^Token | S^WS | '(:' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_ElementDeclaration
     lookahead1W(4)                  // S^WS | '(:' | ')'
@@ -2589,68 +2602,68 @@ class XPath31() {
     eventHandler.endNonterminal("SchemaElementTest", e0)
   }
 
-  private def parse_ElementDeclaration {
+  private def parse_ElementDeclaration: Unit = {
     eventHandler.startNonterminal("ElementDeclaration", e0)
     parse_ElementName
     eventHandler.endNonterminal("ElementDeclaration", e0)
   }
 
-  private def parse_AttributeName {
+  private def parse_AttributeName: Unit = {
     eventHandler.startNonterminal("AttributeName", e0)
     parse_EQName
     eventHandler.endNonterminal("AttributeName", e0)
   }
 
-  private def parse_ElementName {
+  private def parse_ElementName: Unit = {
     eventHandler.startNonterminal("ElementName", e0)
     parse_EQName
     eventHandler.endNonterminal("ElementName", e0)
   }
 
-  private def parse_SimpleTypeName {
+  private def parse_SimpleTypeName: Unit = {
     eventHandler.startNonterminal("SimpleTypeName", e0)
     parse_TypeName
     eventHandler.endNonterminal("SimpleTypeName", e0)
   }
 
-  private def parse_TypeName {
+  private def parse_TypeName: Unit = {
     eventHandler.startNonterminal("TypeName", e0)
     parse_EQName
     eventHandler.endNonterminal("TypeName", e0)
   }
 
-  private def parse_FunctionTest {
+  private def parse_FunctionTest: Unit = {
     eventHandler.startNonterminal("FunctionTest", e0)
     l1 match {
-      case 66 =>                      // 'function'
-        lookahead2W(3)                // S^WS | '(' | '(:'
-        lk match {
-          case 2114 =>                  // 'function' '('
-            lookahead3W(50)             // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | ')' | '*' | 'ancestor' |
-          // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-          // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-          // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-          // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-          // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-          // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-          // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-          // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-          // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
-          case _ =>
-        }
+    case 66 =>                      // 'function'
+      lookahead2W(3)                // S^WS | '(' | '(:'
+      lk match {
+      case 2114 =>                  // 'function' '('
+        lookahead3W(50)             // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | ')' | '*' | 'ancestor' |
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
       case _ =>
-        lk = l1
+      }
+    case _ =>
+      lk = l1
     }
     lk match {
-      case 313410 =>                  // 'function' '(' '*'
-        parse_AnyFunctionTest
-      case _ =>
-        parse_TypedFunctionTest
+    case 313410 =>                  // 'function' '(' '*'
+      parse_AnyFunctionTest
+    case _ =>
+      parse_TypedFunctionTest
     }
     eventHandler.endNonterminal("FunctionTest", e0)
   }
 
-  private def parse_AnyFunctionTest {
+  private def parse_AnyFunctionTest: Unit = {
     eventHandler.startNonterminal("AnyFunctionTest", e0)
     consume(66)                     // 'function'
     lookahead1W(3)                  // S^WS | '(' | '(:'
@@ -2662,21 +2675,21 @@ class XPath31() {
     eventHandler.endNonterminal("AnyFunctionTest", e0)
   }
 
-  private def parse_TypedFunctionTest {
+  private def parse_TypedFunctionTest: Unit = {
     eventHandler.startNonterminal("TypedFunctionTest", e0)
     consume(66)                     // 'function'
     lookahead1W(3)                  // S^WS | '(' | '(:'
     consume(16)                     // '('
     lookahead1W(47)                 // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | ')' | 'ancestor' |
-    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
     if (l1 != 18) {                 // ')'
       whitespace
       parse_SequenceType
@@ -2689,15 +2702,15 @@ class XPath31() {
         else {
           consume(21)               // ','
           lookahead1W(44)           // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | 'ancestor' |
-          // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-          // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-          // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-          // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-          // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-          // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-          // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-          // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-          // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
           whitespace
           parse_SequenceType
         }
@@ -2707,52 +2720,52 @@ class XPath31() {
     lookahead1W(9)                  // S^WS | '(:' | 'as'
     consume(47)                     // 'as'
     lookahead1W(44)                 // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | 'ancestor' |
-    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_SequenceType
     eventHandler.endNonterminal("TypedFunctionTest", e0)
   }
 
-  private def parse_MapTest {
+  private def parse_MapTest: Unit = {
     eventHandler.startNonterminal("MapTest", e0)
     l1 match {
-      case 79 =>                      // 'map'
-        lookahead2W(3)                // S^WS | '(' | '(:'
-        lk match {
-          case 2127 =>                  // 'map' '('
-            lookahead3W(45)             // URIQualifiedName | QName^Token | S^WS | '(:' | '*' | 'ancestor' |
-          // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-          // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-          // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-          // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-          // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-          // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-          // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-          // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-          // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
-          case _ =>
-        }
+    case 79 =>                      // 'map'
+      lookahead2W(3)                // S^WS | '(' | '(:'
+      lk match {
+      case 2127 =>                  // 'map' '('
+        lookahead3W(45)             // URIQualifiedName | QName^Token | S^WS | '(:' | '*' | 'ancestor' |
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
       case _ =>
-        lk = l1
+      }
+    case _ =>
+      lk = l1
     }
     lk match {
-      case 313423 =>                  // 'map' '(' '*'
-        parse_AnyMapTest
-      case _ =>
-        parse_TypedMapTest
+    case 313423 =>                  // 'map' '(' '*'
+      parse_AnyMapTest
+    case _ =>
+      parse_TypedMapTest
     }
     eventHandler.endNonterminal("MapTest", e0)
   }
 
-  private def parse_AnyMapTest {
+  private def parse_AnyMapTest: Unit = {
     eventHandler.startNonterminal("AnyMapTest", e0)
     consume(79)                     // 'map'
     lookahead1W(3)                  // S^WS | '(' | '(:'
@@ -2764,35 +2777,35 @@ class XPath31() {
     eventHandler.endNonterminal("AnyMapTest", e0)
   }
 
-  private def parse_TypedMapTest {
+  private def parse_TypedMapTest: Unit = {
     eventHandler.startNonterminal("TypedMapTest", e0)
     consume(79)                     // 'map'
     lookahead1W(3)                  // S^WS | '(' | '(:'
     consume(16)                     // '('
     lookahead1W(42)                 // URIQualifiedName | QName^Token | S^WS | '(:' | 'ancestor' | 'ancestor-or-self' |
-    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
-    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
-    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
-    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
-    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
-    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
-    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
-    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
-    // 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'and' | 'array' | 'attribute' | 'cast' | 'castable' | 'child' | 'comment' |
+                                    // 'descendant' | 'descendant-or-self' | 'div' | 'document-node' | 'element' |
+                                    // 'else' | 'empty-sequence' | 'eq' | 'every' | 'except' | 'following' |
+                                    // 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' | 'idiv' | 'if' |
+                                    // 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' | 'map' | 'mod' |
+                                    // 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' | 'parent' | 'preceding' |
+                                    // 'preceding-sibling' | 'processing-instruction' | 'return' | 'satisfies' |
+                                    // 'schema-attribute' | 'schema-element' | 'self' | 'some' | 'switch' | 'text' |
+                                    // 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_AtomicOrUnionType
     lookahead1W(6)                  // S^WS | '(:' | ','
     consume(21)                     // ','
     lookahead1W(44)                 // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | 'ancestor' |
-    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_SequenceType
     lookahead1W(4)                  // S^WS | '(:' | ')'
@@ -2800,38 +2813,38 @@ class XPath31() {
     eventHandler.endNonterminal("TypedMapTest", e0)
   }
 
-  private def parse_ArrayTest {
+  private def parse_ArrayTest: Unit = {
     eventHandler.startNonterminal("ArrayTest", e0)
     l1 match {
-      case 46 =>                      // 'array'
-        lookahead2W(3)                // S^WS | '(' | '(:'
-        lk match {
-          case 2094 =>                  // 'array' '('
-            lookahead3W(48)             // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | '*' | 'ancestor' |
-          // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-          // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-          // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-          // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-          // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-          // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-          // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-          // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-          // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
-          case _ =>
-        }
+    case 46 =>                      // 'array'
+      lookahead2W(3)                // S^WS | '(' | '(:'
+      lk match {
+      case 2094 =>                  // 'array' '('
+        lookahead3W(48)             // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | '*' | 'ancestor' |
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
       case _ =>
-        lk = l1
+      }
+    case _ =>
+      lk = l1
     }
     lk match {
-      case 313390 =>                  // 'array' '(' '*'
-        parse_AnyArrayTest
-      case _ =>
-        parse_TypedArrayTest
+    case 313390 =>                  // 'array' '(' '*'
+      parse_AnyArrayTest
+    case _ =>
+      parse_TypedArrayTest
     }
     eventHandler.endNonterminal("ArrayTest", e0)
   }
 
-  private def parse_AnyArrayTest {
+  private def parse_AnyArrayTest: Unit = {
     eventHandler.startNonterminal("AnyArrayTest", e0)
     consume(46)                     // 'array'
     lookahead1W(3)                  // S^WS | '(' | '(:'
@@ -2843,21 +2856,21 @@ class XPath31() {
     eventHandler.endNonterminal("AnyArrayTest", e0)
   }
 
-  private def parse_TypedArrayTest {
+  private def parse_TypedArrayTest: Unit = {
     eventHandler.startNonterminal("TypedArrayTest", e0)
     consume(46)                     // 'array'
     lookahead1W(3)                  // S^WS | '(' | '(:'
     consume(16)                     // '('
     lookahead1W(44)                 // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | 'ancestor' |
-    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_SequenceType
     lookahead1W(4)                  // S^WS | '(:' | ')'
@@ -2865,19 +2878,19 @@ class XPath31() {
     eventHandler.endNonterminal("TypedArrayTest", e0)
   }
 
-  private def parse_ParenthesizedItemType {
+  private def parse_ParenthesizedItemType: Unit = {
     eventHandler.startNonterminal("ParenthesizedItemType", e0)
     consume(16)                     // '('
     lookahead1W(44)                 // URIQualifiedName | QName^Token | S^WS | '(' | '(:' | 'ancestor' |
-    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
-    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
-    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
-    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
-    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
-    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
-    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
-    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
-    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
+                                    // 'ancestor-or-self' | 'and' | 'array' | 'attribute' | 'cast' | 'castable' |
+                                    // 'child' | 'comment' | 'descendant' | 'descendant-or-self' | 'div' |
+                                    // 'document-node' | 'element' | 'else' | 'empty-sequence' | 'eq' | 'every' |
+                                    // 'except' | 'following' | 'following-sibling' | 'for' | 'function' | 'ge' | 'gt' |
+                                    // 'idiv' | 'if' | 'instance' | 'intersect' | 'is' | 'item' | 'le' | 'let' | 'lt' |
+                                    // 'map' | 'mod' | 'namespace' | 'namespace-node' | 'ne' | 'node' | 'or' |
+                                    // 'parent' | 'preceding' | 'preceding-sibling' | 'processing-instruction' |
+                                    // 'return' | 'satisfies' | 'schema-attribute' | 'schema-element' | 'self' |
+                                    // 'some' | 'switch' | 'text' | 'to' | 'treat' | 'typeswitch' | 'union'
     whitespace
     parse_ItemType
     lookahead1W(4)                  // S^WS | '(:' | ')'
@@ -2885,38 +2898,38 @@ class XPath31() {
     eventHandler.endNonterminal("ParenthesizedItemType", e0)
   }
 
-  private def parse_FunctionEQName {
+  private def parse_FunctionEQName: Unit = {
     eventHandler.startNonterminal("FunctionEQName", e0)
     l1 match {
-      case 5 =>                       // URIQualifiedName
-        consume(5)                    // URIQualifiedName
-      case _ =>
-        parse_FunctionName
+    case 5 =>                       // URIQualifiedName
+      consume(5)                    // URIQualifiedName
+    case _ =>
+      parse_FunctionName
     }
     eventHandler.endNonterminal("FunctionEQName", e0)
   }
 
-  private def parse_EQName {
+  private def parse_EQName: Unit = {
     eventHandler.startNonterminal("EQName", e0)
     l1 match {
-      case 5 =>                       // URIQualifiedName
-        consume(5)                    // URIQualifiedName
-      case _ =>
-        parse_QName
+    case 5 =>                       // URIQualifiedName
+      consume(5)                    // URIQualifiedName
+    case _ =>
+      parse_QName
     }
     eventHandler.endNonterminal("EQName", e0)
   }
 
-  private def try_Whitespace {
+  private def try_Whitespace: Unit = {
     l1 match {
-      case 8 =>                       // S^WS
-        consumeT(8)                   // S^WS
-      case _ =>
-        try_Comment
+    case 8 =>                       // S^WS
+      consumeT(8)                   // S^WS
+    case _ =>
+      try_Comment
     }
   }
 
-  private def try_Comment {
+  private def try_Comment: Unit = {
     consumeT(17)                    // '(:'
     var c1 = true
     while (c1) {
@@ -2926,200 +2939,216 @@ class XPath31() {
       }
       else {
         l1 match {
-          case 9 =>                   // CommentContents
-            consumeT(9)               // CommentContents
-          case _ =>
-            try_Comment
+        case 9 =>                   // CommentContents
+          consumeT(9)               // CommentContents
+        case _ =>
+          try_Comment
         }
       }
     }
     consumeT(28)                    // ':)'
   }
 
-  private def parse_FunctionName {
+  private def parse_FunctionName: Unit = {
     eventHandler.startNonterminal("FunctionName", e0)
     l1 match {
-      case 7 =>                       // QName^Token
-        consume(7)                    // QName^Token
-      case 43 =>                      // 'ancestor'
-        consume(43)                   // 'ancestor'
-      case 44 =>                      // 'ancestor-or-self'
-        consume(44)                   // 'ancestor-or-self'
-      case 45 =>                      // 'and'
-        consume(45)                   // 'and'
-      case 49 =>                      // 'cast'
-        consume(49)                   // 'cast'
-      case 50 =>                      // 'castable'
-        consume(50)                   // 'castable'
-      case 51 =>                      // 'child'
-        consume(51)                   // 'child'
-      case 53 =>                      // 'descendant'
-        consume(53)                   // 'descendant'
-      case 54 =>                      // 'descendant-or-self'
-        consume(54)                   // 'descendant-or-self'
-      case 55 =>                      // 'div'
-        consume(55)                   // 'div'
-      case 58 =>                      // 'else'
-        consume(58)                   // 'else'
-      case 60 =>                      // 'eq'
-        consume(60)                   // 'eq'
-      case 61 =>                      // 'every'
-        consume(61)                   // 'every'
-      case 62 =>                      // 'except'
-        consume(62)                   // 'except'
-      case 63 =>                      // 'following'
-        consume(63)                   // 'following'
-      case 64 =>                      // 'following-sibling'
-        consume(64)                   // 'following-sibling'
-      case 65 =>                      // 'for'
-        consume(65)                   // 'for'
-      case 67 =>                      // 'ge'
-        consume(67)                   // 'ge'
-      case 68 =>                      // 'gt'
-        consume(68)                   // 'gt'
-      case 69 =>                      // 'idiv'
-        consume(69)                   // 'idiv'
-      case 72 =>                      // 'instance'
-        consume(72)                   // 'instance'
-      case 73 =>                      // 'intersect'
-        consume(73)                   // 'intersect'
-      case 74 =>                      // 'is'
-        consume(74)                   // 'is'
-      case 76 =>                      // 'le'
-        consume(76)                   // 'le'
-      case 77 =>                      // 'let'
-        consume(77)                   // 'let'
-      case 78 =>                      // 'lt'
-        consume(78)                   // 'lt'
-      case 80 =>                      // 'mod'
-        consume(80)                   // 'mod'
-      case 81 =>                      // 'namespace'
-        consume(81)                   // 'namespace'
-      case 83 =>                      // 'ne'
-        consume(83)                   // 'ne'
-      case 86 =>                      // 'or'
-        consume(86)                   // 'or'
-      case 87 =>                      // 'parent'
-        consume(87)                   // 'parent'
-      case 88 =>                      // 'preceding'
-        consume(88)                   // 'preceding'
-      case 89 =>                      // 'preceding-sibling'
-        consume(89)                   // 'preceding-sibling'
-      case 91 =>                      // 'return'
-        consume(91)                   // 'return'
-      case 92 =>                      // 'satisfies'
-        consume(92)                   // 'satisfies'
-      case 95 =>                      // 'self'
-        consume(95)                   // 'self'
-      case 96 =>                      // 'some'
-        consume(96)                   // 'some'
-      case 100 =>                     // 'to'
-        consume(100)                  // 'to'
-      case 101 =>                     // 'treat'
-        consume(101)                  // 'treat'
-      case _ =>
-        consume(103)                  // 'union'
+    case 7 =>                       // QName^Token
+      consume(7)                    // QName^Token
+    case 43 =>                      // 'ancestor'
+      consume(43)                   // 'ancestor'
+    case 44 =>                      // 'ancestor-or-self'
+      consume(44)                   // 'ancestor-or-self'
+    case 45 =>                      // 'and'
+      consume(45)                   // 'and'
+    case 49 =>                      // 'cast'
+      consume(49)                   // 'cast'
+    case 50 =>                      // 'castable'
+      consume(50)                   // 'castable'
+    case 51 =>                      // 'child'
+      consume(51)                   // 'child'
+    case 53 =>                      // 'descendant'
+      consume(53)                   // 'descendant'
+    case 54 =>                      // 'descendant-or-self'
+      consume(54)                   // 'descendant-or-self'
+    case 55 =>                      // 'div'
+      consume(55)                   // 'div'
+    case 58 =>                      // 'else'
+      consume(58)                   // 'else'
+    case 60 =>                      // 'eq'
+      consume(60)                   // 'eq'
+    case 61 =>                      // 'every'
+      consume(61)                   // 'every'
+    case 62 =>                      // 'except'
+      consume(62)                   // 'except'
+    case 63 =>                      // 'following'
+      consume(63)                   // 'following'
+    case 64 =>                      // 'following-sibling'
+      consume(64)                   // 'following-sibling'
+    case 65 =>                      // 'for'
+      consume(65)                   // 'for'
+    case 67 =>                      // 'ge'
+      consume(67)                   // 'ge'
+    case 68 =>                      // 'gt'
+      consume(68)                   // 'gt'
+    case 69 =>                      // 'idiv'
+      consume(69)                   // 'idiv'
+    case 72 =>                      // 'instance'
+      consume(72)                   // 'instance'
+    case 73 =>                      // 'intersect'
+      consume(73)                   // 'intersect'
+    case 74 =>                      // 'is'
+      consume(74)                   // 'is'
+    case 76 =>                      // 'le'
+      consume(76)                   // 'le'
+    case 77 =>                      // 'let'
+      consume(77)                   // 'let'
+    case 78 =>                      // 'lt'
+      consume(78)                   // 'lt'
+    case 80 =>                      // 'mod'
+      consume(80)                   // 'mod'
+    case 81 =>                      // 'namespace'
+      consume(81)                   // 'namespace'
+    case 83 =>                      // 'ne'
+      consume(83)                   // 'ne'
+    case 86 =>                      // 'or'
+      consume(86)                   // 'or'
+    case 87 =>                      // 'parent'
+      consume(87)                   // 'parent'
+    case 88 =>                      // 'preceding'
+      consume(88)                   // 'preceding'
+    case 89 =>                      // 'preceding-sibling'
+      consume(89)                   // 'preceding-sibling'
+    case 91 =>                      // 'return'
+      consume(91)                   // 'return'
+    case 92 =>                      // 'satisfies'
+      consume(92)                   // 'satisfies'
+    case 95 =>                      // 'self'
+      consume(95)                   // 'self'
+    case 96 =>                      // 'some'
+      consume(96)                   // 'some'
+    case 100 =>                     // 'to'
+      consume(100)                  // 'to'
+    case 101 =>                     // 'treat'
+      consume(101)                  // 'treat'
+    case _ =>
+      consume(103)                  // 'union'
     }
     eventHandler.endNonterminal("FunctionName", e0)
   }
 
-  private def parse_QName {
+  private def parse_QName: Unit = {
     eventHandler.startNonterminal("QName", e0)
     l1 match {
-      case 46 =>                      // 'array'
-        consume(46)                   // 'array'
-      case 48 =>                      // 'attribute'
-        consume(48)                   // 'attribute'
-      case 52 =>                      // 'comment'
-        consume(52)                   // 'comment'
-      case 56 =>                      // 'document-node'
-        consume(56)                   // 'document-node'
-      case 57 =>                      // 'element'
-        consume(57)                   // 'element'
-      case 59 =>                      // 'empty-sequence'
-        consume(59)                   // 'empty-sequence'
-      case 66 =>                      // 'function'
-        consume(66)                   // 'function'
-      case 70 =>                      // 'if'
-        consume(70)                   // 'if'
-      case 75 =>                      // 'item'
-        consume(75)                   // 'item'
-      case 79 =>                      // 'map'
-        consume(79)                   // 'map'
-      case 82 =>                      // 'namespace-node'
-        consume(82)                   // 'namespace-node'
-      case 84 =>                      // 'node'
-        consume(84)                   // 'node'
-      case 90 =>                      // 'processing-instruction'
-        consume(90)                   // 'processing-instruction'
-      case 93 =>                      // 'schema-attribute'
-        consume(93)                   // 'schema-attribute'
-      case 94 =>                      // 'schema-element'
-        consume(94)                   // 'schema-element'
-      case 97 =>                      // 'switch'
-        consume(97)                   // 'switch'
-      case 98 =>                      // 'text'
-        consume(98)                   // 'text'
-      case 102 =>                     // 'typeswitch'
-        consume(102)                  // 'typeswitch'
-      case _ =>
-        parse_FunctionName
+    case 46 =>                      // 'array'
+      consume(46)                   // 'array'
+    case 48 =>                      // 'attribute'
+      consume(48)                   // 'attribute'
+    case 52 =>                      // 'comment'
+      consume(52)                   // 'comment'
+    case 56 =>                      // 'document-node'
+      consume(56)                   // 'document-node'
+    case 57 =>                      // 'element'
+      consume(57)                   // 'element'
+    case 59 =>                      // 'empty-sequence'
+      consume(59)                   // 'empty-sequence'
+    case 66 =>                      // 'function'
+      consume(66)                   // 'function'
+    case 70 =>                      // 'if'
+      consume(70)                   // 'if'
+    case 75 =>                      // 'item'
+      consume(75)                   // 'item'
+    case 79 =>                      // 'map'
+      consume(79)                   // 'map'
+    case 82 =>                      // 'namespace-node'
+      consume(82)                   // 'namespace-node'
+    case 84 =>                      // 'node'
+      consume(84)                   // 'node'
+    case 90 =>                      // 'processing-instruction'
+      consume(90)                   // 'processing-instruction'
+    case 93 =>                      // 'schema-attribute'
+      consume(93)                   // 'schema-attribute'
+    case 94 =>                      // 'schema-element'
+      consume(94)                   // 'schema-element'
+    case 97 =>                      // 'switch'
+      consume(97)                   // 'switch'
+    case 98 =>                      // 'text'
+      consume(98)                   // 'text'
+    case 102 =>                     // 'typeswitch'
+      consume(102)                  // 'typeswitch'
+    case _ =>
+      parse_FunctionName
     }
     eventHandler.endNonterminal("QName", e0)
   }
 
-  private def consume(t: Int) {
+  def getErrorMessage(e: XPath31.ParseException) = {
+    var message = e.getMessage
+    val tokenSet = XPath31.getExpectedTokenSet(e)
+    val found = XPath31.getOffendingToken(e)
+    val size = e.end - e.begin
+    message += (if (found == null) "" else ", found " + found) + "\nwhile expecting " +
+      (if (tokenSet.length == 1) tokenSet(0) else "[" + (tokenSet mkString ", ") + "]") + "\n" +
+      (if (size == 0 || found != null) "" else "after successfully scanning " + size + " characters beginning ")
+    val prefix = input.substring(0, e.begin)
+    val line = prefix.replaceAll("[^\n]", "").length + 1
+    val column = prefix.length - prefix.lastIndexOf('\n')
+    message +
+      "at line " + line + ", column " + column + ":\n..." +
+      input.substring(e.begin, math.min(input.length, e.begin + 64)) + "..."
+  }
+
+  private def consume(t: Int): Unit = {
     if (l1 == t) {
       whitespace
       eventHandler.terminal(XPath31.TOKEN(l1), b1, e1)
       b0 = b1; e0 = e1; l1 = l2; if (l1 != 0) {
-        b1 = b2; e1 = e2; l2 = l3; if (l2 != 0) {
-          b2 = b3; e2 = e3; l3 = 0 }}
+      b1 = b2; e1 = e2; l2 = l3; if (l2 != 0) {
+      b2 = b3; e2 = e3; l3 = 0 }}
     }
     else {
       error(b1, e1, 0, l1, t)
     }
   }
 
-  private def consumeT(t: Int) {
+  private def consumeT(t: Int): Unit = {
     if (l1 == t) {
       b0 = b1; e0 = e1; l1 = l2; if (l1 != 0) {
-        b1 = b2; e1 = e2; l2 = l3; if (l2 != 0) {
-          b2 = b3; e2 = e3; l3 = 0 }}
+      b1 = b2; e1 = e2; l2 = l3; if (l2 != 0) {
+      b2 = b3; e2 = e3; l3 = 0 }}
     }
     else {
       error(b1, e1, 0, l1, t)
     }
   }
 
-  private def skip(code: Int) {
+  private def skip(code: Int): Unit = {
     val b0W = b0; val e0W = e0; val l1W = l1
     val b1W = b1; val e1W = e1; val l2W = l2
-    val b2W = b2; val e2W = e2;
+    val b2W = b2; val e2W = e2
 
-    l1 = code; b1 = begin; e1 = end;
-    l2 = 0;
-    l3 = 0;
+    l1 = code; b1 = begin; e1 = end
+    l2 = 0
+    l3 = 0
 
     try_Whitespace
 
     b0 = b0W; e0 = e0W; l1 = l1W; if (l1 != 0) {
-      b1 = b1W; e1 = e1W; l2 = l2W; if (l2 != 0) {
-        b2 = b2W; e2 = e2W; }}
+    b1 = b1W; e1 = e1W; l2 = l2W; if (l2 != 0) {
+    b2 = b2W; e2 = e2W }}
   }
 
-  private def whitespace {
+  private def whitespace: Unit = {
     if (e0 != b1) {
       eventHandler.whitespace(e0, b1)
       e0 = b1
     }
   }
 
-  private def matchW(set: Int): Int =  {
+  private def matchW(tokenSetId: Int): Int = {
     var continue = true
     var code = 0
     while (continue) {
-      code = matcher(set)
+      code = matcher(tokenSetId)
       if (code != 8) {              // S^WS
         if (code != 17) {           // '(:'
           continue = false
@@ -3132,52 +3161,38 @@ class XPath31() {
     code
   }
 
-  private def lookahead1W(set: Int) {
+  private def lookahead1W(tokenSetId: Int): Unit = {
     if (l1 == 0) {
-      l1 = matchW(set)
+      l1 = matchW(tokenSetId)
       b1 = begin
       e1 = end
     }
   }
 
-  private def lookahead2W(set: Int) {
+  private def lookahead2W(tokenSetId: Int): Unit = {
     if (l2 == 0) {
-      l2 = matchW(set)
+      l2 = matchW(tokenSetId)
       b2 = begin
       e2 = end
     }
     lk = (l2 << 7) | l1
   }
 
-  private def lookahead3W(set: Int) {
+  private def lookahead3W(tokenSetId: Int): Unit = {
     if (l3 == 0) {
-      l3 = matchW(set)
+      l3 = matchW(tokenSetId)
       b3 = begin
       e3 = end
     }
     lk |= l3 << 14
   }
 
-  private def lookahead1(set: Int) {
+  private def lookahead1(tokenSetId: Int): Unit = {
     if (l1 == 0) {
-      l1 = matcher(set)
+      l1 = matcher(tokenSetId)
       b1 = begin
       e1 = end
     }
-  }
-
-  def getErrorMessage(e: XPath31.ParseException) = {
-    val tokenSet = XPath31.getExpectedTokenSet(e)
-    val found = XPath31.getOffendingToken(e)
-    val prefix = input.substring(0, e.begin)
-    val line = prefix.replaceAll("[^\n]", "").length + 1
-    val column = prefix.length - prefix.lastIndexOf('\n')
-    val size = e.end - e.begin
-    e.getMessage + (if (found == null) "" else ", found " + found) + "\nwhile expecting " +
-      (if (tokenSet.length == 1) tokenSet(0) else "[" + (tokenSet mkString ", ") + "]") + "\n" +
-      (if (size == 0 || found != null) "" else "after successfully scanning " + size + " characters beginning ") +
-      "at line " + line + ", column " + column + ":\n..." +
-      input.substring(e.begin, math.min(input.length, e.begin + 64)) + "..."
   }
 
   def error(b: Int, e: Int, s: Int, l: Int, t: Int): Int = {
@@ -3264,10 +3279,9 @@ class XPath31() {
     }
   }
 
-  var input: String = null
-  var size = 0
   var begin = 0
   var end = 0
+
   var lk = 0
   var b0 = 0
   var e0 = 0
@@ -3281,6 +3295,8 @@ class XPath31() {
   var b3 = 0
   var e3 = 0
   var eventHandler: XPath31.EventHandler = null
+  var input: String = null
+  var size = 0
 }
 
 object XPath31 {
@@ -3290,6 +3306,7 @@ object XPath31 {
   }
 
   class ParseException(val begin: Int, val end: Int, val state: Int, val offending: Int, val expected: Int) extends RuntimeException {
+
     override def getMessage = {
       if (offending < 0) "lexical analysis failed" else "syntax error"
     }
@@ -3305,11 +3322,11 @@ object XPath31 {
   }
 
   trait EventHandler {
-    def reset(string: String)
-    def startNonterminal(name: String, begin: Int)
-    def endNonterminal(name: String, end: Int)
-    def terminal(name: String, begin: Int, end: Int)
-    def whitespace(begin: Int, end: Int)
+    def reset(string: String): Unit
+    def startNonterminal(name: String, begin: Int): Unit
+    def endNonterminal(name: String, end: Int): Unit
+    def terminal(name: String, begin: Int, end: Int): Unit
+    def whitespace(begin: Int, end: Int): Unit
   }
 
   class TopDownTreeBuilder extends EventHandler {
@@ -3317,37 +3334,37 @@ object XPath31 {
     private var stack = new ArrayBuffer[Nonterminal](64)
     private var top = -1
 
-    override def reset(input: String) {
+    override def reset(input: String): Unit = {
       this.input = input
       top = -1
     }
 
-    override def startNonterminal(name: String, begin: Int) {
-      val nonterminal = new Nonterminal(name, begin, begin, new ArrayBuffer[Symbol])
+    override def startNonterminal(name: String, begin: Int): Unit = {
+      val nonterminal = new Nonterminal(name, begin, begin, ArrayBuffer[Symbol]())
       if (top >= 0) addChild(nonterminal)
       top += 1
       if (top == stack.length) stack += nonterminal else stack(top) = nonterminal
     }
 
-    override def endNonterminal(name: String, end: Int) {
+    override def endNonterminal(name: String, end: Int): Unit = {
       var nonterminal = stack(top)
       nonterminal.end = end
       if (top > 0) top -= 1
     }
 
-    override def terminal(name: String, begin: Int, end: Int) {
+    override def terminal(name: String, begin: Int, end: Int): Unit = {
       addChild(new Terminal(name, begin, end))
     }
 
-    override def whitespace(begin: Int, end: Int) {
+    override def whitespace(begin: Int, end: Int): Unit = {
     }
 
-    private def addChild(s: Symbol) {
+    private def addChild(s: Symbol): Unit = {
       var current = stack(top)
       current.children += s
     }
 
-    def serialize(e: EventHandler) {
+    def serialize(e: EventHandler): Unit = {
       e.reset(input)
       stack(0).send(e)
     }
@@ -3358,11 +3375,11 @@ object XPath31 {
     var begin = b
     var end = e
 
-    def send(e: EventHandler)
+    def send(e: EventHandler): Unit
   }
 
   class Terminal(name: String, begin: Int, end: Int) extends Symbol(name, begin, end) {
-    override def send(e: EventHandler) {
+    override def send(e: EventHandler): Unit = {
       e.terminal(name, begin, end)
     }
   }
@@ -3370,7 +3387,7 @@ object XPath31 {
   class Nonterminal(name: String, begin: Int, end: Int, c: ArrayBuffer[Symbol]) extends Symbol(name, begin, end) {
     var children = c
 
-    override def send(e: EventHandler) {
+    override def send(e: EventHandler): Unit = {
       e.startNonterminal(name, begin)
       var pos = begin
       for (c <- children) {
@@ -3384,7 +3401,7 @@ object XPath31 {
   }
 
   private def getTokenSet(tokenSetId: Int) = {
-    var expected = new ArrayBuffer[String]
+    var expected = ArrayBuffer[String]()
     val s = if (tokenSetId < 0) - tokenSetId else INITIAL(tokenSetId) & 1023
     var i = 0
     while (i < 108) {

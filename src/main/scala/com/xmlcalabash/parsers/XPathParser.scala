@@ -14,7 +14,7 @@ class XPathParser() extends ExpressionParser {
   private var _errors = false
   private var _trace = false
 
-  def this(cfg: XMLCalabashConfig) {
+  def this(cfg: XMLCalabashConfig) = {
     this()
     _trace = cfg.traceEventManager.traceEnabled("XPathParser")
   }

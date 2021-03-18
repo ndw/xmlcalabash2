@@ -22,7 +22,7 @@ class SequenceBuilder() extends EventHandler {
     val parser = new SequenceParser(in, this)
 
     try {
-      parser.parse
+      parser.parse_Sequence
     } catch {
       case err: SequenceParser.ParseException =>
         throw new ParseException("Syntax error", None)

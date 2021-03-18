@@ -1,18 +1,18 @@
 package com.xmlcalabash.parsers
 
-// This file was generated on Fri Aug 17, 2018 06:58 (UTC+01) by REx v5.47 which is Copyright (c) 1979-2017 by Gunther Rademacher <grd@gmx.net>
+// This file was generated on Thu Mar 18, 2021 17:31 (UTC) by REx v5.52 which is Copyright (c) 1979-2020 by Gunther Rademacher <grd@gmx.net>
 // REx command line: SequenceParser.ebnf -ll 2 -scala -tree
 
-import scala.collection.mutable.ArrayBuffer
+import collection.mutable.ArrayBuffer
 
 class SequenceParser {
 
-  def this(string: String, eh: SequenceParser.EventHandler) {
+  def this(string: String, eh: SequenceParser.EventHandler) = {
     this
     initialize(string, eh)
   }
 
-  def initialize(source: String, parsingEventHandler: SequenceParser.EventHandler) {
+  def initialize(source: String, parsingEventHandler: SequenceParser.EventHandler): Unit = {
     eventHandler = parsingEventHandler
     input = source
     size = source.length
@@ -31,82 +31,82 @@ class SequenceParser {
     return e0
   }
 
-  def reset(l: Int, b: Int, e: Int) {
-    b0 = b; e0 = b
+  def reset(l: Int, b: Int, e: Int): Unit = {
+            b0 = b; e0 = b
     l1 = l; b1 = b; e1 = e
     end = e
     eventHandler.reset(input)
   }
 
-  def reset {
+  def reset: Unit = {
     reset(0, 0, 0)
   }
 
-  def parse {
+  def parse_Sequence: Unit = {
     eventHandler.startNonterminal("Sequence", e0)
     lookahead1W(3)                  // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-    // URIQualifiedName | PrefixedName | UnprefixedName | S^WS | '(' | '(:'
+                                    // URIQualifiedName | PrefixedName | UnprefixedName | S^WS | '(' | '(:'
     l1 match {
-      case 10 =>                      // '('
-        consume(10)                   // '('
-        lookahead1W(4)                // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-        // URIQualifiedName | PrefixedName | UnprefixedName | S^WS | '(:' | ')'
-        if (l1 != 12) {               // ')'
-          whitespace
-          parse_Item
-          var c1 = true
-          while (c1) {
-            lookahead1W(1)            // S^WS | '(:' | ')' | ','
-            if (l1 != 13) {           // ','
-              c1 = false
-            }
-            else {
-              consume(13)             // ','
-              lookahead1W(2)          // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
-              // URIQualifiedName | PrefixedName | UnprefixedName | S^WS | '(:'
-              whitespace
-              parse_Item
-            }
+    case 10 =>                      // '('
+      consume(10)                   // '('
+      lookahead1W(4)                // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
+                                    // URIQualifiedName | PrefixedName | UnprefixedName | S^WS | '(:' | ')'
+      if (l1 != 12) {               // ')'
+        whitespace
+        parse_Item
+        var c1 = true
+        while (c1) {
+          lookahead1W(1)            // S^WS | '(:' | ')' | ','
+          if (l1 != 13) {           // ','
+            c1 = false
+          }
+          else {
+            consume(13)             // ','
+            lookahead1W(2)          // IntegerLiteral | DecimalLiteral | DoubleLiteral | StringLiteral |
+                                    // URIQualifiedName | PrefixedName | UnprefixedName | S^WS | '(:'
+            whitespace
+            parse_Item
           }
         }
-        consume(12)                   // ')'
-      case _ =>
-        parse_Item
+      }
+      consume(12)                   // ')'
+    case _ =>
+      parse_Item
     }
     eventHandler.endNonterminal("Sequence", e0)
   }
 
-  private def parse_Item {
+  private def parse_Item: Unit = {
     eventHandler.startNonterminal("Item", e0)
     l1 match {
-      case 1 =>                       // IntegerLiteral
-        consume(1)                    // IntegerLiteral
-      case 2 =>                       // DecimalLiteral
-        consume(2)                    // DecimalLiteral
-      case 3 =>                       // DoubleLiteral
-        consume(3)                    // DoubleLiteral
-      case 4 =>                       // StringLiteral
-        consume(4)                    // StringLiteral
-      case 5 =>                       // URIQualifiedName
-        consume(5)                    // URIQualifiedName
-      case 6 =>                       // PrefixedName
-        consume(6)                    // PrefixedName
-      case _ =>
-        consume(7)                    // UnprefixedName
+    case 1 =>                       // IntegerLiteral
+      consume(1)                    // IntegerLiteral
+    case 2 =>                       // DecimalLiteral
+      consume(2)                    // DecimalLiteral
+    case 3 =>                       // DoubleLiteral
+      consume(3)                    // DoubleLiteral
+    case 4 =>                       // StringLiteral
+      consume(4)                    // StringLiteral
+    case 5 =>                       // URIQualifiedName
+      consume(5)                    // URIQualifiedName
+    case 6 =>                       // PrefixedName
+      consume(6)                    // PrefixedName
+    case _ =>
+      consume(7)                    // UnprefixedName
     }
     eventHandler.endNonterminal("Item", e0)
   }
 
-  private def try_Whitespace {
+  private def try_Whitespace: Unit = {
     l1 match {
-      case 8 =>                       // S^WS
-        consumeT(8)                   // S^WS
-      case _ =>
-        try_Comment
+    case 8 =>                       // S^WS
+      consumeT(8)                   // S^WS
+    case _ =>
+      try_Comment
     }
   }
 
-  private def try_Comment {
+  private def try_Comment: Unit = {
     consumeT(11)                    // '(:'
     var c1 = true
     while (c1) {
@@ -116,10 +116,10 @@ class SequenceParser {
       }
       else {
         l1 match {
-          case 9 =>                   // CommentContents
-            consumeT(9)               // CommentContents
-          case _ =>
-            try_Comment
+        case 9 =>                   // CommentContents
+          consumeT(9)               // CommentContents
+        case _ =>
+          try_Comment
         }
       }
     }
@@ -142,7 +142,7 @@ class SequenceParser {
       input.substring(e.begin, math.min(input.length, e.begin + 64)) + "..."
   }
 
-  private def consume(t: Int) {
+  private def consume(t: Int): Unit = {
     if (l1 == t) {
       whitespace
       eventHandler.terminal(SequenceParser.TOKEN(l1), b1, e1)
@@ -153,7 +153,7 @@ class SequenceParser {
     }
   }
 
-  private def consumeT(t: Int) {
+  private def consumeT(t: Int): Unit = {
     if (l1 == t) {
       b0 = b1; e0 = e1; l1 = 0
     }
@@ -162,28 +162,28 @@ class SequenceParser {
     }
   }
 
-  private def skip(code: Int) {
-    val b0W = b0; val e0W = e0;
+  private def skip(code: Int): Unit = {
+    val b0W = b0; val e0W = e0
 
-    l1 = code; b1 = begin; e1 = end;
+    l1 = code; b1 = begin; e1 = end
 
     try_Whitespace
 
-    b0 = b0W; e0 = e0W;
+    b0 = b0W; e0 = e0W
   }
 
-  private def whitespace {
+  private def whitespace: Unit = {
     if (e0 != b1) {
       eventHandler.whitespace(e0, b1)
       e0 = b1
     }
   }
 
-  private def matchW(set: Int): Int = {
+  private def matchW(tokenSetId: Int): Int = {
     var continue = true
     var code = 0
     while (continue) {
-      code = matcher(set)
+      code = matcher(tokenSetId)
       if (code != 8) {              // S^WS
         if (code != 11) {           // '(:'
           continue = false
@@ -196,17 +196,17 @@ class SequenceParser {
     code
   }
 
-  private def lookahead1W(set: Int) {
+  private def lookahead1W(tokenSetId: Int): Unit = {
     if (l1 == 0) {
-      l1 = matchW(set)
+      l1 = matchW(tokenSetId)
       b1 = begin
       e1 = end
     }
   }
 
-  private def lookahead1(set: Int) {
+  private def lookahead1(tokenSetId: Int): Unit = {
     if (l1 == 0) {
-      l1 = matcher(set)
+      l1 = matcher(tokenSetId)
       b1 = begin
       e1 = end
     }
@@ -332,11 +332,11 @@ object SequenceParser {
   }
 
   trait EventHandler {
-    def reset(string: String)
-    def startNonterminal(name: String, begin: Int)
-    def endNonterminal(name: String, end: Int)
-    def terminal(name: String, begin: Int, end: Int)
-    def whitespace(begin: Int, end: Int)
+    def reset(string: String): Unit
+    def startNonterminal(name: String, begin: Int): Unit
+    def endNonterminal(name: String, end: Int): Unit
+    def terminal(name: String, begin: Int, end: Int): Unit
+    def whitespace(begin: Int, end: Int): Unit
   }
 
   class TopDownTreeBuilder extends EventHandler {
@@ -344,37 +344,37 @@ object SequenceParser {
     private var stack = new ArrayBuffer[Nonterminal](64)
     private var top = -1
 
-    override def reset(input: String) {
+    override def reset(input: String): Unit = {
       this.input = input
       top = -1
     }
 
-    override def startNonterminal(name: String, begin: Int) {
+    override def startNonterminal(name: String, begin: Int): Unit = {
       val nonterminal = new Nonterminal(name, begin, begin, ArrayBuffer[Symbol]())
       if (top >= 0) addChild(nonterminal)
       top += 1
       if (top == stack.length) stack += nonterminal else stack(top) = nonterminal
     }
 
-    override def endNonterminal(name: String, end: Int) {
+    override def endNonterminal(name: String, end: Int): Unit = {
       var nonterminal = stack(top)
       nonterminal.end = end
       if (top > 0) top -= 1
     }
 
-    override def terminal(name: String, begin: Int, end: Int) {
+    override def terminal(name: String, begin: Int, end: Int): Unit = {
       addChild(new Terminal(name, begin, end))
     }
 
-    override def whitespace(begin: Int, end: Int) {
+    override def whitespace(begin: Int, end: Int): Unit = {
     }
 
-    private def addChild(s: Symbol) {
+    private def addChild(s: Symbol): Unit = {
       var current = stack(top)
       current.children += s
     }
 
-    def serialize(e: EventHandler) {
+    def serialize(e: EventHandler): Unit = {
       e.reset(input)
       stack(0).send(e)
     }
@@ -385,11 +385,11 @@ object SequenceParser {
     var begin = b
     var end = e
 
-    def send(e: EventHandler)
+    def send(e: EventHandler): Unit
   }
 
   class Terminal(name: String, begin: Int, end: Int) extends Symbol(name, begin, end) {
-    override def send(e: EventHandler) {
+    override def send(e: EventHandler): Unit = {
       e.terminal(name, begin, end)
     }
   }
@@ -397,7 +397,7 @@ object SequenceParser {
   class Nonterminal(name: String, begin: Int, end: Int, c: ArrayBuffer[Symbol]) extends Symbol(name, begin, end) {
     var children = c
 
-    override def send(e: EventHandler) {
+    override def send(e: EventHandler): Unit = {
       e.startNonterminal(name, begin)
       var pos = begin
       for (c <- children) {
