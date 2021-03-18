@@ -21,7 +21,6 @@ import org.apache.http.client.config.{CookieSpecs, RequestConfig}
 import org.apache.http.client.methods.{HttpGet, HttpPost, HttpRequestBase}
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.entity.ByteArrayEntity
-import org.apache.http.impl.auth.DigestScheme
 import org.apache.http.impl.client.{BasicCredentialsProvider, HttpClientBuilder, StandardHttpRequestRetryHandler}
 import org.apache.http.{Header, HttpResponse, ProtocolVersion}
 
@@ -152,7 +151,7 @@ class HttpRequest() extends DefaultXmlStep {
         parameters ++= ValueParser.parseParameters(value, context)
       case `_assert` =>
         assert = value.getUnderlyingValue.getStringValue
-      case _ => Unit
+      case _ => ()
     }
   }
 
@@ -563,7 +562,7 @@ class HttpRequest() extends DefaultXmlStep {
             val smsg = config.expressionEvaluator.singletonValue(expr, List(), Map(), None)
             value = smsg.item.asInstanceOf[XdmAtomicValue]
           } catch {
-            case _: DateTimeParseException => Unit
+            case _: DateTimeParseException => ()
           }
         }
 
@@ -579,7 +578,7 @@ class HttpRequest() extends DefaultXmlStep {
 
         props.put(key, value)
       } catch {
-        case _: Exception => Unit
+        case _: Exception => ()
       }
     }
 

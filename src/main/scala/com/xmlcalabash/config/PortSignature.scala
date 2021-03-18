@@ -9,7 +9,7 @@ class PortSignature(val port: String) {
   private var _primary = Option.empty[Boolean]
   private val _contentTypes = ListBuffer.empty[MediaType]
 
-  def this(port: String, primary: Boolean, sequence: Boolean) {
+  def this(port: String, primary: Boolean, sequence: Boolean) = {
     this(port)
     _primary = Some(primary)
     if (sequence) {

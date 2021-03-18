@@ -21,7 +21,7 @@ class Group(override val config: XMLCalabashConfig) extends Container(config) wi
     makeContainerStructureExplicit()
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parNode: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parNode: Node): Unit = {
     if (parent.get.isInstanceOf[Try]) {
       val start = parNode.asInstanceOf[TryCatchStart]
       val node = start.addTry(stepName)
@@ -37,7 +37,7 @@ class Group(override val config: XMLCalabashConfig) extends Container(config) wi
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     super.graphEdges(runtime, parent)
 
     for (output <- children[DeclareOutput]) {

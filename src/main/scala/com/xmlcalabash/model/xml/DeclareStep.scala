@@ -118,7 +118,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
           if (pinput.isEmpty) {
             pinput = Some(input)
           }
-        case _ => Unit
+        case _ => ()
       }
     }
     if (count == 1 && pinput.get._primary.isEmpty) {
@@ -135,7 +135,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
           if (poutput.isEmpty) {
             poutput = Some(output)
           }
-        case _ => Unit
+        case _ => ()
       }
     }
     if (count == 1 && poutput.get._primary.isEmpty) {
@@ -181,7 +181,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
           }
           _bindings.put(option.name, option)
 
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -223,7 +223,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
           optSig.forceQNameKeys = option.qnameKeys
           stepSig.addOption(optSig, option.location.get)
         case _ =>
-          Unit
+          ()
       }
     }
 
@@ -263,7 +263,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
       child match {
         case decl: DeclareStep =>
           buf += decl
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -296,8 +296,8 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
 
     for (child <- allChildren) {
       child match {
-        case doc: Documentation => Unit
-        case pipe: PipeInfo => Unit
+        case doc: Documentation => ()
+        case pipe: PipeInfo => ()
         case _ =>
           child.graphEdges(runtime, pipeline)
       }
@@ -366,9 +366,9 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
                 input.defaultInputs += atomic
             }
           case doc: Document =>
-            Unit
+            ()
           case inline: Inline =>
-            Unit
+            ()
           case _ =>
             throw new RuntimeException("children of input not pipe?")
         }

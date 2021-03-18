@@ -16,7 +16,7 @@ class Pipe(override val config: XMLCalabashConfig, shortcut: Option[String]) ext
     this(config, Some(shortcut))
   }
 
-  def this(pipe: Pipe) {
+  def this(pipe: Pipe) = {
     this(pipe.config)
     _step = pipe._step
     _port = pipe._port
@@ -117,7 +117,7 @@ class Pipe(override val config: XMLCalabashConfig, shortcut: Option[String]) ext
             if (output.port == _port.get) {
               _link = Some(output)
             }
-          case _ => Unit
+          case _ => ()
         }
       }
 

@@ -13,24 +13,24 @@ class ModelException(val code: ExceptionCode, val data: List[String], private va
 
   def location: Option[Location] = _location
 
-  def this(code: ExceptionCode, data: List[String], node: XdmNode) {
+  def this(code: ExceptionCode, data: List[String], node: XdmNode) = {
     this(code, data, None)
     _location = Some(new XProcLocation(node))
   }
 
-  def this(code: ExceptionCode, data: String, node: XdmNode) {
+  def this(code: ExceptionCode, data: String, node: XdmNode) = {
     this(code, List(data), node)
   }
 
-  def this(code: ExceptionCode, data: String, loc: Option[Location]) {
+  def this(code: ExceptionCode, data: String, loc: Option[Location]) = {
     this(code, List(data), loc)
   }
 
-  def this(code: ExceptionCode, data: String, loc: Location) {
+  def this(code: ExceptionCode, data: String, loc: Location) = {
     this(code, List(data), Some(loc))
   }
 
-  def this(code: ExceptionCode, data: List[String], loc: Location) {
+  def this(code: ExceptionCode, data: List[String], loc: Location) = {
     this(code, data, Some(loc))
   }
 

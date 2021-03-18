@@ -49,7 +49,7 @@ class SystemProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
           case "psvi-supported" =>
             value = runtime.psviSupported.toString
           case _ =>
-            Unit
+            ()
         }
       case XProcConstants.ns_cx =>
         local match {
@@ -72,12 +72,12 @@ class SystemProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
           case "saxon-edition" =>
             value = runtime.processor.getSaxonEdition
           case _ =>
-            Unit
+            ()
         }
       case `_localhost` =>
         value = System.getProperty(local)
       case _ =>
-        Unit
+        ()
     }
 
     new StringValue(value)

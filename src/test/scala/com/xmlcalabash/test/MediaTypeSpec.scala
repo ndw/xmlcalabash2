@@ -2,9 +2,9 @@ package com.xmlcalabash.test
 
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.util.MediaType
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 
-class MediaTypeSpec extends FlatSpec {
+class MediaTypeSpec extends AnyFlatSpec {
   private val config = XMLCalabashConfig.newInstance()
   private val text_xml = MediaType.parse("text/xml")
   private val application_xml = MediaType.parse("application/xml")

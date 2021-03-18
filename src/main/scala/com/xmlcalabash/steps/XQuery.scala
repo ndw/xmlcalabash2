@@ -48,7 +48,7 @@ class XQuery extends DefaultXmlStep {
       case "query" =>
         query = Some(item.asInstanceOf[XdmNode])
         queryMetadata = Some(metadata)
-      case _ => Unit
+      case _ => ()
     }
   }
 
@@ -60,7 +60,7 @@ class XQuery extends DefaultXmlStep {
     } else {
       // All of the other options should be single values or the empty sequence
       value.size() match {
-        case 0 => Unit
+        case 0 => ()
         case 1 =>
           val str = value.getUnderlyingValue.getStringValue
           variable match {
@@ -204,7 +204,7 @@ class XQuery extends DefaultXmlStep {
   }
 
   private class MyErrorListener(val compileTime: Boolean) extends ErrorListener {
-    override def warning(e: TransformerException): Unit = Unit
+    override def warning(e: TransformerException): Unit = ()
 
     override def error(e: TransformerException): Unit = {
       goesBang = Some(XProcException.xcXsltCompileError(e.getMessage, location))

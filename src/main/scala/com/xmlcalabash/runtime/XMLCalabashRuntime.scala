@@ -25,6 +25,9 @@ import scala.collection.mutable
 class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends RuntimeConfiguration {
   val config: XMLCalabashConfig = decl.config
 
+  //FIXME:
+  override def threadPoolSize: Int = 5
+
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected[runtime] val joinGateMarker = new XdmAtomicValue(new QName(XProcConstants.ns_cx, "JOIN-GATE-MARKER"))
 
@@ -35,7 +38,6 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   private var _uriResolver = config.uriResolver
   private var _moduleURIResolver = config.moduleURIResolver
   private var _unparsedTextURIResolver = config.unparsedTextURIResolver
-  private var _watchdogTimeout = config.watchdogTimeout
   private var _episode = config.computeEpisode
   private var _defaultSerializationOptions: Map[String,Map[QName,String]] = Map.empty[String,Map[QName,String]]
   private var _trim_inline_whitespace = config.trimInlineWhitespace
@@ -180,11 +182,6 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   def processor: Processor = config.processor
   def staticBaseURI: URI = config.staticBaseURI
   def episode: String = _episode
-
-  def watchdogTimeout: Long = _watchdogTimeout
-  def watchdogTimeout_=(timeout: Long): Unit = {
-    _watchdogTimeout = timeout
-  }
 
   // FIXME: Setters for these
   def entityResolver: EntityResolver = _entityResolver

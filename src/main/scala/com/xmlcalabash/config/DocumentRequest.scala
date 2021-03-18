@@ -16,19 +16,19 @@ class DocumentRequest(val href: Option[URI], val contentType: Option[MediaType],
   private var _params: Option[Map[QName,XdmValue]] = None
   private var _docprops: Option[Map[QName,XdmValue]] = None
 
-  def this(href: URI) {
+  def this(href: URI) = {
     this(Some(href), None, None, false)
   }
 
-  def this(href: URI, contentType: MediaType) {
+  def this(href: URI, contentType: MediaType) = {
     this(Some(href), Some(contentType), None, false)
   }
 
-  def this(href: URI, contentType: MediaType, location: Option[Location]) {
+  def this(href: URI, contentType: MediaType, location: Option[Location]) = {
     this(Some(href), Some(contentType), location, false)
   }
 
-  def this(href: URI, contentType: Option[MediaType], location: Option[Location], validate: Boolean) {
+  def this(href: URI, contentType: Option[MediaType], location: Option[Location], validate: Boolean) = {
     this(Some(href), contentType, location, validate)
   }
 

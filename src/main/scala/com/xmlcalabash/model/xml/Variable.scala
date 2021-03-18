@@ -9,7 +9,7 @@ import com.xmlcalabash.util.xc.ElaboratedPipeline
 
 class Variable(override val config: XMLCalabashConfig) extends NameBinding(config) {
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     if (static) {
       // Statics have already been evaluated, they don't appear in the graph
       return

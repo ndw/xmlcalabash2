@@ -44,7 +44,7 @@ class DynamicContext() {
             found = true
             _iterationPosition = node.iterationPosition
             _iterationSize = node.iterationSize
-          case _ => Unit
+          case _ => ()
         }
       }
       p = p.get.parent

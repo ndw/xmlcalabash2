@@ -36,7 +36,7 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
       val fwi = firstWithInput.get
       fwi.port match {
         case "" => fwi.port = "source"
-        case "source" => Unit
+        case "source" => ()
         case _ => throw new RuntimeException("Viewport with-input must be named 'source'")
       }
     } else {
@@ -82,7 +82,7 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
     }
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[ContainerStart]
     val context = staticContext.withStatics(inScopeStatics)
     val composer = new XMLViewportComposer(config, context, _match)
@@ -94,7 +94,7 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     super.graphEdges(runtime, parent)
 
     val winput = firstWithInput
@@ -105,7 +105,7 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
             pipe.graphEdges(runtime, _graphNode.get)
           case pipe: NamePipe =>
             pipe.graphEdges(runtime, _graphNode.get)
-          case _ => Unit
+          case _ => ()
         }
       }
     }

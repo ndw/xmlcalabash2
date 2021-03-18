@@ -72,7 +72,7 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
                     child match {
                       case inline: Inline => default = true
                       case doc: Document => default = true
-                      case _ => Unit
+                      case _ => ()
                     }
                   }
                 }
@@ -94,7 +94,7 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
               addChild(inline)
               raiseError = false
             }
-          case _ => Unit
+          case _ => ()
         }
 
         if (raiseError && synthetic) {
@@ -177,7 +177,7 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
     addChild(pipe)
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parNode: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parNode: Node): Unit = {
     for (child <- allChildren) {
       child.graphEdges(runtime, parNode)
     }

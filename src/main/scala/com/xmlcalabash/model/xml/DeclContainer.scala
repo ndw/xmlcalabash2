@@ -51,7 +51,7 @@ class DeclContainer(override val config: XMLCalabashConfig) extends Container(co
         case pimport: Import =>
           val icont = pimport.loadImports()
           imap.put(pimport, icont)
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -81,7 +81,7 @@ class DeclContainer(override val config: XMLCalabashConfig) extends Container(co
           }
           addSignatures(library._signatures.toList)
           buf += library
-        case _ => Unit
+        case _ => ()
       }
     }
 

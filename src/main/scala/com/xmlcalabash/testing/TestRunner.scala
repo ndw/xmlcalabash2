@@ -388,7 +388,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
           if (node.getStringValue.trim != "") {
             throw new TestException(s"Unexpected text ${node.getStringValue} in ${child.getBaseURI}")
           }
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -435,7 +435,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
           } else if (child.getNodeName == t_test) {
             resultList += runTest(child)
           } else if (child.getNodeName == t_title) {
-            Unit
+            ()
           } else {
             throw new TestException(s"Unexpected element ${child.getNodeName} in ${child.getBaseURI}")
           }
@@ -443,7 +443,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
           if (node.getStringValue.trim != "") {
             throw new TestException(s"Unexpected text ${node.getStringValue} in ${child.getBaseURI}")
           }
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -489,7 +489,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
           if (child.getNodeName == t_test) {
             resultList += runTest(child)
           } else if (child.getNodeName == t_title) {
-            Unit
+            ()
           } else {
             throw new TestException(s"Unexpected element ${child.getNodeName} in ${child.getBaseURI}")
           }
@@ -497,7 +497,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
           if (node.getStringValue.trim != "") {
             throw new TestException(s"Unexpected text ${node.getStringValue} in ${child.getBaseURI}")
           }
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -622,7 +622,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
             }
             System.setProperty(name, value)
           } else if (child.getNodeName == t_info || child.getNodeName == t_title || child.getNodeName == t_description) {
-            Unit
+            ()
           } else {
             throw new TestException(s"Unexpected element ${child.getNodeName} in ${child.getBaseURI}")
           }
@@ -631,7 +631,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
           if (child.getStringValue.trim != "") {
             throw new TestException(s"Unexpected text ${child.getStringValue} in ${child.getBaseURI}")
           }
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -777,7 +777,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
         file.getName match {
           case fnregex() =>
             testFiles += file.getAbsolutePath
-          case _ => Unit
+          case _ => ()
         }
       }
     }

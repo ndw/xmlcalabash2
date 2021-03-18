@@ -41,7 +41,7 @@ class XPointer(runtime: XMLCalabashRuntime, xpointer: String, readLimit: Int) {
         try {
           result ++= scheme.selectNodes(runtime, doc, xpathNamespaces)
         } catch {
-          case _: XProcException => Unit
+          case _: XProcException => ()
         }
       }
     }
@@ -92,7 +92,7 @@ class XPointer(runtime: XMLCalabashRuntime, xpointer: String, readLimit: Int) {
         tutils.checkType(xpointer, XProcConstants.xs_NCName)
         xpointer = "element(" + xpointer + ")"
       } catch {
-        case _: Exception => Unit
+        case _: Exception => ()
       }
     }
 
@@ -175,7 +175,7 @@ class XPointer(runtime: XMLCalabashRuntime, xpointer: String, readLimit: Int) {
             if (pfx == prefix) {
               return new QName(pfx, uri, lcl)
             }
-          case _ => Unit
+          case _ => ()
         }
         pos -= 1
       }

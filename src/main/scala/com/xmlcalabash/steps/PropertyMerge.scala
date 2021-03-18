@@ -49,7 +49,7 @@ class PropertyMerge extends DefaultXmlStep {
               if (pnode.getStringValue.trim != "") {
                 throw XProcException.xiMergeBadText(pnode.getStringValue.trim, location)
               }
-            case _ => Unit
+            case _ => ()
           }
         }
 
@@ -222,7 +222,7 @@ class PropertyMerge extends DefaultXmlStep {
           if (pnode.getStringValue.trim != "") {
             throw XProcException.xiMergeBadText(pnode.getStringValue.trim, location)
           }
-        case _ => Unit
+        case _ => ()
       }
     }
 

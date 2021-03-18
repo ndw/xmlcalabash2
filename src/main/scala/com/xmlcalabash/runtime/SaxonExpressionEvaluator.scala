@@ -90,12 +90,12 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
               proxies.put(item, node)
               checkDocument(newContext, node, context.head)
             case _ =>
-              Unit // Whatever it is, it isn't a document
+              () // Whatever it is, it isn't a document
           }
         case msg: AnyItemMessage =>
           proxies.put(msg.shadow, msg.item)
           checkDocument(newContext, msg.item, context.head)
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -156,7 +156,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
               case item: XdmItem =>
                 checkDocument(newContext, item, value)
               case _ =>
-                Unit // Whatever this is, it isn't a document
+                () // Whatever this is, it isn't a document
             }
           case _ =>
             throw XProcException.xiInvalidMessage(newContext.location, value)
@@ -172,7 +172,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         val pmap = mutable.Map.empty[QName,XdmItem]
         pmap.put(XProcConstants._base_uri, baseURI)
         new XProcMetadata(MediaType.XML, pmap.toMap)
-      case _ => Unit
+      case _ => ()
         // I'm suspicious that this isn't right in the general case
         XProcMetadata.XML
     }
@@ -449,7 +449,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         }
       case item: XdmItem =>
         dynContext.addItem(item.getUnderlyingValue, msg)
-      case _ => Unit
+      case _ => ()
     }
   }
 
@@ -458,7 +458,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
       case msg: XdmValueItemMessage =>
         msg.item match {
           case item: XdmItem => return item
-          case _ => Unit
+          case _ => ()
         }
 
         msg.metadata match {
@@ -509,7 +509,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
           case node: XdmNodeItemMessage =>
             items += new ExprNodeResource(node.item)
           case item: XdmValueItemMessage =>
-            Unit // ???
+            () // ???
           case _ =>
             throw XProcException.xiBadMessage(msg, None)
         }

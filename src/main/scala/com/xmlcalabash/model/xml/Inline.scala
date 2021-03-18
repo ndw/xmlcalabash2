@@ -13,7 +13,7 @@ import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import scala.collection.mutable
 
 class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val implied: Boolean) extends DataSource(config) {
-  def this(config: XMLCalabashConfig, node: XdmNode) {
+  def this(config: XMLCalabashConfig, node: XdmNode) = {
     this(config, node, false)
   }
 
@@ -155,7 +155,7 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
         if (expandText && str.contains("{")) {
           findVariablesInNodes(str)
         }
-      case _ => Unit
+      case _ => ()
     }
   }
 

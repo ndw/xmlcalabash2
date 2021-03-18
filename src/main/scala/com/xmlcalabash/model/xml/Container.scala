@@ -21,7 +21,7 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
             return false
           }
         case _: Container => return false
-        case _ => Unit
+        case _ => ()
       }
     }
     true
@@ -67,7 +67,7 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
         case variable: Variable =>
           environment.addVariable(variable)
         case _ =>
-          Unit
+          ()
       }
     }
 
@@ -140,7 +140,7 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
           }
         case step: Step =>
           lastStep = Some(step)
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -163,7 +163,7 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
             option.staticValue = computeStatically(option.select.get)
           }
         case _: WithInput =>
-          Unit // we did this above
+          () // we did this above
         case _ =>
           child.makeBindingsExplicit()
       }
@@ -174,19 +174,19 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
     for (child <- allChildren) {
       child.validateStructure()
       child match {
-        case _: WithInput => Unit
-        case _: WithOutput => Unit
-        case _: DeclareInput => Unit
-        case _: DeclareOutput => Unit
-        case _: Step => Unit
-        case _: NamePipe => Unit // For Viweport
+        case _: WithInput => ()
+        case _: WithOutput => ()
+        case _: DeclareInput => ()
+        case _: DeclareOutput => ()
+        case _: Step => ()
+        case _: NamePipe => () // For Viweport
         case _ =>
           throw new RuntimeException(s"Unexpected content in $this: $child")
       }
     }
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     if (allChildren.nonEmpty) {
       if (_graphNode.isDefined) {
         for (child <- allChildren) {
@@ -197,7 +197,7 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
               option.graphNodes(runtime, _graphNode.get)
             case variable: Variable =>
               variable.graphNodes(runtime, _graphNode.get)
-            case _ => Unit
+            case _ => ()
           }
         }
       } else {

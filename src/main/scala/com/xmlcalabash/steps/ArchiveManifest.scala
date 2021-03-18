@@ -67,7 +67,7 @@ class ArchiveManifest extends DefaultXmlStep {
 
     format.get match {
       case `_zip` => zipArchive(context, builder)
-      case _ => Unit
+      case _ => ()
     }
 
     builder.addEndElement()

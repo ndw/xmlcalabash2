@@ -47,7 +47,7 @@ class Port(override val config: XMLCalabashConfig) extends Artifact(config) {
     for (child <- allChildren) {
       child match {
         case ds: DataSource => lb += ds
-        case _ => Unit
+        case _ => ()
       }
     }
     lb.toList
@@ -135,7 +135,7 @@ class Port(override val config: XMLCalabashConfig) extends Artifact(config) {
         case source: Pipe =>
           nonEmpty = true
           pns = true
-        case source: NamePipe => Unit
+        case source: NamePipe => ()
         case _ => throw new RuntimeException(s"Unexpected port binding: $child")
       }
     }

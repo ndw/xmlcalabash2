@@ -6,11 +6,11 @@ package com.xmlcalabash.exceptions
   * @param message The exception message.
   */
 class TestException(val code: String, val message: String) extends Throwable {
-  def this(msg: String) {
+  def this(msg: String) = {
     this("ERROR", msg)
   }
 
-  override def getMessage(): String = {
+  override def getMessage: String = {
     message
   }
 

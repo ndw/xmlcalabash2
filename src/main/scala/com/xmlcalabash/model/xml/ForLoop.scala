@@ -57,7 +57,7 @@ class ForLoop(override val config: XMLCalabashConfig) extends Container(config) 
     makeContainerStructureExplicit()
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[ContainerStart]
     val node = start.addFor(stepName, countFrom, countTo, countBy, Manifold.ALLOW_ANY)
     _graphNode = Some(node)
@@ -67,7 +67,7 @@ class ForLoop(override val config: XMLCalabashConfig) extends Container(config) 
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     super.graphEdges(runtime, parent)
 
     val winput = firstWithInput

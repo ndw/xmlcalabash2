@@ -33,7 +33,7 @@ class ForEach(override val config: XMLCalabashConfig) extends Container(config) 
     makeContainerStructureExplicit()
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[ContainerStart]
     val node = start.addForEach(stepName, Manifold.ALLOW_ANY)
     _graphNode = Some(node)
@@ -43,7 +43,7 @@ class ForEach(override val config: XMLCalabashConfig) extends Container(config) 
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     super.graphEdges(runtime, parent)
 
     val winput = firstWithInput

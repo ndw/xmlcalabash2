@@ -28,7 +28,7 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   private var _inDocument = false
   protected var seenRoot = false
 
-  def this(runtime: XMLCalabashRuntime) {
+  def this(runtime: XMLCalabashRuntime) = {
     this(runtime.config)
   }
 
@@ -130,7 +130,7 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
     addStartElement(node, newName, node.getBaseURI)
   }
 
-  def addStartElement(newName: QName) {
+  def addStartElement(newName: QName): Unit = {
     val elemName = new FingerprintedQName(newName.getPrefix, newName.getNamespaceURI, newName.getLocalName)
     val typeCode = BuiltInType.getSchemaType(StandardNames.XS_UNTYPED)
     val inscopeNS = List.empty[NamespaceBinding]
@@ -192,23 +192,23 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
     }
   }
 
-  def addNamespace(prefix: String, uri: String) {
+  def addNamespace(prefix: String, uri: String): Unit = {
     val nsbind = new NamespaceBinding(prefix, uri)
     receiver.namespace(nsbind, 0)
   }
 
-  def addAttributes(element: XdmNode) {
+  def addAttributes(element: XdmNode): Unit = {
     val iter = element.axisIterator(Axis.ATTRIBUTE)
     while (iter.hasNext) {
       addAttribute(iter.next)
     }
   }
 
-  def addAttribute(xdmattr: XdmNode) {
+  def addAttribute(xdmattr: XdmNode): Unit = {
     addAttribute(xdmattr, xdmattr.getStringValue)
   }
 
-  def addAttribute(xdmAttr: XdmNode, newValue: String) {
+  def addAttribute(xdmAttr: XdmNode, newValue: String): Unit = {
     val inode = xdmAttr.getUnderlyingNode
     val name = xdmAttr.getNodeName
     val attrName = new FingerprintedQName(name.getPrefix, name.getNamespaceURI, name.getLocalName)
@@ -217,37 +217,37 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
     receiver.attribute(attrName, typeCode, newValue, loc, 0)
   }
 
-  def addAttribute(elemName: NodeName, typeCode: SimpleType, newValue: String) {
+  def addAttribute(elemName: NodeName, typeCode: SimpleType, newValue: String): Unit = {
     val loc = new DefaultLocation(receiver.getSystemId)
     receiver.attribute(elemName, typeCode, newValue, loc, 0)
   }
 
-  def addAttribute(attrName: QName, newValue: String) {
+  def addAttribute(attrName: QName, newValue: String): Unit = {
     val loc = new DefaultLocation(receiver.getSystemId)
     val elemName = new FingerprintedQName(attrName.getPrefix, attrName.getNamespaceURI, attrName.getLocalName)
     val typeCode = BuiltInType.getSchemaType(StandardNames.XS_UNTYPED_ATOMIC).asInstanceOf[SimpleType]
     receiver.attribute(elemName, typeCode, newValue, loc, 0)
   }
 
-  def startContent() {
+  def startContent(): Unit = {
     receiver.startContent()
   }
 
-  def addEndElement() {
+  def addEndElement(): Unit = {
     receiver.endElement()
   }
 
-  def addComment(comment: String) {
+  def addComment(comment: String): Unit = {
     val loc = new DefaultLocation(receiver.getSystemId)
     receiver.comment(comment, loc, 0)
   }
 
-  def addText(text: String) {
+  def addText(text: String): Unit = {
     val loc = new DefaultLocation(receiver.getSystemId)
     receiver.characters(text, loc, 0)
   }
 
-  def addPI(target: String, data: String) {
+  def addPI(target: String, data: String): Unit = {
     val loc = new DefaultLocation(receiver.getSystemId)
     receiver.processingInstruction(target, data, loc, 0)
   }

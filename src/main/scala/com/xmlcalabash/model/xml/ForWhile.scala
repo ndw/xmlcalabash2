@@ -91,7 +91,7 @@ class ForWhile(override val config: XMLCalabashConfig) extends Container(config)
       child match {
         case atomic: AtomicStep => lastStep = Some(atomic)
         case compound: Container => lastStep = Some(compound)
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -113,7 +113,7 @@ class ForWhile(override val config: XMLCalabashConfig) extends Container(config)
     }
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val tester = new XmlItemTester(config, test, maxIterations, this)
     val start = parent.asInstanceOf[ContainerStart]
     val node = start.addWhile(tester, returnSet=="all", stepName, Manifold.ALLOW_ANY)
@@ -124,7 +124,7 @@ class ForWhile(override val config: XMLCalabashConfig) extends Container(config)
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     super.graphEdges(runtime, parent)
 
     val winput = firstWithInput

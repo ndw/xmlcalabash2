@@ -161,8 +161,8 @@ class Parser(config: XMLCalabashConfig) {
               // If we don't recognize it, assume it's an atomic step
               container.addChild(parseAtomicStep(child))
           }
-        case XdmNodeKind.COMMENT => Unit
-        case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
+        case XdmNodeKind.COMMENT => ()
+        case XdmNodeKind.PROCESSING_INSTRUCTION => ()
         case XdmNodeKind.TEXT =>
           throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
         case _ =>
@@ -198,8 +198,8 @@ class Parser(config: XMLCalabashConfig) {
             case _ =>
               throw new RuntimeException(s"Unexpected element: ${child.getNodeName}")
           }
-        case XdmNodeKind.COMMENT => Unit
-        case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
+        case XdmNodeKind.COMMENT => ()
+        case XdmNodeKind.PROCESSING_INSTRUCTION => ()
         case XdmNodeKind.TEXT =>
           throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
         case _ =>
@@ -311,8 +311,8 @@ class Parser(config: XMLCalabashConfig) {
             case _ =>
               art.addChild(parseSyntheticInline(child))
           }
-        case XdmNodeKind.COMMENT => Unit
-        case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
+        case XdmNodeKind.COMMENT => ()
+        case XdmNodeKind.PROCESSING_INSTRUCTION => ()
         case XdmNodeKind.TEXT =>
           throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
         case _ =>
@@ -358,8 +358,8 @@ class Parser(config: XMLCalabashConfig) {
             case _ =>
               throw new RuntimeException(s"Unexpected element: ${child.getNodeName}")
           }
-        case XdmNodeKind.COMMENT => Unit
-        case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
+        case XdmNodeKind.COMMENT => ()
+        case XdmNodeKind.PROCESSING_INSTRUCTION => ()
         case XdmNodeKind.TEXT =>
           throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
         case _ =>
@@ -392,8 +392,8 @@ class Parser(config: XMLCalabashConfig) {
             case _ =>
               throw new RuntimeException("no elements allowed")
           }
-        case XdmNodeKind.COMMENT => Unit
-        case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
+        case XdmNodeKind.COMMENT => ()
+        case XdmNodeKind.PROCESSING_INSTRUCTION => ()
         case XdmNodeKind.TEXT =>
           throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
         case _ =>

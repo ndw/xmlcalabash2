@@ -26,7 +26,7 @@ class If(override val config: XMLCalabashConfig) extends Choose(config) {
     }
     for (child <- allChildren) {
       child match {
-        case _: WithInput => Unit
+        case _: WithInput => ()
         case _ =>
           when.addChild(child)
       }

@@ -9,7 +9,7 @@ class DataSource(override val config: XMLCalabashConfig) extends Artifact(config
   override protected[model] def validateStructure(): Unit = {
     for (child <- allChildren) {
       child match {
-        case _: Pipe => Unit
+        case _: Pipe => ()
         case _ =>
           throw new RuntimeException(s"Invalid content in $this")
       }
@@ -23,7 +23,7 @@ class DataSource(override val config: XMLCalabashConfig) extends Artifact(config
           if (binding.static) {
             return // this all has to be resolved statically
           }
-        case _ => Unit
+        case _ => ()
       }
     }
 

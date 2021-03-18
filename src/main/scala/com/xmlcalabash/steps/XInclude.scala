@@ -125,7 +125,7 @@ class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
                 throw XProcException.xcXIncludeInvalidElement(child.getNodeName, location)
               }
             }
-          case _ => Unit
+          case _ => ()
         }
       }
 

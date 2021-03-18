@@ -37,7 +37,7 @@ class CastContentType() extends DefaultXmlStep {
         castTo = MediaType.parse(ValueUtils.singletonStringValue(value, context.location))
       case XProcConstants._parameters =>
         parameters = Some(value)
-      case _ => Unit
+      case _ => ()
     }
   }
 

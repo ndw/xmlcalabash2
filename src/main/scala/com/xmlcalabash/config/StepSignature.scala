@@ -39,7 +39,7 @@ class StepSignature(val stepType: Option[QName]) {
     }
   }
 
-  def implementation_=(className: String) {
+  def implementation_=(className: String): Unit = {
     if (_declaration.isDefined) {
       throw new RuntimeException("Cannot have an atomic step with the same name as a non-atomic step")
     }

@@ -4,13 +4,15 @@ import com.jafpl.graph.Location
 import com.xmlcalabash.exceptions.ExceptionCode.ExceptionCode
 
 class ConfigurationException(val code: ExceptionCode, val data: List[String], val location: Option[Location]) extends Throwable {
-  def this(code: ExceptionCode, data: List[String], loc: Location) {
+  def this(code: ExceptionCode, data: List[String], loc: Location) = {
     this(code, data, Some(loc))
   }
-  def this(code: ExceptionCode, data: List[String]) {
+
+  def this(code: ExceptionCode, data: List[String]) = {
     this(code, data, None)
   }
-  def this(code: ExceptionCode, data: String) {
+
+  def this(code: ExceptionCode, data: String) = {
     this(code, List(data), None)
   }
 

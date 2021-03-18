@@ -64,7 +64,7 @@ class DeclareOutput(override val config: XMLCalabashConfig) extends Port(config)
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     for (child <- allChildren) {
       child.graphEdges(runtime, parent)
     }

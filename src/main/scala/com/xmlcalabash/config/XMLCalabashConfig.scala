@@ -88,10 +88,10 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
   // Do not allow the order to be random
   private val _imports = ListBuffer.empty[URI]
 
-  def this(xprocConfig: XProcConfigurer) {
+  def this(xprocConfig: XProcConfigurer) = {
     this(xprocConfig, None)
   }
-  def this(xprocConfig: XProcConfigurer, processor: Processor) {
+  def this(xprocConfig: XProcConfigurer, processor: Processor) = {
     this(xprocConfig, Some(processor))
   }
 
@@ -264,11 +264,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
     _trim_inline_whitespace = trim
   }
 
-  def watchdogTimeout: Long = _watchdogTimeout
-  def watchdogTimeout_=(timeout: Long): Unit = {
-    checkClosed()
-    _watchdogTimeout = timeout
-  }
+  override def threadPoolSize: Int = 5
 
   def locale: String = _locale
   def locale_=(language: String): Unit = {

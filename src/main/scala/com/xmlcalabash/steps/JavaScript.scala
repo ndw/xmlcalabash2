@@ -31,7 +31,7 @@ class JavaScript extends DefaultXmlStep {
       item match {
         case node: XdmNode =>
           script = node.getStringValue
-        case _ => Unit
+        case _ => ()
       }
     }
   }

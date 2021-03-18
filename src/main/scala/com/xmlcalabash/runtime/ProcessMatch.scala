@@ -109,7 +109,7 @@ class ProcessMatch(config: XMLCalabashConfig,
           }
         case XdmNodeKind.COMMENT => saw |= SAW_COMMENT
         case XdmNodeKind.PROCESSING_INSTRUCTION => saw |= SAW_PI
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -231,7 +231,7 @@ class ProcessMatch(config: XMLCalabashConfig,
           traverseDeepChildren(node, deep, Axis.ATTRIBUTE)
           traverseDeepChildren(node, deep, Axis.CHILD)
         }
-      case _ => Unit
+      case _ => ()
     }
   }
 

@@ -2,7 +2,7 @@ package com.xmlcalabash.model.xml
 
 import java.net.URI
 
-import com.jafpl.graph.{ContainerStart, Graph, Location, Node}
+import com.jafpl.graph.{Location, Node}
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
@@ -374,7 +374,7 @@ class Artifact(val config: XMLCalabashConfig) {
     }
   }
 
-  def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     if (allChildren.nonEmpty) {
       if (_graphNode.isDefined) {
         for (child <- allChildren) {
@@ -400,7 +400,7 @@ class Artifact(val config: XMLCalabashConfig) {
       child match {
         case _: Step =>
           println("")
-        case _ => Unit
+        case _ => ()
       }
       if (dumped.contains(child)) {
         println(s"$indent$this...")

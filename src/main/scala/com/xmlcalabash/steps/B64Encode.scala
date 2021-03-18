@@ -22,7 +22,7 @@ class B64Encode extends DefaultXmlStep {
   override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
     if (variable == XProcConstants._serialization) {
       value match {
-        case _: XdmEmptySequence => Unit
+        case _: XdmEmptySequence => ()
         case _ =>
           val opts = TypeUtils.castAsScala(value).asInstanceOf[Map[Any,Any]]
           for (opt <- opts.keySet) {

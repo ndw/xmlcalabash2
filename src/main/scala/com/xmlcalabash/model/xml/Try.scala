@@ -132,7 +132,7 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
             }
             outputSet += child.port
           }
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -151,7 +151,7 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
     }
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[ContainerStart]
     val node = start.addTryCatch(stepName)
     _graphNode = Some(node)
@@ -161,7 +161,7 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     super.graphEdges(runtime, parent)
 
     for (child <- children[Container]) {
@@ -183,7 +183,7 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
           for (output <- fin.children[DeclareOutput]) {
             runtime.graph.addEdge(fin._graphNode.get, output.port, tryNode, output.port)
           }
-        case _ => Unit
+        case _ => ()
       }
     }
   }

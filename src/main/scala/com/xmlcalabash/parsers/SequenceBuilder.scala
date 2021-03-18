@@ -31,31 +31,31 @@ class SequenceBuilder() extends EventHandler {
     items.toList
   }
 
-  def reset(string: String) {
+  def reset(string: String): Unit = {
     input = string
   }
 
-  def startNonterminal(name: String, begin: Int) {
+  def startNonterminal(name: String, begin: Int): Unit = {
     //println(" nt " + name)
 
     name match {
-      case "Sequence" => Unit
-      case "Item" => Unit
+      case "Sequence" => ()
+      case "Item" => ()
       case _ => println(s"Unexpected NT: $name")
     }
   }
 
-  def endNonterminal(name: String, end: Int) {
+  def endNonterminal(name: String, end: Int): Unit = {
     //println("/nt " + name)
 
     name match {
-      case "Sequence" => Unit
-      case "Item" => Unit
+      case "Sequence" => ()
+      case "Item" => ()
       case _ => println("Unexpected /NT: " + name)
     }
   }
 
-  def terminal(name: String, begin: Int, end: Int) {
+  def terminal(name: String, begin: Int, end: Int): Unit = {
     val tag = if (name(0) == '\'') "TOKEN" else name
     val text = characters(begin, end)
 
@@ -63,9 +63,9 @@ class SequenceBuilder() extends EventHandler {
 
     if (tag == "TOKEN") {
       text match {
-        case "(" => Unit
-        case "," => Unit
-        case ")" => Unit
+        case "(" => ()
+        case "," => ()
+        case ")" => ()
         case _ => println(s"Unexpected token: $text")
       }
     } else {
@@ -84,7 +84,7 @@ class SequenceBuilder() extends EventHandler {
     }
   }
 
-  def whitespace(begin: Int, end: Int) {
+  def whitespace(begin: Int, end: Int): Unit = {
     // nop
   }
 

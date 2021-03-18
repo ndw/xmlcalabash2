@@ -15,7 +15,7 @@ import scala.collection.mutable
 class WithOption(override val config: XMLCalabashConfig) extends NameBinding(config) {
   val typeUtils = new TypeUtils(config)
 
-  def this(config: XMLCalabashConfig, name: QName) {
+  def this(config: XMLCalabashConfig, name: QName) = {
     this(config)
     _name = name
   }
@@ -101,7 +101,7 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
     }
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     if (staticValue.isDefined) {
       return
     }
@@ -132,7 +132,7 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
   }
 
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parNode: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parNode: Node): Unit = {
     if (staticValue.isDefined) {
       return
     }

@@ -28,7 +28,7 @@ class DeclareOption(override val config: XMLCalabashConfig) extends NameBinding(
   override protected[model] def validateStructure(): Unit = {
     for (child <- allChildren) {
       child match {
-        case _: WithInput => Unit
+        case _: WithInput => ()
         case _: NamePipe =>
           throw XProcException.xsStaticErrorInExpression(select.get, "Non-static variable reference", location)
         case _ =>

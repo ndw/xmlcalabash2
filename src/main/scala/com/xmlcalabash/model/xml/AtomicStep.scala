@@ -15,15 +15,15 @@ import net.sf.saxon.s9api.{QName, XdmNode}
 import scala.collection.mutable
 
 class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplParams]) extends Step(config) with NamedArtifact {
-  def this(config: XMLCalabashConfig) {
+  def this(config: XMLCalabashConfig) = {
     this(config, None)
   }
 
-  def this(config: XMLCalabashConfig, params: ImplParams) {
+  def this(config: XMLCalabashConfig, params: ImplParams) = {
     this(config, Some(params))
   }
 
-  def this(config: XMLCalabashConfig, params: ImplParams, context: Artifact) {
+  def this(config: XMLCalabashConfig, params: ImplParams, context: Artifact) = {
     this(config, Some(params))
     _inScopeStatics = context._inScopeStatics
     _inScopeDynamics = context._inScopeDynamics
@@ -191,8 +191,8 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
             throw XProcException.xsDupWithInputPort(art.port, location)
           }
           iport += art.port
-        case _: WithOutput => Unit
-        case _: WithOption => Unit
+        case _: WithOutput => ()
+        case _: WithOption => ()
         case _ =>
           throw new RuntimeException(s"Invalid content in atomic $this")
       }
@@ -226,7 +226,7 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
     }
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[ContainerStart]
     _stepImplementation = stepImplementation(staticContext)
     _stepImplementation.configure(config, params)
@@ -256,12 +256,12 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
       child match {
         case woption: WithOption =>
           woption.graphNodes(runtime, _graphNode.get)
-        case _ => Unit
+        case _ => ()
       }
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     super.graphEdges(runtime, parent)
     for (child <- allChildren) {
       child.graphEdges(runtime, _graphNode.get)

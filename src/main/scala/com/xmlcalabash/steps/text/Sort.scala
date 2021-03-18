@@ -107,7 +107,7 @@ class Sort() extends TextLines {
   }
 
   private class SortErrorListener() extends ErrorListener {
-    override def warning(e: TransformerException): Unit = Unit
+    override def warning(e: TransformerException): Unit = ()
 
     override def error(e: TransformerException): Unit = {
       goesBang = Some(XProcException.xcSortError(e.getMessage, location))
@@ -119,7 +119,7 @@ class Sort() extends TextLines {
           if (xpe.getErrorCodeQName == XProcException.xtte(1020)) {
             goesBang = Some(XProcException.xcSortKeyError(location))
           }
-        case _ => Unit
+        case _ => ()
       }
 
       if (goesBang.isEmpty) {

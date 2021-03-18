@@ -364,11 +364,11 @@ class Archive extends DefaultXmlStep {
             if (entry.getStringValue.trim != "") {
               throw XProcException.xcArchiveBadManifest(location)
             }
-          case XdmNodeKind.PROCESSING_INSTRUCTION => Unit
-          case XdmNodeKind.COMMENT => Unit
-          case XdmNodeKind.DOCUMENT => Unit // impossible
-          case XdmNodeKind.ATTRIBUTE => Unit // impossible
-          case XdmNodeKind.NAMESPACE => Unit // impossible
+          case XdmNodeKind.PROCESSING_INSTRUCTION => ()
+          case XdmNodeKind.COMMENT => ()
+          case XdmNodeKind.DOCUMENT => () // impossible
+          case XdmNodeKind.ATTRIBUTE => () // impossible
+          case XdmNodeKind.NAMESPACE => () // impossible
         }
       }
     }

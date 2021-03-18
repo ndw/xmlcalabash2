@@ -102,7 +102,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
             _qnameKeys = true
             _as = Some(typeUtils.parseFakeMapSequenceType(seqTypeString.get))
           }
-        case _ => Unit
+        case _ => ()
       }
 
     _values = attr(XProcConstants._values)
@@ -266,7 +266,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
             val response = config.documentManager.parse(request)
             context += new XdmValueItemMessage(response.value, XProcMetadata.XML, doc.staticContext)
           case empty: Empty =>
-            Unit
+            ()
         }
       }
 
@@ -285,7 +285,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
           val depends = staticContext.dependsOnContextString(_select.get)
           // FIXME: if depends is false, we can resolve this statically
         } catch {
-          case sax: SaxonApiException => Unit
+          case sax: SaxonApiException => ()
         }
       } else {
         for (ref <- bindings) {
@@ -309,8 +309,8 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
     for (child <- allChildren) {
       child.validateStructure()
       child match {
-        case winput: WithInput => Unit
-        case npipe: NamePipe => Unit
+        case winput: WithInput => ()
+        case npipe: NamePipe => ()
         case _ =>
           throw new RuntimeException(s"Invalid content in $this")
       }
@@ -321,7 +321,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     if (resolvedStatically) {
       return
     }

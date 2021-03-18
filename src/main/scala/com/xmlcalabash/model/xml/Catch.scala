@@ -41,7 +41,7 @@ class Catch(override val config: XMLCalabashConfig) extends Container(config) wi
     makeContainerStructureExplicit()
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[TryCatchStart]
     val node = start.addCatch(stepName, codes.toList)
     _graphNode = Some(node)
@@ -51,7 +51,7 @@ class Catch(override val config: XMLCalabashConfig) extends Container(config) wi
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     for (child <- allChildren) {
       child.graphEdges(runtime, _graphNode.get)
     }

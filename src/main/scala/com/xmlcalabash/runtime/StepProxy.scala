@@ -150,7 +150,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
             }
           }
           step.receiveBinding(qname, value, valuemsg.context)
-        case _ => Unit
+        case _ => ()
           val xvalue = valuemsg.item.getUnderlyingValue
           xvalue match {
             case map: MapItem =>
@@ -176,7 +176,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
 
   override def initialize(config: RuntimeConfiguration): Unit = {
     config match {
-      case _: XMLCalabashRuntime => Unit
+      case _: XMLCalabashRuntime => ()
       case _ => throw XProcException.xiNotXMLCalabash()
     }
 
@@ -185,7 +185,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
         if (this.config.config != xcfg.config) {
           throw XProcException.xiDifferentXMLCalabash()
         }
-      case _ => Unit
+      case _ => ()
     }
 
     step.initialize(config)
@@ -241,7 +241,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
         try {
           stream.close()
         } catch {
-          case ex: IOException => Unit
+          case ex: IOException => ()
           case ex: Exception =>
             thrown = Some(ex)
         }
@@ -320,7 +320,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
             step.receive(port, msg.item, XProcMetadata.EXCEPTION)
         }
         return
-      case _ => Unit
+      case _ => ()
     }
 
     message match {

@@ -1,9 +1,8 @@
 package com.xmlcalabash.test
 
-import java.io.File
-
 import com.xmlcalabash.util.XProcTestSpec
 
+import java.io.File
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
@@ -21,7 +20,7 @@ class RunPassingTestsSpec extends XProcTestSpec {
     if (passing.exists) {
       var skip = false
       val bufferedSource = Source.fromFile(passing)
-      for (line <- bufferedSource.getLines) {
+      for (line <- bufferedSource.getLines()) {
         skip = skip || line == "EOF"
         if (!skip) {
           tests += s"src/test/resources/test-suite/test-suite/tests/$line"

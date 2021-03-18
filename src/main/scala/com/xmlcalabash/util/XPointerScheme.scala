@@ -138,7 +138,7 @@ class XPointerScheme(val schemeName: QName, val schemeData: String, val readLimi
       try {
         rd.reset()
       } catch {
-        case _: Exception => Unit
+        case _: Exception => ()
       }
     }
 
@@ -403,8 +403,7 @@ class XPointerScheme(val schemeName: QName, val schemeData: String, val readLimi
       try {
         rd.reset()
       } catch {
-        case _: Exception =>
-          Unit
+        case _: Exception => ()
       }
     }
 

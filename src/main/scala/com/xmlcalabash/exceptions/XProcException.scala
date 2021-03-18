@@ -441,23 +441,23 @@ class XProcException(val code: QName, val variant: Int, val message: Option[Stri
   private val _underlyingCauses = ListBuffer.empty[Exception]
   private var _errors = Option.empty[XdmNode]
 
-  def this(code: QName) {
+  def this(code: QName) = {
     this(code, 1, None, None, List.empty[String])
   }
 
-  def this(code: QName, message: String) {
+  def this(code: QName, message: String) = {
     this(code, 1, Some(message), None, List.empty[String])
   }
 
-  def this(code: QName, message: String, location: Location) {
+  def this(code: QName, message: String, location: Location) = {
     this(code, 1, Some(message), Some(location), List.empty[String])
   }
 
-  def this(code: QName, message: String, context: StaticContext) {
+  def this(code: QName, message: String, context: StaticContext) = {
     this(code, 1, Some(message), context.location, List.empty[String])
   }
 
-  def this(code: QName, context: StaticContext) {
+  def this(code: QName, context: StaticContext) = {
     this(code, 1, None, context.location, List.empty[String])
   }
 

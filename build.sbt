@@ -1,7 +1,7 @@
 import java.io.{BufferedReader, InputStreamReader}
 
 lazy val xmlCalabashVersion = "1.99.14"
-lazy val jafplVersion = "0.2.41"
+lazy val jafplVersion = "0.3.0"
 lazy val saxonVersion = "9.9.1-7"
 lazy val useSaxonEE = true
 
@@ -9,7 +9,7 @@ name         := "XML Calabash"
 organization := "com.xmlcalabash"
 homepage     := Some(url("https://xmlcalabash.com/"))
 version      := xmlCalabashVersion
-scalaVersion := "2.12.6"
+scalaVersion := "2.13.5"
 
 buildInfoUsePackageAsPath := true
 buildInfoKeys ++= Seq[BuildInfoKey](
@@ -40,7 +40,8 @@ lazy val root = (project in file(".")).
 
 lazy val debugSbtTask = taskKey[Unit]("Task for debugging things I don't understand about sbt")
 debugSbtTask := {
-  println(s"unmanaged: $unmanagedBase")
+  println(unmanagedClasspath.toString())
+  println(managedClasspath)
 }
 
 lazy val failTask = taskKey[Unit]("Force the build to fail")
@@ -118,8 +119,8 @@ publish := Def.taskDyn {
 }.value
 
 
-resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
-resolvers += "Restlet" at "http://maven.restlet.com"
+resolvers += "Artima Maven Repository" at "https://repo.artima.com/releases"
+resolvers += "Restlet" at "https://maven.restlet.com"
 
 libraryDependencies ++= Seq(
   //"org.apache.logging.log4j" % "log4j-api" % "2.12.1",
@@ -128,16 +129,13 @@ libraryDependencies ++= Seq(
   //"org.slf4j" % "jcl-over-slf4j" % "1.7.25",
   //"org.slf4j" % "slf4j-api" % "1.7.25",
   "org.apache.commons" % "commons-compress" % "1.19",
-  "com.typesafe.akka" %% "akka-actor" % "2.5.25",
-  //"com.typesafe.akka" %% "akka-slf4j" % "2.5.25",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
   //"ch.qos.logback" % "logback-classic" % "1.2.3",
-  "com.typesafe.akka" %% "akka-testkit" % "2.5.13" % Test,
-  "org.scalactic" %% "scalactic" % "3.0.5",
-  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-  "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.0",
-  "org.scala-lang.modules" %% "scala-swing" % "2.0.3",
+  "org.scalactic" %% "scalactic" % "3.2.3",
+  "org.scalatest" %% "scalatest" % "3.2.3" % "test",
+  "org.scala-lang.modules" %% "scala-xml" % "1.3.0",
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
+  "org.scala-lang.modules" %% "scala-swing" % "2.1.1",
   "com.ibm.icu" % "icu4j" % "59.1",
   "org.apache.httpcomponents" % "httpclient" % "4.5.11",
   "org.apache.httpcomponents" % "httpcore" % "4.4.13",
@@ -145,13 +143,13 @@ libraryDependencies ++= Seq(
   "org.restlet.jee" % "org.restlet" % "2.2.2",
   "org.restlet.jee" % "org.restlet.ext.fileupload" % "2.2.2",
   "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
-  "org.xmlresolver" % "xmlresolver" % "0.13.1",
+  "org.xmlresolver" % "xmlresolver" % "1.0.6",
   "org.relaxng" % "jing" % "20181222",
   "nu.validator" % "htmlparser" % "1.4.12",
   "com.atlassian.commonmark" % "commonmark" % "0.12.1",
   "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.10.2",
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.2",
-  "com.jafpl" % "jafpl_2.12" % jafplVersion
+  "com.jafpl" % "jafpl_2.13" % jafplVersion
 )
 
 lazy val logback = "ch.qos.logback" % "logback-classic" % "1.0.13"
@@ -163,6 +161,14 @@ libraryDependencies ++= (
     List()
   }
 )
+
+//excludeDependencies ++= (
+//  if (useSaxonEE) {
+//    Seq("net.sf.saxon" % "Saxon-HE" % saxonVersion)
+//  } else {
+//    List()
+//  }
+//)
 
 // ============================================================
 // This section is an attempt to get sbt assembly to work.

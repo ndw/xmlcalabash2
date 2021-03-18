@@ -130,7 +130,7 @@ class XMLCalabashConfiguration {
           if (child.getStringValue.trim != "") {
             logger.error(s"Ignoring text in configuration: ${child.getStringValue}")
           }
-        case _ => Unit
+        case _ => ()
       }
     }
   }
@@ -221,7 +221,7 @@ class XMLCalabashConfiguration {
           val i = value.toInt
           "integer"
         } catch {
-          case _ : Throwable => Unit
+          case _ : Throwable => ()
         }
         "string"
       }

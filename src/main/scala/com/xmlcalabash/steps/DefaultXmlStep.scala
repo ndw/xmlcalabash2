@@ -138,7 +138,7 @@ class DefaultXmlStep extends XmlStep {
       val props = mutable.HashMap.empty[QName, XdmValue]
       for ((name, value) <- metadata.properties) {
         name match {
-          case XProcConstants._serialization => Unit
+          case XProcConstants._serialization => ()
           case XProcConstants._content_type =>
             props.put(name, new XdmAtomicValue("text/plain"))
           case _ => props.put(name, value)
@@ -317,7 +317,7 @@ class DefaultXmlStep extends XmlStep {
     val props = mutable.HashMap.empty[QName, XdmValue]
     for ((key, value) <- meta.properties) {
       key match {
-        case XProcConstants._serialization => Unit
+        case XProcConstants._serialization => ()
         case XProcConstants._content_type =>
           props(key) = new XdmAtomicValue("text/plain")
         case _ =>

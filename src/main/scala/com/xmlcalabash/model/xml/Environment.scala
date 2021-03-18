@@ -21,11 +21,11 @@ object Environment {
   def newEnvironment(step: Artifact): Environment = {
     // Walk "up" the tree until we find a valid starting point
     step match {
-      case step: Step => Unit
-      case input: DeclareInput => Unit
-      case output: DeclareOutput => Unit
-      case variable: Variable => Unit
-      case option: DeclareOption => Unit
+      case step: Step => ()
+      case input: DeclareInput => ()
+      case output: DeclareOutput => ()
+      case variable: Variable => ()
+      case option: DeclareOption => ()
       case _ =>
         return Environment.newEnvironment(step.parent.get)
     }
@@ -48,7 +48,7 @@ object Environment {
           ancestors.insert(0, library)
         case step: Step =>
           ancestors.insert(0, step)
-        case _ => Unit
+        case _ => ()
       }
 
       pptr = pptr.get.parent
@@ -96,7 +96,7 @@ object Environment {
               if (next.isDefined && next.get == childstep) {
                 return walk(env, ancestors.tail)
               }
-            case _ => Unit
+            case _ => ()
           }
         }
 
@@ -128,12 +128,12 @@ object Environment {
 
           xstep match {
             // Choose, when, etc., aren't ordinary container steps
-            case container: Choose => Unit
-            //case container: When => Unit
-            //case container: Otherwise => Unit
-            case container: Try => Unit
-            //case container: Catch => Unit
-            //case container: Finally => Unit
+            case container: Choose => ()
+            //case container: When => ()
+            //case container: Otherwise => ()
+            case container: Try => ()
+            //case container: Catch => ()
+            //case container: Finally => ()
             case _ =>
               // Entering a declare-step resets the default readable port
               if (xstep.isInstanceOf[DeclareStep]) {
@@ -143,7 +143,7 @@ object Environment {
               // The outputs of all contained steps are mutually readable
               for (child <- xstep.allChildren) {
                 child match {
-                  case decl: DeclareStep => Unit // these don't count
+                  case decl: DeclareStep => () // these don't count
                   case childstep: Container =>
                     if (next.isDefined && next.get == childstep) {
                       // ignore this one, we'll be diving down into it
@@ -161,7 +161,7 @@ object Environment {
                     for (port <- childstep.children[WithOutput]) {
                       env.addPort(port)
                     }
-                  case _ => Unit
+                  case _ => ()
                 }
               }
           }
@@ -183,8 +183,8 @@ object Environment {
           }
           xstep match {
             // The children of choose and try aren't ordinary children
-            case container: Choose => Unit
-            case container: Try => Unit
+            case container: Choose => ()
+            case container: Try => ()
             case _ =>
               child match {
                 case option: DeclareOption =>
@@ -192,10 +192,11 @@ object Environment {
                 case variable: Variable =>
                   env.addVariable(variable)
                 case decl: DeclareStep =>
-                  Unit
+                  ()
                 case childstep: Step =>
                   env.defaultReadablePort = childstep.primaryOutput
-                case _ => Unit
+                case _ =>
+                  ()
               }
           }
         }

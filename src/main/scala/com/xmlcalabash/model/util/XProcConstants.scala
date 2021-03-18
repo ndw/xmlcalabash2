@@ -3,6 +3,8 @@ package com.xmlcalabash.model.util
 import net.sf.saxon.s9api.QName
 
 object XProcConstants {
+  type ValueTemplate = List[String]
+
   val ns_p   = "http://www.w3.org/ns/xproc"
   val ns_c   = "http://www.w3.org/ns/xproc-step"
   val ns_chttp = "http://www.w3.org/ns/xproc-http"

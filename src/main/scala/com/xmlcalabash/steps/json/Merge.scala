@@ -84,11 +84,11 @@ class Merge extends DefaultXmlStep {
         case "reject" =>
           throw XProcException.xcRejectDuplicateKeys(key.getStringValue, location)
         case "use-first" =>
-          Unit
+          ()
         case "use-last" =>
           merged = merged.put(key, value)
         case "use-any" =>
-          Unit
+          ()
         case _ => // combine
           val curValue = merged.get(key)
           val vlist = ListBuffer.empty[XdmItem]

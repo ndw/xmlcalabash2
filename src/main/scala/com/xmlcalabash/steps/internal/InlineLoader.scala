@@ -108,7 +108,7 @@ class InlineLoader() extends AbstractLoader {
       while (iter.hasNext) {
         val child = iter.next()
         child.getNodeKind match {
-          case XdmNodeKind.TEXT => Unit
+          case XdmNodeKind.TEXT => ()
           case _ =>
             if (encoding.isDefined) {
               throw XProcException.xdNoMarkupAllowedEncoded(child.getNodeName, exprContext.location)

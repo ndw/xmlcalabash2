@@ -58,7 +58,7 @@ class Import(override val config: XMLCalabashConfig) extends Artifact(config) {
           if (decl.stepType.isEmpty) {
             throw XProcException.xsStepTypeRequired(location)
           }
-        case _ => Unit
+        case _ => ()
       }
 
       config.addImportedURI(_href, declContainer)

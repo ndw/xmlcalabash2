@@ -73,7 +73,7 @@ class Step(override val config: XMLCalabashConfig) extends Artifact(config) with
           if (winput.primary) {
             return Some(winput)
           }
-        case _ => Unit
+        case _ => ()
       }
     }
     None
@@ -90,7 +90,7 @@ class Step(override val config: XMLCalabashConfig) extends Artifact(config) with
           if (woutput.primary) {
             return Some(woutput)
           }
-        case _ => Unit
+        case _ => ()
       }
     }
     None
@@ -111,7 +111,7 @@ class Step(override val config: XMLCalabashConfig) extends Artifact(config) with
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     if (depends.nonEmpty) {
       val thisNode = _graphNode.get
       for (step <- dependSteps) {

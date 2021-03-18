@@ -7,14 +7,13 @@ package com.xmlcalabash.util
 
 import java.io.File
 import java.net.URI
-
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.testing.TestRunner
-import org.scalatest.FunSpec
+import org.scalatest.funspec.AnyFunSpec
 
 import scala.collection.mutable.ListBuffer
 
-class XProcTestSpec extends FunSpec {
+class XProcTestSpec extends AnyFunSpec {
   protected val runtimeConfig: XMLCalabashConfig = XMLCalabashConfig.newInstance()
   protected val testFiles: ListBuffer[String] = ListBuffer.empty[String]
 
@@ -59,7 +58,7 @@ class XProcTestSpec extends FunSpec {
     }
   }
 
-  protected def test(fn: String) {
+  protected def test(fn: String): Unit = {
     val runner = new TestRunner(runtimeConfig, online, List(fn))
     val results = runner.run()
     for (result <- results) {
@@ -85,7 +84,7 @@ class XProcTestSpec extends FunSpec {
           file.getName match {
             case fnregex() =>
               testFiles += file.getAbsolutePath
-            case _ => Unit
+            case _ => ()
           }
         }
       }

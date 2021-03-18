@@ -73,7 +73,7 @@ class DirectoryList() extends DefaultXmlStep {
                   rel = Some(patn.toString())
                 }
                 rematch = true
-              case _ => Unit
+              case _ => ()
             }
           }
         }
@@ -85,7 +85,7 @@ class DirectoryList() extends DefaultXmlStep {
                 rel = Some(patn.toString())
               }
               rematch = false
-            case _ => Unit
+            case _ => ()
           }
         }
 

@@ -32,7 +32,7 @@ class Finally(override val config: XMLCalabashConfig) extends Container(config) 
     }
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[TryCatchStart]
     val node = start.addFinally(stepName)
     _graphNode = Some(node)
@@ -42,7 +42,7 @@ class Finally(override val config: XMLCalabashConfig) extends Container(config) 
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     super.graphEdges(runtime, parent)
 
     for (child <- allChildren) {

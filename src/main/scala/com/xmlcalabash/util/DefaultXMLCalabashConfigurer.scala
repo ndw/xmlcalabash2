@@ -51,9 +51,6 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
       }
     }
 
-    val timeout = Option(System.getProperty("com.xmlcalabash.watchdogTimeout")).getOrElse("30000")
-    configuration.watchdogTimeout = timeout.toLong
-
     val resolver = new XProcURIResolver(configuration)
     configuration.uriResolver = loadResolver(config.uri_resolver, resolver).asInstanceOf[URIResolver]
     configuration.entityResolver = loadResolver(config.entity_resolver, resolver).asInstanceOf[EntityResolver]
@@ -140,7 +137,7 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
               throw new RuntimeException("Cannot redefine namespace bindings in property file")
             }
             nsmap.put(name, uri)
-          case _ => Unit
+          case _ => ()
         }
       }
 
@@ -150,7 +147,7 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
         val name = propIter.next()
         val value = props.get(name).asInstanceOf[String]
         value match {
-          case NSPattern(uri) => Unit
+          case NSPattern(uri) => ()
           case FPattern(pfx,local) =>
             if (nsmap.contains(pfx)) {
               val qname = new QName(pfx, nsmap(pfx), local)

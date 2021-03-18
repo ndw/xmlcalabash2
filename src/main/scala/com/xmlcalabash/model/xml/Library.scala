@@ -55,7 +55,7 @@ class Library(override val config: XMLCalabashConfig) extends DeclContainer(conf
           }
           variable.makeBindingsExplicit()
         case function: DeclareFunction =>
-          Unit
+          ()
       }
     }
   }
@@ -68,8 +68,8 @@ class Library(override val config: XMLCalabashConfig) extends DeclContainer(conf
           if (!variable.static) {
             throw new RuntimeException("Only static variables are allowed in a p:library")
           }
-        case step: DeclareStep => Unit
-        case function: DeclareFunction => Unit
+        case step: DeclareStep => ()
+        case function: DeclareFunction => ()
         case _ =>
           throw new RuntimeException(s"Child not allowed: $child")
       }

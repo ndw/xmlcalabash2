@@ -103,7 +103,7 @@ class ChooseBranch(override val config: XMLCalabashConfig) extends Container(con
     }
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[ChooseStart]
     val node = start.addWhen(testExpr, stepName, Manifold.ALLOW_ANY)
     _graphNode = Some(node)
@@ -113,7 +113,7 @@ class ChooseBranch(override val config: XMLCalabashConfig) extends Container(con
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     super.graphEdges(runtime, parent)
 
     for (child <- allChildren) {

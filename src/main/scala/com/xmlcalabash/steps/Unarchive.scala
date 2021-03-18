@@ -86,7 +86,7 @@ class Unarchive extends DefaultXmlStep {
 
     format.get match {
       case `_zip` => unzip(context)
-      case _ => Unit
+      case _ => ()
     }
   }
 

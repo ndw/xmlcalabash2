@@ -59,7 +59,7 @@ class Xslt extends DefaultXmlStep {
     port match {
       case "source" => inputSequence += item.asInstanceOf[XdmItem]
       case "stylesheet" => stylesheet = Some(item.asInstanceOf[XdmNode])
-      case _ => Unit
+      case _ => ()
     }
   }
 
@@ -71,7 +71,7 @@ class Xslt extends DefaultXmlStep {
     } else {
       // All of the other options should be single values or the empty sequence
       value.size() match {
-        case 0 => Unit
+        case 0 => ()
         case 1 =>
           if (variable == _global_context_item) {
             globalContextItem = Some(value)
@@ -119,7 +119,7 @@ class Xslt extends DefaultXmlStep {
       for (value <- inputSequence) {
         value match {
           case node: XdmNode => docs += node
-          case _ => Unit
+          case _ => ()
         }
       }
       config.setCollectionFinder(new XProcCollectionFinder(runtime, docs.toList, collectionFinder))
@@ -230,7 +230,7 @@ class Xslt extends DefaultXmlStep {
           next match {
             case node: XdmNode =>
               prop(XProcConstants._base_uri) = new XdmAtomicValue(node.getBaseURI)
-            case _ => Unit
+            case _ => ()
           }
           consume(next, "result", prop.toMap)
         }
@@ -279,7 +279,7 @@ class Xslt extends DefaultXmlStep {
         case "html" => ctype = Some(MediaType.HTML)
         case "xhtml" => ctype = Some(MediaType.XHTML)
         case "text" => ctype = Some(MediaType.TEXT)
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -426,7 +426,7 @@ class Xslt extends DefaultXmlStep {
   }
 
   private class MyErrorListener(val compileTime: Boolean) extends ErrorListener {
-    override def warning(e: TransformerException): Unit = Unit
+    override def warning(e: TransformerException): Unit = ()
 
     override def error(e: TransformerException): Unit = {
       goesBang = Some(XProcException.xcXsltCompileError(e.getMessage, location))

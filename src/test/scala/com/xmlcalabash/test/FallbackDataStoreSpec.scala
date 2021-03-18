@@ -1,15 +1,15 @@
 package com.xmlcalabash.test
 
-import java.io.{InputStream, OutputStream}
-import java.net.URI
-
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.util.URIUtils
 import com.xmlcalabash.util.stores.{DataInfo, DataReader, DataWriter, FallbackDataStore}
 import net.sf.saxon.s9api.XdmAtomicValue
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 
-class FallbackDataStoreSpec extends FlatSpec {
+import java.io.{InputStream, OutputStream}
+import java.net.URI
+
+class FallbackDataStoreSpec extends AnyFlatSpec {
   private val config = XMLCalabashConfig.newInstance()
   private val fallback = new FallbackDataStore()
   private val base = URIUtils.cwdAsURI

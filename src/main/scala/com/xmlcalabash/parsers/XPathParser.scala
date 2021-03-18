@@ -88,7 +88,7 @@ class XPathParser() extends ExpressionParser {
         case "PathExpr" => context = true
         case "FunctionCall" => functionCall = true
         case "FunctionName" => functionName = true
-        case _ => Unit
+        case _ => ()
       }
     }
 
@@ -99,7 +99,7 @@ class XPathParser() extends ExpressionParser {
       name match {
         case "FunctionCall" => functionCall = false
         case "FunctionName" => functionName = false
-        case _ => Unit
+        case _ => ()
       }
     }
 

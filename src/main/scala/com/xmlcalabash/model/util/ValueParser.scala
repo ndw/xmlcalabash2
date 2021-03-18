@@ -3,75 +3,18 @@ package com.xmlcalabash.model.util
 import com.jafpl.graph.Location
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
+import com.xmlcalabash.model.util.XProcConstants.ValueTemplate
 import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime, XProcExpression, XProcVtExpression, XProcXPathExpression}
+import com.xmlcalabash.util.ValueTemplateParser
 import net.sf.saxon.s9api.{Axis, QName, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 object ValueParser {
-  def parseAvt(value: String): Option[List[String]] = {
-    val list = ListBuffer.empty[String]
-    var state = StateChange.STRING
-    var pos = 0
-    var substr = ""
-
-    while (pos < value.length) {
-      val ch = value.substring(pos, pos + 1)
-      val nextch = if (pos + 1 < value.length) {
-        value.substring(pos + 1, pos + 2)
-      } else {
-        ""
-      }
-      ch match {
-        case "{" =>
-          if (nextch == "{") {
-            pos += 2
-            substr += "{"
-          } else {
-            state match {
-              case StateChange.STRING =>
-                list += substr
-                substr = ""
-                state = StateChange.EXPR
-                pos += 1
-              case StateChange.EXPR =>
-                substr += "{"
-                pos += 1
-            }
-          }
-        case "}" =>
-          if (nextch == "}") {
-            pos += 2
-            substr += "}"
-          } else {
-            state match {
-              case StateChange.STRING =>
-                return None
-              case StateChange.EXPR =>
-                if (list.isEmpty) {
-                  list += ""
-                }
-                list += substr
-                substr = ""
-                state = StateChange.STRING
-                pos += 1
-            }
-          }
-        case _ =>
-          substr += ch
-          pos += 1
-      }
-    }
-
-    if (state != StateChange.STRING) {
-      None
-    } else {
-      if (substr != "") {
-        list += substr
-      }
-      Some(list.toList)
-    }
+  def parseAvt(value: String): Option[ValueTemplate] = {
+    val parser = new ValueTemplateParser(value)
+    Some(parser.template())
   }
 
   def findVariableRefsInString(config: XMLCalabashRuntime, text: String, context: StaticContext): Set[QName] = {
@@ -267,7 +210,7 @@ object ValueParser {
         if (expandText) {
           variableRefs ++= ValueParser.findVariableRefsInTvt(config, node.getStringValue, location)
         }
-      case _ => Unit
+      case _ => ()
     }
 
     variableRefs.toSet

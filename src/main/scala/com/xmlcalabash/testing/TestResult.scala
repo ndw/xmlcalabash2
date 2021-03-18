@@ -58,7 +58,7 @@ class TestResult(pass: Boolean) {
       case xproc: XProcException =>
         _errQName = Some(xproc.code)
       case _ =>
-        Unit
+        ()
     }
   }
 

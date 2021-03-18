@@ -146,8 +146,8 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
     var primaryOutput = Option.empty[DeclareOutput]
     for (child <- allChildren) {
       child match {
-        case _: WithInput => Unit
-        case _: WithOutput => Unit
+        case _: WithInput => ()
+        case _: WithOutput => ()
         case when: ChooseBranch =>  // When or Otherwise
           if (first) {
             for (child <- when.children[DeclareOutput]) {
@@ -190,7 +190,7 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
     }
   }
 
-  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[ContainerStart]
     val node = start.addChoose(stepName)
     _graphNode = Some(node)
@@ -200,7 +200,7 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
     }
   }
 
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node) {
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     super.graphEdges(runtime, parent)
 
     for (child <- children[Container]) {

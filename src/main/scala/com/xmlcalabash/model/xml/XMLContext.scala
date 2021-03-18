@@ -15,22 +15,22 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class XMLContext(override val config: XMLCalabashConfig, override val artifact: Option[Artifact]) extends StaticContext(config, artifact) {
-  def this(config: XMLCalabashConfig, artifact: Artifact) {
+  def this(config: XMLCalabashConfig, artifact: Artifact) = {
     this(config, Some(artifact))
   }
 
-  def this(config: XMLCalabashConfig) {
+  def this(config: XMLCalabashConfig) = {
     this(config, None)
   }
 
-  def this(config: XMLCalabashConfig, artifact: Artifact, baseURI: Option[URI], ns: Map[String,String], location: Option[Location]) {
+  def this(config: XMLCalabashConfig, artifact: Artifact, baseURI: Option[URI], ns: Map[String,String], location: Option[Location]) = {
     this(config, Some(artifact))
     _baseURI = baseURI
     _inScopeNS = ns
     _location = location
   }
 
-  def this(config: XMLCalabashConfig, baseURI: Option[URI], ns: Map[String,String], location: Option[Location]) {
+  def this(config: XMLCalabashConfig, baseURI: Option[URI], ns: Map[String,String], location: Option[Location]) = {
     this(config, None)
     _baseURI = baseURI
     _inScopeNS = ns

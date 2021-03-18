@@ -166,8 +166,8 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
                 val date = DateUtils.parseDate(header.getValue)
                 val zdt = ZonedDateTime.ofInstant(date.toInstant, ZoneId.systemDefault)
                 props.put(qname, new XdmAtomicValue(zdt.format(DateTimeFormatter.ISO_INSTANT)))
-              case "content-length" => Unit
-              case "content-type" => Unit
+              case "content-length" => ()
+              case "content-type" => ()
               case _ =>
                 props.put(qname, new XdmAtomicValue(header.getValue))
             }
@@ -220,7 +220,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
           source.asInstanceOf[SAXSource].setXMLReader(reader)
           reader.setEntityResolver(xmlCalabash.entityResolver)
         } catch {
-          case se: SAXException => Unit
+          case se: SAXException => ()
           case t: Throwable => throw t
         }
       }
@@ -423,7 +423,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       case ex: Exception =>
         except.underlyingCauses = List(ex)
       case _ =>
-        Unit
+        ()
     }
 
     except

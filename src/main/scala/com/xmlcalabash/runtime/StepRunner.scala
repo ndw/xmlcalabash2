@@ -142,7 +142,7 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
     try {
       runtime.stop()
     } catch {
-      case _: Exception => Unit
+      case _: Exception => ()
     }
   }
 
@@ -169,7 +169,7 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
               consumer.receive(result_port, msg.item, XProcMetadata.EXCEPTION)
           }
           return
-        case _ => Unit
+        case _ => ()
       }
 
       message match {

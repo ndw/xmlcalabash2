@@ -3,9 +3,9 @@ package com.xmlcalabash.test
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.util.{ArgBundle, ValueUtils}
 import net.sf.saxon.s9api.QName
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 
-class ArgBundleSpec extends FlatSpec {
+class ArgBundleSpec extends AnyFlatSpec {
   private val config = XMLCalabashConfig.newInstance()
 
   "Parsing nothing" should "fail" in {
