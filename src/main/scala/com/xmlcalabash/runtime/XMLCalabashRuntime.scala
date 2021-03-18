@@ -140,7 +140,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
     ran = true
 
     try {
-      runtime.run()
+      runtime.runSync()
     } finally {
       runtime.stop()
     }
