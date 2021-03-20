@@ -11,7 +11,7 @@ class XProcXPathValue(override val context: StaticContext,
                       val params: Option[XPathBindingParams])
   extends XProcExpression(context) {
 
-  def this(context: StaticContext, value: XProcVarValue, as: Option[SequenceType], values: Option[List[XdmAtomicValue]], params: XPathBindingParams) {
+  def this(context: StaticContext, value: XProcVarValue, as: Option[SequenceType], values: Option[List[XdmAtomicValue]], params: XPathBindingParams) = {
     this(context, value, as, values, Some(params))
   }
 

@@ -10,7 +10,7 @@ class XProcLocation private (private val puri: String, private val pline: Int, p
   private var _line = pline
   private var _col = pcol
 
-  def this(node: XdmNode) {
+  def this(node: XdmNode) = {
     this(node.getBaseURI.toASCIIString, node.getLineNumber, node.getColumnNumber)
 
     // Special case: if there's a preceding sibling PI that contains the original
@@ -65,7 +65,7 @@ class XProcLocation private (private val puri: String, private val pline: Int, p
     }
   }
 
-  def this(ex: SAXParseException) {
+  def this(ex: SAXParseException) = {
     this(ex.getSystemId, ex.getLineNumber, ex.getColumnNumber)
   }
 

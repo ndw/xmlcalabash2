@@ -25,7 +25,7 @@ class Join extends DefaultXmlStep {
     }
   }
 
-  override def run(staticContext: StaticContext) {
+  override def run(staticContext: StaticContext): Unit = {
     val depth = bindings(_flatten_to_depth).getUnderlyingValue.getStringValue
     if (depth == "unbounded") {
       flattenDepth = Int.MaxValue

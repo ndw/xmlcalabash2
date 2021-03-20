@@ -8,22 +8,22 @@ object DefaultLocation {
 }
 
 class DefaultLocation(href: Option[String], lnum: Option[Long], cnum: Option[Long]) extends graph.Location with parser.Location {
-  def this(href: String) {
+  def this(href: String) = {
     this(Some(href), None, None)
   }
-  def this(lnum: Long) {
+  def this(lnum: Long) = {
     this(None, Some(lnum), None)
   }
 
-  def this(lnum: Long, cnum: Long) {
+  def this(lnum: Long, cnum: Long) = {
     this(None, Some(lnum), Some(cnum))
   }
 
-  def this(href: String, lnum: Long, cnum: Long) {
+  def this(href: String, lnum: Long, cnum: Long) = {
     this(Some(href), Some(lnum), Some(cnum))
   }
 
-  def this(href: Option[String], lnum: Long, cnum: Long) {
+  def this(href: Option[String], lnum: Long, cnum: Long) = {
     this(href, Some(lnum), Some(cnum))
   }
 

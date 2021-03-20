@@ -20,7 +20,7 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
   private var explanation = ""
   private val stream = getClass.getResourceAsStream("/xproc-errors.txt")
 
-  for (line <- Source.fromInputStream(stream, "UTF-8").getLines) {
+  for (line <- Source.fromInputStream(stream, "UTF-8").getLines()) {
     if (line == "") {
       if (code.isDefined) {
         messages += new ErrorExplanationTemplate(code.get, variant, message, explanation)

@@ -68,6 +68,14 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
     }
     configuration.showErrors = config.showErrors
 
+    try {
+      val tcount = Option(System.getProperty("com.xmlcalabash.threadCount")).getOrElse("1").toInt
+      configuration.threadPoolSize = tcount
+    } catch {
+      case _: Exception =>
+        // FIXME: raise exception?
+    }
+
     // Have to check because assigning none enables the default behavior
     if (config.debug_output_directory.isDefined) {
       configuration.debugOptions.outputDirectory = config.debug_output_directory.get

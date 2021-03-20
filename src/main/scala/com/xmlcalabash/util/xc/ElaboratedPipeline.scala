@@ -22,7 +22,7 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
                     psviRequired: Option[Boolean],
                     xpathVersion: Option[Double],
                     excludePrefixes: Option[String],
-                    visibility: Option[String]) {
+                    visibility: Option[String]): Unit = {
     if (!inLibrary) {
       builder.startDocument(None)
     }

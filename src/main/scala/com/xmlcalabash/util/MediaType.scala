@@ -133,11 +133,11 @@ object MediaType {
 }
 
 class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Option[String], val inclusive: Boolean, val param: Option[Array[String]]) {
-  def this(mediaType: String, mediaSubtype: String) {
+  def this(mediaType: String, mediaSubtype: String) = {
     this(mediaType, mediaSubtype, None, true, None)
   }
 
-  def this(mediaType: String, mediaSubtype: String, suffix: String) {
+  def this(mediaType: String, mediaSubtype: String, suffix: String) = {
     this(mediaType, mediaSubtype, Some(suffix), true, None)
   }
 

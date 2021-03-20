@@ -318,7 +318,12 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
       if (input.sequence) {
         inputMap.put(input.port, PortCardinality.ZERO_OR_MORE)
       } else {
-        inputMap.put(input.port, PortCardinality.EXACTLY_ONE)
+        if (input.defaultInputs.nonEmpty) {
+          // Allow it to be empty, the default will provide something
+          inputMap.put(input.port, new PortCardinality(0, 1))
+        } else {
+          inputMap.put(input.port, PortCardinality.EXACTLY_ONE)
+        }
       }
     }
     val outputMap = mutable.HashMap.empty[String,PortCardinality]

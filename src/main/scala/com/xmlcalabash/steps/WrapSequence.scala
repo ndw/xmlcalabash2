@@ -34,7 +34,7 @@ class WrapSequence extends DefaultXmlStep {
     }
   }
 
-  override def run(staticContext: StaticContext) {
+  override def run(staticContext: StaticContext): Unit = {
     wrapper = qnameBinding(_wrapper).get
     groupAdjacent = optionalStringBinding(_group_adjacent)
     if (groupAdjacent.isDefined) {
@@ -63,7 +63,7 @@ class WrapSequence extends DefaultXmlStep {
     consumer.get.receive("result", builder.result, XProcMetadata.XML)
   }
 
-  def runAdjacent(staticContext: StaticContext) {
+  def runAdjacent(staticContext: StaticContext): Unit = {
     var inGroup = false
     var lastValue: XdmValue = null
     var builder: SaxonTreeBuilder = null

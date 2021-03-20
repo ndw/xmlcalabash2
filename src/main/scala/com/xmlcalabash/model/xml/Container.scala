@@ -65,7 +65,7 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
         case compound: Container =>
           lastStep = Some(compound)
         case variable: Variable =>
-          environment.addVariable(variable)
+          environment().addVariable(variable)
         case _ =>
           ()
       }

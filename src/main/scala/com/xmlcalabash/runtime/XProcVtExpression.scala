@@ -8,17 +8,17 @@ class XProcVtExpression private(override val context: StaticContext, val params:
   private var _avt: List[String] = _
   private var _string = false
 
-  def this(context: StaticContext, avt: List[String], stringResult: Boolean) {
+  def this(context: StaticContext, avt: List[String], stringResult: Boolean) = {
     this(context, None)
     _avt = avt
     _string = stringResult
   }
 
-  def this(context: StaticContext, avt: List[String]) {
+  def this(context: StaticContext, avt: List[String]) = {
     this(context, avt, false)
   }
 
-  def this(context: StaticContext, expr: String, stringResult: Boolean) {
+  def this(context: StaticContext, expr: String, stringResult: Boolean) = {
     this(context, None)
     val avt = ValueParser.parseAvt(expr)
     if (avt.isEmpty) {
@@ -28,7 +28,7 @@ class XProcVtExpression private(override val context: StaticContext, val params:
     _string = stringResult
   }
 
-  def this(context: StaticContext, expr: String) {
+  def this(context: StaticContext, expr: String) = {
     this(context, expr, false)
   }
 

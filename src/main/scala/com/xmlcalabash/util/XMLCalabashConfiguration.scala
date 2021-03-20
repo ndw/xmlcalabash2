@@ -23,7 +23,7 @@ class XMLCalabashConfiguration {
   private val cc_module_uri_resolver = new QName("cc", ns_cc, "module-uri-resolver")
   private val cc_unparsed_text_uri_resolver = new QName("cc", ns_cc, "unparsed-text-uri-resolver")
   private val cc_system_property = new QName("cc", ns_cc, "system-property")
-  private val cc_watchdog_timeout = new QName("cc", ns_cc, "watchdog-timeout")
+  private val cc_thread_pool = new QName("cc", ns_cc, "thread-pool")
   private val cc_graphviz = new QName("cc", ns_cc, "graphviz")
   private val cc_debug_output_directory = new QName("cc", ns_cc, "debug-output-directory")
   private val cc_debug_tree = new QName("cc", ns_cc, "tree")
@@ -37,6 +37,7 @@ class XMLCalabashConfiguration {
   private val _value = new QName("value")
   private val _type = new QName("type")
   private val _dot = new QName("dot")
+  private val _thread_count = new QName("thread-count")
 
   private var _show_messages = Option.empty[Boolean]
   private var _schema_aware = Option.empty[Boolean]
@@ -44,6 +45,7 @@ class XMLCalabashConfiguration {
   private var _saxon_configuration_file = Option.empty[String]
   private var _saxon_configuration_property = mutable.HashMap.empty[String,Any]
   private var _serialization = mutable.HashMap.empty[String,mutable.HashMap[QName,String]]
+  private var _thread_pool_size = 1
   private var _entity_resolver = Option.empty[String]
   private var _uri_resolver = Option.empty[String]
   private var _module_uri_resolver = Option.empty[String]
@@ -64,6 +66,7 @@ class XMLCalabashConfiguration {
   def saxon_configuration_file: Option[String] = _saxon_configuration_file
   def saxon_configuration_properties: Map[String,Any] = _saxon_configuration_property.toMap
 
+  def thread_pool_size: Int = _thread_pool_size
   def entity_resolver: Option[String] = _entity_resolver
   def uri_resolver: Option[String] = _uri_resolver
   def module_uri_resolver: Option[String] = _module_uri_resolver
@@ -145,8 +148,8 @@ class XMLCalabashConfiguration {
         _schema_aware = setBoolean(node, option)
       case `cc_system_property` =>
         setSystemProperty(node)
-      case `cc_watchdog_timeout` =>
-        setWatchdogTimeout(node)
+      case `cc_thread_pool` =>
+        setThreadPool(node)
       case `cc_trim_inline_whitespace`  =>
         _trim_inline_whitespace = setBoolean(node, option)
       case `cc_saxon_configuration` =>
@@ -357,13 +360,15 @@ class XMLCalabashConfiguration {
     }
   }
 
-  def setWatchdogTimeout(node: XdmNode): Unit = {
+  def setThreadPool(node: XdmNode): Unit = {
     try {
-      val ms = node.getStringValue.toInt
-      setSystemProperty("com.xmlcalabash.watchdogTimeout", node.getStringValue)
+      val count = node.getAttributeValue(_thread_count)
+      if (count != null) {
+        setSystemProperty("com.xmlcalabash.threadCount", count.toInt.toString)
+      }
     } catch {
       case ex: Exception =>
-        logger.error(s"Invalid watchdog-timeout configuration: ${node.getStringValue}")
+        logger.error(s"Invalid thread configuration: ${node.getStringValue}")
     }
   }
 }

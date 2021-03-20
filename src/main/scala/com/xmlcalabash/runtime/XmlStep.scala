@@ -10,14 +10,14 @@ trait XmlStep {
   def inputSpec: XmlPortSpecification
   def outputSpec: XmlPortSpecification
   def bindingSpec: BindingSpecification
-  def setConsumer(consumer: XProcDataConsumer)
-  def setLocation(location: Location)
-  def receiveBinding(variable: QName, value: XdmValue, context: StaticContext)
-  def receive(port: String, item: Any, metadata: XProcMetadata)
-  def configure(config: XMLCalabashConfig, params: Option[ImplParams])
-  def initialize(config: RuntimeConfiguration)
-  def run(context: StaticContext)
-  def reset()
-  def abort()
-  def stop()
+  def setConsumer(consumer: XProcDataConsumer): Unit
+  def setLocation(location: Location): Unit
+  def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit
+  def receive(port: String, item: Any, metadata: XProcMetadata): Unit
+  def configure(config: XMLCalabashConfig, params: Option[ImplParams]): Unit
+  def initialize(config: RuntimeConfiguration): Unit
+  def run(context: StaticContext): Unit
+  def reset(): Unit
+  def abort(): Unit
+  def stop(): Unit
 }

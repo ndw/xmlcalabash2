@@ -103,15 +103,26 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
       winput.port = "source"
       other.addChild(winput)
 
+      val identity = new AtomicStep(config)
+      identity.stepType = XProcConstants.p_identity
+      val idin = new WithInput(config)
+      val idout = new WithOutput(config)
+      identity.addChild(idin)
+      identity.addChild(idout)
+
       if (primaryOutput.isDefined) {
         val output = new DeclareOutput(config)
         output.port = primaryOutput.get
         output.primary = true
         other.addChild(output)
+
+        val pipe = new Pipe(config)
+        pipe.step = identity.stepName
+        pipe.port = "result"
+        pipe.link = identity.children[WithOutput].head
+        output.addChild(pipe)
       }
 
-      val identity = new AtomicStep(config)
-      identity.stepType = XProcConstants.p_identity
       other.addChild(identity)
 
       // If there isn't a primary output, make sure we sink the output of
@@ -183,9 +194,24 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
   override protected[model] def normalizeToPipes(): Unit = {
     super.normalizeToPipes()
 
-    // Now that we've distributed the input into the p:when's, we can remove this
     val winput = firstWithInput
     if (winput.isDefined) {
+      // If we synthesized a p:otherwise, hook up the identity inputs
+      val other = children[Otherwise].head
+      if (other.synthetic) {
+        val ident = other.children[AtomicStep].head
+        val idinput = ident.firstWithInput
+        for (child <- winput.get.allChildren) {
+          child match {
+            case pipe: Pipe =>
+              idinput.get.addChild(new Pipe(pipe))
+            case _ =>
+              throw new RuntimeException("with input hasn't been normalized to pipes?")
+          }
+        }
+      }
+
+      // Now that we've distributed the input into the p:when's, we can remove this
       removeChild(winput.get)
     }
   }

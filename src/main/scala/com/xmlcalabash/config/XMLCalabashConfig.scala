@@ -64,6 +64,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
   private var _debugOptions: XMLCalabashDebugOptions = new XMLCalabashDebugOptions(this)
 
   private var closed = false
+  private var _threadPoolSize: Int = 2
   private var _processor: Processor = _
   private var _errorListener: ErrorListener = _
   private val _stepImplClasses = mutable.HashMap.empty[QName,String]
@@ -77,7 +78,6 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
   private var _documentManager: DocumentManager = _
   private var _htmlSerializer = false
   private var _trim_inline_whitespace = false
-  private var _watchdogTimeout = 1000L
   private var _staticBaseURI = URIUtils.cwdAsURI
   private var _locale = defaultLocale
   private var _episode = computeEpisode
@@ -264,7 +264,10 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
     _trim_inline_whitespace = trim
   }
 
-  override def threadPoolSize: Int = 5
+  def threadPoolSize: Int = _threadPoolSize
+  def threadPoolSize_=(size: Int): Unit = {
+    _threadPoolSize = size
+  }
 
   def locale: String = _locale
   def locale_=(language: String): Unit = {

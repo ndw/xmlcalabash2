@@ -410,7 +410,7 @@ class XPointerScheme(val schemeName: QName, val schemeData: String, val readLimi
     data.toString()
   }
 
-  private def malformedSearch(select: String, msg: String) {
+  private def malformedSearch(select: String, msg: String): Unit = {
     throw XProcException.xcXPointerMalformedSearch(select, msg);
   }
 }

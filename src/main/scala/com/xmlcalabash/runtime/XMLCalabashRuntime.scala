@@ -25,8 +25,8 @@ import scala.collection.mutable
 class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends RuntimeConfiguration {
   val config: XMLCalabashConfig = decl.config
 
-  //FIXME:
-  override def threadPoolSize: Int = 5
+  //FIXME: why?
+  override def threadPoolSize: Int = config.threadPoolSize
 
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected[runtime] val joinGateMarker = new XdmAtomicValue(new QName(XProcConstants.ns_cx, "JOIN-GATE-MARKER"))

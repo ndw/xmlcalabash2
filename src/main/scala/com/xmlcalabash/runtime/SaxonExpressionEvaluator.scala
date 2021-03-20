@@ -2,7 +2,6 @@ package com.xmlcalabash.runtime
 
 import java.net.URI
 import java.util
-
 import com.jafpl.graph.BindingParams
 import com.jafpl.messages.{ExceptionMessage, Message, PipelineMessage}
 import com.jafpl.runtime.ExpressionEvaluator
@@ -20,9 +19,9 @@ import net.sf.saxon.s9api.{ItemTypeFactory, QName, SaxonApiException, SaxonApiUn
 import net.sf.saxon.trans.XPathException
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.IteratorHasAsJava
 import scala.util.DynamicVariable
 
 object SaxonExpressionEvaluator {
@@ -551,10 +550,10 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
   }
 
   class ExprNodeResource(uri: String, item: Item[_]) extends Resource {
-    def this(node: XdmNode) {
+    def this(node: XdmNode) = {
       this(node.getBaseURI.toASCIIString, node.getUnderlyingNode)
     }
-    def this(value: XdmValue) {
+    def this(value: XdmValue) = {
       this(null, value.getUnderlyingValue.head)
     }
 

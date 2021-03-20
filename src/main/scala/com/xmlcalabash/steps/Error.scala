@@ -20,7 +20,7 @@ class Error extends DefaultXmlStep {
     }
   }
 
-  override def run(context: StaticContext) {
+  override def run(context: StaticContext): Unit = {
     val code = qnameBinding(_code).get
 
     val tree = new SaxonTreeBuilder(config)

@@ -21,7 +21,7 @@ class PropertyExtract extends DefaultXmlStep {
     meta = Some(metadata)
   }
 
-  override def run(staticContext: StaticContext) {
+  override def run(staticContext: StaticContext): Unit = {
     consumer.get.receive("result", doc.get, meta.get)
 
     val builder = new SaxonTreeBuilder(config)

@@ -27,7 +27,6 @@ class DataSource(override val config: XMLCalabashConfig) extends Artifact(config
       }
     }
 
-    val env = environment()
     val loader = new AtomicStep(config, params, this)
     loader.stepType = stepType
 

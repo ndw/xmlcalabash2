@@ -17,27 +17,27 @@ class StaticContext(val config: XMLCalabashConfig, val artifact: Option[Artifact
   protected var _location: Option[Location] = None
   protected var _statics = Map.empty[String,Message]
 
-  def this(config: XMLCalabashConfig) {
+  def this(config: XMLCalabashConfig) = {
     this(config, None)
   }
 
-  def this(config: XMLCalabashRuntime) {
+  def this(config: XMLCalabashRuntime) = {
     this(config.config, None)
   }
 
-  def this(config: XMLCalabashConfig, artifact: Artifact) {
+  def this(config: XMLCalabashConfig, artifact: Artifact) = {
     this(config, Some(artifact))
   }
 
-  def this(runtime: XMLCalabashRuntime, artifact: Option[Artifact]) {
+  def this(runtime: XMLCalabashRuntime, artifact: Option[Artifact]) = {
     this(runtime.config, artifact)
   }
 
-  def this(runtime: XMLCalabashRuntime, artifact: Artifact) {
+  def this(runtime: XMLCalabashRuntime, artifact: Artifact) = {
     this(runtime.config, Some(artifact))
   }
 
-  def this(context: StaticContext, artifact: Option[Artifact]) {
+  def this(context: StaticContext, artifact: Option[Artifact]) = {
     this(context.config, artifact)
     _baseURI = context._baseURI
     _inScopeNS = context._inScopeNS
@@ -45,11 +45,11 @@ class StaticContext(val config: XMLCalabashConfig, val artifact: Option[Artifact
     _statics = context._statics
   }
 
-  def this(context: StaticContext, artifact: Artifact) {
+  def this(context: StaticContext, artifact: Artifact) = {
     this(context, Some(artifact))
   }
 
-  def this(config: XMLCalabashConfig, artifact: Artifact, node: XdmNode) {
+  def this(config: XMLCalabashConfig, artifact: Artifact, node: XdmNode) = {
     this(config, Some(artifact))
     _baseURI = Option(node.getBaseURI)
     _inScopeNS = S9Api.inScopeNamespaces(node)

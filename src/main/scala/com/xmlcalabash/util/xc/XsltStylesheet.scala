@@ -60,7 +60,7 @@ class XsltStylesheet(runtime: XMLCalabashRuntime, val bindings: Map[String,Strin
   builder.startContent()
   openStack.push(xsl_stylesheet)
 
-  def this(runtime: XMLCalabashRuntime) {
+  def this(runtime: XMLCalabashRuntime) = {
     this(runtime, Map.empty[String,String], List(), "2.0")
   }
 
