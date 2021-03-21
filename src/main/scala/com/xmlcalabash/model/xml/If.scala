@@ -15,6 +15,7 @@ class If(override val config: XMLCalabashConfig) extends Choose(config) {
 
     val choose = new Choose(config)
     choose._name = Some(stepName)
+    choose._depends = _depends
     choose.p_if = true
     for (child <- children[WithInput]) {
       choose.addChild(child)

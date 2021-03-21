@@ -202,6 +202,9 @@ It is an error to specify an encoding, “$1”, if the content type is an XML m
 XS0072
 For p:inline “$1” content, only text is allowed. Found: “$2”.
 
+XS0073
+There is no in-scope step named “$1”.
+
 XS0077
 Invalid value specified: “$1”. Value must be $2.
 
