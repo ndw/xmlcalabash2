@@ -9,8 +9,8 @@ import com.xmlcalabash.util.{MediaType, S9Api}
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.{QName, XdmMap, XdmNode}
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.jdk.CollectionConverters.MapHasAsScala
 
 class DeclareOutput(override val config: XMLCalabashConfig) extends Port(config) {
   private var mapexpr = Option.empty[String]

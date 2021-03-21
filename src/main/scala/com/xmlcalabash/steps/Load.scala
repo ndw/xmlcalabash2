@@ -1,15 +1,14 @@
 package com.xmlcalabash.steps
 
 import java.net.URI
-
 import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmMap, XdmValue}
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 class Load() extends DefaultXmlStep {
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE

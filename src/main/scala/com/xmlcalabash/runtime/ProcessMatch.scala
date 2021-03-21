@@ -2,7 +2,6 @@ package com.xmlcalabash.runtime
 
 import java.net.URI
 import java.util
-
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
@@ -13,21 +12,21 @@ import net.sf.saxon.s9api._
 import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.trans.XPathException
 
-import scala.collection.JavaConverters._
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.IteratorHasAsJava
 
 class ProcessMatch(config: XMLCalabashConfig,
                    processor: ProcessMatchingNodes,
                    context: StaticContext,
                    bindings: Option[Map[String,Message]]) extends SaxonTreeBuilder(config) {
-  def this(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes, context: StaticContext) {
+  def this(runtime: XMLCalabashRuntime, processor: ProcessMatchingNodes, context: StaticContext) = {
     this(runtime.config, processor, context, None)
   }
-  def this(runtime: XMLCalabashConfig, processor: ProcessMatchingNodes, context: StaticContext) {
+  def this(runtime: XMLCalabashConfig, processor: ProcessMatchingNodes, context: StaticContext) = {
     this(runtime, processor, context, None)
   }
-  def this(config: XMLCalabashConfig, processor: ProcessMatchingNodes, context: StaticContext, bindings: Map[String,Message]) {
+  def this(config: XMLCalabashConfig, processor: ProcessMatchingNodes, context: StaticContext, bindings: Map[String,Message]) = {
     this(config, processor, context, Some(bindings))
   }
 

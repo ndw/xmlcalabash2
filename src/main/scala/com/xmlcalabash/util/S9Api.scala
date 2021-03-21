@@ -1,22 +1,21 @@
 package com.xmlcalabash.util
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
-import java.net.URI
-
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime}
 import net.sf.saxon.`type`.BuiltInAtomicType
 import net.sf.saxon.ma.map.MapItem
-import net.sf.saxon.om.{FingerprintedQName, InscopeNamespaceResolver, Item, NameOfNode, NamespaceBinding}
+import net.sf.saxon.om.{FingerprintedQName, InscopeNamespaceResolver, NameOfNode, NamespaceBinding}
 import net.sf.saxon.s9api._
 import net.sf.saxon.tree.util.NamespaceIterator
 import net.sf.saxon.value.QNameValue
 import org.xml.sax.InputSource
 
-import scala.collection.JavaConverters._
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+import java.net.URI
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.MapHasAsScala
 
 object S9Api {
   val OPEN_BRACE = new XdmAtomicValue("{")
@@ -206,7 +205,7 @@ object S9Api {
   }
 
   def excludeInlineURIs(node: XdmNode): Set[String] = {
-    val excludeURIs = mutable.HashSet.empty[String] + XProcConstants.ns_p
+    val excludeURIs = mutable.HashSet.empty[String] ++ Set(XProcConstants.ns_p)
 
     var parent = node
     while (parent.getNodeKind == XdmNodeKind.ELEMENT) {

@@ -5,8 +5,8 @@ import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecificati
 import com.xmlcalabash.steps.DefaultXmlStep
 import net.sf.saxon.s9api.{QName, XdmArray, XdmItem, XdmValue}
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 class Join extends DefaultXmlStep {
   private val _flatten_to_depth = new QName("", "flatten-to-depth")

@@ -249,7 +249,7 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
 
     val pcontext = staticContext.withStatics(inScopeStatics)
     val proxy = new StepProxy(runtime, stepType, _stepImplementation, proxyParams, pcontext)
-    val node = start.addAtomic(proxy, stepType + " " + stepName)
+    val node = start.addAtomic(proxy, s"$stepType $stepName")
     _graphNode = Some(node)
 
     for (child <- allChildren) {

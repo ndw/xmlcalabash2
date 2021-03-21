@@ -1,7 +1,6 @@
 package com.xmlcalabash.util
 
 import java.net.URI
-
 import com.xmlcalabash.config.XMLCalabashConfig
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.lib.{CollectionFinder, Resource, ResourceCollection}
@@ -9,8 +8,8 @@ import net.sf.saxon.om.{Item, SpaceStrippingRule}
 import net.sf.saxon.s9api.XdmNode
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.IteratorHasAsJava
 
 object XProcCollectionFinder {
   val DEFAULT = "http://xmlcalabash.com/saxon-default-collection"

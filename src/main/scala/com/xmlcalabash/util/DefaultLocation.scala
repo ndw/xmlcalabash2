@@ -69,11 +69,7 @@ class DefaultLocation(href: Option[String], lnum: Option[Long], cnum: Option[Lon
   }
 
   override def toString: String = {
-    var str = ""
-    str += href.getOrElse("") + ":"
-    str += lnum.getOrElse("") + ":"
-    str += cnum.getOrElse("") + ":"
-    str
+    s"${href.getOrElse("")}:${lnum.getOrElse("")}:${cnum.getOrElse("")}"
   }
 
 }

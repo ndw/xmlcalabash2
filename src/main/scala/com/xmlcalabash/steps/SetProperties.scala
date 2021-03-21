@@ -1,14 +1,13 @@
 package com.xmlcalabash.steps
 
 import java.net.URI
-
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode, XdmValue}
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.jdk.CollectionConverters.MapHasAsScala
 
 class SetProperties() extends DefaultXmlStep {
   private val _merge = new QName("merge")

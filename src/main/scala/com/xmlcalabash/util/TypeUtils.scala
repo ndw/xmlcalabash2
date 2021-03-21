@@ -1,7 +1,6 @@
 package com.xmlcalabash.util
 
 import java.util
-
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
@@ -10,9 +9,9 @@ import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime}
 import jdk.nashorn.api.scripting.ScriptObjectMirror
 import net.sf.saxon.s9api._
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.{CollectionHasAsScala, IterableHasAsJava, MapHasAsScala}
 
 object TypeUtils {
   def castAsXml(value: Any): XdmValue = {

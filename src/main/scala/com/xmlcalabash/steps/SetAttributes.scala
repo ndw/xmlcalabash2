@@ -6,8 +6,8 @@ import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContex
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.jdk.CollectionConverters.MapHasAsScala
 
 class SetAttributes() extends DefaultXmlStep with ProcessMatchingNodes {
   private val _attributes = new QName("attributes")

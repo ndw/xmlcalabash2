@@ -31,7 +31,7 @@ class DynamicContext() {
   private var _injId = Option.empty[String]
   private var _injType = Option.empty[QName]
 
-  def this(artifact: Option[Artifact]) {
+  def this(artifact: Option[Artifact]) = {
     this()
 
     _artifact = artifact

@@ -1,19 +1,20 @@
 package com.xmlcalabash.runtime
 
 import java.net.URI
-
 import com.jafpl.config.Jafpl
+import com.jafpl.exceptions.JafplException
 import com.jafpl.graph.Graph
 import com.jafpl.messages.Message
 import com.jafpl.runtime.{GraphRuntime, RuntimeConfiguration}
 import com.jafpl.steps.DataConsumer
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.config.{DocumentManager, Signatures, XMLCalabashConfig, XProcConfigurer}
-import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{ExpressionParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep}
 import com.xmlcalabash.util.{MediaType, XProcVarValue}
+
 import javax.xml.transform.URIResolver
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmValue}
@@ -53,14 +54,22 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   val graph: Graph = jafpl.newGraph()
 
   protected[xmlcalabash] def init(decl: DeclareStep): Unit = {
-
-    config.debugOptions.dumpOpenGraph(decl, graph)
-
-    runtime = new GraphRuntime(graph, this)
-
-    config.debugOptions.dumpJafplGraph(decl, graph)
-
-    runtime.traceEventManager = _traceEventManager
+    try {
+      config.debugOptions.dumpOpenGraph(decl, graph)
+      runtime = new GraphRuntime(graph, this)
+      config.debugOptions.dumpJafplGraph(decl, graph)
+      runtime.traceEventManager = _traceEventManager
+    } catch {
+      case ex: JafplException =>
+        ex.code match {
+          case JafplException.BAD_LOOP_INPUT_PORT =>
+            throw XProcException.xsLoop(ex.details(1).asInstanceOf[String], ex.details.head.asInstanceOf[String], ex.location)
+          case _ =>
+            throw ex
+        }
+      case ex: Throwable =>
+        throw ex
+    }
   }
 
   // ===================================================================================

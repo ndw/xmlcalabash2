@@ -4,12 +4,10 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.steps.DefaultXmlStep
-import net.sf.saxon.s9api.{QName, XdmArray, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmValue}
-import net.sf.saxon.value.StringValue
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmValue}
 
-import scala.collection.JavaConverters._
-import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.{IteratorHasAsJava, MapHasAsScala}
 
 
 class Merge extends DefaultXmlStep {
@@ -60,17 +58,18 @@ class Merge extends DefaultXmlStep {
           selector.setVariable(p_index, new XdmAtomicValue(index))
           selector.setContextItem(item)
           val value = selector.evaluate()
-          if (value.isInstanceOf[XdmAtomicValue]) {
-            addToMap(value.asInstanceOf[XdmAtomicValue], item.asInstanceOf[XdmValue])
-          } else if (value.isInstanceOf[XdmNode]) {
-            addToMap(new XdmAtomicValue(value.getUnderlyingValue.getStringValue), item.asInstanceOf[XdmValue])
-          } else {
-            try {
-              throw XProcException.xcInvalidJsonMergeKey(value.getUnderlyingValue.getStringValue, location)
-            } catch {
-              case ex: Exception =>
-                throw XProcException.xcInvalidJsonMergeKey(location)
-            }
+          value match {
+            case atomic: XdmAtomicValue =>
+              addToMap(atomic, item.asInstanceOf[XdmValue])
+            case _: XdmNode =>
+              addToMap(new XdmAtomicValue(value.getUnderlyingValue.getStringValue), item.asInstanceOf[XdmValue])
+            case _ =>
+              try {
+                throw XProcException.xcInvalidJsonMergeKey(value.getUnderlyingValue.getStringValue, location)
+              } catch {
+                case ex: Exception =>
+                  throw XProcException.xcInvalidJsonMergeKey(location)
+              }
           }
       }
     }
