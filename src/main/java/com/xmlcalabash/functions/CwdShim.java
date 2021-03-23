@@ -49,7 +49,7 @@ public class CwdShim extends ExtensionFunctionDefinition {
         }
 
         @Override
-        public Sequence<?> call(XPathContext context, Sequence[] arguments) {
+        public Sequence call(XPathContext context, Sequence[] arguments) {
             Cwd impl = new Cwd(runtime);
             return impl.call(context, arguments);
         }

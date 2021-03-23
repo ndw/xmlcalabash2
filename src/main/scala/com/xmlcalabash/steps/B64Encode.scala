@@ -84,7 +84,6 @@ class B64Encode extends DefaultXmlStep {
 
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(baseURI)
-    builder.startContent()
     builder.addText(encoded.replace("\r", ""))
     builder.endDocument()
     val result = builder.result

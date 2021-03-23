@@ -466,10 +466,8 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
             val builder = new SaxonTreeBuilder(xmlCalabash)
             builder.startDocument(None)
             builder.addStartElement(XProcConstants.c_document_properties)
-            builder.startContent()
             for ((key,value) <- props) {
               builder.addStartElement(key)
-              builder.startContent()
               value match {
                 case atom: XdmAtomicValue => builder.addValues(value)
                 case node: XdmNode => builder.addSubtree(node)
@@ -490,7 +488,6 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
     val builder = new SaxonTreeBuilder(xmlCalabash)
     builder.startDocument(None)
     builder.addStartElement(XProcConstants.c_document_properties)
-    builder.startContent()
     builder.addEndElement()
     builder.endDocument()
     builder.result
@@ -549,7 +546,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
     }
   }
 
-  class ExprNodeResource(uri: String, item: Item[_]) extends Resource {
+  class ExprNodeResource(uri: String, item: Item) extends Resource {
     def this(node: XdmNode) = {
       this(node.getBaseURI.toASCIIString, node.getUnderlyingNode)
     }
@@ -558,7 +555,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
     }
 
     override def getResourceURI: String = uri
-    override def getItem(context: XPathContext): Item[_] = item
+    override def getItem(context: XPathContext): Item = item
     override def getContentType: String = null
   }
 }

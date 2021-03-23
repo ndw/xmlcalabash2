@@ -1,20 +1,20 @@
 package com.xmlcalabash.runtime
 
-import java.net.URI
-import java.util
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
+import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
-import net.sf.saxon.om.NamespaceResolver
+import net.sf.saxon.om.{AttributeInfo, AttributeMap, NameOfNode, NamespaceResolver}
 import net.sf.saxon.s9api._
 import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.trans.XPathException
 
+import java.net.URI
+import java.util
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.ListBuffer
-import scala.jdk.CollectionConverters.IteratorHasAsJava
+import scala.jdk.CollectionConverters.{IteratorHasAsJava, SeqHasAsJava}
 
 class ProcessMatch(config: XMLCalabashConfig,
                    processor: ProcessMatchingNodes,
@@ -132,39 +132,38 @@ class ProcessMatch(config: XMLCalabashConfig,
         }
 
       case XdmNodeKind.ELEMENT =>
+        var allAttributes = node.getUnderlyingNode.attributes()
+        val matchingAttributes = ListBuffer.empty[AttributeInfo]
+        val nonMatchingAttributes = ListBuffer.empty[AttributeInfo]
+
+        val iter = node.axisIterator(Axis.ATTRIBUTE)
+        while (iter.hasNext) {
+          val child = iter.next()
+          val name = NameOfNode.makeName(child.getUnderlyingNode)
+          val attr = allAttributes.get(name)
+          if (matches(child)) {
+            matchingAttributes += attr
+          } else {
+            nonMatchingAttributes += attr
+          }
+        }
+
+        if (matchingAttributes.nonEmpty) {
+          val processed = processor.attributes(node,
+            AttributeMap.fromList(matchingAttributes.toList.asJava),
+            AttributeMap.fromList(nonMatchingAttributes.toList.asJava))
+          if (processed.isDefined) {
+            allAttributes = processed.get
+          }
+        }
+
         if (nmatch) {
-          processChildren = processor.startElement(node)
+          processChildren = processor.startElement(node, allAttributes)
           saw = 0
         } else {
-          addStartElement(node)
+          addStartElement(node, allAttributes)
         }
 
-        if (!nmatch) {
-          // First, we check to see if any attributes will match
-          val found = ListBuffer.empty[XdmNode]
-          var iter = node.axisIterator(Axis.ATTRIBUTE)
-          while (iter.hasNext) {
-            val child = iter.next
-            if (matches(child)) {
-              found += child
-            }
-          }
-
-          val doAttributes = if (found.nonEmpty) {
-            processor.allAttributes(node, found.toList)
-          } else {
-            true
-          }
-
-          if (doAttributes) {
-            iter = node.axisIterator(Axis.ATTRIBUTE)
-            while (iter.hasNext) {
-              traverse(iter.next)
-            }
-          }
-
-          receiver.startContent()
-        }
 
         if (!nmatch || processChildren) {
           traverseChildren(node)
@@ -174,15 +173,6 @@ class ProcessMatch(config: XMLCalabashConfig,
           processor.endElement(node)
         } else {
           addEndElement()
-        }
-
-      case XdmNodeKind.ATTRIBUTE =>
-        // FIXME: what about changing the name of an attribute?
-        if (nmatch) {
-          processor.attribute(node)
-          saw = 0
-        } else {
-          addAttribute(node.getNodeName, node.getStringValue)
         }
 
       case XdmNodeKind.COMMENT =>

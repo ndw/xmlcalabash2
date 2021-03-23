@@ -3,6 +3,8 @@ package com.xmlcalabash.steps
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.util.TypeUtils
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap, NamespaceMap}
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 class Error extends DefaultXmlStep {
@@ -29,24 +31,26 @@ class Error extends DefaultXmlStep {
     } else {
       tree.startDocument(context.baseURI)
     }
+
     tree.addStartElement(XProcConstants.c_errors)
-    tree.startContent()
-    tree.addStartElement(XProcConstants.c_error)
-    tree.addAttribute(XProcConstants._code, code.toString)
+
+    var nsmap = NamespaceMap.emptyMap()
+    var amap: AttributeMap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._code, code.toString))
     if (context.location.isDefined) {
       if (context.location.get.uri.isDefined) {
-        tree.addAttribute(XProcConstants._href, context.location.get.uri.get.toString)
+        amap = amap.put(TypeUtils.attributeInfo(XProcConstants._href, context.location.get.uri.get))
       }
       if (context.location.get.line.isDefined) {
-        tree.addAttribute(XProcConstants._line, context.location.get.line.get.toString)
+        amap = amap.put(TypeUtils.attributeInfo(XProcConstants._line, context.location.get.line.get.toString))
       }
       if (context.location.get.column.isDefined) {
-        tree.addAttribute(XProcConstants._column, context.location.get.column.get.toString)
+        amap = amap.put(TypeUtils.attributeInfo(XProcConstants._column, context.location.get.column.get.toString))
       }
     }
-    tree.addAttribute(XProcConstants._type, "p:error")
-    tree.addNamespace("p", XProcConstants.ns_p)
-    tree.startContent()
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._type, "p:error"))
+    nsmap = nsmap.put("p", XProcConstants.ns_p)
+    tree.addStartElement(XProcConstants.c_error, amap, nsmap)
     if (_message.isDefined) {
       tree.addSubtree(_message.get)
     }

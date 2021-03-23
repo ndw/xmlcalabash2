@@ -3,7 +3,6 @@ package com.xmlcalabash.steps
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.net.URI
 import java.util.Base64
-
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.jafpl.messages.Message
@@ -13,6 +12,7 @@ import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils, ValueUtils}
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap}
 import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
@@ -103,10 +103,11 @@ class CastContentType() extends DefaultXmlStep {
         }
 
         builder.startDocument(baseURI)
-        builder.addStartElement(XProcConstants.c_data)
-        builder.addAttribute(XProcConstants._content_type, contentType.toString)
-        builder.addAttribute(XProcConstants._encoding, "base64")
-        builder.startContent()
+
+        var amap: AttributeMap = EmptyAttributeMap.getInstance()
+        amap = amap.put(TypeUtils.attributeInfo(XProcConstants._content_type, contentType.toString))
+        amap = amap.put(TypeUtils.attributeInfo(XProcConstants._encoding, "base64"))
+        builder.addStartElement(XProcConstants.c_data, amap)
 
         // A binary should be an input stream...
         item.get match {
@@ -167,10 +168,12 @@ class CastContentType() extends DefaultXmlStep {
       case MediaType.OCTET_STREAM =>
         val builder = new SaxonTreeBuilder(config)
         builder.startDocument(metadata.get.baseURI)
-        builder.addStartElement(XProcConstants.c_data)
-        builder.addAttribute(XProcConstants._content_type, contentType.toString)
-        builder.addAttribute(XProcConstants._encoding, "base64")
-        builder.startContent()
+
+        var amap: AttributeMap = EmptyAttributeMap.getInstance()
+        amap = amap.put(TypeUtils.attributeInfo(XProcConstants._content_type, contentType.toString))
+        amap = amap.put(TypeUtils.attributeInfo(XProcConstants._encoding, "base64"))
+
+        builder.addStartElement(XProcConstants.c_data, amap)
 
         val stream = item.get.asInstanceOf[BinaryNode].stream
         val bos = new ByteArrayOutputStream()
@@ -202,7 +205,7 @@ class CastContentType() extends DefaultXmlStep {
     val serialOpts = mutable.HashMap.empty[QName, String]
     serialOpts.put(XProcConstants._omit_xml_declaration, "true")
     // If parameters is defined, it's either a map or the empty sequence
-    if (parameters.isDefined && parameters.get.isInstanceOf[Map[Any,Any]]) {
+    if (parameters.isDefined && parameters.get.isInstanceOf[Map[Any, Any]]) {
       val opts = TypeUtils.castAsScala(parameters.get).asInstanceOf[Map[Any, Any]]
       for (opt <- opts.keySet) {
         opt match {
@@ -301,16 +304,18 @@ class CastContentType() extends DefaultXmlStep {
       case MediaType.OCTET_STREAM =>
         val builder = new SaxonTreeBuilder(config)
         builder.startDocument(metadata.get.baseURI)
-        builder.addStartElement(XProcConstants.c_data)
-        builder.addAttribute(XProcConstants._content_type, contentType.toString)
-        builder.addAttribute(XProcConstants._encoding, "base64")
-        builder.startContent()
+
+        var amap: AttributeMap = EmptyAttributeMap.getInstance()
+        amap = amap.put(TypeUtils.attributeInfo(XProcConstants._content_type, contentType.toString))
+        amap = amap.put(TypeUtils.attributeInfo(XProcConstants._encoding, "base64"))
+
+        builder.addStartElement(XProcConstants.c_data, amap)
 
         val stream = item.get.asInstanceOf[BinaryNode].stream
         val bos = new ByteArrayOutputStream()
         var totBytes = 0L
         val pagesize = 4096
-        val tmp = new Array[Byte](4096)
+        val tmp = new Array[Byte](pagesize)
         var length = 0
         length = stream.read(tmp)
         while (length >= 0) {

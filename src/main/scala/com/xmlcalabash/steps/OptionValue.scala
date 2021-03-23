@@ -19,7 +19,6 @@ class OptionValue extends DefaultXmlStep {
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(None)
     builder.addStartElement(XProcConstants.c_result)
-    builder.startContent()
     val iter = value.get.iterator()
     while (iter.hasNext) {
       val item = iter.next()

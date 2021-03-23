@@ -5,9 +5,8 @@ import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime}
 import net.sf.saxon.`type`.BuiltInAtomicType
 import net.sf.saxon.ma.map.MapItem
-import net.sf.saxon.om.{FingerprintedQName, InscopeNamespaceResolver, NameOfNode, NamespaceBinding}
+import net.sf.saxon.om.{AttributeInfo, FingerprintedQName, NameOfNode, NamespaceBinding, NamespaceMap}
 import net.sf.saxon.s9api._
-import net.sf.saxon.tree.util.NamespaceIterator
 import net.sf.saxon.value.QNameValue
 import org.xml.sax.InputSource
 
@@ -15,7 +14,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.net.URI
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.jdk.CollectionConverters.MapHasAsScala
+import scala.jdk.CollectionConverters.{CollectionHasAsScala, MapHasAsScala, SeqHasAsJava}
 
 object S9Api {
   val OPEN_BRACE = new XdmAtomicValue("{")
@@ -225,9 +224,7 @@ object S9Api {
 
   def urisForPrefixes(node: XdmNode, prefixList: Set[String]): Set[String] = {
     val uriList = mutable.HashSet.empty[String]
-
-    val inode = node.getUnderlyingNode
-    val inscopeNS = new InscopeNamespaceResolver(inode)
+    val nsmap = node.getUnderlyingNode.getAllNamespaces
     var all = false
 
     for (pfx <- prefixList) {
@@ -238,14 +235,14 @@ object S9Api {
         all = true
       } else {
         if (pfx == "#default") {
-          found = (inscopeNS.getURIForPrefix("", true) != null)
+          found = nsmap.getURIForPrefix("", true) != null
           if (found) {
-            uriList += inscopeNS.getURIForPrefix("", true)
+            uriList += nsmap.getURIForPrefix("", true)
           }
         } else {
-          found = (inscopeNS.getURIForPrefix(pfx, false) != null)
+          found = nsmap.getURIForPrefix(pfx, false) != null
           if (found) {
-            uriList += inscopeNS.getURIForPrefix(pfx, false)
+            uriList += nsmap.getURIForPrefix(pfx, false)
           }
         }
       }
@@ -256,11 +253,11 @@ object S9Api {
     }
 
     if (all) {
-      val pfxiter = inscopeNS.iteratePrefixes()
+      val pfxiter = nsmap.iteratePrefixes()
       while (pfxiter.hasNext) {
         val pfx = pfxiter.next()
         val isdef = (pfx == "")
-        val nsuri = inscopeNS.getURIForPrefix(pfx, isdef)
+        val nsuri = nsmap.getURIForPrefix(pfx, isdef)
         // Never exclude the xml: and xmlns: prefixes.
         if (nsuri != XProcConstants.ns_xml && nsuri != XProcConstants.ns_xmlns) {
           uriList += nsuri
@@ -299,22 +296,17 @@ object S9Api {
           removeNamespacesWriter(tree, child, excludeNS, preserveUsed)
         }
       case XdmNodeKind.ELEMENT =>
+        val nsmap = node.getUnderlyingNode.getAllNamespaces
         val usesDefaultNS = node.getNodeName.getPrefix == "" && node.getNodeName.getNamespaceURI != ""
         val inode = node.getUnderlyingNode
         var excludeDefault = false
         var changed = false
 
-        val curNS = mutable.ListBuffer.empty[NamespaceBinding]
-        val nsiter = NamespaceIterator.iterateNamespaces(inode)
-        while (nsiter.hasNext) {
-          curNS += nsiter.next
-        }
-
-        val newNS = mutable.ListBuffer.empty[NamespaceBinding]
-
-        for (ns <- curNS) {
-          val pfx = ns.getPrefix
-          val uri = ns.getURI
+        val newNS = ListBuffer.empty[NamespaceBinding]
+        val pfxiter = nsmap.iteratePrefixes()
+        while (pfxiter.hasNext) {
+          val pfx = pfxiter.next
+          val uri = nsmap.getURIForPrefix(pfx, "".equals(pfx))
 
           var delete = excludeNS.contains(uri)
           excludeDefault = excludeDefault || (pfx == "" && delete)
@@ -327,42 +319,34 @@ object S9Api {
           changed |= delete
 
           if (!delete) {
-            newNS += ns
+            newNS += new NamespaceBinding(pfx, uri)
           }
         }
 
+        val attrs = inode.attributes()
+        val attrList = ListBuffer.empty[AttributeInfo]
         var newName = NameOfNode.makeName(inode)
         if (!preserveUsed) {
           val binding = newName.getNamespaceBinding
           if (excludeNS.contains(binding.getURI)) {
             newName = new FingerprintedQName("", "", newName.getLocalPart)
           }
-        }
 
-        tree.addStartElement(newName, inode.getSchemaType, newNS.toList)
-
-        if (preserveUsed) {
-          tree.addAttributes(node)
-        } else {
-          // In this case we may need to change some of the attributes too
-          val seen = mutable.HashSet.empty[QName]
-          for (attr <- S9Api.axis(node, Axis.ATTRIBUTE)) {
-            val attrns = attr.getNodeName.getNamespaceURI
+          // In this case we may need to change some attributes too
+          for (attr <- attrs.asList().asScala) {
+            val attrns = attr.getNodeName.getURI
             if (excludeNS.contains(attrns)) {
-              val newname = new QName(attr.getNodeName.getLocalName)
-              if (seen.contains(newname)) {
-                // Nope we can't do this one
-              } else {
-                seen += newname
-                tree.addAttribute(newname, attr.getStringValue)
-              }
+              val newAttrName = new FingerprintedQName("", "", attr.getNodeName.getLocalPart)
+              val newAttr = new AttributeInfo(newAttrName, attr.getType, attr.getValue, attr.getLocation, attr.getProperties)
+              attrList += newAttr
             } else {
-              tree.addAttribute(attr)
+              attrList += attr
             }
           }
         }
 
-        tree.startContent()
+        tree.addStartElement(newName, attrs, inode.getSchemaType, new NamespaceMap(newNS.toList.asJava))
+
         for (child <- S9Api.axis(node, Axis.CHILD)) {
           removeNamespacesWriter(tree, child, excludeNS, preserveUsed)
         }

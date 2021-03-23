@@ -57,7 +57,7 @@ public class StepAvailableShim extends ExtensionFunctionDefinition {
 
         @Override
         @SuppressWarnings("unchecked")
-        public Sequence<?> call(XPathContext context, Sequence[] arguments) {
+        public Sequence call(XPathContext context, Sequence[] arguments) {
             StepAvailable impl = new StepAvailable(runtime);
             return impl.call(staticContext, context, arguments);
         }

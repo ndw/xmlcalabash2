@@ -3,7 +3,6 @@ package com.xmlcalabash.steps.internal
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.net.URI
 import java.util.Base64
-
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
@@ -11,11 +10,15 @@ import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.params.InlineLoaderParams
 import com.xmlcalabash.runtime.{BinaryNode, ImplParams, StaticContext, XProcMetadata, XProcVtExpression, XProcXPathExpression, XmlPortSpecification}
-import com.xmlcalabash.util.{MediaType, S9Api}
+import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils}
+import net.sf.saxon.`type`.BuiltInAtomicType
+import net.sf.saxon.event.ReceiverOption
+import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap, NamespaceMap}
 import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.ListHasAsScala
 
 // N.B. This looks like a step, but it isn't really. It gets passed all of the variable bindings
 // and the context item and it evaluates its "options" directly. This is necessary because in
@@ -29,6 +32,9 @@ class InlineLoader() extends AbstractLoader {
   private val excludeURIs = mutable.HashSet.empty[String]
   private var expandText = false
   private var contextProvided = false
+
+  private val fq_inline_expand_text = TypeUtils.fqName(XProcConstants._inline_expand_text)
+  private val fq_p_inline_expand_text = TypeUtils.fqName(XProcConstants.p_inline_expand_text)
 
   override def inputSpec: XmlPortSpecification = {
     if (contextProvided) {
@@ -128,7 +134,6 @@ class InlineLoader() extends AbstractLoader {
     if (contentType.xmlContentType || contentType.htmlContentType) {
       val builder = new SaxonTreeBuilder(config)
       builder.startDocument(node.getBaseURI)
-      builder.startContent()
       // FIXME: trim whitespace
       expandTVT(node, builder, expandText)
       builder.endDocument()
@@ -139,7 +144,6 @@ class InlineLoader() extends AbstractLoader {
       val text = if (expandText) {
         val builder = new SaxonTreeBuilder(config)
         builder.startDocument(node.getBaseURI)
-        builder.startContent()
         expandTVT(node, builder, expandText)
         builder.endDocument()
         val result = builder.result
@@ -169,7 +173,6 @@ class InlineLoader() extends AbstractLoader {
       val text = if (expandText) {
         val builder = new SaxonTreeBuilder(config)
         builder.startDocument(node.getBaseURI)
-        builder.startContent()
         expandTVT(node, builder, expandText)
         builder.endDocument()
         val result = builder.result
@@ -183,7 +186,6 @@ class InlineLoader() extends AbstractLoader {
 
         val builder = new SaxonTreeBuilder(config)
         builder.startDocument(node.getBaseURI)
-        builder.startContent()
         builder.addText(text)
         builder.endDocument()
         val result = builder.result
@@ -194,7 +196,6 @@ class InlineLoader() extends AbstractLoader {
 
         val builder = new SaxonTreeBuilder(config)
         builder.startDocument(node.getBaseURI)
-        builder.startContent()
         builder.addText(text)
         builder.endDocument()
         val result = builder.result
@@ -261,53 +262,52 @@ class InlineLoader() extends AbstractLoader {
           expandTVT(child, builder, expandText)
         }
       case XdmNodeKind.ELEMENT =>
-        builder.addStartElement(node.getNodeName)
-        var iter = node.axisIterator(Axis.NAMESPACE)
+        var nsmap = NamespaceMap.emptyMap()
+        val iter = node.getUnderlyingNode.getAllNamespaces.iterator()
         while (iter.hasNext) {
           val ns = iter.next()
-          if (!excludeURIs.contains(ns.getStringValue)) {
-            val prefix = if (Option(ns.getNodeName).isDefined) {
-              ns.getNodeName.getLocalName
-            } else {
-              ""
-            }
-            builder.addNamespace(prefix, ns.getStringValue)
+          if (!excludeURIs.contains(ns.getURI)) {
+            val prefix = Option(ns.getPrefix).getOrElse("")
+            nsmap = nsmap.put(prefix, ns.getURI)
           }
         }
+
         var newExpand = expandText
-        iter = node.axisIterator(Axis.ATTRIBUTE)
-        while (iter.hasNext) {
+
+        var amap: AttributeMap = EmptyAttributeMap.getInstance()
+        for (attr <- node.getUnderlyingNode.attributes().asList().asScala) {
           var discardAttribute = false
-          val attr = iter.next()
-          if (attr.getNodeName == XProcConstants.p_inline_expand_text) {
+          if (attr.getNodeName == fq_p_inline_expand_text) {
             if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
               throw XProcException.xsInlineExpandTextNotAllowed(exprContext.location)
             }
             discardAttribute = true
-            newExpand = attr.getStringValue == "true"
+            newExpand = attr.getValue == "true"
           }
-          if (attr.getNodeName == XProcConstants._inline_expand_text) {
+          if (attr.getNodeName == fq_inline_expand_text) {
             if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
               discardAttribute = true
-              newExpand = attr.getStringValue == "true"
+              newExpand = attr.getValue == "true"
             }
           }
           if (!discardAttribute) {
             if (expandText) {
-              builder.addAttribute(attr.getNodeName, expandString(attr.getStringValue))
+              amap = amap.put(new AttributeInfo(attr.getNodeName, BuiltInAtomicType.UNTYPED_ATOMIC, expandString(attr.getValue), null, ReceiverOption.NONE))
             } else {
-              builder.addAttribute(attr)
+              amap = amap.put(attr)
             }
           }
         }
-        iter = node.axisIterator(Axis.CHILD)
-        while (iter.hasNext) {
-          val child = iter.next()
+
+        builder.addStartElement(node.getNodeName, amap, nsmap)
+        val citer = node.axisIterator(Axis.CHILD)
+        while (citer.hasNext) {
+          val child = citer.next()
           expandTVT(child, builder, newExpand)
         }
         builder.addEndElement()
       case XdmNodeKind.TEXT =>
-        var str = node.getStringValue
+        val str = node.getStringValue
         if (expandText && str.contains("{")) {
           expandNodes(str, builder)
         } else {

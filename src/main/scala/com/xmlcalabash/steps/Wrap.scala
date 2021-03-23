@@ -5,6 +5,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api}
+import net.sf.saxon.om.AttributeMap
 import net.sf.saxon.s9api.{Axis, QName, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 
 import scala.collection.mutable
@@ -21,7 +22,7 @@ class Wrap() extends DefaultXmlStep with ProcessMatchingNodes {
   private var groupAdjacentContext = Option.empty[StaticContext]
   private var wrapper: QName = _
   private val inGroup = mutable.Stack[Boolean]()
-  private var staticContext: StaticContext = null
+  private var staticContext: StaticContext = _
 
   override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
     Map("source"->PortCardinality.EXACTLY_ONE),
@@ -56,7 +57,6 @@ class Wrap() extends DefaultXmlStep with ProcessMatchingNodes {
   override def startDocument(node: XdmNode): Boolean = {
     matcher.startDocument(node.getBaseURI)
     matcher.addStartElement(wrapper)
-    matcher.startContent()
     matcher.addSubtree(node)
     matcher.addEndElement()
     matcher.endDocument()
@@ -67,7 +67,7 @@ class Wrap() extends DefaultXmlStep with ProcessMatchingNodes {
     // nop
   }
 
-  override def startElement(node: XdmNode): Boolean = {
+  override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
     if (!inGroup.head) {
       matcher.addStartElement(wrapper)
     }
@@ -75,8 +75,7 @@ class Wrap() extends DefaultXmlStep with ProcessMatchingNodes {
     inGroup.pop()
     inGroup.push(groupAdjacent.isDefined && nextMatches(node))
 
-    matcher.addStartElement(node)
-    matcher.addAttributes(node)
+    matcher.addStartElement(node, attributes)
 
     inGroup.push(false) // endElement will pop this, its value doesn't matter!
     true
@@ -90,9 +89,7 @@ class Wrap() extends DefaultXmlStep with ProcessMatchingNodes {
     }
   }
 
-  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
-
-  override def attribute(node: XdmNode): Unit = {
+  override def attributes(node: XdmNode, matching: AttributeMap, nonMatching: AttributeMap): Option[AttributeMap] = {
     throw XProcException.xcInvalidSelection(pattern, "attribute", location)
   }
 

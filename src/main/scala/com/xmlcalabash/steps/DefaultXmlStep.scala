@@ -2,7 +2,6 @@ package com.xmlcalabash.steps
 
 import java.io.{InputStream, OutputStream}
 import java.net.URI
-
 import com.jafpl.graph.Location
 import com.jafpl.messages.Message
 import com.jafpl.runtime.RuntimeConfiguration
@@ -13,12 +12,14 @@ import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime._
 import com.xmlcalabash.util.{MediaType, S9Api}
+import net.sf.saxon.lib.NamespaceConstant
+import net.sf.saxon.om.NamespaceMap
 import net.sf.saxon.s9api._
 import net.sf.saxon.value.QNameValue
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.jdk.CollectionConverters.IterableHasAsScala
 
 class DefaultXmlStep extends XmlStep {
   private val stringMapping = Map(
@@ -383,6 +384,44 @@ class DefaultXmlStep extends XmlStep {
       case _: Exception =>
         throw XProcException.xdInvalidURI(relative, location)
     }
+  }
+
+  protected def prefixFor(nsmap: NamespaceMap, preferredPrefix: String, uri: String): String = {
+    if (preferredPrefix == null) {
+      return prefixFor(nsmap, uri)
+    }
+
+    if (uri == NamespaceConstant.XML) {
+      return "xml"
+    }
+
+    val curMapping = nsmap.getURI(preferredPrefix)
+    if (curMapping == null || curMapping == uri) {
+      preferredPrefix
+    } else {
+      prefixFor(nsmap, uri)
+    }
+  }
+
+  protected def prefixFor(nsmap: NamespaceMap, uri: String): String = {
+    if (uri == NamespaceConstant.XML) {
+      return "xml"
+    }
+
+    var count = 0
+    val base = "_"
+    var prefix = "???"
+    var found = true
+    while (found) {
+      count += 1
+      prefix = s"${base}${count}"
+      found = false
+      for (binding <- nsmap.asScala) {
+        found = found || (prefix == binding.getPrefix)
+      }
+    }
+
+    prefix
   }
 
   override def toString: String = {

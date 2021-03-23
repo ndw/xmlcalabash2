@@ -12,7 +12,7 @@ import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmValue}
 import net.sf.saxon.value.QNameValue
 
 class ForceQNameKeys(runtime: XMLCalabashConfig) extends FunctionImpl() {
-  def call(context: XPathContext, arguments: Array[Sequence[_]]): Sequence[_] = {
+  def call(context: XPathContext, arguments: Array[Sequence]): Sequence = {
     val exprEval = runtime.expressionEvaluator
     if (exprEval.dynContext.isEmpty) {
       throw XProcException.xiExtFunctionNotAllowed()

@@ -4,11 +4,13 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.S9Api
-import net.sf.saxon.`type`.SimpleType
-import net.sf.saxon.om.{FingerprintedQName, NameOfNode, NamespaceBinding, NodeInfo, NodeName}
+import net.sf.saxon.`type`.{BuiltInAtomicType, SimpleType, Untyped}
+import net.sf.saxon.event.ReceiverOption
+import net.sf.saxon.om.{AttributeInfo, AttributeMap, FingerprintedQName, NameOfNode, NamespaceBinding, NodeInfo, NodeName}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 import net.sf.saxon.value.QNameValue
 
+import scala.collection.convert.ImplicitConversions.`iterable AsScalaIterable`
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -44,90 +46,78 @@ class NamespaceRename() extends DefaultXmlStep with ProcessMatchingNodes {
 
   override def startDocument(node: XdmNode): Boolean = true
 
-  override def startElement(node: XdmNode): Boolean = {
+  override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
     var inode = node.getUnderlyingNode
-    val inscopeNS = inode.getDeclaredNamespaces(null)
-    var newNS = null
+    val nsmap = inode.getAllNamespaces
+    var newNS = inode.getAllNamespaces
 
-    val nsbindings = mutable.HashMap.empty[String, String]
-    if (applyTo == "attributes") {
-      if (node.getNodeName.getPrefix != "") {
-        nsbindings.put(node.getNodeName.getPrefix, node.getNodeName.getNamespaceURI)
-      }
-      matcher.addStartElement(NameOfNode.makeName(inode), inode.getSchemaType, inscopeNS.toList)
-    } else {
-      val newNS = ListBuffer.empty[NamespaceBinding]
-      for (ns <- inscopeNS) {
-        val pfx = ns.getPrefix
-        val uri = ns.getURI
-        if (from == uri) {
-          if ("" == to) {
-            // Nevermind; we're throwing namespaces away
-          } else {
-            newNS += new NamespaceBinding(pfx, to)
-          }
-        } else {
-          newNS += ns
-        }
-      }
+    // This code had to be competely rewritten for the Saxon 10 API
 
-      // Careful, we're messing with the namespace bindings
-      // Make sure the nameCode is right...
-      var nameCode = NameOfNode.makeName(inode)
-      var pfx = nameCode.getPrefix
-      val uri = nameCode.getURI
-      if (from == uri) {
-        if (to == "") {
-          pfx = ""
-        }
-        nameCode = new FingerprintedQName(pfx, to, nameCode.getLocalPart)
-      }
+    var startName = NameOfNode.makeName(inode)
+    var startType = inode.getSchemaType
+    var startAttr = inode.attributes()
 
-      if (nameCode.getPrefix != "") {
-        nsbindings.put(nameCode.getPrefix, nameCode.getURI)
+    if (applyTo != "attributes") {
+      if (from == node.getNodeName.getNamespaceURI) {
+        val prefix = node.getNodeName.getPrefix
+        startName = new FingerprintedQName(prefix, to, node.getNodeName.getLocalName)
+        startType = Untyped.INSTANCE
+        newNS = newNS.remove(prefix)
+        newNS = newNS.put(prefix, to)
       }
-      matcher.addStartElement(nameCode, inode.getSchemaType, newNS.toList)
     }
 
-    if (applyTo != "elements") {
-      var iter = node.axisIterator(Axis.ATTRIBUTE)
-      val curAttr = mutable.HashSet.empty[QName]
-      while (iter.hasNext) {
-        val attr = iter.next()
-        if (attr.getNodeName.getNamespaceURI != from) {
-          curAttr += attr.getNodeName
-          if (attr.getNodeName.getPrefix != "") {
-            nsbindings.put(attr.getNodeName.getPrefix, attr.getNodeName.getNamespaceURI)
-          }
-        }
-      }
+    applyTo match {
+      case "all" =>
+        for (attr <- inode.attributes().toList) {
+          var nameCode = attr.getNodeName
+          var atype = attr.getType
 
-      iter = node.axisIterator(Axis.ATTRIBUTE)
-      while (iter.hasNext) {
-        val attr = iter.next()
-        inode = attr.getUnderlyingNode
-        var nameCode = NameOfNode.makeName(inode)
+          if (from == nameCode.getURI) {
+            startAttr = startAttr.remove(nameCode)
+            val pfx = nameCode.getPrefix
+            newNS = newNS.remove(pfx)
 
-        var pfx = nameCode.getPrefix
-        val uri = nameCode.getURI
-        if (from == uri) {
-          if (pfx == "") {
-            pfx = S9Api.uniquePrefix(nsbindings.keySet.toSet)
+            nameCode = new FingerprintedQName(pfx, to, nameCode.getLocalPart)
+            atype = BuiltInAtomicType.UNTYPED_ATOMIC
+            newNS = newNS.put(pfx, to)
           }
 
-          nameCode = new FingerprintedQName(pfx, to, nameCode.getLocalPart)
-          val qname = new QName(nameCode.getURI, nameCode.getLocalPart)
-          if (curAttr.contains(qname)) {
-            throw XProcException.xcAttributeNameCollision(qname, location)
-          }
+          startAttr = startAttr.put(new AttributeInfo(nameCode, atype, attr.getValue, attr.getLocation, ReceiverOption.NONE))
         }
 
-        matcher.addAttribute(nameCode, inode.getSchemaType.asInstanceOf[SimpleType], attr.getStringValue)
-      }
-    } else {
-      matcher.addAttributes(node)
+      case "elements" =>
+        for (attr <- inode.attributes().toList) {
+          var nameCode = attr.getNodeName
+          var atype = attr.getType
+
+          if (from == nameCode.getURI) {
+            startAttr = startAttr.remove(nameCode)
+            val pfx = prefixFor(newNS, from)
+            nameCode = new FingerprintedQName(pfx, from, nameCode.getLocalPart)
+            atype = BuiltInAtomicType.UNTYPED_ATOMIC
+            newNS = newNS.put(pfx, from)
+          }
+
+          startAttr = startAttr.put(new AttributeInfo(nameCode, atype, attr.getValue, attr.getLocation, ReceiverOption.NONE))
+        }
+
+      case "attributes" =>
+        for (attr <- inode.attributes()) {
+          var nameCode = attr.getNodeName
+          startAttr = startAttr.remove(nameCode)
+          var pfx = nameCode.getPrefix
+          if (from == nameCode.getURI) {
+            pfx = prefixFor(newNS, to)
+            nameCode = new FingerprintedQName(pfx, to, nameCode.getLocalPart)
+            newNS = newNS.put(pfx, to)
+          }
+
+          startAttr = startAttr.put(new AttributeInfo(nameCode, BuiltInAtomicType.UNTYPED_ATOMIC, attr.getValue, attr.getLocation, ReceiverOption.NONE))
+        }
     }
 
+    matcher.addStartElement(startName, startAttr, startType, newNS)
     true
   }
 
@@ -139,10 +129,8 @@ class NamespaceRename() extends DefaultXmlStep with ProcessMatchingNodes {
     matcher.endDocument()
   }
 
-  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
-
-  override def attribute(node: XdmNode): Unit = {
-    throw new RuntimeException("Processing attributes can't happen in p:namespace-rename!?")
+  override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
+    throw new UnsupportedOperationException("processAttribute can't be called in NamespaceRename--but it was!?")
   }
 
   override def text(node: XdmNode): Unit = {

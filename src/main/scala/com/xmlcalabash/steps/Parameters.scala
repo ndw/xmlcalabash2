@@ -2,7 +2,8 @@ package com.xmlcalabash.steps
 
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.MediaType
+import com.xmlcalabash.util.{MediaType, TypeUtils}
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap}
 import net.sf.saxon.s9api.{QName, XdmValue}
 
 class Parameters() extends DefaultXmlStep {
@@ -25,22 +26,24 @@ class Parameters() extends DefaultXmlStep {
     builder.addStartElement(XProcConstants.c_param_set)
 
     for ((name, value) <- parameters) {
-      builder.addStartElement(XProcConstants.c_param)
-
-      if (name.getNamespaceURI != "") {
-        builder.addAttribute(XProcConstants._namespace, name.getNamespaceURI)
+      var attr: AttributeMap = EmptyAttributeMap.getInstance()
+      attr = attr.put(TypeUtils.attributeInfo(XProcConstants._name, name.getLocalName))
+      if (name.getNamespaceURI != null && name.getNamespaceURI != "") {
+        attr = attr.put(TypeUtils.attributeInfo(XProcConstants._namespace, name.getNamespaceURI))
+      } else {
+        attr = attr.put(TypeUtils.attributeInfo(XProcConstants._namespace, ""))
       }
-      builder.addAttribute(XProcConstants._name, name.getLocalName)
 
-      // XProc document property map values are strings
+      // FIXME: this is not true in 3.0: XProc document property map values are strings
       var strvalue = ""
       val viter = value.iterator()
       while (viter.hasNext) {
         val item = viter.next()
         strvalue += item.getStringValue
       }
-      builder.addAttribute(XProcConstants._value, strvalue)
+      attr = attr.put(TypeUtils.attributeInfo(XProcConstants._value, strvalue))
 
+      builder.addStartElement(XProcConstants.c_param, attr)
       builder.addEndElement()
     }
 

@@ -2,12 +2,13 @@ package com.xmlcalabash.util
 
 import com.jafpl.graph
 import net.sf.saxon.expr.parser
+import net.sf.saxon.s9api.Location
 
 object DefaultLocation {
   val voidLocation = new DefaultLocation(None, None, None)
 }
 
-class DefaultLocation(href: Option[String], lnum: Option[Long], cnum: Option[Long]) extends graph.Location with parser.Location {
+class DefaultLocation(href: Option[String], lnum: Option[Long], cnum: Option[Long]) extends graph.Location with Location {
   def this(href: String) = {
     this(Some(href), None, None)
   }

@@ -4,10 +4,14 @@ import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XMLCalabashRuntime, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.{MediaType, S9Api, XPointer}
+import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils, XPointer}
+import net.sf.saxon.`type`.BuiltInAtomicType
+import net.sf.saxon.event.ReceiverOption
+import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap, FingerprintedQName, NodeName}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable
+import scala.jdk.CollectionConverters.IterableHasAsScala
 
 class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
   private val localAttrNS = "http://www.w3.org/2001/XInclude/local-attributes"
@@ -27,6 +31,10 @@ class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
   private val _parse = new QName("parse")
   private val _fragid = new QName("fragid")
   private val _xpointer = new QName("xpointer")
+
+  private val fq_xml_id = TypeUtils.fqName(XProcConstants.xml_id)
+  private val fq_xml_lang = TypeUtils.fqName(XProcConstants.xml_lang)
+  private val fq_xml_base = TypeUtils.fqName(XProcConstants.xml_base)
 
   private var source: XdmNode = _
   private var smeta: XProcMetadata = _
@@ -89,7 +97,7 @@ class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
     matcherStack.head.endDocument()
   }
 
-  override def startElement(node: XdmNode): Boolean = {
+  override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
     val matcher = matcherStack.head
     if (node.getNodeName == xi_include) {
       val href = Option(node.getAttributeValue(_href)).getOrElse("")
@@ -220,7 +228,7 @@ class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
         for (snode <- S9Api.axis(subdoc.get, Axis.CHILD)) {
           var child = snode
           if ((fixupBase || fixupLang || copyAttributes) && child.getNodeKind == XdmNodeKind.ELEMENT) {
-            val fixup = new Fixup(config, child)
+            val fixup = new Fixup(config, child, child.getUnderlyingNode.attributes())
             child = fixup.fixup()
           }
 
@@ -245,7 +253,7 @@ class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
           } else {
             for (child <- nodes) {
               if ((fixupBase || fixupLang || copyAttributes) && child.getNodeKind == XdmNodeKind.ELEMENT) {
-                val fixup = new Fixup(config, child)
+                val fixup = new Fixup(config, child, child.getUnderlyingNode.attributes())
                 matcher.addSubtree(fixup.fixup())
               } else {
                 matcher.addSubtree(child)
@@ -260,9 +268,7 @@ class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
     } else if (node.getNodeName == xi_fallback) {
       throw XProcException.xcXIncludeFallbackPlacement(location)
     } else {
-      matcher.addStartElement(node)
-      matcher.addAttributes(node)
-      matcher.startContent()
+      matcher.addStartElement(node, attributes)
       true
     }
   }
@@ -275,10 +281,8 @@ class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
     }
   }
 
-  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = false
-
-  override def attribute(node: XdmNode): Unit = {
-    throw new UnsupportedOperationException("attribute() called in XInclude?")
+  override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
+    throw new UnsupportedOperationException("processAttribute can't be called in XInclude--but it was!?")
   }
 
   override def text(node: XdmNode): Unit = {
@@ -345,7 +349,7 @@ class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
     }
   }
 
-    private class Fixup(config: XMLCalabashRuntime, xinclude: XdmNode) extends ProcessMatchingNodes {
+    private class Fixup(config: XMLCalabashRuntime, xinclude: XdmNode, val xiattributes: AttributeMap) extends ProcessMatchingNodes {
       private var root = true
       private var matcher: ProcessMatch = _
 
@@ -364,71 +368,71 @@ class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
         matcher.endDocument()
       }
 
-      override def startElement(node: XdmNode): Boolean = {
-        matcher.addStartElement(node)
+      override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
+        val copied = mutable.HashSet.empty[NodeName]
+        var amap: AttributeMap = EmptyAttributeMap.getInstance()
 
-        val copied = mutable.HashSet.empty[QName]
         if (root) {
           root = false
+
           if (copyAttributes) {
+            // Handle set-xml-id; it suppresses copying the xml:id attribute and optionally
+            // provides a value for it. (The value "" removes the xml:id.)
             val setId = setXmlId.head
             if (setId.isDefined) {
-              copied.add(XProcConstants.xml_id)
+              copied.add(fq_xml_id)
               if (setId.get != "") {
-                matcher.addAttribute(XProcConstants.xml_id, setId.get)
+                amap = amap.put(new AttributeInfo(fq_xml_id, BuiltInAtomicType.UNTYPED_ATOMIC, setId.get, null, ReceiverOption.NONE))
               }
             }
 
-            for (child <- S9Api.axis(node, Axis.ATTRIBUTE)) {
+            for (ainfo <- xiattributes.asList.asScala) {
               // Attribute must be in a namespace
-              var copy = child.getNodeName.getNamespaceURI != ""
-              // But not in the XML namespace
-              copy = copy && child.getNodeName.getNamespaceURI != XProcConstants.ns_xml
+              val nsuri = ainfo.getNodeName.getURI
+              var copy = (nsuri != null && nsuri != "")
+
+              // But not the XML namespace
+              copy = copy && (nsuri != XProcConstants.ns_xml)
 
               if (copy) {
-                var aname = child.getNodeName
-                if (localAttrNS.equals(aname.getNamespaceURI)) {
-                  aname = new QName("", aname.getLocalName)
+                var aname = ainfo.getNodeName
+                if (localAttrNS == aname.getURI) {
+                  aname = new FingerprintedQName("", "", aname.getLocalPart)
                 }
+
                 copied.add(aname)
-                matcher.addAttribute(aname, child.getStringValue)
+                amap = amap.put(new AttributeInfo(aname, ainfo.getType, ainfo.getValue, ainfo.getLocation, ReceiverOption.NONE))
               }
             }
           }
 
-          for (child <- S9Api.axis(node, Axis.ATTRIBUTE)) {
-            if ((fixupBase && child.getNodeName == XProcConstants.xml_base)
-              || (fixupLang && child.getNodeName == XProcConstants.xml_lang)) {
+          for (ainfo <- attributes.asList.asScala) {
+            if ((fq_xml_base == ainfo.getNodeName && fixupBase)
+              || (fq_xml_lang == ainfo.getNodeName && fixupLang)) {
               // nop
             } else {
-              if (!copied.contains(child.getNodeName)) {
-                copied.add(child.getNodeName)
-                matcher.addAttribute(child)
+              if (!copied.contains(ainfo.getNodeName)) {
+                copied.add(ainfo.getNodeName)
+                amap = amap.put(ainfo)
               }
             }
           }
 
           if (fixupBase) {
-            copied.add(XProcConstants.xml_base)
-            matcher.addAttribute(XProcConstants.xml_base, node.getBaseURI.toASCIIString)
+            copied.add(fq_xml_base)
+            amap = amap.put(new AttributeInfo(fq_xml_base, BuiltInAtomicType.UNTYPED_ATOMIC, node.getBaseURI.toASCIIString, null, ReceiverOption.NONE))
           }
 
           val lang = getLang(node)
           if (fixupLang && lang.isDefined) {
-            copied.add(XProcConstants.xml_lang)
-            matcher.addAttribute(XProcConstants.xml_lang, lang.get)
+            copied.add(fq_xml_lang)
+            amap = amap.put(new AttributeInfo(fq_xml_lang, BuiltInAtomicType.UNTYPED_ATOMIC, lang.get, null, ReceiverOption.NONE))
           }
         } else {
-          // Careful. Don't copy ones we've already copied...
-          for (child <- S9Api.axis(node, Axis.ATTRIBUTE)) {
-            if (!copied.contains(child.getNodeName)) {
-              copied.add(child.getNodeName)
-              matcher.addAttribute(child)
-            }
-          }
+          amap = attributes
         }
 
-        matcher.startContent()
+        matcher.addStartElement(node, amap)
         true
       }
 
@@ -436,10 +440,8 @@ class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
          matcher.addEndElement()
       }
 
-      override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = false
-
-      override def attribute(node: XdmNode): Unit = {
-        throw new UnsupportedOperationException("attribute() called in XInclude fixup")
+      override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
+        throw new UnsupportedOperationException("processAttribute can't be called in XInclude/Fixup--but it was!?")
       }
 
       override def text(node: XdmNode): Unit = {
@@ -464,131 +466,4 @@ class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
         lang
       }
     }
-
-  /*
-
-        public XdmNode fixup(XdmNode node) {
-            matcher = new ProcessMatch(runtime, this);
-            matcher.match(node, new RuntimeValue("*", step.getNode()));
-            XdmNode fixed = matcher.getResult();
-            return fixed;
-        }
-
-        public boolean processStartDocument(XdmNode node) throws SaxonApiException {
-            matcher.startDocument(node.getBaseURI());
-            return true;
-        }
-
-        public void processEndDocument(XdmNode node) throws SaxonApiException {
-            matcher.endDocument();
-        }
-
-        public boolean processStartElement(XdmNode node) throws SaxonApiException {
-            HashSet<QName> copied = new HashSet<QName> ();
-            matcher.addStartElement(node);
-
-            if (root) {
-                root = false;
-
-                if (copyAttributes) {
-                    // Handle set-xml-id; it suppresses copying the xml:id attribute and optionally
-                    // provides a value for it. (The value "" removes the xml:id.)
-                    String setId = setXmlId.peek();
-                    if (setId != null) {
-                        copied.add(XProcConstants.xml_id);
-                        if (!"".equals(setId)) {
-                            matcher.addAttribute(XProcConstants.xml_id, setId);
-                        }
-                    }
-
-                    XdmSequenceIterator iter = xinclude.axisIterator(Axis.ATTRIBUTE);
-                    while (iter.hasNext()) {
-                        XdmNode child = (XdmNode) iter.next();
-
-                        // Attribute must be in a namespace
-                        boolean copy = !"".equals(child.getNodeName().getNamespaceURI());
-
-                        // But not in the XML namespace
-                        copy = copy && !XProcConstants.NS_XML.equals(child.getNodeName().getNamespaceURI());
-
-                        if (copy) {
-                            QName aname = child.getNodeName();
-                            if (localAttrNS.equals(aname.getNamespaceURI())) {
-                                aname = new QName("", aname.getLocalName());
-                            }
-
-                            copied.add(aname);
-                            matcher.addAttribute(aname, child.getStringValue());
-                        }
-                    }
-                }
-
-                XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
-                while (iter.hasNext()) {
-                    XdmNode child = (XdmNode) iter.next();
-                    if ((XProcConstants.xml_base.equals(child.getNodeName()) && fixupBase)
-                        || (XProcConstants.xml_lang.equals(child.getNodeName()) && fixupLang)) {
-                        // nop;
-                    } else {
-                        if (!copied.contains(child.getNodeName())) {
-                            copied.add(child.getNodeName());
-                            matcher.addAttribute(child);
-                        }
-                    }
-                }
-                if (fixupBase) {
-                    copied.add(XProcConstants.xml_base);
-                    matcher.addAttribute(XProcConstants.xml_base, node.getBaseURI().toASCIIString());
-                }
-                String lang = getLang(node);
-                if (fixupLang && lang != null) {
-                    copied.add(XProcConstants.xml_lang);
-                    matcher.addAttribute(XProcConstants.xml_lang, lang);
-                }
-            } else {
-                // Careful. Don't copy ones you've already copied...
-                XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
-                while (iter.hasNext()) {
-                    XdmNode child = (XdmNode) iter.next();
-                    if (!copied.contains(child.getNodeName())) {
-                        matcher.addAttribute(child);
-                    }
-                }
-            }
-
-            matcher.startContent();
-            return true;
-        }
-
-        public void processAttribute(XdmNode node) throws SaxonApiException {
-            throw new XProcException(node, "This can't happen!?");
-        }
-
-        public void processEndElement(XdmNode node) throws SaxonApiException {
-            matcher.addEndElement();
-        }
-
-        public void processText(XdmNode node) throws SaxonApiException {
-            throw new XProcException(node, "This can't happen!?");
-        }
-
-        public void processComment(XdmNode node) throws SaxonApiException {
-            throw new XProcException(node, "This can't happen!?");
-        }
-
-        public void processPI(XdmNode node) throws SaxonApiException {
-            throw new XProcException(node, "This can't happen!?");
-        }
-
-        private String getLang(XdmNode node) {
-            String lang = null;
-            while (lang == null && node.getNodeKind() == XdmNodeKind.ELEMENT) {
-                lang = node.getAttributeValue(XProcConstants.xml_lang);
-                node = node.getParent();
-            }
-            return lang;
-        }
-    }
-
-   */
 }

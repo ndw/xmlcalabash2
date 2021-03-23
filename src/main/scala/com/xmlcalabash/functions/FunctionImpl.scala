@@ -8,7 +8,7 @@ import org.slf4j.{Logger, LoggerFactory}
 class FunctionImpl {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
-  protected def getMessage(item: Item[_], exprEval: SaxonExpressionEvaluator): Option[Message] = {
+  protected def getMessage(item: Item, exprEval: SaxonExpressionEvaluator): Option[Message] = {
     // Walk up the tree if we get passed some descendant
     var arg = item
     val msg = exprEval.dynContext.get.message(arg)

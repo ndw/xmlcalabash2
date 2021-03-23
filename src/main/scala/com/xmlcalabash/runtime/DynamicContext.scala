@@ -56,7 +56,7 @@ class DynamicContext() {
   def iterationPosition: Long = _iterationPosition
   def iterationSize: Long = _iterationSize
 
-  def message(document: Item[_ <: Item[_]]): Option[Message] = {
+  def message(document: Item): Option[Message] = {
     _documents.get(document)
   }
 
@@ -102,7 +102,7 @@ class DynamicContext() {
     }
   }
 
-  def addItem(item: Item[_ <: Item[_]], msg: Message): Unit = {
+  def addItem(item: Item, msg: Message): Unit = {
     _documents.put(item, msg)
     _imessages.put(msg, item)
   }

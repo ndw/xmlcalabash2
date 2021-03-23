@@ -1,11 +1,11 @@
 package com.xmlcalabash.steps
 
 import java.net.URI
-
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.stores.{DataInfo, FallbackDataStore, FileDataStore}
-import com.xmlcalabash.util.{MediaType, URIUtils}
+import com.xmlcalabash.util.{MediaType, TypeUtils, URIUtils}
+import net.sf.saxon.om.{AttributeMap, SingletonAttributeMap}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue}
 
 import scala.collection.mutable.ListBuffer
@@ -25,7 +25,6 @@ class DirectoryList() extends DefaultXmlStep {
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(URIUtils.cwdAsURI)
     builder.addStartElement(XProcConstants.c_directory)
-    builder.startContent()
 
     val path = stringBinding(_path)
     val detailed = booleanBinding(_detailed).getOrElse(false)
@@ -98,21 +97,21 @@ class DirectoryList() extends DefaultXmlStep {
         }
 
         if (rematch) {
-          props.getOrElse("file-type", FILE).toString match {
-            case "file" => builder.addStartElement(XProcConstants.c_file)
-            case "directory" =>builder.addStartElement(XProcConstants.c_directory)
-            case _ => builder.addStartElement(XProcConstants.c_other)
+          val ename = props.getOrElse("file-type", FILE).toString match {
+            case "file" => XProcConstants.c_file
+            case "directory" => XProcConstants.c_directory
+            case _ => XProcConstants.c_other
           }
 
-          builder.addAttribute(XProcConstants._name, id.toASCIIString)
+          var amap: AttributeMap = SingletonAttributeMap.of(TypeUtils.attributeInfo(XProcConstants._name, id.toASCIIString))
           if (detailed) {
             for ((key, value) <- props) {
               if (key != "file-type") {
-                builder.addAttribute(new QName("", key), value.toString)
+                amap = amap.put(TypeUtils.attributeInfo(new QName("", key), value.toString))
               }
             }
           }
-          builder.startContent()
+          builder.addStartElement(ename, amap)
           builder.addEndElement()
         }
       }

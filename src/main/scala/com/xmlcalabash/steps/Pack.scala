@@ -39,7 +39,6 @@ class Pack() extends DefaultXmlStep {
       val tree = new SaxonTreeBuilder(config)
       tree.startDocument(context.baseURI)
       tree.addStartElement(wrapName)
-      tree.startContent()
 
       if (source.isDefined) {
         tree.addSubtree(source.get)

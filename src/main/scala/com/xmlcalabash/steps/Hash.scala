@@ -4,8 +4,14 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{HashUtils, TypeUtils}
+import net.sf.saxon.`type`.BuiltInAtomicType
+import net.sf.saxon.event.ReceiverOption
+import net.sf.saxon.om.{AttributeInfo, AttributeMap}
 import net.sf.saxon.s9api.{QName, XdmNode}
 import net.sf.saxon.value.QNameValue
+
+import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.{IterableHasAsScala, SeqHasAsJava}
 
 class Hash() extends DefaultXmlStep  with ProcessMatchingNodes {
   private val _value = new QName("", "value")
@@ -85,7 +91,7 @@ class Hash() extends DefaultXmlStep  with ProcessMatchingNodes {
     false
   }
 
-  override def startElement(node: XdmNode): Boolean = {
+  override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
     matcher.addText(hash)
     false
   }
@@ -98,10 +104,13 @@ class Hash() extends DefaultXmlStep  with ProcessMatchingNodes {
     matcher.endDocument()
   }
 
-  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
-
-  override def attribute(node: XdmNode): Unit = {
-    matcher.addAttribute(node, hash)
+  override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
+    val alist = ListBuffer.empty[AttributeInfo]
+    alist ++= nonMatchingAttributes.asScala
+    for (attr <- matchingAttributes.asScala) {
+      alist += new AttributeInfo(attr.getNodeName, BuiltInAtomicType.ANY_ATOMIC, hash, attr.getLocation, ReceiverOption.NONE)
+    }
+    Some(AttributeMap.fromList(alist.toList.asJava))
   }
 
   override def text(node: XdmNode): Unit = {

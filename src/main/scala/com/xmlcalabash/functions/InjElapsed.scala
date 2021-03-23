@@ -7,7 +7,7 @@ import net.sf.saxon.om.Sequence
 import net.sf.saxon.value.DoubleValue
 
 class InjElapsed(runtime: XMLCalabashConfig) extends FunctionImpl() {
-  def call(context: XPathContext, arguments: Array[Sequence[_]]): Sequence[_] = {
+  def call(context: XPathContext, arguments: Array[Sequence]): Sequence = {
     val exprEval = runtime.expressionEvaluator
     if (exprEval.dynContext == null) {
       throw XProcException.xiExtFunctionNotAllowed()

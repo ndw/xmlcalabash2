@@ -2,7 +2,10 @@ package com.xmlcalabash.util
 
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap, NamespaceMap}
 import net.sf.saxon.s9api.{QName, XdmNode}
+
+import scala.jdk.CollectionConverters._
 
 class StepErrors(config: XMLCalabashRuntime) {
   private val _code = new QName("", "code")
@@ -19,15 +22,17 @@ class StepErrors(config: XMLCalabashRuntime) {
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(config.staticBaseURI)
     builder.addStartElement(XProcConstants.c_errors)
-    builder.startContent()
-    builder.addStartElement(XProcConstants.c_error)
-    builder.addNamespace(code.getPrefix, code.getNamespaceURI)
-    builder.addAttribute(_code, code.toString)
-    builder.startContent()
+
+    var nsmap = NamespaceMap.emptyMap()
+    nsmap = nsmap.put(code.getPrefix, code.getNamespaceURI)
+
+    var amap: AttributeMap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_code, code.toString))
+
+    builder.addStartElement(XProcConstants.c_error, amap, nsmap)
 
     if (message.isDefined) {
       builder.addStartElement(XProcConstants.c_message)
-      builder.startContent()
       builder.addText(message.get)
       builder.addEndElement()
     }

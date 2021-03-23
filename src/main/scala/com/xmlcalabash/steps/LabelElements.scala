@@ -4,8 +4,13 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime._
+import net.sf.saxon.`type`.BuiltInAtomicType
+import net.sf.saxon.event.ReceiverOption
+import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap, FingerprintedQName}
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmNode}
-import net.sf.saxon.value.QNameValue
+
+import java.net.URI
+import scala.jdk.CollectionConverters.IterableHasAsScala
 
 class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
   private val _attribute = new QName("attribute")
@@ -48,35 +53,30 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
     throw XProcException.xcInvalidSelection(pattern, "document", location)
   }
 
-  override def startElement(node: XdmNode): Boolean = {
-    val exprEval = config.expressionEvaluator.newInstance()
-    val expr = new XProcXPathExpression(context, label, None, None, None)
-    val msg = new XdmNodeItemMessage(node, metadata, context)
-    val countmsg = new XdmValueItemMessage(new XdmAtomicValue(p_count), XProcMetadata.XML, context)
-    val result = exprEval.value(expr, List(msg), Map(p_index.getClarkName -> countmsg), None)
-    val index = result.item.getUnderlyingValue.getStringValue
+  override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
+    val nsmap = node.getUnderlyingNode.getAllNamespaces
+    var amap: AttributeMap = EmptyAttributeMap.getInstance()
 
-    var dup = false
-    matcher.addStartElement(node)
-    val iter = node.axisIterator(Axis.ATTRIBUTE)
-    while (iter.hasNext) {
-      val attr = iter.next()
-      if (attr.getNodeName == attribute) {
-        dup = true
-        if (!replace) {
-          matcher.addAttribute(attr)
+    val prefix = prefixFor(nsmap, attribute.getPrefix, attribute.getNamespaceURI)
+    val aname = new FingerprintedQName(prefix, attribute.getNamespaceURI, attribute.getLocalName)
+
+    var found = false
+    for (ainfo <- attributes.asScala) {
+      if (aname == ainfo.getNodeName) {
+        found = true
+        if (replace) {
+          amap = amap.put(new AttributeInfo(aname, BuiltInAtomicType.UNTYPED_ATOMIC, computedLabel(node), ainfo.getLocation, ReceiverOption.NONE))
+        } else {
+          amap = amap.put(ainfo)
         }
-      } else {
-        matcher.addAttribute(attr)
       }
     }
 
-    if (!dup || replace) {
-      matcher.addAttribute(attribute, index)
-      p_count += 1
+    if (!found) {
+      amap = amap.put(new AttributeInfo(aname, BuiltInAtomicType.UNTYPED_ATOMIC, computedLabel(node), null, ReceiverOption.NONE))
     }
 
-    matcher.startContent()
+    matcher.addStartElement(node, amap)
     true
   }
 
@@ -88,9 +88,7 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
     throw XProcException.xcInvalidSelection(pattern, "document", location)
   }
 
-  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
-
-  override def attribute(node: XdmNode): Unit = {
+  override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
     throw XProcException.xcInvalidSelection(pattern, "attribute", location)
   }
 
@@ -105,4 +103,23 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
   override def pi(node: XdmNode): Unit = {
     throw XProcException.xcInvalidSelection(pattern, "processing-instruction", location)
   }
+
+  private def computedLabel(node: XdmNode): String = {
+    val xcomp = config.processor.newXPathCompiler()
+    if (location.isDefined && location.get.uri.isDefined) {
+      xcomp.setBaseURI(new URI(location.get.uri.get))
+    }
+
+    // FIXME: I need the namespace bindings from the label!
+
+    xcomp.declareVariable(p_index)
+    val xexec = xcomp.compile(label)
+    val selector = xexec.load()
+    selector.setVariable(p_index, new XdmAtomicValue(p_count))
+    selector.setContextItem(node)
+    val values = selector.iterator()
+    val item = values.next()
+    item.getStringValue
+  }
+
 }

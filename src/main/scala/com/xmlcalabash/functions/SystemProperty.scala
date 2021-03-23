@@ -10,13 +10,13 @@ import net.sf.saxon.value.StringValue
 class SystemProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
   private val _localhost = "http://localhost/"
 
-  def call(staticContext: StaticContext, context: XPathContext, arguments: Array[Sequence[_]]): Sequence[_] = {
+  def call(staticContext: StaticContext, context: XPathContext, arguments: Array[Sequence]): Sequence = {
     val exprEval = runtime.expressionEvaluator
     if (exprEval.dynContext == null) {
       throw XProcException.xiExtFunctionNotAllowed()
     }
 
-    val lexicalQName = arguments(0).head().asInstanceOf[Item[_]].getStringValue
+    val lexicalQName = arguments(0).head().asInstanceOf[Item].getStringValue
     val propertyName = if (lexicalQName.trim.startsWith("Q{")) {
       StructuredQName.fromClarkName(lexicalQName)
     } else {

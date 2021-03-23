@@ -4,7 +4,8 @@ import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.MediaType
+import com.xmlcalabash.util.{MediaType, TypeUtils}
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap, NamespaceMap}
 import net.sf.saxon.s9api.{XdmAtomicValue, XdmNode}
 
 class PropertyExtract extends DefaultXmlStep {
@@ -26,22 +27,29 @@ class PropertyExtract extends DefaultXmlStep {
 
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(None)
-    builder.addStartElement(XProcConstants.c_document_properties)
-    builder.addNamespace("xsi", XProcConstants.ns_xsi)
-    builder.addNamespace("xs", XProcConstants.ns_xs)
-    builder.startContent()
+
+    var nsmap = NamespaceMap.emptyMap()
+    nsmap = nsmap.put("xsi", XProcConstants.ns_xsi)
+    nsmap = nsmap.put("xs", XProcConstants.ns_xs)
+
+    builder.addStartElement(XProcConstants.c_document_properties, EmptyAttributeMap.getInstance(), nsmap)
     for ((key,value) <- meta.get.properties) {
-      builder.addStartElement(key)
+      var amap: AttributeMap = EmptyAttributeMap.getInstance()
+
       value match {
-        case node: XdmNode =>
-          builder.startContent()
-          builder.addSubtree(node)
         case atomic: XdmAtomicValue =>
           val xtype = atomic.getTypeName
           if (xtype.getNamespaceURI == XProcConstants.ns_xs && (xtype != XProcConstants.xs_string)) {
-            builder.addAttribute(XProcConstants.xsi_type, xtype.toString)
+            amap = amap.put(TypeUtils.attributeInfo(XProcConstants.xsi_type, xtype.toString))
           }
-          builder.startContent()
+        case _ => ()
+      }
+
+      builder.addStartElement(key, amap)
+      value match {
+        case node: XdmNode =>
+          builder.addSubtree(node)
+        case atomic: XdmAtomicValue =>
           builder.addValues(value)
         case _ =>
           throw XProcException.xiInvalidPropertyValue(value, location)

@@ -43,9 +43,7 @@ class Store extends DefaultXmlStep {
 
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(smeta.baseURI)
-    builder.startContent()
     builder.addStartElement(XProcConstants.c_result)
-    builder.startContent()
     builder.addText(href.toASCIIString)
     builder.addEndElement()
     builder.endDocument()

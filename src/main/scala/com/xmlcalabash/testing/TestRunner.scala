@@ -4,15 +4,18 @@ import java.io.{ByteArrayOutputStream, File, PrintStream}
 import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.Calendar
-
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.TestException
 import com.xmlcalabash.messages.XdmNodeItemMessage
 import com.xmlcalabash.model.xml.XMLContext
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
-import com.xmlcalabash.runtime.{XProcLocation, SaxonExpressionEvaluator, StaticContext, XProcMetadata, XProcXPathExpression}
-import com.xmlcalabash.util.{MediaType, S9Api, URIUtils}
+import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, StaticContext, XProcLocation, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils, URIUtils}
+import net.sf.saxon.`type`.BuiltInAtomicType
+import net.sf.saxon.event.ReceiverOption
+import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap, SingletonAttributeMap}
+
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
@@ -153,10 +156,6 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
       val pos = fn.lastIndexOf("/")
       val name = fn.substring(pos+1)
 
-      junit.addStartElement(_testcase)
-      junit.addAttribute(_name, name)
-      junit.addAttribute(_classname, this.getClass.getName)
-
       Console.withOut(psout) {
         Console.withErr(pserr) {
           val source = new SAXSource(new InputSource(fn))
@@ -176,15 +175,18 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
           }
 
           val end_ms = Calendar.getInstance().getTimeInMillis
-          junit.addAttribute(_time, ((end_ms - start_ms) / 1000.0).toString)
-          junit.startContent()
+
+          var amap: AttributeMap = EmptyAttributeMap.getInstance()
+          amap = amap.put(TypeUtils.attributeInfo(_name, name))
+          amap = amap.put(TypeUtils.attributeInfo(_classname, this.getClass.getName))
+          amap = amap.put(TypeUtils.attributeInfo(_time, ((end_ms - start_ms) / 1000.0).toString))
+          junit.addStartElement(_testcase, amap)
 
           for (result <- results) {
             if (result.passed) {
               if (result.skipped.isDefined) {
                 skip += 1
                 junit.addStartElement(_skipped)
-                junit.startContent()
                 junit.addText(result.skipped.get)
                 junit.addEndElement()
               }
@@ -197,10 +199,11 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
 
               if (Option(error).isDefined) {
                 logger.info(error.getMessage)
-                junit.addStartElement(_error)
-                junit.addAttribute(_message, error.getMessage)
-                junit.addAttribute(_type, error.getClass.getName)
-                junit.startContent()
+
+                amap = EmptyAttributeMap.getInstance()
+                amap = amap.put(TypeUtils.attributeInfo(_message, error.getMessage))
+                amap = amap.put(TypeUtils.attributeInfo(_type, error.getClass.getName))
+                junit.addStartElement(_error, amap)
 
                 val stderr2 = new ByteArrayOutputStream()
                 val pstrace = new PrintStream(stderr2)
@@ -216,7 +219,6 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
 
               } else {
                 junit.addStartElement(_failure)
-                junit.startContent()
                 junit.addText(result.toString())
                 junit.addEndElement()
               }
@@ -229,12 +231,10 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
       }
 
       junit.addStartElement(_system_out)
-      junit.startContent()
       junit.addText(stdout.toString())
       junit.addEndElement()
 
       junit.addStartElement(_system_err)
-      junit.startContent()
       junit.addText(stderr.toString())
       junit.addEndElement()
 
@@ -247,113 +247,100 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
 
     logger.info(s"$failures of $count tests failed")
 
+
     val wrapper = new SaxonTreeBuilder(runtimeConfig)
     wrapper.startDocument(URIUtils.cwdAsURI)
-    wrapper.addStartElement(_testsuite)
-    wrapper.addAttribute(_name, "XProc Test Suite")
+
+    var amap: AttributeMap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_name, "XProc Test Suite"))
 
     val today   = Calendar.getInstance().getTime
     val dformat = new SimpleDateFormat("YYYY-MM-dd")
     val tformat = new SimpleDateFormat("HH:mm:ss")
-    var stamp   = dformat.format(today) + "T" + tformat.format(today)
-    wrapper.addAttribute(_timestamp, stamp)
+    val stamp   = dformat.format(today) + "T" + tformat.format(today)
+    amap = amap.put(TypeUtils.attributeInfo(_timestamp, stamp))
 
-    wrapper.addAttribute(_time, ((suite_end_ms - suite_start_ms) / 1000.0).toString)
+    amap = amap.put(TypeUtils.attributeInfo(_time, ((suite_end_ms - suite_start_ms) / 1000.0).toString))
 
-    wrapper.addAttribute(_hostname, InetAddress.getLocalHost.getHostName)
-    wrapper.addAttribute(_tests, count.toString)
-    wrapper.addAttribute(_failures, "0")
-    wrapper.addAttribute(_skipped, skip.toString)
-    wrapper.addAttribute(_errors, failures.toString)
+    amap = amap.put(TypeUtils.attributeInfo(_hostname, InetAddress.getLocalHost.getHostName))
+    amap = amap.put(TypeUtils.attributeInfo(_tests, count.toString))
+    amap = amap.put(TypeUtils.attributeInfo(_failures, "0"))
+    amap = amap.put(TypeUtils.attributeInfo(_skipped, skip.toString))
+    amap = amap.put(TypeUtils.attributeInfo(_errors, failures.toString))
 
-    wrapper.startContent()
+    wrapper.addStartElement(_testsuite, amap)
     wrapper.addStartElement(_properties)
-    wrapper.startContent()
     wrapper.addText("\n")
 
-    wrapper.addStartElement(_property)
-    wrapper.addAttribute(_name, "processor")
-    wrapper.addAttribute(_value, runtimeConfig.productName)
-    wrapper.startContent()
+    amap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_name, "processor"))
+    amap = amap.put(TypeUtils.attributeInfo(_value, runtimeConfig.productName))
+    wrapper.addStartElement(_property, amap)
     wrapper.addEndElement()
     wrapper.addText("\n")
 
-    wrapper.addStartElement(_property)
-    wrapper.addAttribute(_name, "version")
-    wrapper.addAttribute(_value, s"${runtimeConfig.productVersion} (with JAFPL ${runtimeConfig.jafplVersion} for Saxon ${runtimeConfig.saxonVersion})")
-    wrapper.startContent()
+    amap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_name, "version"))
+    amap = amap.put(TypeUtils.attributeInfo(_value, s"${runtimeConfig.productVersion} (with JAFPL ${runtimeConfig.jafplVersion} for Saxon ${runtimeConfig.saxonVersion})"))
+    wrapper.addStartElement(_property, amap)
     wrapper.addEndElement()
     wrapper.addText("\n")
 
-    wrapper.addStartElement(_property)
-    wrapper.addAttribute(_name, "productVersion")
-    wrapper.addAttribute(_value, runtimeConfig.productVersion)
-    wrapper.startContent()
+    amap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_name, "productVersion"))
+    amap = amap.put(TypeUtils.attributeInfo(_value, runtimeConfig.productVersion))
+    wrapper.addStartElement(_property, amap)
     wrapper.addEndElement()
     wrapper.addText("\n")
 
-    wrapper.addStartElement(_property)
-    wrapper.addAttribute(_name, "jafplVersion")
-    wrapper.addAttribute(_value, runtimeConfig.jafplVersion)
-    wrapper.startContent()
+    amap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_name, "jafplVersion"))
+    amap = amap.put(TypeUtils.attributeInfo(_value, runtimeConfig.jafplVersion))
+    wrapper.addStartElement(_property, amap)
     wrapper.addEndElement()
     wrapper.addText("\n")
 
-    wrapper.addStartElement(_property)
-    wrapper.addAttribute(_name, "saxonVersion")
-    wrapper.addAttribute(_value, runtimeConfig.saxonVersion)
-    wrapper.startContent()
+    amap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_name, "saxonVersion"))
+    amap = amap.put(TypeUtils.attributeInfo(_value, runtimeConfig.saxonVersion))
+    wrapper.addStartElement(_property, amap)
     wrapper.addEndElement()
     wrapper.addText("\n")
 
-    wrapper.addStartElement(_property)
-    wrapper.addAttribute(_name, "vendor")
-    wrapper.addAttribute(_value, runtimeConfig.vendor)
-    wrapper.startContent()
+    amap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_name, "vendor"))
+    amap = amap.put(TypeUtils.attributeInfo(_value, runtimeConfig.vendor))
+    wrapper.addStartElement(_property, amap)
     wrapper.addEndElement()
     wrapper.addText("\n")
 
-    wrapper.addStartElement(_property)
-    wrapper.addAttribute(_name, "vendorURI")
-    wrapper.addAttribute(_value, runtimeConfig.vendorURI)
-    wrapper.startContent()
+    amap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_name, "vendorURI"))
+    amap = amap.put(TypeUtils.attributeInfo(_value, runtimeConfig.vendorURI))
+    wrapper.addStartElement(_property, amap)
     wrapper.addEndElement()
     wrapper.addText("\n")
 
-    wrapper.addStartElement(_property)
-    wrapper.addAttribute(_name, "xprocVersion")
-    wrapper.addAttribute(_value, runtimeConfig.xprocVersion)
-    wrapper.startContent()
+    amap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_name, "xprocVersion"))
+    amap = amap.put(TypeUtils.attributeInfo(_value, runtimeConfig.xprocVersion))
+    wrapper.addStartElement(_property, amap)
     wrapper.addEndElement()
     wrapper.addText("\n")
 
-    wrapper.addStartElement(_property)
-    wrapper.addAttribute(_name, "xpathVersion")
-    wrapper.addAttribute(_value, runtimeConfig.xpathVersion)
-    wrapper.startContent()
+    amap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_name, "xpathVersion"))
+    amap = amap.put(TypeUtils.attributeInfo(_value, runtimeConfig.xpathVersion))
+    wrapper.addStartElement(_property, amap)
     wrapper.addEndElement()
     wrapper.addText("\n")
 
-    wrapper.addStartElement(_property)
-    wrapper.addAttribute(_name, "psviSupported")
-    wrapper.addAttribute(_value, runtimeConfig.psviSupported.toString)
-    wrapper.startContent()
+    amap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_name, "psviSupported"))
+    amap = amap.put(TypeUtils.attributeInfo(_value, runtimeConfig.psviSupported.toString))
+    wrapper.addStartElement(_property, amap)
     wrapper.addEndElement()
     wrapper.addText("\n")
-
-    /*
-    val properties = System.getProperties
-    val enum = properties.keys()
-    while (enum.hasMoreElements) {
-      val name = enum.nextElement().asInstanceOf[String]
-      val value = properties.get(name).asInstanceOf[String]
-      wrapper.addStartElement(_property)
-      wrapper.addAttribute(_name, name)
-      wrapper.addAttribute(_value, value)
-      wrapper.startContent()
-      wrapper.addEndElement()
-    }
-    */
 
     wrapper.addEndElement()
     wrapper.addText("\n")

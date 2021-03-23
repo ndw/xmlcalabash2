@@ -53,7 +53,6 @@ class WrapSequence extends DefaultXmlStep {
     builder.startDocument(staticContext.baseURI)
 
     builder.addStartElement(wrapper)
-    builder.startContent()
     for (item <- inputs) {
       builder.addSubtree(item)
     }
@@ -95,7 +94,6 @@ class WrapSequence extends DefaultXmlStep {
         builder = new SaxonTreeBuilder(config)
         builder.startDocument(staticContext.baseURI)
         builder.addStartElement(wrapper)
-        builder.startContent()
         builder.addSubtree(item)
       }
     }
@@ -120,7 +118,7 @@ class WrapSequence extends DefaultXmlStep {
     val dyncontext = expr.createDynamicContext()
     val context = dyncontext.getXPathContextObject
 
-    val fakeIterator = new ManualIterator[NodeInfo](node.getUnderlyingNode, index)
+    val fakeIterator = new ManualIterator(node.getUnderlyingNode, index)
     fakeIterator.setLastPositionFinder(fakeLastPositionFinder)
     context.setCurrentIterator(fakeIterator)
 

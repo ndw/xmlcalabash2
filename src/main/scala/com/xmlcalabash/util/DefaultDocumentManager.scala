@@ -231,10 +231,13 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       val errors = new Errors(xmlCalabash)
       val listener = new CachingErrorListener(errors)
       val saxonConfig = xmlCalabash.processor.getUnderlyingConfiguration
+      // FIXME: Saxon10
+      /*
       saxonConfig.synchronized {
         listener.chainedListener = saxonConfig.getErrorListener
         saxonConfig.setErrorListener(listener)
       }
+      */
 
       val builder = xmlCalabash.processor.newDocumentBuilder
       builder.setDTDValidation(request.dtdValidate)
@@ -276,9 +279,12 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
             }
           }
       } finally {
+        // FIXME: Saxon10
+        /*
         saxonConfig.synchronized {
           saxonConfig.setErrorListener(listener.chainedListener.get)
         }
+         */
       }
 
       new DocumentResponse(node, contentType, props)

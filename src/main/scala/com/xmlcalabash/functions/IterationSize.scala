@@ -7,7 +7,7 @@ import net.sf.saxon.om.Sequence
 import net.sf.saxon.value.Int64Value
 
 class IterationSize(runtime: XMLCalabashConfig) extends FunctionImpl() {
-  def call(staticContext: StaticContext, context: XPathContext, arguments: Array[Sequence[_]]): Sequence[_] = {
+  def call(staticContext: StaticContext, context: XPathContext, arguments: Array[Sequence]): Sequence = {
     val exprEval = runtime.expressionEvaluator
     if (exprEval.dynContext == null) {
       throw XProcException.xiExtFunctionNotAllowed()

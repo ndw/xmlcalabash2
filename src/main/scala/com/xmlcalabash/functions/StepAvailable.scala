@@ -10,13 +10,13 @@ import net.sf.saxon.s9api.QName
 import net.sf.saxon.value.BooleanValue
 
 class StepAvailable(runtime: XMLCalabashConfig) extends FunctionImpl() {
-  def call(staticContext: StaticContext, context: XPathContext, arguments: Array[Sequence[_]]): Sequence[_] = {
+  def call(staticContext: StaticContext, context: XPathContext, arguments: Array[Sequence]): Sequence = {
     val exprEval = runtime.expressionEvaluator
     if (exprEval.dynContext == null) {
       throw XProcException.xiExtFunctionNotAllowed()
     }
 
-    val lexicalQName = arguments(0).head().asInstanceOf[Item[_]].getStringValue
+    val lexicalQName = arguments(0).head().asInstanceOf[Item].getStringValue
     val propertyName = if (lexicalQName.trim.startsWith("Q{")) {
       StructuredQName.fromClarkName(lexicalQName)
     } else {

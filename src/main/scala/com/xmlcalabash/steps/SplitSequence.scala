@@ -57,7 +57,7 @@ class SplitSequence() extends DefaultXmlStep {
         val dyncontext = expr.createDynamicContext()
         val context = dyncontext.getXPathContextObject
 
-        var fakeIterator = new ManualIterator[NodeInfo](source.source.getUnderlyingNode, index)
+        var fakeIterator = new ManualIterator(source.source.getUnderlyingNode, index)
         fakeIterator.setLastPositionFinder(fakeLastPositionFinder)
         context.setCurrentIterator(fakeIterator)
         val value = expr.evaluate(dyncontext)

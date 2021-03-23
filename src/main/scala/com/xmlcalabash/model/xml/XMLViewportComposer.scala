@@ -7,6 +7,8 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XProcVtExpression, XProcXPathExpression}
+import com.xmlcalabash.util.{TypeUtils, VoidLocation}
+import net.sf.saxon.om.{AttributeMap, SingletonAttributeMap}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode, XdmValue}
 
 import scala.collection.mutable
@@ -65,9 +67,7 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
 
   private class Decomposer() extends ProcessMatchingNodes {
     private def insertMarker(): Unit = {
-      matcher.addStartElement(cx_viewport)
-      matcher.addAttribute(_index, itemIndex.toString)
-      matcher.startContent()
+      matcher.addStartElement(cx_viewport, SingletonAttributeMap.of(TypeUtils.attributeInfo(_index, itemIndex.toString)))
       itemIndex += 1
     }
 
@@ -78,7 +78,7 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
       false
     }
 
-    override def startElement(node: XdmNode): Boolean = {
+    override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
       items += new XMLViewportItem(node)
       insertMarker()
       false
@@ -92,9 +92,7 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
       matcher.endDocument()
     }
 
-    override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
-
-    override def attribute(node: XdmNode): Unit = {
+    override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
       throw new RuntimeException("viewport cannot process attributes")
     }
 
@@ -128,7 +126,7 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
       true
     }
 
-    override def startElement(node: XdmNode): Boolean = {
+    override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
       if (node.getNodeName == cx_viewport) {
         processMarker(node)
         false
@@ -148,10 +146,8 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
       matcher.endDocument()
     }
 
-    override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
-
-    override def attribute(node: XdmNode): Unit = {
-      throw new RuntimeException("this will never happen")
+    override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
+      throw XProcException.xcInvalidSelection(pattern, "attribute", None)
     }
 
     override def text(node: XdmNode): Unit = {

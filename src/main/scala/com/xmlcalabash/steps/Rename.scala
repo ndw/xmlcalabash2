@@ -4,8 +4,12 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime._
+import com.xmlcalabash.util.TypeUtils
+import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap, FingerprintedQName}
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmNode}
 import net.sf.saxon.value.QNameValue
+
+import scala.jdk.CollectionConverters.ListHasAsScala
 
 class Rename() extends DefaultXmlStep with ProcessMatchingNodes {
   private val _new_name = new QName("new-name")
@@ -42,10 +46,8 @@ class Rename() extends DefaultXmlStep with ProcessMatchingNodes {
     throw XProcException.xcInvalidSelection(pattern, "document", location)
   }
 
-  override def startElement(node: XdmNode): Boolean = {
-    matcher.addStartElement(newName)
-    matcher.addAttributes(node)
-    matcher.startContent()
+  override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
+    matcher.addStartElement(newName, node.getUnderlyingNode.attributes())
     true
   }
 
@@ -57,28 +59,43 @@ class Rename() extends DefaultXmlStep with ProcessMatchingNodes {
     throw XProcException.xcInvalidSelection(pattern, "document", location)
   }
 
-  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = {
-    val iter = node.axisIterator(Axis.ATTRIBUTE)
-    while (iter.hasNext) {
-      val attr = iter.next()
+  override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
+    if (matchingAttributes.size() > 1) {
+      // FIXME: should be an xprocexception
+      throw new RuntimeException("Cannot rename multiple attributes to the same name")
+    }
 
-      // If we're renaming A to B,
-      // 1. Don't output A
-      // 2. Don't output any existing attribute named B
-      if (matching.contains(attr) || attr.getNodeName == newName) {
-        // nop
+    var amap = nonMatchingAttributes
+    var nsmap = node.getUnderlyingNode.getAllNamespaces
+    for (attr <- matchingAttributes.asList().asScala) {
+      var prefix = newName.getPrefix
+      val uri = newName.getNamespaceURI
+      val localName = newName.getLocalName
+
+      if (uri == null || uri == "") {
+        val fqName = new FingerprintedQName("", "", localName)
+        amap = amap.put(new AttributeInfo(fqName, attr.getType, attr.getValue, attr.getLocation, attr.getProperties))
       } else {
-        matcher.addAttribute(attr)
+        if (prefix == null || prefix == "") {
+          prefix = "_"
+        }
+
+        var count = 1
+        var checkPrefix = prefix
+        var nsURI = nsmap.getURI(checkPrefix)
+        while (nsURI != null && nsURI != uri) {
+          count += 1
+          checkPrefix = s"${prefix}${count}"
+          nsURI = nsmap.getURI(checkPrefix)
+        }
+
+        prefix = checkPrefix
+        val fqName = new FingerprintedQName(prefix, uri, localName)
+        amap = amap.put(new AttributeInfo(fqName, attr.getType, attr.getValue, attr.getLocation, attr.getProperties))
       }
     }
 
-    matcher.addAttribute(newName, matching.head.getStringValue)
-
-    false
-  }
-
-  override def attribute(node: XdmNode): Unit = {
-    throw new RuntimeException("attribute called in rename")
+    Some(amap)
   }
 
   override def text(node: XdmNode): Unit = {

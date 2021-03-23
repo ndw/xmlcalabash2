@@ -3,13 +3,13 @@ package com.xmlcalabash.steps
 import java.io.ByteArrayOutputStream
 import java.net.URI
 import java.util.zip.{ZipEntry, ZipException}
-
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.{MediaType, S9Api}
+import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils}
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap}
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmNode, XdmNodeKind, XdmValue}
 import org.apache.commons.compress.archivers.ArchiveOutputStream
 import org.apache.commons.compress.archivers.zip.{ZipArchiveEntry, ZipArchiveOutputStream, ZipFile}
@@ -119,9 +119,7 @@ class Archive extends DefaultXmlStep {
 
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(None)
-    builder.startContent()
     builder.addStartElement(XProcConstants.c_archive)
-    builder.startContent()
     for (entry <- manifest.toList) {
       entry.makeEntry(builder)
     }
@@ -131,7 +129,7 @@ class Archive extends DefaultXmlStep {
   }
 
   private def processZip(): BinaryNode = {
-    command = if (parameters.get(_command).isDefined) {
+    command = if (parameters.contains(_command)) {
       parameters(_command).getUnderlyingValue.getStringValue
     } else {
       "update"
@@ -436,15 +434,17 @@ class Archive extends DefaultXmlStep {
 
   class ManifestEntry(val name: String, val href: URI, val comment: String, val method: String, val level: String) {
     def makeEntry(builder: SaxonTreeBuilder): Unit = {
-      builder.addStartElement(XProcConstants.c_entry)
-      builder.addAttribute(XProcConstants._name, name)
-      builder.addAttribute(XProcConstants._href, href.toASCIIString)
+      var amap: AttributeMap = EmptyAttributeMap.getInstance()
+
+      amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, name))
+      amap = amap.put(TypeUtils.attributeInfo(XProcConstants._href, href.toASCIIString))
       if (comment != "") {
-        builder.addAttribute(XProcConstants._comment, comment)
+        amap = amap.put(TypeUtils.attributeInfo(XProcConstants._comment, comment))
       }
-      builder.addAttribute(XProcConstants._method, method)
-      builder.addAttribute(XProcConstants._level, level)
-      builder.startContent()
+      amap = amap.put(TypeUtils.attributeInfo(XProcConstants._method, method))
+      amap = amap.put(TypeUtils.attributeInfo(XProcConstants._level, level))
+
+      builder.addStartElement(XProcConstants.c_entry, amap)
       builder.addEndElement()
     }
   }

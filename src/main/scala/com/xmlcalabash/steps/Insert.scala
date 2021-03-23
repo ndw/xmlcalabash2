@@ -4,6 +4,7 @@ import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
+import net.sf.saxon.om.AttributeMap
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable.ListBuffer
@@ -68,14 +69,12 @@ class Insert() extends DefaultXmlStep  with ProcessMatchingNodes {
     true
   }
 
-  override def startElement(node: XdmNode): Boolean = {
+  override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
     if (position == "before") {
       doInsert()
     }
 
-    matcher.addStartElement(node)
-    matcher.addAttributes(node)
-    matcher.startContent()
+    matcher.addStartElement(node, attributes)
 
     if (position == "first-child") {
       doInsert()
@@ -107,9 +106,7 @@ class Insert() extends DefaultXmlStep  with ProcessMatchingNodes {
     matcher.endDocument()
   }
 
-  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
-
-  override def attribute(node: XdmNode): Unit = {
+  override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
     throw XProcException.xcInvalidSelection(pattern, "attribute", location)
   }
 

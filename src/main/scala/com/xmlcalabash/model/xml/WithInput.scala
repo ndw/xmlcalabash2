@@ -86,7 +86,6 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
               val tree = new SaxonTreeBuilder(config)
               tree.startDocument(None)
               tree.addStartElement(XProcConstants.cx_use_default_input)
-              tree.startContent()
               tree.addEndElement()
               tree.endDocument()
 

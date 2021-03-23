@@ -12,7 +12,7 @@ import net.sf.saxon.tree.iter.ArrayIterator
 import net.sf.saxon.value.{QNameValue, StringValue}
 
 class DocumentProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
-  def call(staticContext: StaticContext, context: XPathContext, arguments: Array[Sequence[Item[_]]]): Sequence[_] = {
+  def call(staticContext: StaticContext, context: XPathContext, arguments: Array[Sequence]): Sequence = {
     val exprEval = runtime.expressionEvaluator
     if (exprEval.dynContext.isEmpty) {
       throw XProcException.xiExtFunctionNotAllowed()
@@ -56,7 +56,7 @@ class DocumentProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
             node.getUnderlyingNode
           case atomic: XdmItem =>
             // I wonder if there's a better way?
-            val iter = new ArrayIterator[Item[_ <: Item[_]]](Array(atomic.getUnderlyingValue))
+            val iter = new ArrayIterator[Item](Array(atomic.getUnderlyingValue))
             iter.materialize()
           case _ =>
             XdmEmptySequence.getInstance().getUnderlyingValue

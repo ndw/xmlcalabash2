@@ -4,7 +4,12 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{HashUtils, TypeUtils}
+import net.sf.saxon.`type`.BuiltInAtomicType
+import net.sf.saxon.event.ReceiverOption
+import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap}
 import net.sf.saxon.s9api.{QName, XdmNode}
+
+import scala.jdk.CollectionConverters.ListHasAsScala
 
 class Uuid() extends DefaultXmlStep  with ProcessMatchingNodes {
   private var source: XdmNode = _
@@ -43,9 +48,20 @@ class Uuid() extends DefaultXmlStep  with ProcessMatchingNodes {
     false
   }
 
-  override def startElement(node: XdmNode): Boolean = {
+  override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
     matcher.addText(uuid)
     false
+  }
+
+  override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
+    var amap: AttributeMap = EmptyAttributeMap.getInstance()
+    for (attr <- nonMatchingAttributes.asList().asScala) {
+      amap = amap.put(attr)
+    }
+    for (attr <- matchingAttributes.asList().asScala) {
+      amap = amap.put(new AttributeInfo(attr.getNodeName, BuiltInAtomicType.UNTYPED_ATOMIC, uuid, attr.getLocation, ReceiverOption.NONE))
+    }
+    Some(amap)
   }
 
   override def endElement(node: XdmNode): Unit = {
@@ -54,12 +70,6 @@ class Uuid() extends DefaultXmlStep  with ProcessMatchingNodes {
 
   override def endDocument(node: XdmNode): Unit = {
     matcher.endDocument()
-  }
-
-  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = false
-
-  override def attribute(node: XdmNode): Unit = {
-    matcher.addAttribute(node, uuid)
   }
 
   override def text(node: XdmNode): Unit = {

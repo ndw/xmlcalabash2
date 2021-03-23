@@ -2,6 +2,8 @@ package com.xmlcalabash.util.xc
 
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
+import com.xmlcalabash.util.TypeUtils
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap, NamespaceMap, SingletonAttributeMap}
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable
@@ -31,15 +33,17 @@ class XsltStylesheet(runtime: XMLCalabashRuntime, val bindings: Map[String,Strin
   private val openStack = mutable.Stack.empty[QName]
 
   builder.startDocument(None)
-  builder.addStartElement(xsl_stylesheet)
+
+  var nsmap = NamespaceMap.emptyMap()
+  var amap: AttributeMap = EmptyAttributeMap.getInstance()
 
   var found = false
   for ((prefix,uri) <- bindings) {
-    builder.addNamespace(prefix,uri)
+    nsmap = nsmap.put(prefix, uri)
     found = found || prefix == "xsl"
   }
   if (!found) {
-    builder.addNamespace("xsl", XProcConstants.ns_xsl)
+    nsmap = nsmap.put("xsl", XProcConstants.ns_xsl)
   }
 
   found = false
@@ -55,9 +59,11 @@ class XsltStylesheet(runtime: XMLCalabashRuntime, val bindings: Map[String,Strin
   if (!found) {
     xrn = xrn + "xsl "
   }
-  builder.addAttribute(_exclude_result_prefixes, xrn)
-  builder.addAttribute(XProcConstants._version, version)
-  builder.startContent()
+
+  amap = amap.put(TypeUtils.attributeInfo(_exclude_result_prefixes, xrn))
+  amap = amap.put(TypeUtils.attributeInfo(XProcConstants._version, version))
+
+  builder.addStartElement(xsl_stylesheet, amap, nsmap)
   openStack.push(xsl_stylesheet)
 
   def this(runtime: XMLCalabashRuntime) = {
@@ -72,16 +78,14 @@ class XsltStylesheet(runtime: XMLCalabashRuntime, val bindings: Map[String,Strin
   }
 
   def startTemplate(matchPattern: String): Unit = {
-    builder.addStartElement(xsl_template)
-    builder.addAttribute(_match, matchPattern)
-    builder.startContent()
+    val amap = SingletonAttributeMap.of(TypeUtils.attributeInfo(_match, matchPattern))
+    builder.addStartElement(xsl_template, amap)
     openStack.push(xsl_template)
   }
 
   def startNamedTemplate(name: String): Unit = {
-    builder.addStartElement(xsl_template)
-    builder.addAttribute(_name, name)
-    builder.startContent()
+    val amap = SingletonAttributeMap.of(TypeUtils.attributeInfo(_name, name))
+    builder.addStartElement(xsl_template, amap)
     openStack.push(xsl_template)
   }
 
@@ -91,9 +95,8 @@ class XsltStylesheet(runtime: XMLCalabashRuntime, val bindings: Map[String,Strin
   }
 
   def startForEach(select: String): Unit = {
-    builder.addStartElement(xsl_for_each)
-    builder.addAttribute(_select, select)
-    builder.startContent()
+    val amap = SingletonAttributeMap.of(TypeUtils.attributeInfo(_select, select))
+    builder.addStartElement(xsl_for_each, amap)
     openStack.push(xsl_for_each)
   }
 
@@ -111,12 +114,13 @@ class XsltStylesheet(runtime: XMLCalabashRuntime, val bindings: Map[String,Strin
   }
 
   private def startVariable(name: String, as: Option[String]): Unit = {
-    builder.addStartElement(xsl_variable)
-    builder.addAttribute(_name, name)
+    var amap: AttributeMap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_name, name))
     if (as.isDefined) {
-      builder.addAttribute(_as, as.get)
+      amap = amap.put(TypeUtils.attributeInfo(_as, as.get))
     }
-    builder.startContent()
+
+    builder.addStartElement(xsl_variable)
     openStack.push(xsl_variable)
   }
 
@@ -127,14 +131,16 @@ class XsltStylesheet(runtime: XMLCalabashRuntime, val bindings: Map[String,Strin
 
   def startSort(select: String, lang: Option[String], order: Option[String],
            collation: Option[String], stable: Option[String], case_order: Option[String]): Unit = {
-    builder.addStartElement(xsl_sort)
-    builder.addAttribute(_select, select)
-    if (lang.isDefined) { builder.addAttribute(_lang, lang.get) }
-    if (order.isDefined) { builder.addAttribute(_order, order.get) }
-    if (collation.isDefined) { builder.addAttribute(_collation, collation.get) }
-    if (stable.isDefined) { builder.addAttribute(_stable, stable.get.toString) }
-    if (case_order.isDefined) { builder.addAttribute(_case_order, case_order.get) }
-    builder.startContent()
+    var amap: AttributeMap = EmptyAttributeMap.getInstance()
+    amap.put(TypeUtils.attributeInfo(_select, select))
+
+    if (lang.isDefined) { amap = amap.put(TypeUtils.attributeInfo(_lang, lang.get)) }
+    if (order.isDefined) { amap = amap.put(TypeUtils.attributeInfo(_order, order.get)) }
+    if (collation.isDefined) { amap = amap.put(TypeUtils.attributeInfo(_collation, collation.get)) }
+    if (stable.isDefined) { amap = amap.put(TypeUtils.attributeInfo(_stable, stable.get)) }
+    if (case_order.isDefined) { amap = amap.put(TypeUtils.attributeInfo(_case_order, case_order.get)) }
+
+    builder.addStartElement(xsl_sort, amap)
     openStack.push(xsl_sort)
   }
 
@@ -144,29 +150,25 @@ class XsltStylesheet(runtime: XMLCalabashRuntime, val bindings: Map[String,Strin
   }
 
   def sequence(select: String): Unit = {
-    builder.addStartElement(xsl_sequence)
-    builder.addAttribute(_select, select)
-    builder.startContent()
+    val amap = SingletonAttributeMap.of(TypeUtils.attributeInfo(_select, select))
+    builder.addStartElement(xsl_sequence, amap)
     builder.addEndElement()
   }
 
   def valueOf(select: String): Unit = {
-    builder.addStartElement(xsl_value_of)
-    builder.addAttribute(_select, select)
-    builder.startContent()
+    val amap = SingletonAttributeMap.of(TypeUtils.attributeInfo(_select, select))
+    builder.addStartElement(xsl_value_of, amap)
     builder.addEndElement()
   }
 
   def literal(qname: QName, content: String): Unit = {
     builder.addStartElement(qname)
-    builder.startContent()
     builder.addText(content)
     builder.addEndElement()
   }
 
   def text(content: String): Unit = {
     builder.addStartElement(xsl_text)
-    builder.startContent()
     builder.addText(content)
     builder.addEndElement()
   }

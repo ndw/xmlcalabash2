@@ -2,7 +2,8 @@ package com.xmlcalabash.util.xc
 
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.util.MediaType
+import com.xmlcalabash.util.{MediaType, TypeUtils}
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap, NamespaceMap, SingletonAttributeMap}
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable
@@ -26,17 +27,19 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
     if (!inLibrary) {
       builder.startDocument(None)
     }
-    builder.addStartElement(XProcConstants.p_declare_step)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    builder.addNamespace("cx", XProcConstants.ns_cx)
-    oattr(XProcConstants._type, stepType)
-    oattr(XProcConstants._version, Some(version))
-    oattr(XProcConstants._xpath_version, xpathVersion)
-    oattr(XProcConstants._psvi_required, psviRequired)
-    oattr(XProcConstants._exclude_inline_prefixes, excludePrefixes)
-    oattr(XProcConstants._visibility, visibility)
-    builder.startContent()
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+    amap = oattr(amap, XProcConstants._type, stepType)
+    amap = oattr(amap, XProcConstants._version, Some(version))
+    amap = oattr(amap, XProcConstants._xpath_version, xpathVersion)
+    amap = oattr(amap, XProcConstants._psvi_required, psviRequired)
+    amap = oattr(amap, XProcConstants._exclude_inline_prefixes, excludePrefixes)
+    amap = oattr(amap, XProcConstants._visibility, visibility)
+
+    var nsmap = NamespaceMap.emptyMap()
+    nsmap = nsmap.put("cx", XProcConstants.ns_cx)
+
+    builder.addStartElement(XProcConstants.p_declare_step, amap, nsmap)
     openStack.push(XProcConstants.p_declare_step)
   }
 
@@ -58,12 +61,12 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   }
 
   def startInput(tumble_id: String, name: String, port: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, name))
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._port, port))
+
     val element = XProcConstants.p_input
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, name)
-    builder.addAttribute(XProcConstants._port, port)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -72,12 +75,12 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   }
 
   def startOutput(tumble_id: String, name: String, port: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, name))
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._port, port))
+
     val element = XProcConstants.p_output
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, name)
-    builder.addAttribute(XProcConstants._port, port)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -86,13 +89,13 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   }
 
   def startWithOutput(tumble_id: String, name: String, port: String, sequence: Boolean): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, name))
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._port, port))
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._sequence, sequence.toString))
+
     val element = XProcConstants.p_with_output
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, name)
-    builder.addAttribute(XProcConstants._port, port)
-    builder.addAttribute(XProcConstants._sequence, sequence.toString)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -101,12 +104,12 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   }
 
   def startWithInput(tumble_id: String, name: String, port: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, name))
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._port, port))
+
     val element = XProcConstants.p_with_input
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, name)
-    builder.addAttribute(XProcConstants._port, port)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -115,12 +118,12 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   }
 
   def startPipe(tumble_id: String, step: String, port: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._step, step))
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._port, port))
+
     val element = XProcConstants.p_pipe
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._step, step)
-    builder.addAttribute(XProcConstants._port, port)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -129,11 +132,11 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   }
 
   def startNamePipe(tumble_id: String, step: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._step, step))
+
     val element = new QName("p", XProcConstants.ns_p, "name-pipe")
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._step, step)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -142,11 +145,11 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   }
 
   def startDocument(tumble_id: String, href: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._href, href))
+
     val element = XProcConstants.p_inline
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._href, href)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -155,13 +158,13 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   }
 
   def startInline(tumble_id: String, root: Option[QName]): Unit = {
-    val element = XProcConstants.p_inline
-    builder.addStartElement(element)
-    tid(tumble_id)
+    var amap = tid(tumble_id)
     if (root.isDefined) {
-      builder.addAttribute(new QName("root"), root.get.toString)
+      amap = amap.put(TypeUtils.attributeInfo(new QName("root"), root.get.toString))
     }
-    builder.startContent()
+
+    val element = XProcConstants.p_inline
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -170,13 +173,13 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   }
 
   def startDocumentation(tumble_id: String, root: Option[QName]): Unit = {
-    val element = XProcConstants.p_documentation
-    builder.addStartElement(element)
-    tid(tumble_id)
+    var amap = tid(tumble_id)
     if (root.isDefined) {
-      builder.addAttribute(new QName("root"), root.get.toString)
+      amap = amap.put(TypeUtils.attributeInfo(new QName("root"), root.get.toString))
     }
-    builder.startContent()
+
+    val element = XProcConstants.p_documentation
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -185,13 +188,13 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   }
 
   def startPipeInfo(tumble_id: String, root: Option[QName]): Unit = {
-    val element = XProcConstants.p_pipeinfo
-    builder.addStartElement(element)
-    tid(tumble_id)
+    var amap = tid(tumble_id)
     if (root.isDefined) {
-      builder.addAttribute(new QName("root"), root.get.toString)
+      amap = amap.put(TypeUtils.attributeInfo(new QName("root"), root.get.toString))
     }
-    builder.startContent()
+
+    val element = XProcConstants.p_pipeinfo
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -200,12 +203,12 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   }
 
   def startVariable(tumble_id: String, stepName: String, name: QName): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+    amap = amap.put(TypeUtils.attributeInfo(new QName("varname"), name.toString))
+
     val element = XProcConstants.p_variable
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    builder.addAttribute(new QName("varname"), name.toString)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -214,12 +217,12 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   }
 
   def startOption(tumble_id: String, name: String, optname: QName): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, name))
+    amap = amap.put(TypeUtils.attributeInfo(new QName("optname"), optname.toString))
+
     val element = XProcConstants.p_option
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, name)
-    builder.addAttribute(new QName("optname"), optname.toString)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -228,12 +231,12 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   }
 
   def startWithOption(tumble_id: String, name: String, optname: QName): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, name))
+    amap = amap.put(TypeUtils.attributeInfo(new QName("optname"), optname.toString))
+
     val element = XProcConstants.p_with_option
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, name)
-    builder.addAttribute(new QName("optname"), optname.toString)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -244,11 +247,11 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   def startAtomic(tumble_id: String,
                   stepName: String,
                   stepType: QName): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+
     val element = stepType
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -259,12 +262,12 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   def startViewport(tumble_id: String,
                     stepName: String,
                     pattern: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._match, pattern))
+
     val element = XProcConstants.p_viewport
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    builder.addAttribute(XProcConstants._match, pattern)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -274,11 +277,11 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
 
   def startForEach(tumble_id: String,
                    stepName: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+
     val element = XProcConstants.p_for_each
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -288,11 +291,11 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
 
   def startForUntil(tumble_id: String,
                     stepName: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+
     val element = XProcConstants.cx_until
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -302,11 +305,11 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
 
   def startForWhile(tumble_id: String,
                     stepName: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+
     val element = XProcConstants.cx_while
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -316,11 +319,11 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
 
   def startForLoop(tumble_id: String,
                     stepName: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+
     val element = XProcConstants.cx_loop
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -330,11 +333,11 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
 
   def startChoose(tumble_id: String,
                   stepName: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+
     val element = XProcConstants.p_choose
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -345,12 +348,12 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   def startWhen(tumble_id: String,
                 stepName: String,
                 test: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._test, test))
+
     val element = XProcConstants.p_when
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    builder.addAttribute(XProcConstants._test, test)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -360,11 +363,11 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
 
   def startGroup(tumble_id: String,
                    stepName: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+
     val element = XProcConstants.p_group
     builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    builder.startContent()
     openStack.push(element)
   }
 
@@ -374,11 +377,11 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
 
   def startTry(tumble_id: String,
                stepName: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+
     val element = XProcConstants.p_try
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -389,12 +392,12 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
   def startCatch(tumble_id: String,
                  stepName: String,
                  codes: Option[String]): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+    amap = oattr(amap, XProcConstants._code, Some(codes))
+
     val element = XProcConstants.p_catch
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    oattr(XProcConstants._code, Some(codes))
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -404,11 +407,11 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
 
   def startFinally(tumble_id: String,
                     stepName: String): Unit = {
+    var amap = tid(tumble_id)
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
+
     val element = XProcConstants.p_catch
-    builder.addStartElement(element)
-    tid(tumble_id)
-    builder.addAttribute(XProcConstants._name, stepName)
-    builder.startContent()
+    builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
@@ -416,14 +419,16 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
     end()
   }
 
-  private def oattr(name: QName, value: Option[Any]): Unit = {
+  private def oattr(amap: AttributeMap, name: QName, value: Option[Any]): AttributeMap = {
     if (value.isDefined) {
-      builder.addAttribute(name, value.get.toString)
+      amap.put(TypeUtils.attributeInfo(name, value.get.toString))
+    } else {
+      amap
     }
   }
 
-  private def tid(id: String): Unit = {
+  private def tid(id: String): AttributeMap = {
     val xid = s"ID_${id.substring(1)}"
-    builder.addAttribute(XProcConstants.xml_id, xid)
+    SingletonAttributeMap.of(TypeUtils.attributeInfo(XProcConstants.xml_id, xid))
   }
 }

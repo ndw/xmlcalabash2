@@ -3,8 +3,9 @@ package com.xmlcalabash.steps
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.MediaType
+import com.xmlcalabash.util.{MediaType, TypeUtils}
 import net.sf.saxon.`type`.ValidationException
+import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap, NamespaceMap}
 import net.sf.saxon.s9api.QName
 import net.sf.saxon.trans.XPathException
 import org.xml.sax.SAXParseException
@@ -20,11 +21,12 @@ class ExceptionTranslator() extends DefaultXmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULTSEQ
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
+    var nsmap = NamespaceMap.emptyMap()
+    nsmap = nsmap.put("cx", XProcConstants.ns_cx)
+
     val tree = new SaxonTreeBuilder(config)
     tree.startDocument(None)
-    tree.addStartElement(XProcConstants.c_errors)
-    tree.addNamespace("cx", XProcConstants.ns_cx)
-    tree.startContent()
+    tree.addStartElement(XProcConstants.c_errors, EmptyAttributeMap.getInstance(), nsmap)
 
     item match {
       case except: Throwable =>
@@ -54,29 +56,30 @@ class ExceptionTranslator() extends DefaultXmlStep {
   }
 
   private def formatGenericException(tree: SaxonTreeBuilder, exception: Throwable): Unit = {
-    tree.addStartElement(XProcConstants.c_error)
-    tree.addAttribute(XProcConstants.cx_class, exception.getClass.getName)
-    tree.startContent()
+    var amap: AttributeMap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants.cx_class, exception.getClass.getName))
+    tree.addStartElement(XProcConstants.c_error, amap)
     tree.addText(exception.getMessage)
     tree.addEndElement()
   }
 
   private def formatXProcException(tree: SaxonTreeBuilder, exception: XProcException): Unit = {
-    tree.addStartElement(XProcConstants.c_error)
-    tree.addAttribute(XProcConstants._code, exception.code.toString)
+    var amap: AttributeMap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._code, exception.code.toString))
     if (exception.location.isDefined) {
       val loc = exception.location.get
       if (loc.uri.isDefined) {
-        tree.addAttribute(_uri, loc.uri.get)
+        amap = amap.put(TypeUtils.attributeInfo(_uri, loc.uri.get))
       }
       if (loc.line.isDefined) {
-        tree.addAttribute(_line, loc.line.get.toString)
+        amap = amap.put(TypeUtils.attributeInfo(_line, loc.line.get.toString))
       }
       if (loc.column.isDefined) {
-        tree.addAttribute(_column, loc.column.get.toString)
+        amap = amap.put(TypeUtils.attributeInfo(_column, loc.column.get.toString))
       }
     }
-    tree.startContent()
+
+    tree.addStartElement(XProcConstants.c_error, amap)
     tree.addText(exception.getMessage)
     tree.addEndElement()
 
@@ -88,7 +91,6 @@ class ExceptionTranslator() extends DefaultXmlStep {
   private def formatXPathException(tree: SaxonTreeBuilder, exception: XPathException): Unit = {
     if (exception.getException == null) {
       tree.addStartElement(XProcConstants.c_error)
-      tree.startContent()
       tree.addText(exception.getMessage)
       tree.addEndElement()
     } else {
@@ -97,11 +99,12 @@ class ExceptionTranslator() extends DefaultXmlStep {
   }
 
   private def formatSAXParseException(tree: SaxonTreeBuilder, exception: SAXParseException): Unit = {
-    tree.addStartElement(XProcConstants.c_error)
-    tree.addAttribute(_uri, exception.getSystemId)
-    tree.addAttribute(_line, exception.getLineNumber.toString)
-    tree.addAttribute(_column, exception.getColumnNumber.toString)
-    tree.startContent()
+    var amap: AttributeMap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(_uri, exception.getSystemId))
+    amap = amap.put(TypeUtils.attributeInfo(_line, exception.getLineNumber.toString))
+    amap = amap.put(TypeUtils.attributeInfo(_line, exception.getLineNumber.toString))
+
+    tree.addStartElement(XProcConstants.c_error, amap)
     tree.addText(exception.getMessage)
     tree.addEndElement()
   }
@@ -109,13 +112,14 @@ class ExceptionTranslator() extends DefaultXmlStep {
   private def formatValidationException(tree: SaxonTreeBuilder, exception: ValidationException): Unit = {
     val vf = exception.getValidationFailure
 
-    tree.addStartElement(XProcConstants.c_error)
-    tree.addAttribute(XProcConstants._code, vf.getErrorCode)
-    tree.addAttribute(_uri, vf.getSystemId)
-    tree.addAttribute(_xpath, exception.getPath)
-    tree.addAttribute(_line, vf.getLineNumber.toString)
-    tree.addAttribute(_column, vf.getColumnNumber.toString)
-    tree.startContent()
+    var amap: AttributeMap = EmptyAttributeMap.getInstance()
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._code, vf.getErrorCode))
+    amap = amap.put(TypeUtils.attributeInfo(_uri, vf.getSystemId))
+    amap = amap.put(TypeUtils.attributeInfo(_xpath, exception.getPath))
+    amap = amap.put(TypeUtils.attributeInfo(_line, vf.getLineNumber.toString))
+    amap = amap.put(TypeUtils.attributeInfo(_column, vf.getColumnNumber.toString))
+
+    tree.addStartElement(XProcConstants.c_error, amap)
     tree.addText(vf.getMessage)
     tree.addEndElement()
   }

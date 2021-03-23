@@ -49,9 +49,7 @@ class EscapeMarkup() extends DefaultXmlStep {
           }
           topLevelElement = true
 
-          tree.addStartElement(child)
-          tree.addAttributes(child)
-          tree.startContent()
+          tree.addStartElement(child, child.getUnderlyingNode.attributes())
 
           val sw = new StringWriter()
           serializer.setOutputWriter(sw)

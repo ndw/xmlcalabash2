@@ -3,11 +3,11 @@ package com.xmlcalabash.steps
 import java.io.{File, InputStream}
 import java.net.URI
 import java.util.zip.ZipEntry
-
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.MediaType
+import com.xmlcalabash.util.{MediaType, TypeUtils}
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap}
 import net.sf.saxon.s9api.{QName, XdmValue}
 import org.apache.commons.compress.archivers.zip.{ZipArchiveEntry, ZipFile}
 
@@ -61,9 +61,7 @@ class ArchiveManifest extends DefaultXmlStep {
 
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(smeta.baseURI)
-    builder.startContent()
     builder.addStartElement(XProcConstants.c_archive)
-    builder.startContent()
 
     format.get match {
       case `_zip` => zipArchive(context, builder)
@@ -94,46 +92,50 @@ class ArchiveManifest extends DefaultXmlStep {
       val entry = enum.nextElement()
 
       if (!entry.isDirectory) {
-        builder.addStartElement(XProcConstants.c_entry)
-        builder.addAttribute(XProcConstants._name, entry.getName)
+        var amap: AttributeMap = EmptyAttributeMap.getInstance()
+        amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, entry.getName))
         if (relativeTo.isDefined) {
-          builder.addAttribute(XProcConstants._href, relativeTo.get.resolve(entry.getName).toASCIIString)
+          amap = amap.put(TypeUtils.attributeInfo(XProcConstants._href, relativeTo.get.resolve(entry.getName).toASCIIString))
         } else {
           if (context.baseURI.isDefined) {
-            builder.addAttribute(XProcConstants._href, context.baseURI.get.resolve(entry.getName).toASCIIString)
+            amap = amap.put(TypeUtils.attributeInfo(XProcConstants._href, context.baseURI.get.resolve(entry.getName).toASCIIString))
           } else {
             // I wouldn't expect this to succeed, as the name is unlikely to be an absolute
             // URI, but I've run out of options.
-            builder.addAttribute(XProcConstants._href, new URI(entry.getName).toASCIIString)
+            amap = amap.put(TypeUtils.attributeInfo(XProcConstants._href, new URI(entry.getName).toASCIIString))
           }
         }
 
-        archiveAttribute(builder, XProcConstants._comment, Option(entry.getComment))
-        entry.getMethod match {
+
+        amap = archiveAttribute(amap, XProcConstants._comment, Option(entry.getComment))
+        amap = entry.getMethod match {
           // ZipArchiveEntry inherites from ZipEntry, but ZipArchiveEntry.STORED doesn't resolve???
-          case ZipEntry.STORED => archiveAttribute(builder, XProcConstants._method, Some("none"))
-          case ZipEntry.DEFLATED => archiveAttribute(builder, XProcConstants._method, Some("deflated"))
-          case _ => archiveAttribute(builder, XProcConstants._method, Some("unknown"))
+          case ZipEntry.STORED => archiveAttribute(amap, XProcConstants._method, Some("none"))
+          case ZipEntry.DEFLATED => archiveAttribute(amap, XProcConstants._method, Some("deflated"))
+          case _ => archiveAttribute(amap, XProcConstants._method, Some("unknown"))
         }
         if (Option(entry.getComment).isDefined) {
-          archiveAttribute(builder, XProcConstants._comment, Some(entry.getComment))
+          amap = archiveAttribute(amap, XProcConstants._comment, Some(entry.getComment))
         }
         if (entry.getCompressedSize >= 0) {
-          archiveAttribute(builder, XProcConstants._compressed_size, Some(entry.getCompressedSize.toString))
+          amap = archiveAttribute(amap, XProcConstants._compressed_size, Some(entry.getCompressedSize.toString))
         }
         if (entry.getSize >= 0) {
-          archiveAttribute(builder, XProcConstants._size, Some(entry.getSize.toString))
+          amap = archiveAttribute(amap, XProcConstants._size, Some(entry.getSize.toString))
         }
-        builder.startContent()
+
+        builder.addStartElement(XProcConstants.c_entry, amap)
         builder.addEndElement()
       }
     }
     zipIn.close()
   }
 
-  private def archiveAttribute(builder: SaxonTreeBuilder, name: QName, value: Option[String]): Unit = {
+  private def archiveAttribute(amap: AttributeMap, name: QName, value: Option[String]): AttributeMap = {
     if (value.isDefined) {
-      builder.addAttribute(name, value.get)
+      amap.put(TypeUtils.attributeInfo(name, value.get))
+    } else {
+      amap
     }
   }
 

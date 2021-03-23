@@ -3,6 +3,7 @@ package com.xmlcalabash.steps
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
+import net.sf.saxon.om.AttributeMap
 import net.sf.saxon.s9api.{Axis, XdmNode, XdmNodeKind}
 
 class Unwrap() extends DefaultXmlStep  with ProcessMatchingNodes {
@@ -33,7 +34,7 @@ class Unwrap() extends DefaultXmlStep  with ProcessMatchingNodes {
     true
   }
 
-  override def startElement(node: XdmNode): Boolean = {
+  override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
     true
   }
 
@@ -45,9 +46,7 @@ class Unwrap() extends DefaultXmlStep  with ProcessMatchingNodes {
     matcher.endDocument()
   }
 
-  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
-
-  override def attribute(node: XdmNode): Unit = {
+  override def attributes(node: XdmNode, matching: AttributeMap, nonMatching: AttributeMap): Option[AttributeMap] = {
     throw XProcException.xcInvalidSelection(pattern, "attribute", location)
   }
 

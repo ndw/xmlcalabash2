@@ -5,6 +5,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.S9Api
+import net.sf.saxon.om.AttributeMap
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmNode, XdmNodeKind}
 
 import scala.collection.mutable.ListBuffer
@@ -58,7 +59,7 @@ class Replace() extends DefaultXmlStep  with ProcessMatchingNodes {
     false
   }
 
-  override def startElement(node: XdmNode): Boolean = {
+  override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
     doReplace()
     false
   }
@@ -71,9 +72,7 @@ class Replace() extends DefaultXmlStep  with ProcessMatchingNodes {
     matcher.endDocument()
   }
 
-  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
-
-  override def attribute(node: XdmNode): Unit = {
+  override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
     throw XProcException.xcInvalidSelection(pattern, "attribute", location)
   }
 

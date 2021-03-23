@@ -3,7 +3,13 @@ package com.xmlcalabash.steps
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
-import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
+import com.xmlcalabash.util.{S9Api, TypeUtils}
+import net.sf.saxon.`type`.BuiltInAtomicType
+import net.sf.saxon.event.ReceiverOption
+import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap}
+import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmValue}
+
+import scala.jdk.CollectionConverters.ListHasAsScala
 
 class StringReplace() extends DefaultXmlStep with ProcessMatchingNodes {
   private val _replace = new QName("", "replace")
@@ -66,22 +72,12 @@ class StringReplace() extends DefaultXmlStep with ProcessMatchingNodes {
     }
   }
 
-  def replaceAttribute(context: XdmNode): Unit = {
-    val value = computeReplacement(context)
-    var text = ""
-    for (pos <- 0 until value.size()) {
-      val item = value.itemAt(pos)
-      text = text + item.getStringValue
-    }
-    matcher.addAttribute(context.getNodeName, text)
-  }
-
   override def startDocument(node: XdmNode): Boolean = {
     replaceNode(node)
     false
   }
 
-  override def startElement(node: XdmNode): Boolean = {
+  override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
     replaceNode(node)
     false
   }
@@ -94,10 +90,25 @@ class StringReplace() extends DefaultXmlStep with ProcessMatchingNodes {
     // nop, replaced
   }
 
-  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
+  override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
+    var amap: AttributeMap = EmptyAttributeMap.getInstance()
+    for (attr <- nonMatchingAttributes.asList().asScala) {
+      amap = amap.put(attr)
+    }
+    for (attr <- matchingAttributes.asList().asScala) {
+      // This is kind of ugly; I need the XdmNode for the attribute
+      var attrNode: XdmNode = null
+      for (anode <- S9Api.axis(node, Axis.ATTRIBUTE)) {
+        val aname = TypeUtils.fqName(anode.getNodeName)
+        if (aname == attr.getNodeName) {
+          attrNode = anode
+        }
+      }
+      val replacement = computeReplacement(attrNode).getUnderlyingValue.getStringValue
+      amap = amap.put(new AttributeInfo(attr.getNodeName, BuiltInAtomicType.UNTYPED_ATOMIC, replacement, attr.getLocation, ReceiverOption.NONE))
+    }
+    Some(amap)
 
-  override def attribute(node: XdmNode): Unit = {
-    replaceAttribute(node)
   }
 
   override def text(node: XdmNode): Unit = {

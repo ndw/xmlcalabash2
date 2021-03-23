@@ -1,21 +1,37 @@
 package com.xmlcalabash.model.util
 
-import java.net.URI
-
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.exceptions.{ExceptionCode, ModelException}
+import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
-import com.xmlcalabash.util.{DefaultLocation, S9Api}
-import net.sf.saxon.{Configuration, Controller}
-import net.sf.saxon.`type`.{BuiltInType, SchemaType, SimpleType}
+import com.xmlcalabash.util.{DefaultLocation, S9Api, SysIdLocation, VoidLocation}
+import net.sf.saxon.`type`.{BuiltInType, SchemaType, SimpleType, Untyped}
 import net.sf.saxon.event.{NamespaceReducer, Receiver}
 import net.sf.saxon.expr.instruct.Executable
-import net.sf.saxon.om.{FingerprintedQName, NamePool, NamespaceBinding, NodeName, StandardNames}
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap, FingerprintedQName, NameOfNode, NamePool, NamespaceBinding, NamespaceMap, NodeName, StandardNames}
 import net.sf.saxon.s9api.{Axis, QName, XdmDestination, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.serialize.SerializationProperties
-import net.sf.saxon.tree.util.NamespaceIterator
+import net.sf.saxon.trans.XPathException
+import net.sf.saxon.{Configuration, Controller}
 
+import java.net.URI
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.{BufferHasAsJava, CollectionHasAsScala}
+
+/* N.B. There's a fundamental problem in here somewhere. In order to preserve base URIs correctly
+   when, for example, @xml:base attributes have been deleted. The tree walker has to reset the
+   systemIdentifier in the receiver several times. This must have something to do with getting
+   the right base URIs on the constructed nodes.
+
+   Conversely, in the case where, for example, the file is coming from a p:http-request, the URI
+   of the document entity received over the net is supposed to be the base URI of the document.
+   But this "resetting" that takes place undoes the value set on the document node. I'm not sure
+   how.
+
+   So there's a hacked compromise in here: if the "overrideBaseURI" is the empty string, we ignore
+   it. That seems to cover both cases.
+
+   But I am not very confident.
+ */
 
 class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   protected val config: Configuration = runtime.processor.getUnderlyingConfiguration
@@ -27,6 +43,7 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   protected var receiver: Receiver = _
   private var _inDocument = false
   protected var seenRoot = false
+  private val emptyAttributeMap = EmptyAttributeMap.getInstance()
 
   def this(runtime: XMLCalabashRuntime) = {
     this(runtime.config)
@@ -79,31 +96,30 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   }
 
   def addSubtree(node: XdmNode): Unit = {
-    node.getNodeKind match {
-      case XdmNodeKind.DOCUMENT =>
-        writeChildren(node)
-      case XdmNodeKind.ELEMENT =>
-        addStartElement(node)
-        val iter = node.axisIterator(Axis.ATTRIBUTE)
-        while (iter.hasNext) {
-          val child = iter.next()
-          addAttribute(child, child.getStringValue)
+    try {
+      receiver.append(node.getUnderlyingNode)
+    } catch {
+      case _: UnsupportedOperationException =>
+        // do it the hard way
+        node.getNodeKind match {
+          case XdmNodeKind.DOCUMENT =>
+            writeChildren(node)
+          case XdmNodeKind.ELEMENT =>
+            addStartElement(node)
+            writeChildren(node)
+            addEndElement()
+          case XdmNodeKind.COMMENT =>
+            addComment(node.getStringValue)
+          case XdmNodeKind.TEXT =>
+            addText(node.getStringValue)
+          case XdmNodeKind.PROCESSING_INSTRUCTION =>
+            addPI(node.getNodeName.getLocalName, node.getStringValue)
+          case _ =>
+            throw new ModelException(ExceptionCode.BADTREENODE, List(node.getNodeKind.toString, node.getNodeName.toString), node)
         }
-        try {
-          receiver.startContent()
-        } catch {
-          case t: Throwable => throw t
-        }
-        writeChildren(node)
-        addEndElement()
-      case XdmNodeKind.COMMENT =>
-        addComment(node.getStringValue)
-      case XdmNodeKind.TEXT =>
-        addText(node.getStringValue)
-      case XdmNodeKind.PROCESSING_INSTRUCTION =>
-        addPI(node.getNodeName.getLocalName, node.getStringValue)
-      case _ =>
-        throw new ModelException(ExceptionCode.BADTREENODE, List(node.getNodeKind.toString, node.getNodeName.toString), node)
+      case xpe: XPathException =>
+        // FIXME: wrap in xprocexception
+        throw new RuntimeException(xpe)
     }
   }
 
@@ -118,6 +134,10 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
     }
   }
 
+  def addStartElement(nodeName: QName): Unit = {
+    addStartElement(nodeName, EmptyAttributeMap.getInstance())
+  }
+
   def addStartElement(node: XdmNode): Unit = {
     addStartElement(node, node.getNodeName, node.getBaseURI)
   }
@@ -130,40 +150,33 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
     addStartElement(node, newName, node.getBaseURI)
   }
 
-  def addStartElement(newName: QName): Unit = {
-    val elemName = new FingerprintedQName(newName.getPrefix, newName.getNamespaceURI, newName.getLocalName)
-    val typeCode = BuiltInType.getSchemaType(StandardNames.XS_UNTYPED)
-    val inscopeNS = List.empty[NamespaceBinding]
-    addStartElement(elemName, typeCode, inscopeNS)
+  def addStartElement(node: XdmNode, newName: QName, overrideBaseURI: URI): Unit = {
+    val attrs = node.getUnderlyingNode.attributes()
+    addStartElement(node, newName, overrideBaseURI, attrs)
   }
 
-  def addStartElement(node: XdmNode, newName: QName, overrideBaseURI: URI): Unit = {
+  def addStartElement(node: XdmNode, attrs: AttributeMap): Unit = {
     val inode = node.getUnderlyingNode
-    val inscopeNS = ListBuffer.empty[NamespaceBinding]
-    if (seenRoot) {
-      for (ns <- inode.getDeclaredNamespaces(null)) {
-        inscopeNS += ns
+    addStartElement(NameOfNode.makeName(inode), attrs, inode.getSchemaType, inode.getAllNamespaces, node.getBaseURI)
+  }
+
+  def addStartElement(node: XdmNode, newName: QName, overrideBaseURI: URI, attrs: AttributeMap): Unit = {
+    val inode = node.getUnderlyingNode
+
+    var inscopeNS = if (seenRoot) {
+      val nslist = ListBuffer.empty[NamespaceBinding]
+      for (binding <- inode.getDeclaredNamespaces(null)) {
+        nslist += binding
       }
+      new NamespaceMap(nslist.asJava)
     } else {
-      val nsiter = NamespaceIterator.iterateNamespaces(inode)
-      while (nsiter.hasNext) {
-        inscopeNS += nsiter.next()
-      }
-      seenRoot = true
+      inode.getAllNamespaces
     }
 
     // If the newName has no prefix, then make sure we don't pass along some other
     // binding for the default namespace...
-    if (newName.getPrefix == "") {
-      var defns = Option.empty[NamespaceBinding]
-      for (ns <- inscopeNS) {
-        if (ns.getPrefix == "") {
-          defns = Some(ns)
-        }
-      }
-      if (defns.isDefined) {
-        inscopeNS -= defns.get
-      }
+    if (newName.getPrefix == "" && inscopeNS.getDefaultNamespace != "") {
+      inscopeNS = inscopeNS.remove("")
     }
 
     // Hack. See comment at top of file
@@ -172,65 +185,78 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
     }
 
     val newNameOfNode = new FingerprintedQName(newName.getPrefix, newName.getNamespaceURI, newName.getLocalName)
-    addStartElement(newNameOfNode, inode.getSchemaType, inscopeNS.toList)
+    addStartElement(newNameOfNode, attrs, inode.getSchemaType, inscopeNS)
   }
 
-  def addStartElement(elemName: NodeName, typeCode: SchemaType, nscodes: List[NamespaceBinding]): Unit = {
-    val loc = if (receiver.getSystemId == null) {
-      DefaultLocation.voidLocation
-    } else {
-      new DefaultLocation(receiver.getSystemId)
-    }
+  def addStartElement(newName: QName, attrs: AttributeMap): Unit = {
+    addStartElement(newName, attrs, NamespaceMap.emptyMap())
+  }
 
-    try {
-      receiver.startElement(elemName, typeCode, loc, 0)
-      for (ns <- nscodes) {
-        receiver.namespace(ns, 0)
+  def addStartElement(newName: QName, attrs: AttributeMap, nsmap: NamespaceMap): Unit = {
+    val elemName = new FingerprintedQName(newName.getPrefix, newName.getNamespaceURI, newName.getLocalName)
+    addStartElement(elemName, attrs, Untyped.INSTANCE, nsmap)
+  }
+
+  def addStartElement(elemName: NodeName, typeCode: SchemaType): Unit = {
+    addStartElement(elemName, emptyAttributeMap, typeCode, NamespaceMap.emptyMap())
+  }
+
+  def addStartElement(elemName: NodeName, typeCode: SchemaType, nsmap: NamespaceMap): Unit = {
+    addStartElement(elemName, emptyAttributeMap, typeCode, nsmap)
+  }
+
+  def addStartElement(elemName: NodeName, attrs: AttributeMap, typeCode: SchemaType, nsmap: NamespaceMap, overrideBaseURI: URI): Unit = {
+    // Hack. See comment at top of file
+    if (overrideBaseURI != null && overrideBaseURI.toASCIIString != "") {
+      receiver.setSystemId(overrideBaseURI.toASCIIString)
+    }
+    addStartElement(elemName, attrs, typeCode, nsmap)
+  }
+
+  def addStartElement(elemName: NodeName, attrs: AttributeMap, typeCode: SchemaType, nsmap: NamespaceMap): Unit = {
+    // Sort out the namespaces...
+    var newmap = updateMap(nsmap, elemName.getPrefix, elemName.getURI)
+    // FIXME: this should be iterable?
+    for (attr <- attrs.asList.asScala) {
+      if (attr.getNodeName.getURI != null && attr.getNodeName.getURI != "") {
+        newmap = updateMap(newmap, attr.getNodeName.getPrefix, attr.getNodeName.getURI)
       }
-    } catch {
-      case t: Throwable => throw t
+    }
+
+    val sysId = receiver.getSystemId
+    val loc = if (sysId == null) {
+      VoidLocation.instance()
+    } else {
+      new SysIdLocation(sysId)
+    }
+    try receiver.startElement(elemName, typeCode, attrs, nsmap, loc, 0)
+    catch {
+      case e: XPathException =>
+        // FIXME: some sort of XProcException
+        throw new RuntimeException(e)
     }
   }
 
-  def addNamespace(prefix: String, uri: String): Unit = {
-    val nsbind = new NamespaceBinding(prefix, uri)
-    receiver.namespace(nsbind, 0)
-  }
-
-  def addAttributes(element: XdmNode): Unit = {
-    val iter = element.axisIterator(Axis.ATTRIBUTE)
-    while (iter.hasNext) {
-      addAttribute(iter.next)
+  private def updateMap(nsmap: NamespaceMap, prefix: String, uri: String): NamespaceMap = {
+    if (uri == null || "" == uri) {
+      return nsmap
     }
-  }
 
-  def addAttribute(xdmattr: XdmNode): Unit = {
-    addAttribute(xdmattr, xdmattr.getStringValue)
-  }
+    if (prefix == null || "" == prefix) {
+      if (!(uri == nsmap.getDefaultNamespace)) {
+        return nsmap.put("", uri)
+      }
+    }
 
-  def addAttribute(xdmAttr: XdmNode, newValue: String): Unit = {
-    val inode = xdmAttr.getUnderlyingNode
-    val name = xdmAttr.getNodeName
-    val attrName = new FingerprintedQName(name.getPrefix, name.getNamespaceURI, name.getLocalName)
-    val typeCode = inode.getSchemaType.asInstanceOf[SimpleType]
-    val loc = new DefaultLocation(receiver.getSystemId)
-    receiver.attribute(attrName, typeCode, newValue, loc, 0)
-  }
+    val curNS = nsmap.getURI(prefix)
+    if (curNS == null) {
+      return nsmap.put(prefix, uri)
+    } else if (curNS == uri) {
+      return nsmap
+    }
 
-  def addAttribute(elemName: NodeName, typeCode: SimpleType, newValue: String): Unit = {
-    val loc = new DefaultLocation(receiver.getSystemId)
-    receiver.attribute(elemName, typeCode, newValue, loc, 0)
-  }
-
-  def addAttribute(attrName: QName, newValue: String): Unit = {
-    val loc = new DefaultLocation(receiver.getSystemId)
-    val elemName = new FingerprintedQName(attrName.getPrefix, attrName.getNamespaceURI, attrName.getLocalName)
-    val typeCode = BuiltInType.getSchemaType(StandardNames.XS_UNTYPED_ATOMIC).asInstanceOf[SimpleType]
-    receiver.attribute(elemName, typeCode, newValue, loc, 0)
-  }
-
-  def startContent(): Unit = {
-    receiver.startContent()
+    // FIXME: runtime exception should be some form of xproc exception?
+    throw new RuntimeException("Cannot add " + prefix + " to namespace map with URI " + uri)
   }
 
   def addEndElement(): Unit = {

@@ -56,7 +56,6 @@ class Count() extends DefaultXmlStep {
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(URIUtils.cwdAsURI)
     builder.addStartElement(XProcConstants.c_result)
-    builder.startContent()
     builder.addText(value.toString)
     builder.addEndElement()
     builder.endDocument()

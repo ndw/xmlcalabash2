@@ -1,12 +1,13 @@
 package com.xmlcalabash.steps
 
 import java.net.URI
-
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, XProcCollectionFinder}
+import net.sf.saxon.Configuration
+
 import javax.xml.transform.{ErrorListener, SourceLocator, TransformerException}
 import net.sf.saxon.event.{PipelineConfiguration, Receiver}
 import net.sf.saxon.expr.XPathContext
@@ -127,7 +128,7 @@ class Xslt extends DefaultXmlStep {
 
     val compiler = processor.newXsltCompiler()
     compiler.setSchemaAware(processor.isSchemaAware)
-    compiler.setErrorListener(new MyErrorListener(true))
+
     val exec = try {
       compiler.compile(stylesheet.get.asSource())
     } catch {
@@ -136,7 +137,7 @@ class Xslt extends DefaultXmlStep {
     }
     val transformer = exec.load30()
 
-    transformer.setStylesheetParameters(mapAsJavaMap(parameters))
+    transformer.setStylesheetParameters(asJava(parameters))
 
     val inputSelection = if (document.isDefined) {
       val iter = inputSequence.iterator.asJava
@@ -147,10 +148,10 @@ class Xslt extends DefaultXmlStep {
 
     transformer.setMessageListener(new CatchMessages())
 
-    //transformer.setResultDocumentHandler(new ResultDocumentHandler())
-    transformer.getUnderlyingController.setResultDocumentResolver(new MyResultDocumentResolver)
 
+    //transformer.setResultDocumentHandler(new ResultDocumentHandler())
     //transformer.setDestination(new MyDestination(outputProperties))
+    transformer.getUnderlyingController.setResultDocumentResolver(new MyResultDocumentResolver(processor.getUnderlyingConfiguration))
 
     if (initialMode.isDefined) {
       try {
@@ -387,7 +388,7 @@ class Xslt extends DefaultXmlStep {
     }
   }
 
-  class MyResultDocumentResolver extends ResultDocumentResolver {
+  class MyResultDocumentResolver(val sconfig: Configuration) extends ResultDocumentResolver() {
     override def resolve(context: XPathContext, href: String, baseUri: String, properties: SerializationProperties): Receiver = {
       val tree = Option(properties.getProperty(SaxonOutputKeys.BUILD_TREE))
       val uri = ResolveURI.makeAbsolute(href, baseUri)
@@ -406,7 +407,8 @@ class Xslt extends DefaultXmlStep {
       secondaryOutputProperties.put(uri, xprocProps.toMap)
       secondaryResults.put(uri, destination)
 
-      destination.getReceiver(context.getReceiver.getPipelineConfiguration, properties);
+      val pc = new PipelineConfiguration(sconfig)
+      destination.getReceiver(pc, properties);
     }
   }
 
@@ -415,7 +417,6 @@ class Xslt extends DefaultXmlStep {
       val treeWriter = new SaxonTreeBuilder(config)
       treeWriter.startDocument(content.getBaseURI)
       treeWriter.addStartElement(XProcConstants.c_error)
-      treeWriter.startContent()
       treeWriter.addSubtree(content)
       treeWriter.addEndElement()
       treeWriter.endDocument()

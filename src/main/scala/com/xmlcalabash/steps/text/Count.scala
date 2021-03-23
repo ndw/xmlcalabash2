@@ -12,7 +12,6 @@ class Count() extends TextLines {
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(None)
     builder.addStartElement(XProcConstants.c_result)
-    builder.startContent()
     builder.addText(lines.size.toString)
     builder.addEndElement()
     builder.endDocument()

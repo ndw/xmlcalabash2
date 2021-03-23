@@ -7,6 +7,9 @@ import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.parsers.SequenceBuilder
 import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime}
 import jdk.nashorn.api.scripting.ScriptObjectMirror
+import net.sf.saxon.`type`.BuiltInAtomicType
+import net.sf.saxon.event.ReceiverOption
+import net.sf.saxon.om.{AttributeInfo, FingerprintedQName}
 import net.sf.saxon.s9api._
 
 import scala.collection.mutable
@@ -112,6 +115,18 @@ object TypeUtils {
       case v: Boolean => vnd("boolean")
       case _ => throw XProcException.xiMediaType(value, None)
     }
+  }
+
+  def fqName(name: QName): FingerprintedQName = {
+    new FingerprintedQName(name.getPrefix, name.getNamespaceURI, name.getLocalName)
+  }
+
+  def attributeInfo(name: QName, value: String): AttributeInfo = {
+    TypeUtils.attributeInfo(name, value, null)
+  }
+
+  def attributeInfo(name: QName, value: String, location: Location): AttributeInfo = {
+    new AttributeInfo(TypeUtils.fqName(name), BuiltInAtomicType.UNTYPED_ATOMIC, value, location, ReceiverOption.NONE)
   }
 
   private def vnd(t: String): MediaType = {

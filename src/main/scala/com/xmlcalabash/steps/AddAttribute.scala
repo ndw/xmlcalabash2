@@ -3,7 +3,8 @@ package com.xmlcalabash.steps
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.S9Api
+import com.xmlcalabash.util.{S9Api, TypeUtils}
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap, NamespaceMap}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode}
 import net.sf.saxon.value.QNameValue
 
@@ -55,7 +56,7 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
     throw XProcException.xcInvalidSelection(pattern, "document", location)
   }
 
-  override def startElement(node: XdmNode): Boolean = {
+  override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
     // We're going to loop through the attributes several times, so let's grab them.
     // If the element has an attribute named attrName, skip it because we're going to replace it.
     val nsbindings = mutable.HashMap.empty[String, String]
@@ -75,8 +76,7 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
       }
     }
 
-    // Ok, add the element to the output
-    matcher.addStartElement(node)
+    var amap: AttributeMap = EmptyAttributeMap.getInstance()
 
     var instanceAttrName = attrName
     if (attrName.getNamespaceURI != null && attrName.getNamespaceURI != "") {
@@ -90,19 +90,20 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
       // If there isn't a prefix, invent one
       if (prefix == "") {
         val prefix = S9Api.uniquePrefix(nsbindings.keySet.toSet)
-        matcher.addNamespace(prefix, attrName.getNamespaceURI)
+        amap = amap.put(TypeUtils.attributeInfo(new QName("", prefix), attrName.getNamespaceURI))
         instanceAttrName = new QName(prefix, attrName.getNamespaceURI, attrName.getLocalName)
       }
     }
 
     // Add the "new" attribute in, with its instance-valid QName
-    matcher.addAttribute(instanceAttrName, attrValue)
+    amap = amap.put(TypeUtils.attributeInfo(instanceAttrName, attrValue))
 
     // Add the other attributes
     for (attr <- attrs.keySet) {
-      matcher.addAttribute(attr, attrs(attr))
+      amap = amap.put(TypeUtils.attributeInfo(attr, attrs(attr)))
     }
 
+    matcher.addStartElement(node, amap)
     true
   }
 
@@ -114,9 +115,7 @@ class AddAttribute() extends DefaultXmlStep with ProcessMatchingNodes {
     throw XProcException.xcInvalidSelection(pattern, "document", location)
   }
 
-  override def allAttributes(node: XdmNode, matching: List[XdmNode]): Boolean = true
-
-  override def attribute(node: XdmNode): Unit = {
+  override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
     throw XProcException.xcInvalidSelection(pattern, "attribute", location)
   }
 
