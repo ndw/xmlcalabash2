@@ -37,6 +37,7 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
     amap = oattr(amap, XProcConstants._visibility, visibility)
 
     var nsmap = NamespaceMap.emptyMap()
+    nsmap = nsmap.put("p", XProcConstants.ns_p)
     nsmap = nsmap.put("cx", XProcConstants.ns_cx)
 
     builder.addStartElement(XProcConstants.p_declare_step, amap, nsmap)
