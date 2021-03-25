@@ -134,6 +134,7 @@ object XProcException {
   def xdInvalidURI(uri: String, location: Option[Location]): XProcException = dynamicError(64, uri, location)
   def xdBadMapKey(key: String, location: Option[Location]): XProcException = dynamicError(70, key, location)
   def xdBadViewportResult(location: Option[Location]): XProcException = dynamicError(73, location)
+  def xdUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = dynamicError(79, ctype, location)
   def xdValueNotInList(value: String, location: Option[Location]): XProcException = dynamicError(101, value, location)
 
   def xsLoop(step: String, port: String, location: Option[Location]): XProcException = staticError(1, List(step, port), location)
@@ -259,7 +260,6 @@ object XProcException {
   def xcCannotAddNamespaces(name: QName, location: Option[Location]): XProcException = stepError(59, name, location)
   def xcUnsupportedUuidVersion(version: Integer, location: Option[Location]): XProcException = stepError(60, version.toString, location)
   def xcContentTypeNotAllowed(location: Option[Location]): XProcException = stepError(69, location)
-  def xcUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = stepError(70, ctype, location)
   def xcInvalidBase64(message: String, location: Option[Location]): XProcException = stepError(72, message, location)
   def xcContentTypeMissing(location: Option[Location]): XProcException = stepError(73, location)
   def xcDifferentContentTypes(castTo: String, cdata: String, location: Option[Location]): XProcException = stepError(74, List(castTo,cdata), location)

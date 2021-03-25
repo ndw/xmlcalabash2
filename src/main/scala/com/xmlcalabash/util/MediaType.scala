@@ -65,7 +65,7 @@ object MediaType {
     // [-]type/subtype; name1=val1; name2=val2
     var pos = mtype.indexOf("/")
     if (pos <= 0) {
-      throw XProcException.xcUnrecognizedContentType(mtype, None)
+      throw XProcException.xdUnrecognizedContentType(mtype, None)
     }
     var mediaType = mtype.substring(0, pos).trim
     var rest = mtype.substring(pos + 1)

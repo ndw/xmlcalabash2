@@ -121,6 +121,7 @@ publish := Def.taskDyn {
 
 resolvers += "Artima Maven Repository" at "https://repo.artima.com/releases"
 resolvers += "Restlet" at "https://maven.restlet.com"
+resolvers += "Saxonica" at "https://dev.saxonica.com/maven"
 
 libraryDependencies ++= Seq(
   //"org.apache.logging.log4j" % "log4j-api" % "2.12.1",
@@ -155,10 +156,10 @@ libraryDependencies ++= Seq(
 lazy val logback = "ch.qos.logback" % "logback-classic" % "1.0.13"
 
 libraryDependencies ++= (
-  if (!useSaxonEE) {
-    Seq("net.sf.saxon" % "Saxon-HE" % saxonVersion)
+  if (useSaxonEE) {
+    Seq("com.saxonica" % "Saxon-EE" % saxonVersion)
   } else {
-    List()
+    Seq("net.sf.saxon" % "Saxon-HE" % saxonVersion)
   }
 )
 

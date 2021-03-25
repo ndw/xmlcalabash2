@@ -1,25 +1,24 @@
 package com.xmlcalabash.config
 
-import java.net.URI
-
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode}
-import com.xmlcalabash.functions.{CwdShim, DocumentPropertiesShim, DocumentPropertyShim, ForceQNameKeysShim, InjElapsedShim, InjIdShim, InjNameShim, InjTypeShim, IterationPositionShim, IterationSizeShim, StepAvailableShim, SystemPropertyShim}
+import com.xmlcalabash.functions.{Cwd, DocumentProperties, DocumentProperty, ForceQNameKeys, InjElapsed, InjId, InjName, InjType, IterationPosition, IterationSize, StepAvailable, SystemProperty}
 import com.xmlcalabash.model.util.ExpressionParser
-import com.xmlcalabash.model.xml.{Container, DeclContainer, Library}
+import com.xmlcalabash.model.xml.{DeclContainer, Library}
 import com.xmlcalabash.parsers.XPathParser
-import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, XMLCalabashRuntime}
+import com.xmlcalabash.runtime.SaxonExpressionEvaluator
 import com.xmlcalabash.sbt.BuildInfo
 import com.xmlcalabash.util.URIUtils
-import javax.xml.transform.URIResolver
-import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.{Processor, QName, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.helpers.XMLReaderFactory
 import org.xml.sax.{EntityResolver, InputSource}
 
+import java.net.URI
+import javax.xml.transform.URIResolver
+import javax.xml.transform.sax.SAXSource
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -386,18 +385,18 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
       processor.registerExtensionFunction(f.asInstanceOf[ExtensionFunctionDefinition])
     }
     */
-    processor.registerExtensionFunction(new CwdShim(this))
-    processor.registerExtensionFunction(new DocumentPropertiesShim(this))
-    processor.registerExtensionFunction(new DocumentPropertyShim(this))
-    processor.registerExtensionFunction(new ForceQNameKeysShim(this))
-    processor.registerExtensionFunction(new InjElapsedShim(this))
-    processor.registerExtensionFunction(new InjIdShim(this))
-    processor.registerExtensionFunction(new InjNameShim(this))
-    processor.registerExtensionFunction(new InjTypeShim(this))
-    processor.registerExtensionFunction(new SystemPropertyShim(this))
-    processor.registerExtensionFunction(new StepAvailableShim(this))
-    processor.registerExtensionFunction(new IterationPositionShim(this))
-    processor.registerExtensionFunction(new IterationSizeShim(this))
+    processor.registerExtensionFunction(new Cwd(this))
+    processor.registerExtensionFunction(new DocumentProperties(this))
+    processor.registerExtensionFunction(new DocumentProperty(this))
+    processor.registerExtensionFunction(new ForceQNameKeys(this))
+    processor.registerExtensionFunction(new InjElapsed(this))
+    processor.registerExtensionFunction(new InjId(this))
+    processor.registerExtensionFunction(new InjName(this))
+    processor.registerExtensionFunction(new InjType(this))
+    processor.registerExtensionFunction(new SystemProperty(this))
+    processor.registerExtensionFunction(new StepAvailable(this))
+    processor.registerExtensionFunction(new IterationPosition(this))
+    processor.registerExtensionFunction(new IterationSize(this))
   }
   private def checkClosed(): Unit = {
     if (closed) {
