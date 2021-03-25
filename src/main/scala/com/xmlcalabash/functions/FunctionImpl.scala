@@ -2,10 +2,11 @@ package com.xmlcalabash.functions
 
 import com.jafpl.messages.Message
 import com.xmlcalabash.runtime.SaxonExpressionEvaluator
+import net.sf.saxon.lib.ExtensionFunctionDefinition
 import net.sf.saxon.om.{Item, NodeInfo}
 import org.slf4j.{Logger, LoggerFactory}
 
-class FunctionImpl {
+abstract class FunctionImpl extends ExtensionFunctionDefinition {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   protected def getMessage(item: Item, exprEval: SaxonExpressionEvaluator): Option[Message] = {
