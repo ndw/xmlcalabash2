@@ -2,9 +2,10 @@ package com.xmlcalabash.util
 
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.TestException
+import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.om.StructuredQName
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmDestination, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmDestination, XdmNode, XdmValue}
 import org.xml.sax.InputSource
 
 import java.net.URI
@@ -12,6 +13,7 @@ import javax.xml.transform.sax.SAXSource
 import javax.xml.transform.{Source, URIResolver}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 class SchematronImpl(runtimeConfig: XMLCalabashConfig) {
   private val s_schema = new QName("http://purl.oclc.org/dsdl/schematron", "schema")
@@ -44,18 +46,17 @@ class SchematronImpl(runtimeConfig: XMLCalabashConfig) {
     if (schemaRoot.isDefined) {
       if (schemaRoot.get.getNodeName == s_schema && Option(schemaRoot.get.getAttributeValue(_queryBinding)).isEmpty) {
         // The schema doesn't specify a query binding. That'll cause SchXslt to fail. Patch it.
-        val compiler = runtimeConfig.processor.newXsltCompiler()
-        val uResolver = new UResolver(compiler.getURIResolver)
-        val result: XdmDestination = new XdmDestination()
-
-        compiler.setURIResolver(uResolver)
-        val xsl = uResolver.resolve("/patchsch.xsl", fakeBaseURI)
-        val exec = compiler.compile(xsl)
-        val patch = exec.load()
-        patch.setInitialContextNode(schema)
-        patch.setDestination(result)
-        patch.transform()
-        schema = result.getXdmNode
+        val patch = new SaxonTreeBuilder(runtimeConfig)
+        patch.startDocument(schemaRoot.get.getBaseURI)
+        var amap = schemaRoot.get.getUnderlyingNode.attributes()
+        amap = amap.put(TypeUtils.attributeInfo(_queryBinding, "xslt3"))
+        patch.addStartElement(s_schema, amap, schemaRoot.get.getUnderlyingNode.getAllNamespaces)
+        for (child <- schemaRoot.get.axisIterator(Axis.CHILD).asScala) {
+          patch.addSubtree(child)
+        }
+        patch.addEndElement()
+        patch.endDocument()
+        schema = patch.result
       }
     }
 
