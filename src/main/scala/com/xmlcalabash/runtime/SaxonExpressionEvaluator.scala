@@ -1,7 +1,5 @@
 package com.xmlcalabash.runtime
 
-import java.net.URI
-import java.util
 import com.jafpl.graph.BindingParams
 import com.jafpl.messages.{ExceptionMessage, Message, PipelineMessage}
 import com.jafpl.runtime.ExpressionEvaluator
@@ -9,19 +7,21 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.model.xml.XMLContext
 import com.xmlcalabash.runtime.params.XPathBindingParams
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.lib.{CollectionFinder, Resource, ResourceCollection}
+import net.sf.saxon.ma.arrays.ArrayItem
 import net.sf.saxon.om.{Item, SpaceStrippingRule}
-import net.sf.saxon.s9api.{ItemTypeFactory, QName, SaxonApiException, SaxonApiUncheckedException, SequenceType, XPathExecutable, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{ItemTypeFactory, QName, SaxonApiException, SaxonApiUncheckedException, SequenceType, XPathExecutable, XdmArray, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.trans.XPathException
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.net.URI
+import java.util
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.jdk.CollectionConverters.IteratorHasAsJava
+import scala.jdk.CollectionConverters.{CollectionHasAsScala, IterableHasAsScala, IteratorHasAsJava}
 import scala.util.DynamicVariable
 
 object SaxonExpressionEvaluator {
@@ -255,22 +255,15 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
 
         if (avtexpr.stringResult) {
           val viter = xdmval.iterator()
-          var s = ""
-          var pos = 0
+          val sbuf = new StringBuffer()
           while (viter.hasNext) {
-            // Why did I think there needed to be spaces here?
-            /*
-            if (pos > 0) {
-              s += " "
-            }
-             */
-            s += viter.next().getStringValue
-            pos += 1
+            val v = viter.next()
+            sbuf.append(avtStringOf(v.getUnderlyingValue))
           }
 
           val typeFactory = new ItemTypeFactory(xmlCalabash.processor)
           val untypedAtomicType = typeFactory.getAtomicType(XProcConstants.xs_untypedAtomic)
-          xdmval = new XdmAtomicValue(s, untypedAtomicType)
+          xdmval = new XdmAtomicValue(sbuf.toString, untypedAtomicType)
         }
 
         xdmval
@@ -285,6 +278,23 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         result
       case _ =>
         throw XProcException.xiUnexpectedExprType(xpath.context.location, xpath)
+    }
+  }
+
+  private def avtStringOf(item: Item): String = {
+    item match {
+      case arr: ArrayItem =>
+        val buf = new StringBuffer()
+        for (pos <- 0 until arr.arrayLength()) {
+          if (pos > 0) {
+            buf.append(" ")
+          }
+          for (v <- arr.get(pos).asIterable().asScala) {
+            buf.append(avtStringOf(v))
+          }
+        }
+        buf.toString
+      case _ => item.getStringValue
     }
   }
 

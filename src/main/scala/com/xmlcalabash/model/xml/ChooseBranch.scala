@@ -40,6 +40,29 @@ class ChooseBranch(override val config: XMLCalabashConfig) extends Container(con
     makeContainerStructureExplicit()
   }
 
+  override protected def syntheticDeclaredOutput(): DeclareOutput = {
+    var portName = "#result"
+
+    if (synthetic) { // This must be an otherwise
+      // If we've created a synthetic otherwise that has a primary output
+      // port, make sure the port name we give it is consistent with the
+      // primary output port of the when's, if they have one.
+      val choose = parent.get
+      val when = choose.children[When].head
+      for (child <- when.children[DeclareOutput]) {
+        if (child.primary) {
+          portName = child.port
+        }
+      }
+    }
+
+    val output = new DeclareOutput(config)
+    output.port = portName
+    output.primary = true
+    output.sequence = true
+    output
+  }
+
   override protected[model] def makeBindingsExplicit(): Unit = {
     super.makeBindingsExplicit()
 

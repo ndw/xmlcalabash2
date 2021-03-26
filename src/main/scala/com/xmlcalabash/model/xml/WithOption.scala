@@ -32,7 +32,7 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
       if (bindings.isEmpty && parent.get.isInstanceOf[AtomicStep]) {
         val depends = staticContext.dependsOnContextAvt(avt)
         if (!depends) {
-          val expr = new XProcVtExpression(staticContext, _avt.get)
+          val expr = new XProcVtExpression(staticContext, _avt.get, true)
           var msg = config.expressionEvaluator.value(expr, List(), inScopeStatics, None)
           // Ok, now we have a string value
           val avalue = msg.item.getUnderlyingValue.getStringValue

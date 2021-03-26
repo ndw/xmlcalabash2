@@ -72,10 +72,7 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
     }
 
     if (_outputs.isEmpty && lastStep.isDefined && lastStep.get.primaryOutput.isDefined) {
-      val output = new DeclareOutput(config)
-      output.port = "#result"
-      output.primary = true
-      output.sequence = true
+      val output = syntheticDeclaredOutput()
 
       val pipe = new Pipe(config)
       pipe.step = lastStep.get.stepName
@@ -93,6 +90,14 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
     if (_outputs.size == 1 && lastOutput.get._primary.isEmpty) {
       lastOutput.get.primary = true
     }
+  }
+
+  protected def syntheticDeclaredOutput(): DeclareOutput = {
+    val output = new DeclareOutput(config)
+    output.port = "#result"
+    output.primary = true
+    output.sequence = true
+    output
   }
 
   override protected[model] def makeBindingsExplicit(): Unit = {

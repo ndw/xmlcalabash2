@@ -99,30 +99,37 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
       val other = new Otherwise(config)
       other.test = "true()"
 
+      /*
       val winput = new WithInput(config)
       winput.port = "source"
       other.addChild(winput)
+      */
 
       val identity = new AtomicStep(config)
       identity.stepType = XProcConstants.p_identity
       val idin = new WithInput(config)
-      val idout = new WithOutput(config)
+      idin.port = "source"
       identity.addChild(idin)
+      /*
+      val idout = new WithOutput(config)
+      idout.port = "result"
       identity.addChild(idout)
-
+*/
+      /*
       if (primaryOutput.isDefined) {
         val output = new DeclareOutput(config)
         output.port = primaryOutput.get
         output.primary = true
         other.addChild(output)
 
+
         val pipe = new Pipe(config)
         pipe.step = identity.stepName
         pipe.port = "result"
-        pipe.link = identity.children[WithOutput].head
+        //pipe.link = identity.children[WithOutput].head
         output.addChild(pipe)
       }
-
+*/
       other.addChild(identity)
 
       // If there isn't a primary output, make sure we sink the output of
