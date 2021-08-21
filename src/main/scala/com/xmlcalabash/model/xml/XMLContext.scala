@@ -104,7 +104,7 @@ class XMLContext(override val config: XMLCalabashConfig, override val artifact: 
         case ex: XProcException =>
           if (ex.code == XProcException.xc0070) {
             // Map to the static error...
-            throw XProcException.xsUnrecognizedContentType(ex.details.head.toString, ex.location)
+            throw XProcException.xsUnrecognizedContentTypeShortcut(ex.details.head.toString, ex.location)
           } else {
             throw ex
           }

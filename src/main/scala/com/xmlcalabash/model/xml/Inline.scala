@@ -66,7 +66,7 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
 
     // Is this sufficient? We don't want to attempt to parse AVTs in JSON!
     if (expand_text && (ctype.markupContentType || ctype.textContentType)) {
-      findVariablesInTVT(_node, false)
+      findVariablesInTVT(_node, expand_text)
       for (ref <- nameBindings) {
         val binding = env.variable(ref)
         if (binding.isEmpty) {
@@ -125,7 +125,7 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
         var iter = node.axisIterator(Axis.ATTRIBUTE)
         while (iter.hasNext) {
           var discardAttribute = false
-          val attr = iter.next()
+          val attr = iter.next().asInstanceOf[XdmNode]
           if (attr.getNodeName == XProcConstants.p_inline_expand_text) {
             if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
               throw XProcException.xsInlineExpandTextNotAllowed(location)

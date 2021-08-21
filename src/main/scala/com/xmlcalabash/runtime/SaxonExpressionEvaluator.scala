@@ -226,44 +226,53 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
 
     xpath match {
       case avtexpr: XProcVtExpression =>
-        var xdmval: XdmValue = null
+        val xdmresults = ListBuffer.empty[XdmValue]
         var evalAvt = false
         for (part <- avtexpr.avt) {
           if (evalAvt) {
-            val epart = computeValue(part, None, context, avtexpr.context, patchBindings.toMap, proxies, avtexpr.extensionFunctionsAllowed, options, false)
-            if (xdmval == null) {
-              xdmval = epart
-            } else {
-              xdmval = xdmval.append(epart)
-            }
+            xdmresults += computeValue(part, None, context, avtexpr.context, patchBindings.toMap, proxies, avtexpr.extensionFunctionsAllowed, options, false)
           } else {
             if (part != "") {
-              if (xdmval == null) {
-                xdmval = new XdmAtomicValue(part)
-              } else {
-                xdmval = xdmval.append(new XdmAtomicValue(part))
-              }
+              xdmresults += new XdmAtomicValue(part)
             }
           }
           evalAvt = !evalAvt
         }
 
         // Special case for AVT=""
-        if (xdmval == null) {
-          xdmval = new XdmAtomicValue("")
+        if (xdmresults.isEmpty) {
+          xdmresults += new XdmAtomicValue("")
         }
 
+        var xdmval: XdmValue = null;
         if (avtexpr.stringResult) {
-          val viter = xdmval.iterator()
+          // Make sure we get spaces in the right places
           val sbuf = new StringBuffer()
-          while (viter.hasNext) {
-            val v = viter.next()
-            sbuf.append(avtStringOf(v.getUnderlyingValue))
+          for (part <- xdmresults) {
+            val viter = part.iterator()
+            var first = true
+            while (viter.hasNext) {
+              val v = viter.next()
+              if (!first) {
+                // Needed to pass ab-avt-009 but I'm not sure what the rule is...
+                sbuf.append(" ");
+              }
+              first = false
+              sbuf.append(avtStringOf(v.getUnderlyingValue))
+            }
           }
 
           val typeFactory = new ItemTypeFactory(xmlCalabash.processor)
           val untypedAtomicType = typeFactory.getAtomicType(XProcConstants.xs_untypedAtomic)
           xdmval = new XdmAtomicValue(sbuf.toString, untypedAtomicType)
+        } else {
+          for (part <- xdmresults) {
+            if (xdmval == null) {
+              xdmval = part;
+            } else {
+              xdmval.append(part);
+            }
+          }
         }
 
         xdmval

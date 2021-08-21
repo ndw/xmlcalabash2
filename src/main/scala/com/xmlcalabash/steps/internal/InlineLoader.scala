@@ -94,7 +94,7 @@ class InlineLoader() extends AbstractLoader {
     }
 
     if (encoding.isDefined) {
-      if (contentType.xmlContentType) {
+      if (contentType.xmlContentType || contentType.htmlContentType) {
         throw XProcException.xdCannotEncodeXml(encoding.get, contentType, exprContext.location)
       }
       if (encoding.get != "base64") {

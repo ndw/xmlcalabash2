@@ -47,11 +47,11 @@ object Main extends App {
     }
 
     for (port <- runtime.outputs) {
-      val serOpt = runtime.serializationOptions(port)
+      val output = runtime.decl.output(port)
       val pc = if (options.outputs.contains(port)) {
-        new PrintingConsumer(runtime, serOpt, options.outputs(port))
+        new PrintingConsumer(runtime, output, options.outputs(port))
       } else {
-        new PrintingConsumer(runtime, serOpt)
+        new PrintingConsumer(runtime, output)
       }
       runtime.output(port, pc)
     }

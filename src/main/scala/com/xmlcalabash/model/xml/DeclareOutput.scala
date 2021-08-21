@@ -14,7 +14,7 @@ import scala.jdk.CollectionConverters.MapHasAsScala
 
 class DeclareOutput(override val config: XMLCalabashConfig) extends Port(config) {
   private var mapexpr = Option.empty[String]
-  private var _serialization = mutable.Map.empty[QName,String]
+  private val _serialization = mutable.Map.empty[QName,String]
 
   def serialization: Map[QName,String] = _serialization.toMap
 

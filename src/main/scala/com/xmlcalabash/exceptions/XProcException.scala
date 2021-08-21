@@ -217,7 +217,7 @@ object XProcException {
   def xsStaticRefsNonStaticStr(name: String, location: Option[Location]): XProcException = staticError((107,4), name, location)
 
   def xsPrimaryOutputRequired(location: Option[Location]): XProcException = staticError(108, location)
-  def xsUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = staticError(111, ctype, location)
+  def xsUnrecognizedContentTypeShortcut(ctype: String, location: Option[Location]): XProcException = staticError(111, ctype, location)
 
   def xcGeneralException(code: QName, errors: Option[XdmNode], location: Option[Location]): XProcException = {
     val except = new XProcException(code, 1, None, location, List())
