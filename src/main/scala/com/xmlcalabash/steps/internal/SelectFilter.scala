@@ -105,7 +105,6 @@ class SelectFilter() extends XmlStep {
 
     for (node <- nodes) {
       val metadata = nodeMeta(node)
-      val exprEval = config.expressionEvaluator.newInstance()
       val expr = new XProcXPathExpression(selectContext, select, None, None, None)
       val msg = node match {
         case value: XdmNode => new XdmNodeItemMessage(value, metadata, selectContext)
@@ -117,6 +116,7 @@ class SelectFilter() extends XmlStep {
           new AnyItemMessage(tree.result, value, metadata, selectContext)
         case _ => throw new RuntimeException("fred")
       }
+      val exprEval = config.expressionEvaluator.newInstance()
       val result = exprEval.value(expr, List(msg), bindings.toMap, None)
       val xdmvalue = result.item
       val iter = xdmvalue.iterator()

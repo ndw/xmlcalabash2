@@ -96,7 +96,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
               }
 
               val expr = new XProcXPathExpression(scontext, value)
-              val msg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), paramBind.toMap, None)
+              val msg = xmlCalabash.expressionEvaluator.newInstance().singletonValue(expr, List(), paramBind.toMap, None)
               val eval = msg.asInstanceOf[XdmValueItemMessage].item
 
               _params.put(qname, new XProcVarValue(eval, scontext))

@@ -103,10 +103,10 @@ class TvtExpander(config: XMLCalabashConfig,
   }
 
   private def expandString(text: String): String = {
-    val evaluator = config.expressionEvaluator
     val expr = new XProcVtExpression(exprContext, text)
     var s = ""
     var string = ""
+    val evaluator = config.expressionEvaluator.newInstance()
     val iter = evaluator.value(expr, contextItem.toList, msgBindings, None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
@@ -117,9 +117,9 @@ class TvtExpander(config: XMLCalabashConfig,
   }
 
   private def expandNodes(text: String, builder: SaxonTreeBuilder): Unit = {
-    val evaluator = config.expressionEvaluator
     val expr = new XProcVtExpression(exprContext, text)
 
+    val evaluator = config.expressionEvaluator.newInstance()
     val iter = evaluator.value(expr, contextItem.toList, msgBindings, None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()

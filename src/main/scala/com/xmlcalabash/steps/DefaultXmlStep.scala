@@ -12,8 +12,11 @@ import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime._
 import com.xmlcalabash.util.{MediaType, S9Api}
+import net.sf.saxon.`type`.{BuiltInAtomicType, BuiltInType, TypeHierarchy}
+import net.sf.saxon.expr.AtomicSequenceConverter
+import net.sf.saxon.expr.parser.RoleDiagnostic
 import net.sf.saxon.lib.NamespaceConstant
-import net.sf.saxon.om.NamespaceMap
+import net.sf.saxon.om.{NamespaceMap, Sequence}
 import net.sf.saxon.s9api._
 import net.sf.saxon.value.QNameValue
 import org.slf4j.{Logger, LoggerFactory}
@@ -174,7 +177,12 @@ class DefaultXmlStep extends XmlStep {
 
   def stringBinding(name: QName, default: String): String = {
     if (definedBinding(name)) {
-      bindings(name).getUnderlyingValue.getStringValue
+      val boundvalue = bindings(name).getUnderlyingValue
+      val hierarchy = new TypeHierarchy(config.processor.getUnderlyingConfiguration)
+      // I have no idea what diagnostic means
+      val diagnostic = new RoleDiagnostic(RoleDiagnostic.VARIABLE, name.getClarkName, RoleDiagnostic.VARIABLE)
+      val converted = hierarchy.applyFunctionConversionRules(boundvalue, net.sf.saxon.value.SequenceType.SINGLE_STRING, diagnostic, null)
+      converted.head.getStringValue
     } else {
       default
     }
@@ -373,7 +381,7 @@ class DefaultXmlStep extends XmlStep {
     val bindingsMap = mutable.HashMap.empty[String, Message]
     val vmsg = new XdmValueItemMessage(source.asInstanceOf[XdmValue], XProcMetadata.TEXT, context)
     bindingsMap.put("{}map", vmsg)
-    val smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+    val smsg = config.expressionEvaluator.newInstance().singletonValue(expr, List(), bindingsMap.toMap, None)
     output.write(smsg.item.toString.getBytes())
   }
 

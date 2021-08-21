@@ -8,6 +8,9 @@ import net.sf.saxon.s9api.XdmNode
 
 class Otherwise(override val config: XMLCalabashConfig) extends ChooseBranch(config) {
 
+  // An otherwise is not atomic, even if it contains only synthetic children
+  override def atomic: Boolean = false
+
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
 

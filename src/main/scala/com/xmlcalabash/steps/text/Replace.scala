@@ -31,7 +31,6 @@ class Replace() extends DefaultXmlStep {
     val replacement = stringBinding(_replacement).replace("'", "''")
     val flags = optionalStringBinding(_flags)
 
-    val evaluator = config.expressionEvaluator
     val replexpr = if (flags.isDefined) {
       s"replace(., '$pattern', '$replacement', '${flags.get}')"
     } else {
@@ -40,6 +39,7 @@ class Replace() extends DefaultXmlStep {
     val expr = new XProcXPathExpression(context, replexpr)
     val contextItem = new XdmNodeItemMessage(text, meta, context)
 
+    val evaluator = config.expressionEvaluator.newInstance()
     val repl = evaluator.singletonValue(expr, List(contextItem), Map.empty[String,Message], None)
 
     consumer.get.receive("result", repl.item, meta)

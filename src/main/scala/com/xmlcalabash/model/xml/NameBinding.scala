@@ -270,9 +270,9 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
         }
       }
 
-
       val expr = new XProcXPathExpression(staticContext, select.get)
-      val msg = config.expressionEvaluator.value(expr, context.toList, inScopeStatics, None)
+      val exeval = config.expressionEvaluator.newInstance()
+      val msg = exeval.value(expr, context.toList, inScopeStatics, None)
       staticValue = msg
       resolvedStatically = true
     }
@@ -293,10 +293,13 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
           if (binding.isEmpty) {
             throw new RuntimeException("Reference to undefined variable")
           }
+          /* don't do this here, we do it in makeBindingsExplicit
           if (!binding.get.static) {
             val pipe = new NamePipe(config, ref, binding.get.tumble_id, binding.get)
             addChild(pipe)
           }
+
+           */
         }
       }
     }

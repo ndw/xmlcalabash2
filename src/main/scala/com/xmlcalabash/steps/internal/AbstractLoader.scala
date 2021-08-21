@@ -81,8 +81,8 @@ abstract class AbstractLoader() extends DefaultXmlStep {
   }
 
   protected def xpathValue(expr: XProcExpression): XdmValue = {
-    val eval = config.expressionEvaluator
     val dynContext = new DynamicContext()
+    val eval = config.expressionEvaluator.newInstance()
     val msg = eval.withContext(dynContext) { eval.singletonValue(expr, contextItem.toList, msgBindings.toMap, None) }
     msg.asInstanceOf[XdmValueItemMessage].item
   }

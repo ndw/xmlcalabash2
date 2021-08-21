@@ -133,21 +133,27 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
   }
 
   override def reset(): Unit = {
-    runtime.reset()
+    if (runtime != null) {
+      runtime.reset()
+    }
     inputs.clear()
     bindings.clear()
   }
 
   override def abort(): Unit = {
     try {
-      runtime.stop()
+      if (runtime != null) {
+        runtime.stop()
+      }
     } catch {
       case _: Exception => ()
     }
   }
 
   override def stop(): Unit = {
-    runtime.stop()
+    if (runtime != null) {
+      runtime.stop()
+    }
   }
 
   class ConsumerMap(val result_port: String, val consumer: XProcDataConsumer) extends DataConsumer {

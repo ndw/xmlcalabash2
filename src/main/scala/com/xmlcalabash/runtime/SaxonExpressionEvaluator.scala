@@ -271,9 +271,29 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         val collection = if (xpathexpr.params.isDefined) {
           xpathexpr.params.get.collection
         } else {
-          List()
+          List("false")
         }
-        val coll_value = collection.nonEmpty && collection.head == "true"
+
+        // The use of collections in some expressions is handled by the XPathBindingParams.
+        // If collection is specified and is a single string, then it must be "true"
+        // If collection is a list of strings, then it must be an AVT and we compute its
+        // value.
+        val coll_value = if (collection.isEmpty) {
+          false
+        } else if (collection.size == 1) {
+          collection.head == "true" // special case for a non-AVT
+        } else {
+          val cavt = new XProcVtExpression(xpathexpr.context, collection)
+          val avtbindings = mutable.HashMap.empty[String, Message]
+          for ((str, value) <- xpath.context.statics) {
+            avtbindings.put(str, value)
+          }
+          for ((str, value) <- bindings) {
+            avtbindings.put(str, value)
+          }
+          booleanValue(cavt, context, avtbindings.toMap, None)
+        }
+
         val result = computeValue(xpathexpr.expr, xpathexpr.as, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed, options, coll_value)
         result
       case _ =>

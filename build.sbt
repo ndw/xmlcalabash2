@@ -1,7 +1,7 @@
 import java.io.{BufferedReader, InputStreamReader}
 
 lazy val xmlCalabashVersion = "1.99.15"
-lazy val jafplVersion = "0.3.5"
+lazy val jafplVersion = "0.3.12"
 lazy val saxonVersion = "10.3"
 lazy val useSaxonEE = true
 
@@ -10,6 +10,9 @@ organization := "com.xmlcalabash"
 homepage     := Some(url("https://xmlcalabash.com/"))
 version      := xmlCalabashVersion
 scalaVersion := "2.13.5"
+
+Global / excludeLintKeys += homepage
+Global / excludeLintKeys += organization
 
 buildInfoUsePackageAsPath := true
 buildInfoKeys ++= Seq[BuildInfoKey](
@@ -163,6 +166,10 @@ libraryDependencies ++= (
   }
 )
 
+// This is being pulled in by something, and this doesn't push
+// it back out again. :-/
+excludeDependencies ++= (Seq("net.sf.saxon" % "Saxon-HE" % "9.6.0-4"))
+
 //excludeDependencies ++= (
 //  if (useSaxonEE) {
 //    Seq("net.sf.saxon" % "Saxon-HE" % saxonVersion)
@@ -175,11 +182,11 @@ libraryDependencies ++= (
 // This section is an attempt to get sbt assembly to work.
 // It's a bit of trial and error more than informed choice.
 
-assemblyJarName in assembly := Array("xml-calabash",
+assembly / assemblyJarName := Array("xml-calabash",
   xmlCalabashVersion,
   saxonVersion.split("\\.").take(2).mkString("")).mkString("-") + ".jar"
 
-test in assembly := {}
+assembly / test := {}
 
 libraryDependencies +=
   "org.relaxng" % "jing" % "20181222" excludeAll(
@@ -193,18 +200,20 @@ libraryDependencies +=
     ExclusionRule(organization = "commons-logging")
   )
 
-dependencyOverrides += "net.sf.saxon" % "Saxon-HE" % saxonVersion
+//dependencyOverrides += "net.sf.saxon" % "Saxon-HE" % saxonVersion
 dependencyOverrides += "xml-apis" % "xml-apis" % "1.3.04"
 
+/* ???
 mappings in (Compile, packageBin) := {
   (mappings in (Compile, packageBin)).value.filter {
     case (file, toPath) => toPath != "com/xmlcalabash/drivers/Test.class"
   }
 }
+*/
 
 // ============================================================
 
-unmanagedJars in Compile ++= (
+Compile / unmanagedJars ++= (
   if (useSaxonEE) {
     Seq(file(s"${baseDirectory.value}/eelib/$saxonVersion/saxon9ee.jar"))
   } else {
@@ -212,7 +221,7 @@ unmanagedJars in Compile ++= (
   }
 )
 
-unmanagedJars in Runtime ++= (
+Runtime / unmanagedJars ++= (
   if (useSaxonEE) {
     Seq(file(s"${baseDirectory.value}/eelib/$saxonVersion/saxon9ee.jar"))
   } else {
@@ -220,7 +229,7 @@ unmanagedJars in Runtime ++= (
   }
 )
 
-unmanagedClasspath in Runtime ++= (
+Runtime / unmanagedClasspath ++= (
   if (useSaxonEE) {
     Seq(file(s"${baseDirectory.value}/eelib"))
   } else {

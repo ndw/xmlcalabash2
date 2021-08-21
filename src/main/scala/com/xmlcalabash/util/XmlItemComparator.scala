@@ -49,7 +49,8 @@ class XmlItemComparator(config: XMLCalabashConfig, comparator: String, maxIterat
     var same = false
     val dynamicContext = new DynamicContext(Some(art))
     DynamicContext.withContext(dynamicContext) {
-      same = config.expressionEvaluator.booleanValue(expr, List(amsg), bindingsMap.toMap, None)
+      val exeval = config.expressionEvaluator.newInstance()
+      same = exeval.booleanValue(expr, List(amsg), bindingsMap.toMap, None)
     }
 
     same

@@ -367,7 +367,7 @@ class Artifact(val config: XMLCalabashConfig) {
     val exprContext = staticContext.withStatics(inScopeStatics)
     val expr = new XProcXPathExpression(staticContext, xpathExpression)
     try {
-      config.expressionEvaluator.value(expr, List(), exprContext.statics, None)
+      config.expressionEvaluator.newInstance().value(expr, List(), exprContext.statics, None)
     } catch {
       case sae: SaxonApiException =>
         throw XProcException.xsStaticErrorInExpression(xpathExpression, sae.getMessage, exprContext.location)

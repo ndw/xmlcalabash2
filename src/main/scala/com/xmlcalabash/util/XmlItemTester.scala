@@ -22,7 +22,8 @@ class XmlItemTester(config: XMLCalabashConfig, comparator: String, maxIterations
     var pass = false
     val dynamicContext = new DynamicContext(Some(art))
     DynamicContext.withContext(dynamicContext) {
-      pass = config.expressionEvaluator.booleanValue(expr, item, bindings, None)
+      val exeval = config.expressionEvaluator.newInstance()
+      pass = exeval.booleanValue(expr, item, bindings, None)
     }
 
     pass

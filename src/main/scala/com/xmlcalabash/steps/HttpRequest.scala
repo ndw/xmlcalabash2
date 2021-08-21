@@ -414,7 +414,8 @@ class HttpRequest() extends DefaultXmlStep {
     if (assert != "") {
       val msg = new XdmValueItemMessage(report, XProcMetadata.JSON, context)
       val expr = new XProcXPathExpression(context, assert)
-      val ok = config.expressionEvaluator.booleanValue(expr, List(msg), Map.empty[String,Message], None)
+      val exeval = config.expressionEvaluator.newInstance()
+      val ok = exeval.booleanValue(expr, List(msg), Map.empty[String,Message], None)
       if (!ok) {
         throw XProcException.xcHttpAssertFailed(assert, location)
       }
@@ -559,7 +560,7 @@ class HttpRequest() extends DefaultXmlStep {
             val ta = DateTimeFormatter.RFC_1123_DATE_TIME.parse(header.getValue)
             val dt = Instant.from(ta).toString
             val expr = new XProcXPathExpression(context, s"xs:dateTime('$dt')")
-            val smsg = config.expressionEvaluator.singletonValue(expr, List(), Map(), None)
+            val smsg = config.expressionEvaluator.newInstance().singletonValue(expr, List(), Map(), None)
             value = smsg.item.asInstanceOf[XdmAtomicValue]
           } catch {
             case _: DateTimeParseException => ()

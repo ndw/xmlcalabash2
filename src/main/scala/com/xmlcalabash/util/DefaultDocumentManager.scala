@@ -310,7 +310,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       val bindingsMap = mutable.HashMap.empty[String, Message]
       val vmsg = new XdmValueItemMessage(new XdmAtomicValue(json), XProcMetadata.JSON, context)
       bindingsMap.put("{}json", vmsg)
-      val smsg = xmlCalabash.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+      val smsg = xmlCalabash.expressionEvaluator.newInstance().singletonValue(expr, List(), bindingsMap.toMap, None)
       new DocumentResponse(smsg.item, respContentType, props)
 
     } else if (contentType.textContentType) {

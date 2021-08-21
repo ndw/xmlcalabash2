@@ -33,7 +33,7 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
         val depends = staticContext.dependsOnContextAvt(avt)
         if (!depends) {
           val expr = new XProcVtExpression(staticContext, _avt.get, true)
-          var msg = config.expressionEvaluator.value(expr, List(), inScopeStatics, None)
+          var msg = config.expressionEvaluator.newInstance().value(expr, List(), inScopeStatics, None)
           // Ok, now we have a string value
           val avalue = msg.item.getUnderlyingValue.getStringValue
           var tvalue = typeUtils.castAtomicAs(XdmAtomicValue.makeAtomicValue(avalue), Some(declaredType), staticContext)
@@ -57,7 +57,7 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
           }
           val opts = new XPathBindingParams(Map.empty[QName, XdmValue], collection)
           val expr = new XProcXPathExpression(staticContext, _select.get, checkas, allowedValues, opts)
-          val msg = config.expressionEvaluator.value(expr, List(), inScopeStatics, Some(opts))
+          val msg = config.expressionEvaluator.newInstance().value(expr, List(), inScopeStatics, Some(opts))
 
           if (qnameKeys) {
             msg.item match {

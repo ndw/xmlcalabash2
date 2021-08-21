@@ -99,37 +99,13 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
       val other = new Otherwise(config)
       other.test = "true()"
 
-      /*
-      val winput = new WithInput(config)
-      winput.port = "source"
-      other.addChild(winput)
-      */
-
       val identity = new AtomicStep(config)
       identity.stepType = XProcConstants.p_identity
+      /* ??? tangled up in the collectin/expression debacle and unclear to me
       val idin = new WithInput(config)
       idin.port = "source"
       identity.addChild(idin)
-      /*
-      val idout = new WithOutput(config)
-      idout.port = "result"
-      identity.addChild(idout)
-*/
-      /*
-      if (primaryOutput.isDefined) {
-        val output = new DeclareOutput(config)
-        output.port = primaryOutput.get
-        output.primary = true
-        other.addChild(output)
-
-
-        val pipe = new Pipe(config)
-        pipe.step = identity.stepName
-        pipe.port = "result"
-        //pipe.link = identity.children[WithOutput].head
-        output.addChild(pipe)
-      }
-*/
+       */
       other.addChild(identity)
 
       // If there isn't a primary output, make sure we sink the output of
@@ -195,31 +171,6 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
         case _ =>
           throw new RuntimeException(s"Invalid content in $this")
       }
-    }
-  }
-
-  override protected[model] def normalizeToPipes(): Unit = {
-    super.normalizeToPipes()
-
-    val winput = firstWithInput
-    if (winput.isDefined) {
-      // If we synthesized a p:otherwise, hook up the identity inputs
-      val other = children[Otherwise].head
-      if (other.synthetic) {
-        val ident = other.children[AtomicStep].head
-        val idinput = ident.firstWithInput
-        for (child <- winput.get.allChildren) {
-          child match {
-            case pipe: Pipe =>
-              idinput.get.addChild(new Pipe(pipe))
-            case _ =>
-              throw new RuntimeException("with input hasn't been normalized to pipes?")
-          }
-        }
-      }
-
-      // Now that we've distributed the input into the p:when's, we can remove this
-      removeChild(winput.get)
     }
   }
 

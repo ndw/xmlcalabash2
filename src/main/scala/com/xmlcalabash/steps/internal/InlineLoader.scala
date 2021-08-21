@@ -157,7 +157,7 @@ class InlineLoader() extends AbstractLoader {
       val vmsg = new XdmValueItemMessage(new XdmAtomicValue(text), XProcMetadata.JSON, context)
       bindingsMap.put("{}json", vmsg)
       try {
-        val smsg = config.expressionEvaluator.singletonValue(expr, List(), bindingsMap.toMap, None)
+        val smsg = config.expressionEvaluator.newInstance().singletonValue(expr, List(), bindingsMap.toMap, None)
         consumer.get.receive("result", smsg.item, new XProcMetadata(contentType, props.toMap))
       } catch {
         case ex: SaxonApiException =>
@@ -319,10 +319,10 @@ class InlineLoader() extends AbstractLoader {
   }
 
   private def expandString(text: String): String = {
-    val evaluator = config.expressionEvaluator
     val expr = new XProcVtExpression(exprContext, text)
     var s = ""
     var string = ""
+    val evaluator = config.expressionEvaluator.newInstance()
     val iter = evaluator.value(expr, contextItem.toList, msgBindings.toMap, None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
@@ -333,9 +333,9 @@ class InlineLoader() extends AbstractLoader {
   }
 
   private def expandNodes(text: String, builder: SaxonTreeBuilder): Unit = {
-    val evaluator = config.expressionEvaluator
     val expr = new XProcVtExpression(exprContext, text)
 
+    val evaluator = config.expressionEvaluator.newInstance()
     val iter = evaluator.value(expr, contextItem.toList, msgBindings.toMap, None).item.iterator()
     while (iter.hasNext) {
       val next = iter.next()
