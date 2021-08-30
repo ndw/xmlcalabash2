@@ -129,7 +129,6 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
     }
 
     runtime.run()
-    println("HELLO")
   }
 
   override def reset(): Unit = {

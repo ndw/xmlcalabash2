@@ -70,8 +70,9 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
                 if (input.port == port) {
                   for (child <- input.allChildren) {
                     child match {
-                      case inline: Inline => default = true
-                      case doc: Document => default = true
+                      case _: Inline => default = true
+                      case _: Document => default = true
+                      case _: Empty => default = true;
                       case _ => ()
                     }
                   }

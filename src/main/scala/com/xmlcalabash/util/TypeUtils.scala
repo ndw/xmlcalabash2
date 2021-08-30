@@ -179,10 +179,16 @@ class TypeUtils(val processor: Processor, val context: StaticContext) {
       new XdmAtomicValue(value.getStringValue, xsdtype)
     } catch {
       case sae: SaxonApiException =>
-        if (sae.getMessage.contains("Invalid URI")) {
-          throw XProcException.xdInvalidURI(value.getStringValue, context.location)
+        val location = if (context == null) {
+          None
         } else {
-          throw XProcException.xdBadType(value.getStringValue, xsdtype.toString, context.location)
+          context.location
+        }
+
+        if (sae.getMessage.contains("Invalid URI")) {
+          throw XProcException.xdInvalidURI(value.getStringValue, location)
+        } else {
+          throw XProcException.xdBadType(value.getStringValue, xsdtype.toString, location)
         }
       case ex: Exception =>
         throw(ex)

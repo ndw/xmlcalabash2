@@ -56,6 +56,9 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   protected[xmlcalabash] def init(decl: DeclareStep): Unit = {
     try {
       config.debugOptions.dumpOpenGraph(decl, graph)
+
+      graph.dumpGraphTransitions = true
+
       runtime = new GraphRuntime(graph, this)
       config.debugOptions.dumpJafplGraph(decl, graph)
       runtime.traceEventManager = _traceEventManager

@@ -249,10 +249,18 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
                   stepName: String,
                   stepType: QName): Unit = {
     var amap = tid(tumble_id)
+
+    var nsmap = NamespaceMap.emptyMap()
+    nsmap = nsmap.put("p", XProcConstants.ns_p)
+    nsmap = nsmap.put("cx", XProcConstants.ns_cx)
+    if (stepType.getPrefix != null && !"".equals(stepType.getPrefix)) {
+      nsmap = nsmap.put(stepType.getPrefix, stepType.getNamespaceURI)
+    }
+
     amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName))
 
     val element = stepType
-    builder.addStartElement(element, amap)
+    builder.addStartElement(element, amap, nsmap)
     openStack.push(element)
   }
 

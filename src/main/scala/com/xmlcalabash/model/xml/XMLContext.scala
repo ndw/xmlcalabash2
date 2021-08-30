@@ -58,7 +58,7 @@ class XMLContext(override val config: XMLCalabashConfig, override val artifact: 
   def parseQName(name: Option[String]): Option[QName] = {
     if (name.isDefined) {
       val eqname = "^Q\\{(.*)\\}(\\S+)$".r
-      name.get match {
+      val qname = name.get match {
         case eqname(uri,local) => Some(new QName(uri, local))
         case _ =>
           if (name.get.contains(":")) {
@@ -74,6 +74,21 @@ class XMLContext(override val config: XMLCalabashConfig, override val artifact: 
             Some(new QName("", name.get))
           }
       }
+
+      val prefix = qname.get.getPrefix
+      val local = qname.get.getLocalName
+      if (prefix != null && !"".equals(prefix)) {
+        if (parseNCName(Some(prefix)).isDefined && parseNCName(Some(local)).isDefined) {
+          return qname
+        }
+      } else {
+        if (parseNCName(Some(local)).isDefined) {
+          return qname
+        }
+      }
+      // This will have already happened in the calls to parseNCName above, but
+      // putting it here satisfies the compiler.
+      throw XProcException.xsBadTypeValue(name.get, "NCName", location)
     } else {
       None
     }
@@ -83,10 +98,10 @@ class XMLContext(override val config: XMLCalabashConfig, override val artifact: 
     if (name.isDefined) {
       try {
         val typeUtils = new TypeUtils(config)
-        val ncname = typeUtils.castAtomicAs(XdmAtomicValue.makeAtomicValue(name.get), ItemType.NCNAME, null)
+        val ncname = typeUtils.castAtomicAs(new XdmAtomicValue(name.get), ItemType.NCNAME, null)
         Some(ncname.getStringValue)
       } catch {
-        case sae: SaxonApiException =>
+        case _: SaxonApiException =>
           throw XProcException.xsBadTypeValue(name.get, "NCName", location)
         case e: Exception =>
           throw e
