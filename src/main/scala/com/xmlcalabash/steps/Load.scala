@@ -15,11 +15,7 @@ class Load() extends DefaultXmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANY
 
   override def run(context: StaticContext): Unit = {
-    val href = if (context.baseURI.isDefined) {
-      context.baseURI.get.resolve(stringBinding(XProcConstants._href))
-    } else {
-      new URI(stringBinding(XProcConstants._href))
-    }
+    val href = UriBinding(XProcConstants._href);
 
     // FIXME: the key type conversions here should occur centrally based on map type.
 

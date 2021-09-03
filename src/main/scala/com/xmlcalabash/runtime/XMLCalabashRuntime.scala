@@ -13,6 +13,7 @@ import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelE
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{ExpressionParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep}
+import com.xmlcalabash.util.stores.{DataStore, FallbackDataStore, FileDataStore, HttpDataStore}
 import com.xmlcalabash.util.{MediaType, XProcVarValue}
 
 import javax.xml.transform.URIResolver
@@ -49,6 +50,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   private var ran = false
   private var _signatures: Signatures = _
   private var runtime: GraphRuntime = _
+  private var _datastore = Option.empty[DataStore]
 
   val jafpl: Jafpl = Jafpl.newInstance()
   val graph: Graph = jafpl.newGraph()
@@ -219,6 +221,16 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
 
   override def expressionEvaluator: SaxonExpressionEvaluator = config.expressionEvaluator
   def expressionParser: ExpressionParser = config.expressionParser
+
+  def datastore: DataStore = {
+    if (_datastore.isEmpty) {
+      val fallback = new FallbackDataStore()
+      val filestore = new FileDataStore(config, fallback)
+      _datastore = Some(new HttpDataStore(config, filestore))
+    }
+
+    _datastore.get
+  }
 
   // ====================================================================================
 

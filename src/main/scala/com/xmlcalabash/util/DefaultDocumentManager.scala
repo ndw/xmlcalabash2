@@ -1,11 +1,5 @@
 package com.xmlcalabash.util
 
-import java.io.{File, FileInputStream, FileNotFoundException, IOException, InputStream, UnsupportedEncodingException}
-import java.net.{URI, URLConnection}
-import java.time.format.DateTimeFormatter
-import java.time.{ZoneId, ZonedDateTime}
-import java.util.Date
-
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.jafpl.messages.Message
@@ -15,8 +9,6 @@ import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.xc.Errors
-import javax.xml.transform.dom.DOMSource
-import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmValue}
 import net.sf.saxon.trans.XPathException
 import nu.validator.htmlparser.common.XmlViolationPolicy
@@ -28,8 +20,14 @@ import org.apache.http.util.ByteArrayBuffer
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.helpers.XMLReaderFactory
 import org.xml.sax.{InputSource, SAXException}
-import org.yaml.snakeyaml.Yaml
 
+import java.io.{File, FileInputStream, FileNotFoundException, IOException, InputStream, UnsupportedEncodingException}
+import java.net.{URI, URLConnection}
+import java.time.format.DateTimeFormatter
+import java.time.{ZoneId, ZonedDateTime}
+import java.util.Date
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.sax.SAXSource
 import scala.collection.mutable
 import scala.xml.SAXParseException
 
@@ -406,6 +404,9 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
     htmlBuilder.setEntityResolver(xmlCalabash.entityResolver)
     val html = htmlBuilder.parse(isource)
     val builder = xmlCalabash.processor.newDocumentBuilder()
+    if (request.href.isDefined) {
+      builder.setBaseURI(request.href.get)
+    }
     new DocumentResponse(builder.build(new DOMSource(html)), MediaType.HTML, Map.empty[QName,XdmValue])
   }
 

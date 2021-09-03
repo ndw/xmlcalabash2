@@ -61,10 +61,12 @@
 
 <p:declare-step type="p:directory-list">
   <p:output port="result" content-types="application/xml"/>
-  <p:option name="path" required="true" as="xs:anyURI"/>
-  <p:option name="detailed" select="false()" as="xs:boolean"/>
-  <p:option name="include-filter" as="xs:string*" cx:as="RegularExpression"/>
-  <p:option name="exclude-filter" as="xs:string*" cx:as="RegularExpression"/>
+  <p:option name="path" required="true" as="xs:anyURI"/>        
+  <p:option name="detailed" as="xs:boolean" select="false()"/>  
+  <p:option name="max-depth" as="xs:string?" select="'1'"/>     
+  <p:option name="include-filter" as="xs:string*"/>             
+  <p:option name="exclude-filter" as="xs:string*"/>             
+  <p:option name="override-content-types" as="array(array(xs:string))?"/>
 </p:declare-step>
 
 <p:declare-step type="p:delete">
@@ -83,6 +85,57 @@
   <p:input port="source" content-types="xml html"/>
   <p:output port="result" content-types="xml html"/>
   <p:option name="serialization" as="map(xs:QName,item()*)?"/>
+</p:declare-step>
+
+<p:declare-step type="p:file-copy">
+  <p:output port="result" primary="true" content-types="application/xml"/>
+  <p:option name="href" required="true" as="xs:anyURI"/>        
+  <p:option name="target" required="true" as="xs:anyURI"/>      
+  <p:option name="fail-on-error" as="xs:boolean" select="true()"/>
+  <p:option name="overwrite" as="xs:boolean" select="true()"/>  
+</p:declare-step>
+
+<p:declare-step type="p:file-delete">
+  <p:output port="result" primary="true" content-types="application/xml"/>
+  <p:option name="href" required="true" as="xs:anyURI"/>        
+  <p:option name="recursive" as="xs:boolean" select="false()"/> 
+  <p:option name="fail-on-error" as="xs:boolean" select="true()"/>
+</p:declare-step>
+
+<p:declare-step type="p:file-info">
+  <p:output port="result" primary="true" content-types="application/xml"/>
+  <p:option name="href" required="true" as="xs:anyURI"/>        
+  <p:option name="fail-on-error" as="xs:boolean" select="true()"/>
+  <p:option name="override-content-types" as="array(array(xs:string))?"/>
+</p:declare-step>
+
+<p:declare-step type="p:file-mkdir">
+  <p:output port="result" primary="true" content-types="application/xml"/>
+  <p:option name="href" required="true" as="xs:anyURI"/>        
+  <p:option name="fail-on-error" as="xs:boolean" select="true()"/>
+</p:declare-step>
+
+<p:declare-step type="p:file-move">
+  <p:output port="result" primary="true" content-types="application/xml"/>
+  <p:option name="href" required="true" as="xs:anyURI"/>        
+  <p:option name="target" required="true" as="xs:anyURI"/>      
+  <p:option name="fail-on-error" as="xs:boolean" select="true()"/>
+</p:declare-step>
+
+<p:declare-step type="p:file-create-tempfile">
+  <p:output port="result" primary="true" content-types="application/xml"/>
+  <p:option name="href" as="xs:anyURI?"/>                       
+  <p:option name="suffix" as="xs:string?"/>                     
+  <p:option name="prefix" as="xs:string?"/>                     
+  <p:option name="delete-on-exit" as="xs:boolean" select="false()"/>
+  <p:option name="fail-on-error" as="xs:boolean" select="true()"/>
+</p:declare-step>
+
+<p:declare-step type="p:file-touch">
+  <p:output port="result" primary="true" content-types="application/xml"/>
+  <p:option name="href" required="true" as="xs:anyURI"/>        
+  <p:option name="timestamp" as="xs:dateTime?"/>                
+  <p:option name="fail-on-error" as="xs:boolean" select="true()"/>
 </p:declare-step>
 
 <p:declare-step type="p:hash">

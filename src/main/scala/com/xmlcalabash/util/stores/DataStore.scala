@@ -13,11 +13,11 @@ trait DataWriter {
 }
 
 trait DataReader {
-  def load(id: URI, media: String, content: InputStream, len: Long): Unit
+  def load(id: URI, media: String, content: InputStream, len: Option[Long]): Unit
 }
 
 trait DataInfo {
-  def list(id: URI, props: Map[String,XdmAtomicValue]): Unit
+  def list(id: URI, props: Map[String, XdmAtomicValue]): Unit
 }
 
 trait DataStore {

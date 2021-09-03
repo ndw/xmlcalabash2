@@ -116,6 +116,8 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
   def xpathVersion: String = "3.1"
   def psviSupported: Boolean = processor.isSchemaAware
 
+  def safeMode: Boolean = false
+
   def processorRequired: Boolean = _processor == null
   def processor: Processor = {
     if (_processor == null) {

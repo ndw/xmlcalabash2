@@ -9,6 +9,7 @@ object XProcConstants {
   val ns_c   = "http://www.w3.org/ns/xproc-step"
   val ns_chttp = "http://www.w3.org/ns/xproc-http"
   val ns_err = "http://www.w3.org/ns/xproc-error"
+  val ns_html = "http://www.w3.org/1999/xhtml"
   val ns_xs  = "http://www.w3.org/2001/XMLSchema"
   val ns_cx  = "http://xmlcalabash.com/ns/extensions"
   val ns_exf = "http://exproc.org/standard/functions"

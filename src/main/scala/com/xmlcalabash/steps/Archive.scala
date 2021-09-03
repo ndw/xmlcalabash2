@@ -157,7 +157,7 @@ class Archive extends DefaultXmlStep {
     }
 
     relativeTo = if (definedBinding(_relativeTo)) {
-      optionalURIBinding(_relativeTo).get
+      UriBinding(_relativeTo).get
     } else {
       if (archive_source.isDefined) {
         arcmeta.get.baseURI.get

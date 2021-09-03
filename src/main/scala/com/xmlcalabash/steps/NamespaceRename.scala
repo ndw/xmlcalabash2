@@ -1,18 +1,11 @@
 package com.xmlcalabash.steps
 
-import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.S9Api
-import net.sf.saxon.`type`.{BuiltInAtomicType, SimpleType, Untyped}
+import net.sf.saxon.`type`.{BuiltInAtomicType, Untyped}
 import net.sf.saxon.event.ReceiverOption
-import net.sf.saxon.om.{AttributeInfo, AttributeMap, FingerprintedQName, NameOfNode, NamespaceBinding, NodeInfo, NodeName}
-import net.sf.saxon.s9api.{Axis, QName, XdmNode}
-import net.sf.saxon.value.QNameValue
-
-import scala.collection.convert.ImplicitConversions.`iterable AsScalaIterable`
-import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
+import net.sf.saxon.om.{AttributeInfo, AttributeMap, FingerprintedQName, NameOfNode}
+import net.sf.saxon.s9api.{QName, XdmNode}
+import scala.jdk.CollectionConverters._
 
 class NamespaceRename() extends DefaultXmlStep with ProcessMatchingNodes {
   private val _from = new QName("from")
@@ -69,7 +62,7 @@ class NamespaceRename() extends DefaultXmlStep with ProcessMatchingNodes {
 
     applyTo match {
       case "all" =>
-        for (attr <- inode.attributes().toList) {
+        for (attr <- inode.attributes().asScala) {
           var nameCode = attr.getNodeName
           var atype = attr.getType
 
@@ -87,7 +80,7 @@ class NamespaceRename() extends DefaultXmlStep with ProcessMatchingNodes {
         }
 
       case "elements" =>
-        for (attr <- inode.attributes().toList) {
+        for (attr <- inode.attributes().asScala) {
           var nameCode = attr.getNodeName
           var atype = attr.getType
 
@@ -103,7 +96,7 @@ class NamespaceRename() extends DefaultXmlStep with ProcessMatchingNodes {
         }
 
       case "attributes" =>
-        for (attr <- inode.attributes()) {
+        for (attr <- inode.attributes().asScala) {
           var nameCode = attr.getNodeName
           startAttr = startAttr.remove(nameCode)
           var pfx = nameCode.getPrefix

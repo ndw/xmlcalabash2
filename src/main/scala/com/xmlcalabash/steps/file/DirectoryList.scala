@@ -1,18 +1,18 @@
-package com.xmlcalabash.steps
+package com.xmlcalabash.steps.file
 
-import java.net.URI
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.steps.DefaultXmlStep
 import com.xmlcalabash.util.stores.{DataInfo, FallbackDataStore, FileDataStore}
 import com.xmlcalabash.util.{MediaType, TypeUtils, URIUtils}
 import net.sf.saxon.om.{AttributeMap, SingletonAttributeMap}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue}
 
+import java.net.URI
 import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
 
 class DirectoryList() extends DefaultXmlStep {
-  private val _path = new QName("", "path")
   private val _detailed = new QName("", "detailed")
   private val _include_filter = new QName("", "include-filter")
   private val _exclude_filter = new QName("", "exclude-filter")
@@ -26,9 +26,14 @@ class DirectoryList() extends DefaultXmlStep {
     builder.startDocument(URIUtils.cwdAsURI)
     builder.addStartElement(XProcConstants.c_directory)
 
-    val path = stringBinding(_path)
+    val path = if (context.baseURI.isDefined) {
+      context.baseURI.get.resolve(stringBinding(XProcConstants._path)).toString
+    } else {
+      new URI(stringBinding(XProcConstants._path)).toString
+    }
+
     val detailed = booleanBinding(_detailed).getOrElse(false)
-    val fileDS = new FileDataStore(new FallbackDataStore())
+    val fileDS = new FileDataStore(config.config, new FallbackDataStore())
     val include = ListBuffer.empty[Regex]
     val exclude = ListBuffer.empty[Regex]
 

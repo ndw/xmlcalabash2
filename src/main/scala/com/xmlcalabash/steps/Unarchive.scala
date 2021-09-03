@@ -63,7 +63,7 @@ class Unarchive extends DefaultXmlStep {
     }
 
     if (bindings.get(_relativeTo).isDefined) {
-      relativeTo = optionalURIBinding(_relativeTo).get
+      relativeTo = UriBinding(_relativeTo).get
     } else {
       smeta.baseURI.get
     }

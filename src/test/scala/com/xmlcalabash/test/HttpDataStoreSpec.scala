@@ -1,7 +1,7 @@
 package com.xmlcalabash.test
 
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.util.stores.{DataInfo, DataReader, DataWriter, FallbackDataStore, FileDataStore}
+import com.xmlcalabash.util.stores.{DataInfo, DataReader, DataWriter, FallbackDataStore, FileDataStore, HttpDataStore}
 import net.sf.saxon.s9api.XdmAtomicValue
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
@@ -9,28 +9,16 @@ import org.scalatest.flatspec.AnyFlatSpec
 import java.io.{File, InputStream, OutputStream}
 import java.net.URI
 
-class FileDataStoreSpec extends AnyFlatSpec with BeforeAndAfter {
+class HttpDataStoreSpec extends AnyFlatSpec with BeforeAndAfter {
   private val config = XMLCalabashConfig.newInstance()
-  private val fileStore = new FileDataStore(config, new FallbackDataStore())
+  private val httpStore = new HttpDataStore(config, new FallbackDataStore())
+  private val baseURI = URI.create("http://localhost:8246/service/")
   private val testIO = new TestIO()
-  private val tempDir: File = File.createTempFile("xml-calabash-test-", ".dir")
-  private var tempFile: File = null
-
-  before {
-    tempDir.delete()
-    tempDir.mkdir()
-    tempFile = File.createTempFile("xml-calabash-test-", ".bin", tempDir)
-  }
-
-  after {
-    tempFile.delete()
-    tempDir.delete()
-  }
 
   "readEntry" should "pass" in {
     var pass = true
     try {
-      fileStore.readEntry(tempFile.getName, tempDir.toURI, "*/*", None, testIO)
+      httpStore.readEntry("fixed-xml", baseURI, "*/*", None, testIO)
     } catch {
       case _: Throwable => pass = false
     }
@@ -40,7 +28,7 @@ class FileDataStoreSpec extends AnyFlatSpec with BeforeAndAfter {
   "writeEntry" should "pass" in {
     var pass = true
     try {
-      fileStore.writeEntry("foo.txt", tempDir.toURI, "text/plain", testIO)
+      httpStore.writeEntry("accept-put", baseURI, "text/plain", testIO)
     } catch {
       case _: Throwable => pass = false
     }
@@ -50,7 +38,7 @@ class FileDataStoreSpec extends AnyFlatSpec with BeforeAndAfter {
   "infoEntry" should "pass" in {
     var pass = true
     try {
-      fileStore.infoEntry(tempFile.getName, tempDir.toURI, "*/*", testIO)
+      httpStore.infoEntry("fixed-html", baseURI, "*/*", testIO)
     } catch {
       case _: Throwable => pass = false
     }
@@ -60,20 +48,21 @@ class FileDataStoreSpec extends AnyFlatSpec with BeforeAndAfter {
   "listEachEntry" should "pass" in {
     var pass = true
     try {
-      fileStore.listEachEntry("", tempDir.toURI, "*/*", testIO)
+      httpStore.listEachEntry("http://localhost/", baseURI, "*/*", testIO)
     } catch {
       case _: Throwable => pass = false
     }
-    pass = pass && testIO.sawFile
+    pass = pass && testIO.fileCount > 0
     assert(pass)
   }
 
-  "createList" should "pass" in {
-    var pass = true
+  "createList" should "fail" in {
+    var pass = false
     try {
-      fileStore.createList("subdir", tempDir.toURI)
+      httpStore.createList("subdir", baseURI)
     } catch {
-      case _: Throwable => pass = false
+      case _: Exception =>
+        pass = true
     }
     assert(pass)
   }
@@ -81,8 +70,7 @@ class FileDataStoreSpec extends AnyFlatSpec with BeforeAndAfter {
   "deleteEntry" should "pass" in {
     var pass = true
     try {
-      fileStore.deleteEntry("foo.txt", tempDir.toURI)
-      fileStore.deleteEntry("subdir", tempDir.toURI)
+      httpStore.deleteEntry("accept-delete", baseURI)
     } catch {
       case _: Throwable => pass = false
     }
@@ -90,7 +78,7 @@ class FileDataStoreSpec extends AnyFlatSpec with BeforeAndAfter {
   }
 
   private class TestIO extends DataReader with DataWriter with DataInfo {
-    var sawFile = false
+    var fileCount = 0
 
     override def load(id: URI, media: String, content: InputStream, len: Option[Long]): Unit = {
       // nop
@@ -101,8 +89,7 @@ class FileDataStoreSpec extends AnyFlatSpec with BeforeAndAfter {
     }
 
     override def list(id: URI, props: Map[String, XdmAtomicValue]): Unit = {
-      sawFile = sawFile || id.toASCIIString.endsWith("/foo.txt")
+      fileCount += 1
     }
   }
-
 }

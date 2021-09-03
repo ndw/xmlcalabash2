@@ -293,6 +293,9 @@ object XProcException {
   def xcHttpDuplicateHeader(name: String, location: Option[Location]): XProcException = stepError(127, name, location)
   def xcMultipartRequired(contentType: String, location: Option[Location]): XProcException = stepError(133, contentType, location)
   def xcHttpAssertFailed(assert: String, location: Option[Location]): XProcException = stepError(126, assert, location)
+
+  def xcCopyDirToFile(source: String, target: String, location: Option[Location]): XProcException = stepError(157, List(source, target), location)
+
   def xcInvalidResultDataFormat(location: Option[Location]): XProcException = stepError(201, location)
   def xcUnknownCompressionFormat(location: Option[Location]): XProcException = stepError((202,1), location)
   def xcUnknownCompressionFormat(format: QName, location: Option[Location]): XProcException = stepError((202,2), format, location)

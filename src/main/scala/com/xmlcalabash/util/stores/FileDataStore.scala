@@ -1,20 +1,25 @@
 package com.xmlcalabash.util.stores
 
+import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.util.{ContentTypes, URIUtils}
+import net.sf.saxon.s9api.XdmAtomicValue
+
 import java.io.{File, FileFilter, FileInputStream, FileNotFoundException, FileOutputStream, IOException}
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone}
-
-import com.xmlcalabash.util.{ContentTypes, URIUtils}
-import net.sf.saxon.s9api.XdmAtomicValue
-
 import scala.collection.mutable
 
-class FileDataStore(fallback: DataStore) extends DataStore {
+class FileDataStore(config: XMLCalabashConfig, fallback: DataStore) extends DataStore {
   override def writeEntry(href: String, baseURI: URI, media: String, handler: DataWriter): URI = {
     val uri = baseURI.resolve(href)
     if ("file".equalsIgnoreCase(uri.getScheme)) {
       val file = URIUtils.toFile(uri)
+
+      if (config.safeMode) {
+        throw new RuntimeException("Can't write in safe mode")
+      }
+
       val suffix = ContentTypes.extension(media)
       if (file.isDirectory || uri.getPath.endsWith("/")) {
         if (!file.isDirectory && !file.mkdirs) throw new FileNotFoundException(file.getAbsolutePath)
@@ -62,7 +67,7 @@ class FileDataStore(fallback: DataStore) extends DataStore {
       val ctype = overrideContentType.getOrElse(ContentTypes.contentType(file.getName))
       val in = new FileInputStream(file)
       try {
-        handler.load(file.toURI, ctype, in, file.length)
+        handler.load(file.toURI, ctype, in, Some(file.length))
       } finally {
         in.close()
       }
@@ -107,6 +112,11 @@ class FileDataStore(fallback: DataStore) extends DataStore {
     val uri = baseURI.resolve(href)
     if ("file".equalsIgnoreCase(uri.getScheme)) {
       val file = URIUtils.toFile(uri)
+
+      if (config.safeMode) {
+        throw new RuntimeException("Can't write in safe mode")
+      }
+
       if (file.isDirectory) {
         file.toURI
       } else if (file.exists) {
@@ -127,6 +137,11 @@ class FileDataStore(fallback: DataStore) extends DataStore {
     val uri = baseURI.resolve(href)
     if ("file".equalsIgnoreCase(uri.getScheme)) {
       val file = URIUtils.toFile(uri)
+
+      if (config.safeMode) {
+        throw new RuntimeException("Can't write in safe mode")
+      }
+
       if (!file.exists) {
         throw new FileNotFoundException(file.toURI.toASCIIString)
       } else {

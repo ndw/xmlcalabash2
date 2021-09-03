@@ -76,7 +76,7 @@ class FallbackDataStoreSpec extends AnyFlatSpec {
   }
 
   private class NopIO extends DataReader with DataWriter with DataInfo {
-    override def load(id: URI, media: String, content: InputStream, len: Long): Unit = {
+    override def load(id: URI, media: String, content: InputStream, len: Option[Long]): Unit = {
       // nop
     }
 
