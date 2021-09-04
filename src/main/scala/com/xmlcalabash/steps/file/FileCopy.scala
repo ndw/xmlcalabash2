@@ -14,9 +14,6 @@ import java.nio.file.attribute.PosixFilePermissions
 import java.nio.file.{Files, LinkOption, Path, Paths, StandardCopyOption}
 
 class FileCopy() extends DefaultXmlStep {
-  private val _target = new QName("", "target")
-  private val _overwrite = new QName("", "overwrite")
-  private val _fail_on_error = new QName("", "fail-on-error")
   private val cx_copyLinks = new QName("cx", XProcConstants.ns_cx, "copy-links")
   private val cx_copyAttributes = new QName("cx", XProcConstants.ns_cx, "copy-attributes")
   private val _bufsize = 8192
@@ -36,11 +33,11 @@ class FileCopy() extends DefaultXmlStep {
 
   override def run(context: StaticContext): Unit = {
     staticContext = context
-    href = UriBinding(XProcConstants._href).get
-    target = UriBinding(_target).get
+    href = uriBinding(XProcConstants._href).get
+    target = uriBinding(XProcConstants._target).get
 
-    overwrite = booleanBinding(_overwrite).getOrElse(overwrite);
-    failOnError = booleanBinding(_fail_on_error).getOrElse(failOnError)
+    overwrite = booleanBinding(XProcConstants._overwrite).getOrElse(overwrite);
+    failOnError = booleanBinding(XProcConstants._fail_on_error).getOrElse(failOnError)
     copyLinks = booleanBinding(cx_copyLinks).getOrElse(copyLinks)
     copyAttributes = booleanBinding(cx_copyAttributes).getOrElse(copyAttributes)
 

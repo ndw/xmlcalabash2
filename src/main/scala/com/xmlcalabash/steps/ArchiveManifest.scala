@@ -57,7 +57,7 @@ class ArchiveManifest extends DefaultXmlStep {
       throw XProcException.xcUnknownArchiveFormat(format.get, location)
     }
 
-    relativeTo = UriBinding(_relativeTo)
+    relativeTo = uriBinding(_relativeTo)
 
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(smeta.baseURI)

@@ -325,8 +325,26 @@ Multiple top-level elements are not allowed in p:escape-markup.
 XC0092
 Attribute name collision: “$1”
 
+XC0113
+Attempt to delete non-empty directory without the recursive option: $1
+
 XC0126
 Assertion failed: “$1”
+
+XC0134
+Cannot return info for URI scheme in “$1”
+
+XC0142
+Cannot delete URIs with the scheme in “$1”
+
+XC0143
+Delete not allowed: $1
+
+XC0157
+Cannot copy directory ($1) to file ($2)
+
+XC0158
+Cannot move directory ($1) to file ($2)
 
 {http://xmlcalabash.com/ns/extensions}XI0016
 No input specified for pipeline port “$1”.

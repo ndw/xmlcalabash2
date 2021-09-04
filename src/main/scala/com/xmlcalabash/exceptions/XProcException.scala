@@ -287,6 +287,8 @@ object XProcException {
   def xcInvalidJsonMergeKey(key: String, location: Option[Location]): XProcException = stepError((110,1), key, location)
   def xcInvalidJsonMergeKey(location: Option[Location]): XProcException = stepError((110,2), location)
   def xcArchiveTooManyManifests(location: Option[Location]): XProcException = stepError(112, location)
+  def xcFileDeleteNotRecursive(href: URI, location: Option[Location]): XProcException = stepError(113, href, location)
+  def xcFileMkdirFail(href: URI, location: Option[Location]): XProcException = stepError(114, href, location)
   def xcHttpInvalidAuth(name: String, value: String, location: Option[Location]): XProcException = stepError(123, List(name, value), location)
   def xcHttpInvalidParameter(name: String, value: String, location: Option[Location]): XProcException = stepError(124, List(name, value), location)
   def xcHttpMultipartForbidden(location: Option[Location]): XProcException = stepError(125, location)
@@ -294,8 +296,16 @@ object XProcException {
   def xcMultipartRequired(contentType: String, location: Option[Location]): XProcException = stepError(133, contentType, location)
   def xcHttpAssertFailed(assert: String, location: Option[Location]): XProcException = stepError(126, assert, location)
 
+  def xcFileInfoBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(134, uri, location)
+
+  def xcFileMkdirBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(140, uri, location)
+  def xcFileDeleteBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(142, uri, location)
+  def xcFileDeleteNotAllowed(uri: URI, location: Option[Location]): XProcException = stepError(143, uri, location)
+
   def xcFileCopyBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(144, uri, location)
+  def xcFileMoveBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(148, uri, location)
   def xcFileCopyDirToFile(source: URI, target: URI, location: Option[Location]): XProcException = stepError(157, List(source, target), location)
+  def xcFileMoveDirToFile(source: URI, target: URI, location: Option[Location]): XProcException = stepError(158, List(source, target), location)
 
   def xcInvalidResultDataFormat(location: Option[Location]): XProcException = stepError(201, location)
   def xcUnknownCompressionFormat(location: Option[Location]): XProcException = stepError((202,1), location)

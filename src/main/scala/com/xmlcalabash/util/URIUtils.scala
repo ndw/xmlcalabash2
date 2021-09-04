@@ -1,9 +1,9 @@
 package com.xmlcalabash.util
 
 import java.io.File
-import java.net.URI
-
+import java.net.{URI, URLConnection}
 import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.model.util.XProcConstants
 
 object URIUtils {
   def homeAsURI: URI = {
@@ -69,5 +69,14 @@ object URIUtils {
     else {
       new File(uri.getPath)
     }
+  }
+
+  def guessContentType(href: URI): MediaType = {
+    // Using the filename sort of sucks, but it's what the OSes do at this point so...sigh
+    // You can extend the set of known extensions by pointing the system property
+    // `content.types.user.table` at your own mime types file. The default file to
+    // start with is in $JAVA_HOME/lib/content-types.properties
+    val contentTypeString = Option(URLConnection.guessContentTypeFromName(href.toASCIIString)).getOrElse("application/octet-stream")
+    MediaType.parse(contentTypeString)
   }
 }

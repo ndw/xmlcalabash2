@@ -188,7 +188,7 @@ class DefaultXmlStep extends XmlStep {
     }
   }
 
-  def UriBinding(name: QName): Option[URI] = {
+  def uriBinding(name: QName): Option[URI] = {
     if (definedBinding(name)) {
       val context = bindingContexts(name)
       Some(context.baseURI.get.resolve(bindings(name).getUnderlyingValue.getStringValue))
