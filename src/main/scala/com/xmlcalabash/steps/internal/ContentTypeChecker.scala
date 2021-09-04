@@ -100,7 +100,7 @@ class ContentTypeChecker() extends XmlStep {
     }
   }
 
-  override def configure(config: XMLCalabashConfig, params: Option[ImplParams]): Unit = {
+  override def configure(config: XMLCalabashConfig, stepType: QName, stepName: Option[String], params: Option[ImplParams]): Unit = {
     if (params.isEmpty) {
       throw XProcException.xiWrongImplParams()
     } else {

@@ -19,8 +19,8 @@ class StepWrapper(protected[xmlcalabash] val step: XmlStep, val signature: StepS
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     step.receive(port,item,metadata)
   }
-  override def configure(config: XMLCalabashConfig, params: Option[ImplParams]): Unit = {
-    step.configure(config, params)
+  override def configure(config: XMLCalabashConfig, stepType: QName, stepName: Option[String], params: Option[ImplParams]): Unit = {
+    step.configure(config, stepType, stepName, params)
   }
   override def initialize(config: RuntimeConfiguration): Unit = {
     step.initialize(config)

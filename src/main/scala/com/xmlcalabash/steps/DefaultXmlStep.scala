@@ -60,6 +60,8 @@ class DefaultXmlStep extends XmlStep {
   protected var config: XMLCalabashRuntime = _
   protected val bindingContexts = mutable.HashMap.empty[QName, StaticContext]
   protected val bindings = mutable.HashMap.empty[QName, XdmValue]
+  protected var stepType: QName = _
+  protected var stepName = Option.empty[String]
 
   def location: Option[Location] = _location
 
@@ -88,8 +90,9 @@ class DefaultXmlStep extends XmlStep {
     // nop
   }
 
-  override def configure(config: XMLCalabashConfig, params: Option[ImplParams]): Unit = {
-    // nop
+  override def configure(config: XMLCalabashConfig, stepType: QName, stepName: Option[String], params: Option[ImplParams]): Unit = {
+    this.stepType = stepType
+    this.stepName = stepName
   }
 
   override def initialize(config: RuntimeConfiguration): Unit = {

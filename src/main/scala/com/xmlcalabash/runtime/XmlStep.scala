@@ -14,7 +14,7 @@ trait XmlStep {
   def setLocation(location: Location): Unit
   def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit
   def receive(port: String, item: Any, metadata: XProcMetadata): Unit
-  def configure(config: XMLCalabashConfig, params: Option[ImplParams]): Unit
+  def configure(config: XMLCalabashConfig, stepType: QName, stepName: Option[String], params: Option[ImplParams]): Unit
   def initialize(config: RuntimeConfiguration): Unit
   def run(context: StaticContext): Unit
   def reset(): Unit

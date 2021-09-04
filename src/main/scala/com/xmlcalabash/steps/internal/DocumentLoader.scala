@@ -33,7 +33,7 @@ class DocumentLoader() extends AbstractLoader {
   }
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULTSEQ
 
-  override def configure(config: XMLCalabashConfig, params: Option[ImplParams]): Unit = {
+  override def configure(config: XMLCalabashConfig, stepType: QName, stopName: Option[String], params: Option[ImplParams]): Unit = {
     if (params.isEmpty) {
       throw new RuntimeException("document loader params required")
     }

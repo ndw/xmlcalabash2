@@ -13,8 +13,10 @@ class FileStep() extends DefaultXmlStep {
     var amap: AttributeMap = EmptyAttributeMap.getInstance()
     var body: String = ""
 
-    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, "???"))
-    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._type, "???"))
+    amap = amap.put(TypeUtils.attributeInfo(XProcConstants._type, stepType.getClarkName))
+    if (stepName.isDefined) {
+      amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, stepName.get))
+    }
 
     exception match {
       case xproc: XProcException =>

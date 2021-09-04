@@ -229,7 +229,7 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
   override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[ContainerStart]
     _stepImplementation = stepImplementation(staticContext)
-    _stepImplementation.configure(config, params)
+    _stepImplementation.configure(config, stepType, _name, params)
 
     var proxyParams: Option[ImplParams] = params
 

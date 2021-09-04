@@ -88,7 +88,7 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
     }
   }
 
-  override def configure(config: XMLCalabashConfig, params: Option[ImplParams]): Unit = {
+  override def configure(config: XMLCalabashConfig, stepType: QName, stepName: Option[String], params: Option[ImplParams]): Unit = {
     // nop
   }
 
