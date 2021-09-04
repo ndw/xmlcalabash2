@@ -334,6 +334,12 @@ Assertion failed: “$1”
 XC0134
 Cannot return info for URI scheme in “$1”
 
+XC0136
+Cannot touch file with URI scheme in “$1”
+
+XC0138
+Cannot create temporary file URI scheme in “$1”
+
 XC0142
 Cannot delete URIs with the scheme in “$1”
 

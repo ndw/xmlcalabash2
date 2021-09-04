@@ -297,6 +297,8 @@ object XProcException {
   def xcHttpAssertFailed(assert: String, location: Option[Location]): XProcException = stepError(126, assert, location)
 
   def xcFileInfoBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(134, uri, location)
+  def xcFileTouchBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(136, uri, location)
+  def xcFileCreateTempFileBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(138, uri, location)
 
   def xcFileMkdirBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(140, uri, location)
   def xcFileDeleteBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(142, uri, location)
