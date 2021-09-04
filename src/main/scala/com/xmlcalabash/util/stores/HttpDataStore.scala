@@ -16,12 +16,12 @@ class HttpDataStore(config: XMLCalabashConfig, fallback: DataStore) extends Data
   override def writeEntry(href: String, baseURI: URI, media: String, handler: DataWriter): URI = {
     val uri = baseURI.resolve(href)
     if ("http".equalsIgnoreCase(uri.getScheme) || "https".equalsIgnoreCase(uri.getScheme)) {
-      val request = new InternetProtocolRequest(config)
+      val request = new InternetProtocolRequest(config, uri)
       val baos = new ByteArrayOutputStream()
       handler.store(baos)
       val meta = new XProcMetadata(MediaType.parse(media))
       request.addSource(baos.toByteArray, meta)
-      val response = request.httpRequest("PUT", uri)
+      val response = request.execute("PUT")
       if (response.statusCode.isEmpty || response.statusCode.get >= 400) {
         throw new RuntimeException("Failed to PUT resource " + uri.toString)
       }
@@ -34,8 +34,8 @@ class HttpDataStore(config: XMLCalabashConfig, fallback: DataStore) extends Data
   override def readEntry(href: String, baseURI: URI, accept: String, overrideContentType: Option[String], handler: DataReader): Unit = {
     val uri = baseURI.resolve(href)
     if ("http".equalsIgnoreCase(uri.getScheme) || "https".equalsIgnoreCase(uri.getScheme)) {
-      val request = new InternetProtocolRequest(config)
-      val response = request.httpRequest("GET", uri)
+      val request = new InternetProtocolRequest(config, uri)
+      val response = request.execute("GET")
       if (response.statusCode.isEmpty || response.statusCode.get >= 400) {
         throw new RuntimeException("Failed to GET resource " + uri.toString)
       }
@@ -73,8 +73,8 @@ class HttpDataStore(config: XMLCalabashConfig, fallback: DataStore) extends Data
   override def infoEntry(href: String, baseURI: URI, accept: String, handler: DataInfo): Unit = {
     val uri = baseURI.resolve(href)
     if ("http".equalsIgnoreCase(uri.getScheme) || "https".equalsIgnoreCase(uri.getScheme)) {
-      val request = new InternetProtocolRequest(config)
-      val response = request.httpRequest("HEAD", uri)
+      val request = new InternetProtocolRequest(config, uri)
+      val response = request.execute("HEAD")
       if (response.statusCode.isEmpty || response.statusCode.get >= 400) {
         throw new RuntimeException("Failed to GET resource " + uri.toString)
       }
@@ -87,10 +87,10 @@ class HttpDataStore(config: XMLCalabashConfig, fallback: DataStore) extends Data
   override def listEachEntry(href: String, baseURI: URI, accept: String, handler: DataInfo): Unit = {
     val uri = baseURI.resolve(href)
     if ("http".equalsIgnoreCase(uri.getScheme) || "https".equalsIgnoreCase(uri.getScheme)) {
-      val request = new InternetProtocolRequest(config)
+      val request = new InternetProtocolRequest(config, uri)
 
       // Do head first to avoid a big download that isn't going to work
-      var response = request.httpRequest("HEAD", uri)
+      var response = request.execute("HEAD")
       if (response.statusCode.isEmpty || response.statusCode.get >= 400) {
         throw new RuntimeException("Failed to GET resource " + uri.toString)
       }
@@ -99,7 +99,7 @@ class HttpDataStore(config: XMLCalabashConfig, fallback: DataStore) extends Data
       }
 
       // It's actually HTML, so get it
-      response = request.httpRequest("GET", uri)
+      response = request.execute("GET")
       if (response.statusCode.isEmpty || response.statusCode.get >= 400) {
         throw new RuntimeException("Failed to GET resource " + uri.toString)
       }
@@ -130,8 +130,8 @@ class HttpDataStore(config: XMLCalabashConfig, fallback: DataStore) extends Data
           pos = href.indexOf("/")
           if (href != "" && (pos < 0 || pos == href.length)) {
             val itemuri = uri.resolve(href)
-            val irequest = new InternetProtocolRequest(config)
-            val iresponse = irequest.httpRequest("HEAD", uri)
+            val irequest = new InternetProtocolRequest(config, uri)
+            val iresponse = irequest.execute("HEAD")
 
             if (accept.contains("*/*")) {
               handler.list(itemuri, stringMap(iresponse.responseMetadata.head.properties))
@@ -162,8 +162,8 @@ class HttpDataStore(config: XMLCalabashConfig, fallback: DataStore) extends Data
   override def deleteEntry(href: String, baseURI: URI): Unit = {
     val uri = baseURI.resolve(href)
     if ("http".equalsIgnoreCase(uri.getScheme) || "https".equalsIgnoreCase(uri.getScheme)) {
-      val request = new InternetProtocolRequest(config)
-      val response = request.httpRequest("DELETE", uri)
+      val request = new InternetProtocolRequest(config, uri)
+      val response = request.execute("DELETE")
       if (response.statusCode.isEmpty || response.statusCode.get >= 400) {
         throw new RuntimeException("Failed to DELETE resource " + uri.toString)
       }

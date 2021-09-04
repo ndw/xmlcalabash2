@@ -294,7 +294,8 @@ object XProcException {
   def xcMultipartRequired(contentType: String, location: Option[Location]): XProcException = stepError(133, contentType, location)
   def xcHttpAssertFailed(assert: String, location: Option[Location]): XProcException = stepError(126, assert, location)
 
-  def xcCopyDirToFile(source: String, target: String, location: Option[Location]): XProcException = stepError(157, List(source, target), location)
+  def xcFileCopyBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(144, uri, location)
+  def xcFileCopyDirToFile(source: URI, target: URI, location: Option[Location]): XProcException = stepError(157, List(source, target), location)
 
   def xcInvalidResultDataFormat(location: Option[Location]): XProcException = stepError(201, location)
   def xcUnknownCompressionFormat(location: Option[Location]): XProcException = stepError((202,1), location)

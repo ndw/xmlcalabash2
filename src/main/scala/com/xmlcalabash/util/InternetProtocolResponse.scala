@@ -2,22 +2,45 @@ package com.xmlcalabash.util
 
 import com.xmlcalabash.runtime.XProcMetadata
 import net.sf.saxon.s9api.XdmMap
+import org.apache.http.client.CookieStore
+import org.apache.http.cookie.Cookie
+import org.apache.http.impl.client.BasicCookieStore
 
 import java.io.InputStream
 import java.net.URI
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
-class InternetProtocolResponse(val finalURI: URI) {
+class InternetProtocolResponse(val responseURI: URI) {
   private var _statusCode = Option.empty[Int]
   private var _report = Option.empty[XdmMap]
   private var _mediaType = Option.empty[MediaType]
   private val _response = ListBuffer.empty[InputStream]
   private val _responseMetadata = ListBuffer.empty[XProcMetadata]
+  private var _cookieStore = Option.empty[CookieStore]
 
   def statusCode: Option[Int] = _statusCode
 
   def statusCode_=(value: Int): Unit = {
     _statusCode = Some(value)
+  }
+
+  def finalURI: URI = {
+    // Because content-disposition might have changed it
+    if (_responseMetadata.length == 1 && _responseMetadata.head.baseURI.isDefined) {
+      _responseMetadata.head.baseURI.get
+    } else {
+      responseURI
+    }
+  }
+
+  def cookieStore: Option[CookieStore] = _cookieStore
+  def cookieStore_=(store: CookieStore): Unit = {
+    // This is a mutable object, copy it
+    _cookieStore = Some(new BasicCookieStore())
+    for (cookie <- store.getCookies.asScala) {
+      _cookieStore.get.addCookie(cookie)
+    }
   }
 
   def report: Option[XdmMap] = _report

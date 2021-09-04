@@ -1,19 +1,20 @@
 package com.xmlcalabash.util
 
 import com.jafpl.graph.Location
-import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime, XProcMetadata, XProcXPathExpression}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmValue}
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
-import org.apache.http.client.CredentialsProvider
-import org.apache.http.client.config.{CookieSpecs, RequestConfig}
+import org.apache.http.client.{CookieStore, CredentialsProvider}
+import org.apache.http.client.config.{AuthSchemes, CookieSpecs, RequestConfig}
 import org.apache.http.client.methods.{HttpDelete, HttpGet, HttpHead, HttpPost, HttpPut, HttpRequestBase}
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.entity.ByteArrayEntity
-import org.apache.http.impl.client.{BasicCredentialsProvider, HttpClientBuilder, StandardHttpRequestRetryHandler}
-import org.apache.http.{Header, HttpResponse, ProtocolVersion}
+import org.apache.http.impl.auth.BasicScheme
+import org.apache.http.impl.client.{BasicAuthCache, BasicCookieStore, BasicCredentialsProvider, HttpClientBuilder, StandardHttpRequestRetryHandler}
+import org.apache.http.{Header, HttpHost, HttpResponse, ProtocolVersion}
 
 import java.io.ByteArrayInputStream
 import java.net.URI
@@ -21,8 +22,9 @@ import java.time.Instant
 import java.time.format.{DateTimeFormatter, DateTimeParseException}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.{ListHasAsScala, SeqHasAsJava}
 
-class InternetProtocolRequest(val config: XMLCalabashConfig, val context: StaticContext) {
+class InternetProtocolRequest(val config: XMLCalabashConfig, val context: StaticContext, val uri: URI) {
   private val _expires = new QName("", "expires")
   private val _date = new QName("", "date")
   private val _content_disposition = new QName("", "content-disposition")
@@ -34,9 +36,10 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
   private val headers = mutable.HashMap.empty[String,String]
 
   private var _location = Option.empty[Location]
+  private var _cookieStore = Option.empty[CookieStore]
   private var _timeout = Option.empty[Int]
-  private var _sources = ListBuffer.empty[Array[Byte]] // serialization is your problem, not mine!
-  private var _sourcesMetadata = ListBuffer.empty[XProcMetadata]
+  private val _sources = ListBuffer.empty[Array[Byte]] // serialization is your problem, not mine!
+  private val _sourcesMetadata = ListBuffer.empty[XProcMetadata]
   private var _authMethod = Option.empty[String]
   private var _authPremptive = false
   private var _usercreds = Option.empty[UsernamePasswordCredentials]
@@ -44,12 +47,24 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
   private var _statusOnly = false
   private var _overrideContentType = Option.empty[MediaType]
 
-  def this(config: XMLCalabashConfig) =
-    this(config, new StaticContext(config))
+  def this(config: XMLCalabashRuntime, context: StaticContext, uri: URI) =
+    this(config.config, context, uri)
+
+  def this(config: XMLCalabashConfig, uri: URI) =
+    this(config, new StaticContext(config), uri)
 
   def location: Option[Location] = _location
   def location_=(loc: Location): Unit = {
     _location = Some(loc)
+  }
+
+  def cookieStore: Option[CookieStore] = _cookieStore
+  def cookieStore_=(store: CookieStore): Unit = {
+    // This is a mutable object, copy it
+    _cookieStore = Some(new BasicCookieStore())
+    for (cookie <- store.getCookies.asScala) {
+      _cookieStore.get.addCookie(cookie)
+    }
   }
 
   def timeout: Option[Int] = _timeout
@@ -95,7 +110,7 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
     _authPremptive = premptive
   }
 
-  def httpRequest(method: String, uri: URI): InternetProtocolResponse = {
+  def execute(method: String): InternetProtocolResponse = {
     href = uri
     builder = HttpClientBuilder.create()
 
@@ -103,7 +118,11 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
     rqbuilder.setCookieSpec(CookieSpecs.DEFAULT)
     val localContext = HttpClientContext.create()
 
-    // FIXME: deal with cookies
+    if (cookieStore.isEmpty) {
+      cookieStore = new BasicCookieStore()
+    }
+
+    builder.setDefaultCookieStore(cookieStore.get)
 
     if (timeout.isDefined) {
       rqbuilder.setSocketTimeout(timeout.get)
@@ -127,22 +146,38 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
     }
 
     builder.setRetryHandler(new StandardHttpRequestRetryHandler(3, false))
-    // FIXME: deal with proxy
+    for (pscheme <- config.proxies.keySet) {
+      val proxy = config.proxies(pscheme)
+      val host = new HttpHost(proxy.getHost, proxy.getPort, pscheme)
+      builder.setProxy(host)
+    }
 
-    var provider = Option.empty[CredentialsProvider]
     if (_usercreds.isDefined) {
-      if (_authMethod.get == "basic") {
-        val basic = new BasicCredentialsProvider()
-        basic.setCredentials(AuthScope.ANY, _usercreds.get)
-        provider = Some(basic)
-      } else { // digest
-        throw new UnsupportedOperationException("Can't handle digest auth yet")
+      val scope = new AuthScope(uri.getHost, uri.getPort)
+      val bCredsProvider = new BasicCredentialsProvider()
+      bCredsProvider.setCredentials(scope, _usercreds.get)
+      var authpref: List[String] = List("")
+      _authMethod.get match {
+        case "basic" =>
+          authpref = List(AuthSchemes.BASIC)
+          if (_authPremptive) {
+            // See https://stackoverflow.com/questions/20914311/httpclientbuilder-basic-auth
+            val authCache = new BasicAuthCache()
+            val basicAuth = new BasicScheme()
+            authCache.put(new HttpHost(uri.getHost, uri.getPort), basicAuth)
+            localContext.setCredentialsProvider(bCredsProvider)
+            localContext.setAuthCache(authCache)
+          }
+        case "digest" =>
+          authpref = List(AuthSchemes.DIGEST)
+        case _ =>
+          throw new RuntimeException("Unexpected authentication method: " + _authMethod.get)
       }
+
+      rqbuilder.setProxyPreferredAuthSchemes(authpref.asJava)
+      builder.setDefaultCredentialsProvider(bCredsProvider)
     }
 
-    if (provider.isDefined) {
-      builder.setDefaultCredentialsProvider(provider.get)
-    }
     val httpClient = builder.build()
 
     if (Option(httpClient).isEmpty) {
@@ -162,6 +197,7 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
 
     val response = new InternetProtocolResponse(finalURI);
     response.statusCode = httpResult.getStatusLine.getStatusCode
+    response.cookieStore = cookieStore.get
     response.report = requestReport()
     readResponseEntity(response)
   }

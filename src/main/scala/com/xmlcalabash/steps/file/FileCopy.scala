@@ -4,9 +4,9 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.steps.DefaultXmlStep
-import com.xmlcalabash.util.stores.{DataReader, DataWriter}
-import com.xmlcalabash.util.{MediaType, URIUtils}
-import net.sf.saxon.s9api.QName
+import com.xmlcalabash.util.stores.{DataInfo, DataReader, DataWriter}
+import com.xmlcalabash.util.{InternetProtocolRequest, MediaType, URIUtils}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue}
 
 import java.io.{InputStream, OutputStream}
 import java.net.URI
@@ -18,7 +18,7 @@ class FileCopy() extends DefaultXmlStep {
   private val _overwrite = new QName("", "overwrite")
   private val _fail_on_error = new QName("", "fail-on-error")
   private val cx_copyLinks = new QName("cx", XProcConstants.ns_cx, "copy-links")
-  private val cx_copyAttributes = new QName("cx", XProcConstants.ns_cx,"copy-attributes")
+  private val cx_copyAttributes = new QName("cx", XProcConstants.ns_cx, "copy-attributes")
   private val _bufsize = 8192
 
   private var overwrite = true
@@ -26,44 +26,132 @@ class FileCopy() extends DefaultXmlStep {
   private var copyLinks = false
   private var copyAttributes = false
 
+  private var staticContext: StaticContext = _
+  private var href: URI = _
+  private var target: URI = _
+
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
+
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
   override def run(context: StaticContext): Unit = {
-    val href = UriBinding(XProcConstants._href).get
-    val target = UriBinding(_target).get
+    staticContext = context
+    href = UriBinding(XProcConstants._href).get
+    target = UriBinding(_target).get
 
     overwrite = booleanBinding(_overwrite).getOrElse(overwrite);
     failOnError = booleanBinding(_fail_on_error).getOrElse(failOnError)
     copyLinks = booleanBinding(cx_copyLinks).getOrElse(copyLinks)
     copyAttributes = booleanBinding(cx_copyAttributes).getOrElse(copyAttributes)
 
-    if (href.getScheme == "file") {
-      val srcpath = Paths.get(href.getPath)
-      if (Files.isDirectory(srcpath)) {
-        if (target.getScheme == "file") {
-          copyDirectory(srcpath, Paths.get(target.getPath).resolve(srcpath.getFileName))
-          return
-        } else {
-          throw new RuntimeException("can't copy dir to non-file URI")
-        }
-      }
+    // Let's do some error checking
+    if (href.getScheme != "file" && href.getScheme != "http" && href.getScheme != "https") {
+      throw XProcException.xcFileCopyBadScheme(href, location);
     }
 
-    config.datastore.readEntry(href.toString, href, "*/*", None, new CopyReader(target))
+    if (target.getScheme != "file" && target.getScheme != "http" && target.getScheme != "https") {
+      throw XProcException.xcFileCopyBadScheme(target, location);
+    }
+
+    if (href.getScheme == "file") {
+      copyFromFile()
+    } else {
+      copyFromHttp()
+    }
 
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(URIUtils.cwdAsURI)
     builder.addStartElement(XProcConstants.c_result)
-    builder.addText(href.toString)
-    builder.addText("\n")
     builder.addText(target.toString)
     builder.addEndElement()
     builder.endDocument()
     consumer.get.receive("result", builder.result, new XProcMetadata(MediaType.XML))
   }
 
-  def copyDirectory(source: Path, target: Path): Unit = {
+  private def copyFromFile(): Unit = {
+    val srcpath = Paths.get(href.getPath)
+
+    if (!Files.exists(srcpath)) {
+      throw XProcException.xdDoesNotExist(href.toString, location)
+    }
+
+    if (Files.isDirectory(srcpath)) {
+      if (target.getScheme == "file") {
+        // If the source is a directory, "/path/from", and the target is "/path/to",
+        // we want to copy the files in /path/from/* to /path/to/from/
+        copyFileDirectoryToFile(srcpath, Paths.get(target.getPath).resolve(srcpath.getFileName))
+      } else {
+        if (target.getPath.endsWith("/")) {
+          // Okay, we'll try this
+          copyFileDirectoryToHttp(srcpath)
+        } else {
+          throw XProcException.xcFileCopyDirToFile(href, target, location);
+        }
+      }
+    }
+  }
+
+  private def copyFromHttp(): Unit = {
+    if (href.getPath.endsWith("/")) {
+      copyFromHttpDirectory()
+    } else {
+      copyFromHttpFile()
+    }
+  }
+
+  def copyFromHttpFile(): Unit = {
+    if (target.getScheme == "file") {
+      var destination = Paths.get(target.getPath)
+      if (!Files.exists(destination)) {
+        Files.createDirectories(destination)
+      }
+      if (!Files.exists(destination)) {
+        throw XProcException.xcCannotStore(target, location)
+      }
+      if (Files.isDirectory(destination)) {
+        var name = href.getPath
+        val pos = name.lastIndexOf("/")
+        if (pos >= 0) {
+          name = name.substring(pos+1)
+        }
+        destination = destination.resolve(name)
+      }
+
+      config.datastore.readEntry(href.toString, href, "*/*", None, new CopyReader(destination.toUri))
+    } else {
+      config.datastore.readEntry(href.toString, href, "*/*", None, new CopyReader(target))
+    }
+  }
+
+  def copyFromHttpDirectory(): Unit = {
+    if (target.getScheme == "file") {
+      val destination = Paths.get(target.getPath)
+      if (!Files.exists(destination)) {
+        Files.createDirectories(destination)
+      }
+      if (!Files.exists(destination)) {
+        throw XProcException.xcCannotStore(target, location)
+      }
+      if (!Files.isDirectory(destination)) {
+        throw XProcException.xcFileCopyDirToFile(href, target, location);
+      }
+
+      if (!target.getPath.endsWith("/")) {
+        target = new URI("file://" + target.getPath + "/")
+      }
+
+      config.datastore.listEachEntry(href.toString, href, "*/*", new CopyListReader(target))
+    } else {
+      if (target.getPath.endsWith("/")) {
+        // Okay, we'll try this
+        config.datastore.listEachEntry(href.toString, href, "*/*", new CopyListReader(target))
+      } else {
+        throw XProcException.xcFileCopyDirToFile(href, target, location);
+      }
+    }
+  }
+
+  def copyFileDirectoryToFile(source: Path, target: Path): Unit = {
     if (!Files.exists(target)) {
       val permissions = Files.getPosixFilePermissions(source)
       val fileattr = PosixFilePermissions.asFileAttribute(permissions)
@@ -75,13 +163,13 @@ class FileCopy() extends DefaultXmlStep {
     }
 
     if (!Files.isDirectory(target)) {
-      throw XProcException.xcCopyDirToFile(source.toString, target.toString, location);
+      throw XProcException.xcFileCopyDirToFile(source.toUri, target.toUri, location);
     }
 
-    Files.walk(source).forEach(copyItem(source, target, _))
+    Files.walk(source).forEach(copyItemToFile(source, target, _))
   }
 
-  private def copyItem(source: Path, target: Path, item: Path): Unit = {
+  private def copyItemToFile(source: Path, target: Path, item: Path): Unit = {
     if (source == item) {
       // .walk passes the source as the first item, ignore this
       return
@@ -137,9 +225,73 @@ class FileCopy() extends DefaultXmlStep {
     }
   }
 
+  def copyFileDirectoryToHttp(source: Path): Unit = {
+    Files.walk(source).forEach(copyItemToHttp(source, target, _))
+  }
+
+  private def copyItemToHttp(source: Path, target: URI, item: Path): Unit = {
+    if (source == item) {
+      // .walk passes the source as the first item, ignore this
+      return
+    }
+
+    if (Files.isDirectory(item)) {
+      // nevermind
+    } else {
+      try {
+        val relsrc = source.relativize(item)
+        val output = target.resolve(relsrc.toString)
+        config.datastore.readEntry(item.toUri.toString, item.toUri, "*/*", None, new CopyReader(output))
+      } catch {
+        case ex: Exception =>
+          if (failOnError) {
+            throw ex
+          }
+          logger.info("Failed to PUT " + item)
+      }
+    }
+  }
+
   private class CopyReader(target: URI) extends DataReader {
     override def load(id: URI, media: String, content: InputStream, len: Option[Long]): Unit = {
-      config.datastore.writeEntry(target.toString, target, "application/octet-stream", new CopyWriter(content))
+      try {
+        config.datastore.writeEntry(target.toString, target, "application/octet-stream", new CopyWriter(content))
+      } catch {
+        case ex: Exception =>
+          if (failOnError) {
+            throw ex
+          }
+          logger.info(ex.getMessage)
+      }
+    }
+  }
+
+  private class CopyListReader(target: URI) extends DataInfo {
+    override def list(id: URI, props: Map[String, XdmAtomicValue]): Unit = {
+      try {
+        val hrefstr = href.toString
+        val destination = id.toString
+        if (!destination.startsWith(hrefstr)) {
+          throw XProcException.xcCannotStore(id, location)
+        }
+
+        val request = new InternetProtocolRequest(config, staticContext, id)
+        val result = request.execute("GET")
+        if (result.statusCode.getOrElse(404) == 200) {
+          if (result.multipart) {
+            throw XProcException.xcCannotStore(id, location)
+          }
+          config.datastore.writeEntry(destination.substring(hrefstr.length), target, "application/octet-stream", new CopyWriter(result.response.head))
+        } else {
+          throw XProcException.xdDoesNotExist(id.toString, location)
+        }
+      } catch {
+        case ex: Exception =>
+          if (failOnError) {
+            throw ex
+          }
+          logger.info(ex.getMessage)
+      }
     }
   }
 

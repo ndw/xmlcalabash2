@@ -48,7 +48,7 @@ class HttpDataStoreSpec extends AnyFlatSpec with BeforeAndAfter {
   "listEachEntry" should "pass" in {
     var pass = true
     try {
-      httpStore.listEachEntry("http://localhost/", baseURI, "*/*", testIO)
+      httpStore.listEachEntry("http://localhost:8246/docs/", baseURI, "*/*", testIO)
     } catch {
       case _: Throwable => pass = false
     }

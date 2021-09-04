@@ -117,6 +117,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
   def psviSupported: Boolean = processor.isSchemaAware
 
   def safeMode: Boolean = false
+  def proxies: Map[String,URI] = Map.empty[String,URI]
 
   def processorRequired: Boolean = _processor == null
   def processor: Processor = {
