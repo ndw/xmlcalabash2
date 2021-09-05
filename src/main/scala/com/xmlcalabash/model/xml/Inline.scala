@@ -10,6 +10,8 @@ import com.xmlcalabash.util.xc.ElaboratedPipeline
 import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 
+import java.io.UnsupportedEncodingException
+import java.util.Base64
 import scala.collection.mutable
 
 class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val implied: Boolean) extends DataSource(config) {
@@ -44,6 +46,29 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
       if (_contentType.isDefined && _encoding.isEmpty) {
         if (_contentType.get.charset.isDefined) {
           throw XProcException.xdCharsetWithoutEncoding(attributes(XProcConstants._content_type), location)
+        }
+      }
+
+      if (_encoding.isDefined) {
+        if (_encoding.get == "base64") {
+          val charset = if (_contentType.isDefined) {
+            _contentType.get.charset.getOrElse("UTF-8")
+          } else {
+            "UTF-8"
+          }
+
+          // Can I trust you?
+          try {
+            val bytes = Base64.getDecoder.decode(srcNode.getStringValue)
+            val string = new String(bytes, charset)
+          } catch {
+            case _: IllegalArgumentException =>
+              throw XProcException.xdIncorrectEncoding(_encoding.get, location)
+            case _: UnsupportedEncodingException =>
+              throw XProcException.xdUnsupportedCharset(charset, location)
+            case ex: Exception =>
+              throw ex
+          }
         }
       }
     }

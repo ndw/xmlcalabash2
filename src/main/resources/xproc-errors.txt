@@ -63,6 +63,12 @@ Computed result “$2” does not match specified type “$3” for “$1”.
 XD0038
 Input content type “$1” is not an acceptable type (expected one of $2).
 
+XD0039
+Unsupported character set “$1”.
+
+XD0040
+The content is not correctly encoded for the $1 encoding.
+
 XD0042
 Output content type “$1” is not an acceptable type (expected one of $2).
 

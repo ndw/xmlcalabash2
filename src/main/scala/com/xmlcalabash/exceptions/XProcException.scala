@@ -121,6 +121,8 @@ object XProcException {
   def xdBadType(value: String, as: String, location: Option[Location]): XProcException = dynamicError(36, List(value, as), location)
   def xdBadType(name: QName, value: String, as: String, location: Option[Location]): XProcException = dynamicError(36, List(name, value, as), location)
   def xdBadInputMediaType(ctype: MediaType, allowed: List[MediaType], location: Option[Location]): XProcException = dynamicError(38, List(ctype, allowed), location)
+  def xdUnsupportedCharset(charset: String, location: Option[Location]): XProcException = dynamicError(39, charset, location)
+  def xdIncorrectEncoding(encoding: String, location: Option[Location]): XProcException = dynamicError(40, encoding, location)
   def xdBadOutputMediaType(ctype: MediaType, allowed: List[MediaType], location: Option[Location]): XProcException = dynamicError(42, List(ctype, allowed), location)
   def xdNotWFXML(href: String, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, message), location)
   def xdNotWFXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, line, col, message), location)
