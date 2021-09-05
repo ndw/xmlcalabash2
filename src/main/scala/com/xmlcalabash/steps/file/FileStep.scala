@@ -61,6 +61,11 @@ class FileStep() extends DefaultXmlStep {
 
     builder.addStartElement(XProcConstants.c_error, amap)
     builder.addText(body)
+    errorDetail(builder)
     builder.addEndElement()
+  }
+
+  protected def errorDetail(builder: SaxonTreeBuilder): Unit = {
+    // nop
   }
 }

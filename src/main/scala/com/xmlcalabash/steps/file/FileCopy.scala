@@ -3,17 +3,17 @@ package com.xmlcalabash.steps.file
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.steps.DefaultXmlStep
 import com.xmlcalabash.util.stores.{DataInfo, DataReader, DataWriter}
-import com.xmlcalabash.util.{InternetProtocolRequest, MediaType, URIUtils}
+import com.xmlcalabash.util.{InternetProtocolRequest, MediaType}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue}
 
 import java.io.{InputStream, OutputStream}
 import java.net.URI
 import java.nio.file.attribute.PosixFilePermissions
 import java.nio.file.{Files, LinkOption, Path, Paths, StandardCopyOption}
+import scala.collection.mutable.ListBuffer
 
-class FileCopy() extends DefaultXmlStep {
+class FileCopy() extends FileStep {
   private val cx_copyLinks = new QName("cx", XProcConstants.ns_cx, "copy-links")
   private val cx_copyAttributes = new QName("cx", XProcConstants.ns_cx, "copy-attributes")
   private val _bufsize = 8192
@@ -26,6 +26,8 @@ class FileCopy() extends DefaultXmlStep {
   private var staticContext: StaticContext = _
   private var href: URI = _
   private var target: URI = _
+  private var exception = Option.empty[Exception]
+  private val failures = ListBuffer.empty[URI]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
 
@@ -41,26 +43,40 @@ class FileCopy() extends DefaultXmlStep {
     copyLinks = booleanBinding(cx_copyLinks).getOrElse(copyLinks)
     copyAttributes = booleanBinding(cx_copyAttributes).getOrElse(copyAttributes)
 
-    // Let's do some error checking
-    if (href.getScheme != "file" && href.getScheme != "http" && href.getScheme != "https") {
-      throw XProcException.xcFileCopyBadScheme(href, location);
-    }
+    try {
+      // Let's do some error checking
+      if (href.getScheme != "file" && href.getScheme != "http" && href.getScheme != "https") {
+        throw XProcException.xcFileCopyBadScheme(href, location);
+      }
 
-    if (target.getScheme != "file" && target.getScheme != "http" && target.getScheme != "https") {
-      throw XProcException.xcFileCopyBadScheme(target, location);
-    }
+      if (target.getScheme != "file" && target.getScheme != "http" && target.getScheme != "https") {
+        throw XProcException.xcFileCopyBadScheme(target, location);
+      }
 
-    if (href.getScheme == "file") {
-      copyFromFile()
-    } else {
-      copyFromHttp()
+      if (href.getScheme == "file") {
+        copyFromFile()
+      } else {
+        copyFromHttp()
+      }
+    } catch {
+      case ex: Exception =>
+        if (failOnError) {
+          throw ex
+        }
+        exception = Some(ex)
     }
 
     val builder = new SaxonTreeBuilder(config)
-    builder.startDocument(URIUtils.cwdAsURI)
-    builder.addStartElement(XProcConstants.c_result)
-    builder.addText(target.toString)
-    builder.addEndElement()
+    builder.startDocument(None)
+
+    if (exception.isDefined) {
+      errorFromException(builder, exception.get)
+    } else {
+      builder.addStartElement(XProcConstants.c_result)
+      builder.addText(target.toString)
+      builder.addEndElement()
+    }
+
     builder.endDocument()
     consumer.get.receive("result", builder.result, new XProcMetadata(MediaType.XML))
   }
@@ -186,6 +202,8 @@ class FileCopy() extends DefaultXmlStep {
             throw ex;
           } else {
             logger.info("Failed to create symlink: " + ex.getMessage)
+            failures += output.toUri
+            exception = Some(ex)
           }
       }
     } else if (Files.isDirectory(item)) {
@@ -215,6 +233,8 @@ class FileCopy() extends DefaultXmlStep {
             throw ex;
           } else {
             logger.info("Failed to copy file: " + ex.getMessage)
+            failures += item.toUri
+            exception = Some(ex)
           }
       }
     } else {
@@ -245,6 +265,20 @@ class FileCopy() extends DefaultXmlStep {
             throw ex
           }
           logger.info("Failed to PUT " + item)
+          failures += item.toUri
+          exception = Some(ex)
+      }
+    }
+  }
+
+  override protected def errorDetail(builder: SaxonTreeBuilder): Unit = {
+    if (failures.nonEmpty) {
+      builder.addText("\nThe following failures occurred:\n")
+      for (fail <- failures) {
+        builder.addStartElement(XProcConstants._uri)
+        builder.addText(fail.toString)
+        builder.addEndElement()
+        builder.addText("\n")
       }
     }
   }
@@ -259,6 +293,8 @@ class FileCopy() extends DefaultXmlStep {
             throw ex
           }
           logger.info(ex.getMessage)
+          failures += target
+          exception = Some(ex)
       }
     }
   }
@@ -288,6 +324,8 @@ class FileCopy() extends DefaultXmlStep {
             throw ex
           }
           logger.info(ex.getMessage)
+          failures += target
+          exception = Some(ex)
       }
     }
   }

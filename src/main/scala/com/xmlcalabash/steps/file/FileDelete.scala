@@ -12,13 +12,16 @@ import java.io.{IOException, InputStream, OutputStream}
 import java.net.URI
 import java.nio.file.attribute.{BasicFileAttributes, PosixFilePermissions}
 import java.nio.file.{FileVisitResult, Files, LinkOption, Path, Paths, SimpleFileVisitor, StandardCopyOption}
+import scala.collection.mutable.ListBuffer
 
-class FileDelete() extends DefaultXmlStep {
+class FileDelete() extends FileStep {
   private var href: URI = _
   private var recursive = false
   private var failOnError = true
 
   private var staticContext: StaticContext = _
+  private var exception = Option.empty[Exception]
+  private val failures = ListBuffer.empty[URI]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
@@ -43,13 +46,19 @@ class FileDelete() extends DefaultXmlStep {
           throw ex
         }
         logger.info("Failed to delete " + href);
+        exception = Some(ex)
     }
 
     val builder = new SaxonTreeBuilder(config)
-    builder.startDocument(URIUtils.cwdAsURI)
-    builder.addStartElement(XProcConstants.c_result)
-    builder.addText(href.toString)
-    builder.addEndElement()
+    builder.startDocument(None)
+
+    if (exception.isDefined) {
+      errorFromException(builder, exception.get)
+    } else {
+      builder.addStartElement(XProcConstants.c_result)
+      builder.addText(href.toString)
+      builder.addEndElement()
+    }
     builder.endDocument()
     consumer.get.receive("result", builder.result, new XProcMetadata(MediaType.XML))
   }
@@ -86,6 +95,18 @@ class FileDelete() extends DefaultXmlStep {
     }
   }
 
+  override protected def errorDetail(builder: SaxonTreeBuilder): Unit = {
+    if (failures.nonEmpty) {
+      builder.addText("\nThe following failures occurred:\n")
+      for (fail <- failures) {
+        builder.addStartElement(XProcConstants._uri)
+        builder.addText(fail.toString)
+        builder.addEndElement()
+        builder.addText("\n")
+      }
+    }
+  }
+
   private class DeleteVisitor extends SimpleFileVisitor[Path] {
     override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
       try {
@@ -96,6 +117,8 @@ class FileDelete() extends DefaultXmlStep {
             throw ex
           }
           logger.info("Failed to delete " + file)
+          exception = Some(ex)
+          failures += file.toUri
       }
       FileVisitResult.CONTINUE
     }
@@ -108,6 +131,8 @@ class FileDelete() extends DefaultXmlStep {
             throw ex
           }
           logger.info("Failed to delete " + dir)
+          exception = Some(ex)
+          failures += dir.toUri
       }
       FileVisitResult.CONTINUE
     }
