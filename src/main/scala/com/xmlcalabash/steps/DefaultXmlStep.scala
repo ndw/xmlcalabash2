@@ -1,7 +1,5 @@
 package com.xmlcalabash.steps
 
-import java.io.{InputStream, OutputStream}
-import java.net.URI
 import com.jafpl.graph.Location
 import com.jafpl.messages.Message
 import com.jafpl.runtime.RuntimeConfiguration
@@ -12,15 +10,16 @@ import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime._
 import com.xmlcalabash.util.{MediaType, S9Api}
-import net.sf.saxon.`type`.{BuiltInAtomicType, BuiltInType, TypeHierarchy}
-import net.sf.saxon.expr.AtomicSequenceConverter
+import net.sf.saxon.`type`.TypeHierarchy
 import net.sf.saxon.expr.parser.RoleDiagnostic
 import net.sf.saxon.lib.NamespaceConstant
-import net.sf.saxon.om.{NamespaceMap, Sequence}
+import net.sf.saxon.om.NamespaceMap
 import net.sf.saxon.s9api._
 import net.sf.saxon.value.QNameValue
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.io.{InputStream, OutputStream}
+import java.net.URI
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.IterableHasAsScala
 
