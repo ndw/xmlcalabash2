@@ -180,7 +180,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
   }
 
   override def booleanValue(xpath: Any, context: List[Message], bindings: Map[String, Message], params: Option[BindingParams]): Boolean = {
-    val xdmval = value(xpath, context, bindings, params).item.asInstanceOf[XdmValue]
+    val xdmval = value(xpath, context, bindings, params).item
 
     if (xdmval.size() == 0) {
       //System.err.println(s"$xpath = false")

@@ -246,6 +246,8 @@ object XProcException {
   def xcBadChildPosition(pattern: String, position: String, location: Option[Location]): XProcException = stepError(25, List(pattern, position), location)
   def xcHttpCantInterpret(msg: String, location: Option[Location]): XProcException = stepError(30, msg, location)
 
+  def xcOsExecBadSeparator(pathSeparator: String, location: Option[Location]): XProcException = stepError(33, pathSeparator, location)
+  def xcOsExecBadCwd(path: String, location: Option[Location]): XProcException = stepError(34, path, location)
   def xcBadCrcVersion(version: String, location: Option[Location]): XProcException = stepError((36,1), version, location)
   def xcBadMdVersion(version: String, location: Option[Location]): XProcException = stepError((36,2), version, location)
   def xcBadShaVersion(version: String, location: Option[Location]): XProcException = stepError((36,3), version, location)
@@ -260,6 +262,7 @@ object XProcException {
   def xcXsltNoTemplate(template: QName, location: Option[Location]): XProcException = stepError(56, template, location)
   def xcCannotAddNamespaces(name: QName, location: Option[Location]): XProcException = stepError(59, name, location)
   def xcUnsupportedUuidVersion(version: Integer, location: Option[Location]): XProcException = stepError(60, version.toString, location)
+  def xcOsExecFailed(rc: Int, location: Option[Location]): XProcException = stepError(64, rc.toString, location)
   def xcContentTypeNotAllowed(location: Option[Location]): XProcException = stepError(69, location)
   def xcInvalidBase64(message: String, location: Option[Location]): XProcException = stepError(72, message, location)
   def xcContentTypeMissing(location: Option[Location]): XProcException = stepError(73, location)

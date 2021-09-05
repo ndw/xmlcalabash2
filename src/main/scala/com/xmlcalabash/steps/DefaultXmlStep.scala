@@ -21,6 +21,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import java.io.{InputStream, OutputStream}
 import java.net.URI
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.IterableHasAsScala
 
 class DefaultXmlStep extends XmlStep {
@@ -187,6 +188,25 @@ class DefaultXmlStep extends XmlStep {
       converted.head.getStringValue
     } else {
       default
+    }
+  }
+
+  def listOfStringBinding(name: QName): List[String] = {
+    // N.B. this method blindly returns the string values of whatever kinds of things are in the sequence
+    if (definedBinding(name)) {
+      val value = bindings(name).getUnderlyingValue
+      val ls = ListBuffer.empty[String]
+
+      val iter = value.iterate()
+      var item = iter.next()
+      while (item != null) {
+        ls += item.getStringValue
+        item = iter.next()
+      }
+
+      ls.toList
+    } else {
+      List.empty[String]
     }
   }
 
