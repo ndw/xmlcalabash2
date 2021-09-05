@@ -135,18 +135,7 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
       }
     }
 
-    // Now make sure there are no extras!
-    val seenInput = mutable.HashSet.empty[String]
-    for (winput <- children[WithInput]) {
-      if (!decl.inputPorts.contains(winput.port)) {
-        throw new RuntimeException(s"No port named ${winput.port} on this step")
-      }
-      if (seenInput.contains(winput.port)) {
-        throw XProcException.xsDupWithInputPort(winput.port, location)
-      }
-      seenInput += winput.port
-    }
-
+    // Make sure there are no extra options
     val seenOption = mutable.HashSet.empty[QName]
     for (woption <- children[WithOption]) {
       if (!decl.optionNames.contains(woption.name)) {
@@ -156,6 +145,33 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
         throw XProcException.xsDupWithOptionName(woption.name, location)
       }
       seenOption += woption.name
+    }
+
+    // Now manufacture "with-option"s for extension attributes
+    for (attr <- extensionAttributes.keySet) {
+      val woption = new WithOption(config, attr)
+      woption.staticContext = staticContext
+      woption.qnameKeys = false
+      woption.avt = extensionAttributes(attr)
+
+      if (seenOption.contains(woption.name)) {
+        throw XProcException.xsDupWithOptionName(woption.name, location)
+      }
+      seenOption += woption.name
+
+      addChild(woption)
+    }
+
+    // Now make sure there are no extra inputs
+    val seenInput = mutable.HashSet.empty[String]
+    for (winput <- children[WithInput]) {
+      if (!decl.inputPorts.contains(winput.port)) {
+        throw new RuntimeException(s"No port named ${winput.port} on this step")
+      }
+      if (seenInput.contains(winput.port)) {
+        throw XProcException.xsDupWithInputPort(winput.port, location)
+      }
+      seenInput += winput.port
     }
 
     // Now that we've checked the options, we can add an extra one.

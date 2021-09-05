@@ -135,7 +135,6 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
       val optsig  = stepsig.option(qname, staticContext.location)
       val opttype: Option[SequenceType] = optsig.declaredType
       val optlist: Option[List[XdmAtomicValue]] = optsig.tokenList
-      val occurrence = optsig.occurrence
 
       valuemsg.item match {
         case atomic: XdmAtomicValue =>
@@ -165,12 +164,8 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
           }
       }
     } else {
-      // These are special steps; they get all of the in-scope variables not just their declared options
-      if (stepType == XProcConstants.cx_document_loader
-        || stepType == XProcConstants.cx_inline_loader
-        || stepType == XProcConstants.cx_select_filter) {
-        step.receiveBinding(qname, valuemsg.item, valuemsg.context)
-      }
+      // Just pass it through, it's probably an extension attribute
+      step.receiveBinding(qname, valuemsg.item, valuemsg.context)
     }
   }
 
