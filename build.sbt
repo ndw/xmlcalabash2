@@ -154,7 +154,7 @@ libraryDependencies ++= Seq(
   "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.10.2",
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.2",
   "com.jafpl" % "jafpl_2.13" % jafplVersion
-)
+).map(_.exclude("net.sf.saxon", "*"))
 
 lazy val logback = "ch.qos.logback" % "logback-classic" % "1.0.13"
 
@@ -165,18 +165,6 @@ libraryDependencies ++= (
     Seq("net.sf.saxon" % "Saxon-HE" % saxonVersion)
   }
 )
-
-// This is being pulled in by something, and this doesn't push
-// it back out again. :-/
-excludeDependencies ++= (Seq("net.sf.saxon" % "Saxon-HE" % "9.6.0-4"))
-
-//excludeDependencies ++= (
-//  if (useSaxonEE) {
-//    Seq("net.sf.saxon" % "Saxon-HE" % saxonVersion)
-//  } else {
-//    List()
-//  }
-//)
 
 // ============================================================
 // This section is an attempt to get sbt assembly to work.
