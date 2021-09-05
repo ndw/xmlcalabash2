@@ -517,12 +517,6 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
         result.skipped = "The 'lazy-eval' feature is not supported"
         return result
       }
-      if (features.contains("file-steps")) {
-        val result = new TestResult(true) // skipped counts as a pass...
-        result.baseURI = node.getBaseURI
-        result.skipped = "The 'file-steps' are not implemented yet"
-        return result
-      }
       if (features.contains("webaccess")) {
         if (!online) {
           val result = new TestResult(true) // skipped counts as a pass...
