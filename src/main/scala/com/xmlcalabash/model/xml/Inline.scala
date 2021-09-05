@@ -40,6 +40,12 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
       _documentProperties = attr(XProcConstants._document_properties)
       _encoding = attr(XProcConstants._encoding)
       _exclude_inline_prefixes = attr(XProcConstants._exclude_inline_prefixes)
+
+      if (_contentType.isDefined && _encoding.isEmpty) {
+        if (_contentType.get.charset.isDefined) {
+          throw XProcException.xdCharsetWithoutEncoding(attributes(XProcConstants._content_type), location)
+        }
+      }
     }
   }
 

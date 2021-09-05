@@ -126,6 +126,7 @@ object XProcException {
   def xdNotWFXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, line, col, message), location)
 
   def xdCannotEncodeXml(encoding: String, contentType: MediaType, location: Option[Location]): XProcException = dynamicError(54, List(encoding,contentType), location)
+  def xdCharsetWithoutEncoding(contentType: String, location: Option[Location]): XProcException = dynamicError(55, contentType, location)
   def xdNoMarkupAllowedEncoded(name: QName, location: Option[Location]): XProcException = dynamicError(56, name, location)
   def xdInvalidJson(message: String, location: Option[Location]): XProcException = dynamicError(57, message, location)
   def xdUnsupportedEncoding(encoding: String, location: Option[Location]): XProcException = dynamicError(60, encoding, location)
