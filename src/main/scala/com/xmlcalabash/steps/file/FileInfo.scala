@@ -3,20 +3,17 @@ package com.xmlcalabash.steps.file
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.steps.DefaultXmlStep
 import com.xmlcalabash.util.{InternetProtocolRequest, MediaType, TypeUtils, URIUtils}
 import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap}
 import net.sf.saxon.s9api.QName
 
-import java.io.IOException
 import java.net.URI
-import java.nio.file.attribute.{BasicFileAttributes, FileTime, PosixFilePermission, PosixFilePermissions}
-import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor}
+import java.nio.file.attribute.{FileTime, PosixFilePermission}
+import java.nio.file.{Files, Path, Paths}
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZonedDateTime}
-import scala.collection.immutable.HashMap
 
-class FileInfo() extends DefaultXmlStep {
+class FileInfo() extends FileStep {
   private var href: URI = _
   private var failOnError = true
 
@@ -30,9 +27,10 @@ class FileInfo() extends DefaultXmlStep {
     staticContext = context
     href = uriBinding(XProcConstants._href).get
     failOnError = booleanBinding(XProcConstants._fail_on_error).getOrElse(failOnError)
+    var exception = Option.empty[Exception]
 
     builder = new SaxonTreeBuilder(config)
-    builder.startDocument(URIUtils.cwdAsURI)
+    builder.startDocument(None)
 
     try {
       if (href.getScheme == "file") {
@@ -48,9 +46,19 @@ class FileInfo() extends DefaultXmlStep {
           throw ex
         }
         logger.info("Failed to get info for " + href);
+        exception = Some(ex)
     }
 
     builder.endDocument()
+
+    if (exception.isDefined) {
+      // Discard the things we might have built...
+      builder = new SaxonTreeBuilder(config)
+      builder.startDocument(None)
+      errorFromException(builder, exception.get)
+      builder.endDocument()
+    }
+
     consumer.get.receive("result", builder.result, new XProcMetadata(MediaType.XML))
   }
 

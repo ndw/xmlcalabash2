@@ -3,15 +3,12 @@ package com.xmlcalabash.steps.file
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.steps.DefaultXmlStep
-import com.xmlcalabash.util.stores.{DataInfo, DataReader, DataWriter}
-import com.xmlcalabash.util.{InternetProtocolRequest, MediaType, URIUtils}
-import net.sf.saxon.s9api.{QName, XdmAtomicValue}
+import com.xmlcalabash.util.{InternetProtocolRequest, MediaType}
 
-import java.io.{IOException, InputStream, OutputStream}
+import java.io.IOException
 import java.net.URI
-import java.nio.file.attribute.{BasicFileAttributes, PosixFilePermissions}
-import java.nio.file.{FileVisitResult, Files, LinkOption, Path, Paths, SimpleFileVisitor, StandardCopyOption}
+import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor}
 import scala.collection.mutable.ListBuffer
 
 class FileDelete() extends FileStep {
@@ -59,7 +56,9 @@ class FileDelete() extends FileStep {
       builder.addText(href.toString)
       builder.addEndElement()
     }
+
     builder.endDocument()
+
     consumer.get.receive("result", builder.result, new XProcMetadata(MediaType.XML))
   }
 

@@ -11,7 +11,7 @@ import java.net.URI
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor}
 
-class FileMkdir() extends DefaultXmlStep {
+class FileMkdir() extends FileStep {
   private var href: URI = _
   private var failOnError = true
 
@@ -21,6 +21,7 @@ class FileMkdir() extends DefaultXmlStep {
   override def run(context: StaticContext): Unit = {
     href = uriBinding(XProcConstants._href).get
     failOnError = booleanBinding(XProcConstants._fail_on_error).getOrElse(failOnError)
+    var exception = Option.empty[Exception]
 
     try {
       if (href.getScheme == "file") {
@@ -34,14 +35,22 @@ class FileMkdir() extends DefaultXmlStep {
           throw ex
         }
         logger.info("Failed to mkdir " + href);
+        exception = Some(ex)
     }
 
     val builder = new SaxonTreeBuilder(config)
-    builder.startDocument(URIUtils.cwdAsURI)
-    builder.addStartElement(XProcConstants.c_result)
-    builder.addText(href.toString)
-    builder.addEndElement()
+    builder.startDocument(None)
+
+    if (exception.isDefined) {
+      errorFromException(builder, exception.get)
+    } else {
+      builder.addStartElement(XProcConstants.c_result)
+      builder.addText(href.toString)
+      builder.addEndElement()
+    }
+
     builder.endDocument()
+
     consumer.get.receive("result", builder.result, new XProcMetadata(MediaType.XML))
   }
 
