@@ -57,6 +57,9 @@ $1
 XD0036
 Computed result “$1” does not match specified type “$2”.
 
+XD0036
+Computed result “$2” does not match specified type “$3” for “$1”.
+
 XD0038
 Input content type “$1” is not an acceptable type (expected one of $2).
 

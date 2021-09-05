@@ -103,6 +103,13 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
       // Return a default template
       new ErrorExplanationTemplate(code.getClarkName, 1,"[No explanatory message for " + code + "]", "")
     } else {
+      // Return the (first) one with the matching cardinality
+      for (template <- templates) {
+        if (template.cardinality == count) {
+          return template
+        }
+      }
+
       // Return the one with the highest cardinality.
       templates.maxBy(_.cardinality)
     }

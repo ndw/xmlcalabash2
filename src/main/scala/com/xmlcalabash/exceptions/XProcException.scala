@@ -119,6 +119,7 @@ object XProcException {
   def xdStepFailed(msg: String, location: Option[Location]): XProcException = dynamicError(30, msg, location)
   def xdConflictingNamespaceDeclarations(msg: String, location: Option[Location]): XProcException = dynamicError(34, msg, location)
   def xdBadType(value: String, as: String, location: Option[Location]): XProcException = dynamicError(36, List(value, as), location)
+  def xdBadType(name: QName, value: String, as: String, location: Option[Location]): XProcException = dynamicError(36, List(name, value, as), location)
   def xdBadInputMediaType(ctype: MediaType, allowed: List[MediaType], location: Option[Location]): XProcException = dynamicError(38, List(ctype, allowed), location)
   def xdBadOutputMediaType(ctype: MediaType, allowed: List[MediaType], location: Option[Location]): XProcException = dynamicError(42, List(ctype, allowed), location)
   def xdNotWFXML(href: String, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, message), location)

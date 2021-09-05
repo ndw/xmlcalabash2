@@ -202,7 +202,13 @@ class DefaultXmlStep extends XmlStep {
 
   def booleanBinding(name: QName): Option[Boolean] = {
     if (definedBinding(name)) {
-      Some(bindings(name).getUnderlyingValue.getStringValue == "true")
+      val str = bindings(name).getUnderlyingValue.getStringValue
+      str match {
+        case "true" => Some(true)
+        case "false" => Some(false)
+        case _ =>
+          throw XProcException.xdBadType(name, str, "xs:boolean", location)
+      }
     } else {
       None
     }
