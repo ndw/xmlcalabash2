@@ -12,7 +12,6 @@ import java.nio.file.{Files, Paths, StandardCopyOption}
 
 class FileMove() extends FileStep {
   private var failOnError = true
-  private var overwrite = true
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
@@ -21,7 +20,6 @@ class FileMove() extends FileStep {
     val href = uriBinding(XProcConstants._href).get
     var target = uriBinding(XProcConstants._target).get
     failOnError = booleanBinding(XProcConstants._fail_on_error).getOrElse(failOnError)
-    overwrite = booleanBinding(XProcConstants._overwrite).getOrElse(overwrite)
     var exception = Option.empty[Exception]
 
     try {
@@ -46,15 +44,14 @@ class FileMove() extends FileStep {
         } else {
           if (Files.isDirectory(source)) {
             throw XProcException.xcFileMoveDirToFile(href, target, location)
+          } else {
+            throw XProcException.xcFileMoveOverwriteForbidden(href, target, location)
           }
         }
       }
 
-      if (overwrite) {
-        Files.move(source, dest, StandardCopyOption.REPLACE_EXISTING)
-      } else {
-        Files.move(source, dest)
-      }
+      // N.B. It is always an error if 'dest' exists
+      Files.move(source, dest)
     } catch {
       case ex: Exception =>
         if (failOnError) {

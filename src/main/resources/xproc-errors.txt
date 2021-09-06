@@ -340,6 +340,9 @@ Attribute name collision: “$1”
 XC0113
 Attempt to delete non-empty directory without the recursive option: $1
 
+XC0115
+Cannot move ($1) onto an existing file ($2).
+
 XC0126
 Assertion failed: “$1”
 
