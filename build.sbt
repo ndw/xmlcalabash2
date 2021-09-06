@@ -148,13 +148,12 @@ libraryDependencies ++= Seq(
   "org.restlet.jee" % "org.restlet.ext.fileupload" % "2.2.2",
   "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
   "org.xmlresolver" % "xmlresolver" % "1.0.6",
-  "org.relaxng" % "jing" % "20181222",
   "nu.validator" % "htmlparser" % "1.4.12",
   "com.atlassian.commonmark" % "commonmark" % "0.12.1",
   "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.10.2",
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.2",
   "com.jafpl" % "jafpl_2.13" % jafplVersion
-).map(_.exclude("net.sf.saxon", "*"))
+)
 
 lazy val logback = "ch.qos.logback" % "logback-classic" % "1.0.13"
 
@@ -180,7 +179,8 @@ libraryDependencies +=
   "org.relaxng" % "jing" % "20181222" excludeAll(
     ExclusionRule(organization = "com.sun.xml.bind.jaxb"),
     ExclusionRule(organization = "isorelax"),
-    ExclusionRule(organization = "relaxngDatatype")
+    ExclusionRule(organization = "relaxngDatatype"),
+    ExclusionRule(organization = "net.sf.saxon")
   )
 
 libraryDependencies +=
