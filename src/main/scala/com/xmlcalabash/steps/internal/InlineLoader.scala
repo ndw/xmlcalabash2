@@ -1,8 +1,5 @@
 package com.xmlcalabash.steps.internal
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
-import java.net.URI
-import java.util.Base64
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
@@ -10,15 +7,18 @@ import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.params.InlineLoaderParams
 import com.xmlcalabash.runtime.{BinaryNode, ImplParams, StaticContext, XProcMetadata, XProcVtExpression, XProcXPathExpression, XmlPortSpecification}
-import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils}
+import com.xmlcalabash.util.{MediaType, TypeUtils}
 import net.sf.saxon.`type`.BuiltInAtomicType
 import net.sf.saxon.event.ReceiverOption
 import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap, NamespaceMap}
-import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmNode, XdmNodeKind, XdmValue}
 
+import java.io.ByteArrayInputStream
+import java.net.URI
+import java.util.Base64
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.jdk.CollectionConverters.ListHasAsScala
+import scala.jdk.CollectionConverters._
 
 // N.B. This looks like a step, but it isn't really. It gets passed all of the variable bindings
 // and the context item and it evaluates its "options" directly. This is necessary because in
@@ -275,7 +275,7 @@ class InlineLoader() extends AbstractLoader {
         var newExpand = expandText
 
         var amap: AttributeMap = EmptyAttributeMap.getInstance()
-        for (attr <- node.getUnderlyingNode.attributes().asList().asScala) {
+        for (attr <- node.getUnderlyingNode.attributes().asScala) {
           var discardAttribute = false
           if (attr.getNodeName == fq_p_inline_expand_text) {
             if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
@@ -334,7 +334,6 @@ class InlineLoader() extends AbstractLoader {
 
   private def expandNodes(text: String, builder: SaxonTreeBuilder): Unit = {
     val expr = new XProcVtExpression(exprContext, text)
-
     val evaluator = config.expressionEvaluator.newInstance()
     val iter = evaluator.value(expr, contextItem.toList, msgBindings.toMap, None).item.iterator()
     while (iter.hasNext) {

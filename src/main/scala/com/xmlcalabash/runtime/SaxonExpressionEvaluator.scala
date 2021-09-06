@@ -270,7 +270,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
             if (xdmval == null) {
               xdmval = part;
             } else {
-              xdmval.append(part);
+              xdmval = xdmval.append(part);
             }
           }
         }
@@ -426,8 +426,9 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         }
       }
 
-      val value = try {
-        selector.evaluate()
+      var value: XdmValue = null;
+      try {
+        value = selector.evaluate()
       } catch {
         case sae: SaxonApiException =>
           if (sae.getMessage.contains("context item") && sae.getMessage.contains("absent")) {
