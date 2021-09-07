@@ -392,6 +392,12 @@ class HttpRequest() extends DefaultXmlStep {
     if (provider.isDefined) {
       builder.setDefaultCredentialsProvider(provider.get)
     }
+
+    // FIXME: redirect is effectively boolean when it should be counting; will have to do by hand
+    if (followRedirectCount == 0) {
+      builder.disableRedirectHandling()
+    }
+
     val httpClient = builder.build()
 
     if (Option(httpClient).isEmpty) {
@@ -526,7 +532,12 @@ class HttpRequest() extends DefaultXmlStep {
 
     val ctype = httpResult.getLastHeader("Content-Type")
     if (Option(ctype).isEmpty) {
-      return MediaType.OCTET_STREAM
+      if (httpResult.getLastHeader("Location") == null) {
+        return MediaType.OCTET_STREAM
+      } else {
+        // This is kind of a lie, but it's a safe one
+        return MediaType.TEXT
+      }
     }
 
     val types = ctype.getElements
@@ -544,8 +555,8 @@ class HttpRequest() extends DefaultXmlStep {
   }
 
   private def entityMetadata(): XProcMetadata = {
-    var ctype = MediaType.OCTET_STREAM
-    var props = mutable.HashMap.empty[QName, XdmValue]
+    var ctype = getFullContentType
+    val props = mutable.HashMap.empty[QName, XdmValue]
 
     props.put(XProcConstants._base_uri, new XdmAtomicValue(finalURI))
 
@@ -564,16 +575,6 @@ class HttpRequest() extends DefaultXmlStep {
             value = smsg.item.asInstanceOf[XdmAtomicValue]
           } catch {
             case _: DateTimeParseException => ()
-          }
-        }
-
-        if (key == XProcConstants._content_type) {
-          if (overrideContentType.isDefined) {
-            ctype = overrideContentType.get
-            value = new XdmAtomicValue(overrideContentType.get.toString)
-          } else {
-            ctype = MediaType.parse(header.getValue).discardParams(List("charset"))
-            value = new XdmAtomicValue(ctype.toString)
           }
         }
 
