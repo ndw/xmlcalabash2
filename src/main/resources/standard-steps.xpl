@@ -36,6 +36,7 @@
   <p:option name="format" as="xs:QName?"/>                      
   <p:option name="parameters" as="map(xs:QName, item()*)?"/>    
   <p:option name="relative-to" as="xs:anyURI?"/>                
+  <p:option name="override-content-types" as="array(array(xs:string))?"/>
 </p:declare-step>
 
 <p:declare-step type="p:cast-content-type">

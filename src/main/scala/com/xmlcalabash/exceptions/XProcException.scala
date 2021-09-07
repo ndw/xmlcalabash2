@@ -313,6 +313,7 @@ object XProcException {
   def xcFileDeleteNotAllowed(uri: URI, location: Option[Location]): XProcException = stepError(143, uri, location)
 
   def xcFileCopyBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(144, uri, location)
+  def xcOverrideContentTypesMalformed(location: Option[Location]): XProcException = stepError(146, location)
   def xcFileMoveBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(148, uri, location)
   def xcFileCopyDirToFile(source: URI, target: URI, location: Option[Location]): XProcException = stepError(157, List(source, target), location)
   def xcFileMoveDirToFile(source: URI, target: URI, location: Option[Location]): XProcException = stepError(158, List(source, target), location)

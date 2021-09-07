@@ -9,6 +9,7 @@ import com.xmlcalabash.runtime.params.StepParams
 import com.xmlcalabash.runtime.{ImplParams, StepExecutable, StepProxy, StepRunner, StepWrapper, XMLCalabashRuntime, XmlStep}
 import com.xmlcalabash.steps.internal.{DocumentLoader, InlineLoader}
 import com.xmlcalabash.util.xc.ElaboratedPipeline
+import net.sf.saxon.ma.arrays.ArrayItemType
 import net.sf.saxon.ma.map.MapType
 import net.sf.saxon.s9api.{QName, XdmNode}
 
@@ -107,6 +108,8 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
 
             dtype.getItemType.getUnderlyingItemType match {
               case _: MapType =>
+                woption.select = attr(doption.name).get
+              case _: ArrayItemType =>
                 woption.select = attr(doption.name).get
               case _ =>
                 woption.avt = attr(doption.name).get

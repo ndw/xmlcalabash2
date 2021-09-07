@@ -36,7 +36,6 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   protected var _href = Option.empty[String]
   protected var _pipe = Option.empty[String]
 
-  private val typeFactory = new ItemTypeFactory(config.processor)
   private var typeUtils: TypeUtils = _
 
   def name: QName = _name
@@ -44,6 +43,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   protected[model] def as_=(seq: SequenceType): Unit = {
     _as = Some(seq)
   }
+
   def declaredType: SequenceType = {
     if (_declaredType.isEmpty) {
       _declaredType = staticContext.parseSequenceType(Some("xs:string"))
@@ -53,6 +53,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   protected[model] def declaredType_=(decltype: SequenceType): Unit = {
     _declaredType = Some(decltype)
   }
+
   def values: Option[String] = _values
   def required: Boolean = _required.getOrElse(false)
   def select: Option[String] = _select
@@ -66,6 +67,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
     }
     _avt = Some(expr)
   }
+
   def static: Boolean = _static.getOrElse(false)
   def visibility: String = _visibility.getOrElse("public")
   def allowedValues: Option[List[XdmAtomicValue]] = _allowedValues
@@ -128,9 +130,6 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   }
 
   override protected[model] def makeStructureExplicit(): Unit = {
-    val astep = parent.get
-
-
     if (_href.isDefined && _pipe.isDefined) {
       throw XProcException.xsPipeAndHref(location)
     }

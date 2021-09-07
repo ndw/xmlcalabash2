@@ -8,8 +8,11 @@ import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, TypeUtils}
 import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap}
-import net.sf.saxon.s9api.{QName, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmArray, XdmValue}
 import org.apache.commons.compress.archivers.zip.{ZipArchiveEntry, ZipFile}
+
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class ArchiveManifest extends DefaultXmlStep {
   private val _zip = new QName("", "zip")
@@ -55,6 +58,28 @@ class ArchiveManifest extends DefaultXmlStep {
 
     if (format.get != _zip) {
       throw XProcException.xcUnknownArchiveFormat(format.get, location)
+    }
+
+    val overrideContentTypes = ListBuffer.empty[Tuple2[String,MediaType]]
+    if (bindings.contains(XProcConstants._override_content_types)) {
+      val ctarrayarray = bindings(XProcConstants._override_content_types).asInstanceOf[XdmArray];
+      for (apos <- 0 until ctarrayarray.arrayLength()) {
+        val ctarray = ctarrayarray.get(apos).asInstanceOf[XdmArray]
+        if (ctarray.arrayLength() != 2) {
+          throw XProcException.xcOverrideContentTypesMalformed(location)
+        }
+        val regex = ctarray.get(0).toString
+        val ctype = MediaType.parse(ctarray.get(1).toString)
+
+        // FIXME: this should be centralized. It can't trivially be added to .parse() because
+        // we use that to parse things like */*+xml in other places
+        if (!ctype.mediaType.matches("^[a-z][a-z0-9_]*$")) {
+          throw XProcException.xdUnrecognizedContentType(ctarray.get(1).toString, location)
+        }
+
+        val tuple = (regex, ctype)
+        overrideContentTypes += tuple
+      }
     }
 
     relativeTo = uriBinding(_relativeTo)

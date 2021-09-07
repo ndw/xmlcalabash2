@@ -216,6 +216,7 @@ object XProcConstants {
   val _omit_xml_declaration = new QName("", "omit-xml-declaration")
   val _override_content_encoding = new QName("", "override-content-encoding")
   val _override_content_type = new QName("", "override-content-type")
+  val _override_content_types = new QName("", "override-content-types")
   val _overwrite = new QName("", "overwrite")
   val _required = new QName("", "required")
   val _parameters = new QName("", "parameters")

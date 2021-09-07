@@ -232,6 +232,7 @@ class InlineLoader() extends AbstractLoader {
     }
   }
 
+  /*
   private def trim(nodes: List[XdmNode]): List[XdmNode] = {
     if (config.trimInlineWhitespace) {
       var count = 1
@@ -252,6 +253,7 @@ class InlineLoader() extends AbstractLoader {
       nodes
     }
   }
+  */
 
   private def expandTVT(node: XdmNode, builder: SaxonTreeBuilder, expandText: Boolean): Unit = {
     node.getNodeKind match {
