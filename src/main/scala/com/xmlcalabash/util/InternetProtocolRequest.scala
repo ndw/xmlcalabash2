@@ -43,9 +43,10 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
   private var _authMethod = Option.empty[String]
   private var _authPremptive = false
   private var _usercreds = Option.empty[UsernamePasswordCredentials]
-  private var _httpVersion = Option.empty[ProtocolVersion]
+  private var _httpVersion = Option.empty[Tuple2[Int,Int]]
   private var _statusOnly = false
   private var _overrideContentType = Option.empty[MediaType]
+  private var _followRedirectCount = -1
 
   def this(config: XMLCalabashRuntime, context: StaticContext, uri: URI) =
     this(config.config, context, uri)
@@ -72,8 +73,8 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
     _timeout = Some(timeout)
   }
 
-  def httpVersion: Option[ProtocolVersion] = _httpVersion
-  def httVersion_=(version: ProtocolVersion): Unit = {
+  def httpVersion: Option[Tuple2[Int,Int]] = _httpVersion
+  def httpVersion_=(version: Tuple2[Int,Int]): Unit = {
     _httpVersion = Some(version)
   }
 
@@ -87,12 +88,20 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
     _overrideContentType = Some(mtype)
   }
 
+  def followRedirectCount: Int = _followRedirectCount
+  def followRedirectCount_=(count: Int): Unit = {
+    _followRedirectCount = count
+  }
+
   def addSource(item: Array[Byte], meta: XProcMetadata): Unit = {
     _sources += item;
     _sourcesMetadata += meta;
   }
 
   def addHeader(name: String, value: String): Unit = {
+    if (name.equalsIgnoreCase("content-type")) {
+      MediaType.parse(value).assertValid
+    }
     headers.put(name, value);
   }
 
@@ -178,6 +187,15 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
       builder.setDefaultCredentialsProvider(bCredsProvider)
     }
 
+    // FIXME: redirect is effectively boolean when it should be counting; will have to do by hand
+    if (followRedirectCount == 0) {
+      builder.disableRedirectHandling()
+    }
+
+    for ((header,value) <- headers) {
+      httpRequest.setHeader(header, value)
+    }
+
     val httpClient = builder.build()
 
     if (Option(httpClient).isEmpty) {
@@ -185,7 +203,7 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
     }
 
     if (httpVersion.isDefined) {
-      httpRequest.setProtocolVersion(httpVersion.get)
+      httpRequest.setProtocolVersion(new ProtocolVersion(href.getScheme, httpVersion.get._1, httpVersion.get._2))
     }
 
     httpResult = httpClient.execute(httpRequest, localContext)
@@ -299,6 +317,7 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
 
   private def entityMetadata(headers: List[Header]): XProcMetadata = {
     var ctype = MediaType.OCTET_STREAM
+    var location = false
     var baseURI = finalURI
     val props = mutable.HashMap.empty[QName, XdmValue]
 
@@ -342,10 +361,16 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
           }
         }
 
+        location = location ||  (key == XProcConstants._location)
         props.put(key, value)
       } catch {
         case _: Exception => ()
       }
+    }
+
+    if (location) {
+      // Lie like a rug. An empty document might as well be text/plain as application/octet-stream
+      props.put(XProcConstants._content_type, new XdmAtomicValue("text/plain"))
     }
 
     props.put(XProcConstants._base_uri, new XdmAtomicValue(baseURI))

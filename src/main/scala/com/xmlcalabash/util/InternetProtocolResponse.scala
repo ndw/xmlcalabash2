@@ -44,7 +44,6 @@ class InternetProtocolResponse(val responseURI: URI) {
   }
 
   def report: Option[XdmMap] = _report
-
   def report_=(map: XdmMap): Unit = {
     _report = Some(map)
   }

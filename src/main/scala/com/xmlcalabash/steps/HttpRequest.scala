@@ -1,36 +1,22 @@
 package com.xmlcalabash.steps
 
-import java.io.ByteArrayOutputStream
-import java.net.URI
-import java.time.Instant
-import java.time.format.{DateTimeFormatter, DateTimeParseException}
-
 import com.jafpl.messages.Message
-import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
-import com.xmlcalabash.util.{MIMEReader, MediaType}
+import com.xmlcalabash.util.{InternetProtocolRequest, MediaType}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmValue}
-import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
-import org.apache.http.client.CredentialsProvider
-import org.apache.http.client.config.{CookieSpecs, RequestConfig}
-import org.apache.http.client.methods.{HttpGet, HttpPost, HttpRequestBase}
-import org.apache.http.client.protocol.HttpClientContext
-import org.apache.http.entity.ByteArrayEntity
-import org.apache.http.impl.client.{BasicCredentialsProvider, HttpClientBuilder, StandardHttpRequestRetryHandler}
-import org.apache.http.{Header, HttpResponse, ProtocolVersion}
 
+import java.io.ByteArrayOutputStream
+import java.net.URI
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class HttpRequest() extends DefaultXmlStep {
   private val _timeout = new QName("", "timeout")
-  private val _expires = new QName("", "expires")
-  private val _date = new QName("", "date")
 
   private val sources = ListBuffer.empty[Any]
   private val sourceMeta = ListBuffer.empty[XProcMetadata]
@@ -42,12 +28,9 @@ class HttpRequest() extends DefaultXmlStep {
   private val auth = mutable.HashMap.empty[String, XdmValue]
   private val parameters = mutable.HashMap.empty[QName, XdmValue]
   private var assert = ""
-  private var builder: HttpClientBuilder = _
-  private var httpResult: HttpResponse = _
-  private var finalURI: URI = _
 
   // Parameters
-  private var httpVersion = Option.empty[ProtocolVersion]
+  private var httpVersion = Option.empty[Tuple2[Int,Int]]
   private var overrideContentType = Option.empty[MediaType]
   private var acceptMultipart = true
   private var overrideContentEncoding = Option.empty[String]
@@ -65,7 +48,6 @@ class HttpRequest() extends DefaultXmlStep {
   private var password = Option.empty[String]
   private var authmethod = Option.empty[String]
   private var sendauth = false
-  private var usercreds = Option.empty[UsernamePasswordCredentials]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCESEQ
   override def outputSpec: XmlPortSpecification = new XmlPortSpecification(
@@ -73,11 +55,6 @@ class HttpRequest() extends DefaultXmlStep {
     Map("result" -> List("application/octet-stream"),
       "report" -> List("application/json"))
   )
-
-  override def initialize(config: RuntimeConfiguration): Unit = {
-    super.initialize(config)
-    builder = HttpClientBuilder.create()
-  }
 
   override def reset(): Unit = {
     super.reset()
@@ -87,9 +64,6 @@ class HttpRequest() extends DefaultXmlStep {
     auth.clear()
     parameters.clear()
     assert = ""
-    builder = HttpClientBuilder.create()
-    httpResult = null
-    finalURI = null
   }
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
@@ -217,7 +191,6 @@ class HttpRequest() extends DefaultXmlStep {
       if (password.isEmpty) {
         password = Some("")
       }
-      usercreds = Some(new UsernamePasswordCredentials(username.get, password.get))
     }
 
     if (username.isDefined && authmethod.isEmpty) {
@@ -276,7 +249,7 @@ class HttpRequest() extends DefaultXmlStep {
         throw XProcException.xcHttpInvalidParameter("http-version", value.toString, location)
     }
 
-    httpVersion = Some(new ProtocolVersion(href.getScheme, minVer, majVer))
+    httpVersion = Some(new Tuple2(minVer, majVer))
   }
 
   private def booleanParameter(name: String, value: XdmValue): Boolean = {
@@ -350,79 +323,35 @@ class HttpRequest() extends DefaultXmlStep {
   }
 
   private def doHttp(): Unit = {
-    val rqbuilder = RequestConfig.custom()
-    rqbuilder.setCookieSpec(CookieSpecs.DEFAULT)
-    val localContext = HttpClientContext.create()
-
-    // FIXME: deal with cookies
+    val request = new InternetProtocolRequest(config, context, href)
 
     if (parameters.contains(_timeout)) {
-      rqbuilder.setSocketTimeout(Integer.parseInt(parameters(_timeout).getUnderlyingValue.getStringValue))
+      request.timeout = Integer.parseInt(parameters(_timeout).getUnderlyingValue.getStringValue)
     }
 
-    builder.setDefaultRequestConfig(rqbuilder.build())
-
-    // FIXME: deal with auth
-
-    // FIXME: deal with source
-
-    val httpRequest = method match {
-      case "GET" =>
-        doGet()
-      case "POST" =>
-        doPost()
-      case _ =>
-        throw new UnsupportedOperationException(s"Unsupported method: $method")
+    if (username.isDefined) {
+      request.authentication(authmethod.get, username.get, password.get, sendauth)
     }
 
-    builder.setRetryHandler(new StandardHttpRequestRetryHandler(3, false))
-    // FIXME: deal with proxy
+    for (pos <- sources.indices) {
+      val source = sources(pos)
+      val meta = sourceMeta(pos)
 
-    var provider = Option.empty[CredentialsProvider]
-    if (usercreds.isDefined) {
-      if (authmethod.get == "basic") {
-        val basic = new BasicCredentialsProvider()
-        basic.setCredentials(AuthScope.ANY, usercreds.get)
-        provider = Some(basic)
-      } else { // digest
-        throw new UnsupportedOperationException("Can't handle digest auth yet")
-      }
-    }
-
-    if (provider.isDefined) {
-      builder.setDefaultCredentialsProvider(provider.get)
-    }
-
-    // FIXME: redirect is effectively boolean when it should be counting; will have to do by hand
-    if (followRedirectCount == 0) {
-      builder.disableRedirectHandling()
+      val baos = new ByteArrayOutputStream()
+      serialize(context, source, meta, baos)
+      request.addSource(baos.toByteArray, meta)
     }
 
     for ((header,value) <- headers) {
-      if (header.equalsIgnoreCase("content-type")) {
-        MediaType.parse(value).assertValid
-      }
-      httpRequest.setHeader(header, value)
-    }
-
-    val httpClient = builder.build()
-
-    if (Option(httpClient).isEmpty) {
-      throw new RuntimeException("HTTP requests have been disabled")
+      request.addHeader(header, value)
     }
 
     if (httpVersion.isDefined) {
-      httpRequest.setProtocolVersion(httpVersion.get)
+      request.httpVersion = httpVersion.get
     }
 
-    httpResult = httpClient.execute(httpRequest, localContext)
-    finalURI = httpRequest.getURI
-    val locations = Option(localContext.getRedirectLocations)
-    if (locations.isDefined) {
-      finalURI = locations.get.get(locations.get.size() - 1)
-    }
-
-    val report = requestReport()
+    val response = request.execute(method)
+    val report = response.report.get
 
     if (assert != "") {
       val msg = new XdmValueItemMessage(report, XProcMetadata.JSON, context)
@@ -436,261 +365,29 @@ class HttpRequest() extends DefaultXmlStep {
 
     consumer.get.receive("report", report, new XProcMetadata(MediaType.JSON))
 
-    readResponseEntity()
-  }
+    for (pos <- response.response.indices) {
+      val doc = response.response(pos)
+      val meta = response.responseMetadata(pos)
 
-  private def readResponseEntity(): Unit = {
-    if (Option(httpResult.getEntity).isEmpty) {
-      return
-    }
-
-    val contentType = getFullContentType
-    if (contentType.matches(MediaType.MULTIPART)) {
-      if (!acceptMultipart) {
-        throw XProcException.xcHttpMultipartForbidden(location)
+      val request = new DocumentRequest(meta.baseURI, Some(meta.contentType), location, false)
+      val result = try {
+        config.documentManager.parse(request, doc)
+      } catch {
+        case ex: Exception =>
+          if (overrideContentType.isDefined) {
+            throw XProcException.xcHttpCantInterpret(ex.getMessage, location)
+          } else {
+            throw ex
+          }
       }
-      if (!statusOnly) {
-        readMultipartEntity()
-      }
-    } else {
-      if (!statusOnly) {
-        readSinglepartEntity()
-      }
-    }
-  }
-
-  private def readSinglepartEntity(): Unit = {
-    val stream = httpResult.getEntity.getContent
-    val contentType = getFullContentType
-    val request = new DocumentRequest(finalURI, contentType, location)
-    val result = try {
-      config.documentManager.parse(request, stream)
-    } catch {
-      case ex: Exception =>
-        if (overrideContentType.isDefined) {
-          throw XProcException.xcHttpCantInterpret(ex.getMessage, location)
-        } else {
-          throw ex
-        }
-    }
-
-    val meta = entityMetadata()
-
-    if (result.shadow.isDefined) {
-      val node = new BinaryNode(config, result.shadow.get)
-      consumer.get.receive("result", node, meta)
-    } else {
-      consumer.get.receive("result", result.value, meta)
-    }
-  }
-
-  private def readMultipartEntity(): Unit = {
-    val contentType = getFullContentType
-    val boundary = contentType.paramValue("boundary")
-
-    val reader = new MIMEReader(httpResult.getEntity.getContent, boundary.get)
-    while (reader.readHeaders()) {
-      val pctype = reader.header("Content-Type")
-      val pclen = reader.header("Content-Length")
-
-      val contentType = MediaType.parse(getHeaderValue(pctype).getOrElse("application/octet-stream"))
-
-      val partStream = if (pclen.isDefined) {
-        val len = getHeaderValue(pclen).get.toLong
-        reader.readBodyPart(len)
-      } else {
-        reader.readBodyPart()
-      }
-
-      // FIXME: handle content-disposition: attachment; filename="something.xml"
-      val partURI = finalURI
-
-      val request = new DocumentRequest(partURI, contentType)
-      request.baseURI = partURI
-
-      val result = config.documentManager.parse(request, partStream)
 
       if (result.shadow.isDefined) {
         val node = new BinaryNode(config, result.shadow.get)
-        consumer.get.receive("result", node, new XProcMetadata(result.contentType, result.props))
+        consumer.get.receive("result", node, meta)
       } else {
-        consumer.get.receive("result", result.value, new XProcMetadata(result.contentType, result.props))
+        consumer.get.receive("result", result.value, meta)
       }
     }
-  }
-
-  private def getHeaderValue(header: Option[Header]): Option[String] = {
-    if (header.isEmpty) {
-      None
-    } else {
-      val elems = header.get.getElements
-      if (elems == null || elems.isEmpty) {
-        None
-      } else {
-        Some(elems(0).toString)
-      }
-    }
-  }
-
-  private def getFullContentType: MediaType = {
-    if (overrideContentType.isDefined) {
-      return overrideContentType.get
-    }
-
-    val ctype = httpResult.getLastHeader("Content-Type")
-    if (Option(ctype).isEmpty) {
-      if (httpResult.getLastHeader("Location") == null) {
-        return MediaType.OCTET_STREAM
-      } else {
-        // This is kind of a lie, but it's a safe one
-        return MediaType.TEXT
-      }
-    }
-
-    val types = ctype.getElements
-    if (Option(types).isEmpty || types.isEmpty) {
-      return MediaType.OCTET_STREAM
-    }
-
-    var params = ""
-    for (param <- types(0).getParameters) {
-      params += "; "
-      params += param.getName.toLowerCase() + "=" + param.getValue
-    }
-
-    MediaType.parse(types(0).getName + params)
-  }
-
-  private def entityMetadata(): XProcMetadata = {
-    var ctype = getFullContentType
-    val props = mutable.HashMap.empty[QName, XdmValue]
-
-    props.put(XProcConstants._base_uri, new XdmAtomicValue(finalURI))
-
-    for (header <- httpResult.getAllHeaders) {
-      try {
-        val key = new QName("", header.getName.toLowerCase)
-        var value = new XdmAtomicValue(header.getValue)
-
-        if (key == _date || key == _expires) {
-          try {
-            // Convert date time strings into proper xs:dateTime values
-            val ta = DateTimeFormatter.RFC_1123_DATE_TIME.parse(header.getValue)
-            val dt = Instant.from(ta).toString
-            val expr = new XProcXPathExpression(context, s"xs:dateTime('$dt')")
-            val smsg = config.expressionEvaluator.newInstance().singletonValue(expr, List(), Map(), None)
-            value = smsg.item.asInstanceOf[XdmAtomicValue]
-          } catch {
-            case _: DateTimeParseException => ()
-          }
-        }
-
-        props.put(key, value)
-      } catch {
-        case _: Exception => ()
-      }
-    }
-
-    new XProcMetadata(ctype, props.toMap)
-  }
-
-  private def requestReport(): XdmMap = {
-    var report = new XdmMap()
-    report = report.put(new XdmAtomicValue("status-code"), new XdmAtomicValue(httpResult.getStatusLine.getStatusCode))
-
-    var headers = new XdmMap()
-    for (header <- httpResult.getAllHeaders) {
-      val key = header.getName.toLowerCase
-      val value = header.getValue
-      headers = headers.put(new XdmAtomicValue(key), new XdmAtomicValue(value))
-    }
-
-    report.put(new XdmAtomicValue("headers"), headers)
-  }
-
-  private def normalizedHeaders: Map[String,String] = {
-    val normHeaders = mutable.HashMap.empty[String,String]
-
-    for ((name,value) <- headers) {
-      if (normHeaders.contains(name.toLowerCase)) {
-        throw XProcException.xcHttpDuplicateHeader(name.toLowerCase, location)
-      }
-      normHeaders.put(name.toLowerCase, value)
-    }
-    normHeaders.clear()
-
-    if (sources.size == 1) {
-      if (sourceMeta.head.property("content-type").isDefined) {
-        normHeaders.put("content-type", sourceMeta.head.property("content-type").get.toString)
-      }
-    }
-
-    for ((name,value) <- headers) {
-      normHeaders.put(name.toLowerCase, value)
-    }
-
-    if (sources.size == 1) {
-      for ((name, value) <- sourceMeta.head.properties) {
-        if (name.getNamespaceURI == XProcConstants.ns_chttp) {
-          val key = name.getLocalName.toLowerCase
-          if (!normHeaders.contains(key)) {
-            normHeaders.put(name.getLocalName, value.toString)
-          }
-        }
-      }
-    }
-
-    normHeaders.toMap
-  }
-
-  private def doGet(): HttpRequestBase = {
-    val request = new HttpGet(href)
-    for ((name,value) <- normalizedHeaders) {
-      request.addHeader(name, value)
-    }
-    request
-  }
-
-  private def doPost(): HttpRequestBase = {
-    val normHeaders = normalizedHeaders
-    val contentType = if (normHeaders.contains("content-type")) {
-      if (sources.size > 1 && !normHeaders("content-type").startsWith("multipart/")) {
-        throw XProcException.xcMultipartRequired(normHeaders("content-type"), location)
-      }
-      normHeaders("content-type")
-    } else {
-      if (sources.size > 1) {
-        "multipart/mixed"
-      } else {
-        "application/octet-stream"
-      }
-    }
-
-    if (contentType.startsWith("multipart/")) {
-      return doMultipartPost()
-    }
-
-    val request = new HttpPost(href)
-    for ((name,value) <- normHeaders) {
-      request.addHeader(name, value)
-    }
-
-    if (sources.nonEmpty) {
-      val os = new ByteArrayOutputStream()
-      serialize(context, sources.head, sourceMeta.head, os)
-      os.close()
-      request.setEntity(new ByteArrayEntity(os.toByteArray))
-    }
-
-    request
-  }
-
-  private def doMultipartPost(): HttpRequestBase = {
-    val request = new HttpPost(href)
-    for ((name,value) <- normalizedHeaders) {
-      request.addHeader(name, value)
-    }
-    throw new UnsupportedOperationException("Multipart post is not implemented yet")
   }
 
   private def doFile(): Unit = {
