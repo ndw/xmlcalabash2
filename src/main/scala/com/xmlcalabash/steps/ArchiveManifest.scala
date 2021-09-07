@@ -69,14 +69,7 @@ class ArchiveManifest extends DefaultXmlStep {
           throw XProcException.xcOverrideContentTypesMalformed(location)
         }
         val regex = ctarray.get(0).toString
-        val ctype = MediaType.parse(ctarray.get(1).toString)
-
-        // FIXME: this should be centralized. It can't trivially be added to .parse() because
-        // we use that to parse things like */*+xml in other places
-        if (!ctype.mediaType.matches("^[a-z][a-z0-9_]*$")) {
-          throw XProcException.xdUnrecognizedContentType(ctarray.get(1).toString, location)
-        }
-
+        val ctype = MediaType.parse(ctarray.get(1).toString).assertValid
         val tuple = (regex, ctype)
         overrideContentTypes += tuple
       }

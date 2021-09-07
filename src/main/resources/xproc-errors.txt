@@ -117,6 +117,9 @@ Mismatched content types: “$1” is not the same as “$2”.
 XD0063
 When an non-XML (and non-HTML) encoding is specified for a p:inline, markup is not allowed: “$1”.
 
+XD0079
+Invalid media type: “$1”.
+
 XS0001
 Pipeline contains a loop from “$2” on “$1”.
 

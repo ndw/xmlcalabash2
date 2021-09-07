@@ -398,6 +398,13 @@ class HttpRequest() extends DefaultXmlStep {
       builder.disableRedirectHandling()
     }
 
+    for ((header,value) <- headers) {
+      if (header.equalsIgnoreCase("content-type")) {
+        MediaType.parse(value).assertValid
+      }
+      httpRequest.setHeader(header, value)
+    }
+
     val httpClient = builder.build()
 
     if (Option(httpClient).isEmpty) {

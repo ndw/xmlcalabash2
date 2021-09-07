@@ -1,9 +1,9 @@
 package com.xmlcalabash.util
 
 import java.net.{URI, URLConnection}
-
 import com.xmlcalabash.exceptions.XProcException
 
+import java.util.regex.Pattern
 import scala.collection.mutable.ListBuffer
 
 // This isn't trying very hard to be strict about the rules
@@ -64,11 +64,18 @@ object MediaType {
   def parse(mtype: String): MediaType = {
     // [-]type/subtype; name1=val1; name2=val2
     var pos = mtype.indexOf("/")
-    if (pos <= 0) {
-      throw XProcException.xsUnrecognizedContentTypeShortcut(mtype, None)
+    var mediaType = if (pos < 0) {
+      mtype.trim
+    } else {
+      mtype.substring(0, pos).trim
     }
-    var mediaType = mtype.substring(0, pos).trim
-    var rest = mtype.substring(pos + 1)
+
+    var rest = if (pos < 0) {
+      ""
+    } else {
+      mtype.substring(pos + 1).trim
+    }
+
     val plist = ListBuffer.empty[String]
 
     var inclusive = true
@@ -125,7 +132,11 @@ object MediaType {
         case "text" => contentTypes ++= MATCH_TEXT
         case "json" => contentTypes ++= MATCH_JSON
         case "any"  => contentTypes ++= MATCH_ANY
-        case _      => contentTypes += MediaType.parse(ctype)
+        case _      =>
+          if (ctype.indexOf("/") <= 0) {
+            throw XProcException.xsUnrecognizedContentTypeShortcut(ctype, None)
+          }
+          contentTypes += MediaType.parse(ctype)
       }
     }
     contentTypes
@@ -280,8 +291,29 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
     paramValue("charset")
   }
 
+  def assertValid: MediaType = {
+    if (assertValidName(mediaType) && assertValidName(mediaSubtype)) {
+      return this
+    }
+
+    var ctype = mediaType
+    if (mediaSubtype != "") {
+      ctype += s"/${mediaSubtype}"
+    }
+    throw XProcException.xdUnrecognizedContentType(ctype, None)
+  }
+
+  private def assertValidName(literal: String): Boolean = {
+    val name = literal.toLowerCase
+    val length_ok = name.nonEmpty && name.length <= 127
+    val start_ok = length_ok && name.substring(0,1).matches("^[a-z0-9]")
+    val content_ok = start_ok && name.matches(s"[a-z0-9${Pattern.quote("!#$&-^_.+")}]+$$")
+    content_ok
+  }
+
   // https://alvinalexander.com/scala/how-to-define-equals-hashcode-methods-in-scala-object-equality
   private def canEqual(obj: Any): Boolean = obj.isInstanceOf[MediaType]
+
   override def equals(mtype: Any): Boolean =
     mtype match {
       case that: MediaType =>
@@ -290,6 +322,7 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
           this.mediaSubtype == that.mediaSubtype
       case _ => false
     }
+
   override def hashCode(): Int = {
     val prime = 41
     var result = 1
