@@ -2,17 +2,20 @@ package com.xmlcalabash.drivers
 
 import java.io.File
 import java.net.URI
-
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.testing.TestRunner
 import com.xmlcalabash.util.{MediaType, S9Api}
-import net.sf.saxon.s9api.Serializer
+import net.sf.saxon.s9api.{QName, Serializer, XdmAtomicValue, XdmDestination, XdmValue}
 
+import java.nio.file.{Files, Paths}
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.jdk.javaapi.CollectionConverters.asJava
 
 object Test extends App {
   private val xmlCalabash = XMLCalabashConfig.newInstance()
 
+  private var regex = Option.empty[String]
   private var debug = false
   private var showPassing = false
   private var showFailing = false
@@ -33,11 +36,11 @@ object Test extends App {
   private val showAll = !showPassing && !showFailing && !showSkipping
 
   if (testLocations.isEmpty) {
-    println("Usage: com.xmlcalabash.drivers.Test [-h htmloutput] [-j junitoutput] testlocation [testlocation+]")
+    println("Usage: com.xmlcalabash.drivers.Test [-h htmloutput] [-j junitoutput] [-r regex] testlocation [testlocation+]")
   }
 
   try {
-    val runner = new TestRunner(xmlCalabash, online, testLocations.toList)
+    val runner = new TestRunner(xmlCalabash, online, regex, testLocations.toList)
 
     if (xmlOutput.isDefined) {
       val junit = runner.junit()
@@ -46,6 +49,24 @@ object Test extends App {
       serializer.setOutputFile(new File(xmlOutput.get))
       serializer.setOutputProperty(Serializer.Property.METHOD, "xml")
       S9Api.serialize(xmlCalabash, junit, serializer)
+
+      // If we can find the previous results and the compare stylesheet, print the changes report
+      val outputf = Paths.get(xmlOutput.get).toAbsolutePath
+      val prevf = outputf.getParent.resolve("../test-suite/reports/xml-calabash.xml")
+      val comp = outputf.getParent.resolve("tools/test-changes.xsl")
+      if (Files.exists(prevf) && Files.exists(comp)) {
+        val builder = xmlCalabash.processor.newDocumentBuilder()
+        val xsl = builder.build(comp.toFile)
+        val compiler = xmlCalabash.processor.newXsltCompiler()
+        val transformer = compiler.compile(xsl.asSource()).load30()
+        transformer.setGlobalContextItem(junit)
+        val parameters = mutable.HashMap.empty[QName, XdmValue]
+        parameters.put(new QName("", "previous"), new XdmAtomicValue(prevf.toString))
+        transformer.setStylesheetParameters(asJava(parameters.toMap))
+        val result = new XdmDestination()
+        transformer.applyTemplates(junit, result)
+        println(result.getXdmNode.toString)
+      }
     } else {
       var total = 0
       var pass = 0
@@ -93,6 +114,7 @@ object Test extends App {
     val optp = "-(p)".r
     val optf = "-(f)".r
     val opts = "-(s)".r
+    val optr = "-r(.*)".r
     val optx = "-(.*)".r
 
     var pos = 0
@@ -112,6 +134,18 @@ object Test extends App {
           if (opt == "") {
             pos += 1
             xmlOutput = Some(args(pos))
+          }
+        case optr(opt) =>
+          regex = Some(opt)
+          if (opt == "") {
+            pos += 1
+            regex = Some(args(pos))
+          }
+          if (!regex.get.startsWith("^")) {
+            regex = Some("^.*" + regex.get)
+          }
+          if (!regex.get.endsWith("$")) {
+            regex = Some(regex.get + ".*$")
           }
         case optx(opt) =>
           throw new RuntimeException(s"Unknown option: -$opt")

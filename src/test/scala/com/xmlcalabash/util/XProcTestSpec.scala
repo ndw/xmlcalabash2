@@ -59,7 +59,7 @@ class XProcTestSpec extends AnyFunSpec {
   }
 
   protected def test(fn: String): Unit = {
-    val runner = new TestRunner(runtimeConfig, online, List(fn))
+    val runner = new TestRunner(runtimeConfig, online, None, List(fn))
     val results = runner.run()
     for (result <- results) {
       if (verboseOutput) {
