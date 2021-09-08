@@ -24,7 +24,7 @@ import org.xml.sax.InputSource
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: List[String]) {
+class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Option[String], testloc: List[String]) {
   private val _testsuite = new QName("", "testsuite")
   private val _properties = new QName("", "properties")
   private val _property = new QName("", "property")
@@ -84,7 +84,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
       if (dir.isDirectory) {
         recurse(dir)
       } else {
-        testFiles += path
+        rematch(path)
       }
     } else {
       throw new RuntimeException(s"Test location does not exist: $path")
@@ -98,6 +98,12 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
   private val sortedList = testFiles.sorted
   testFiles.clear()
   testFiles ++= sortedList
+
+  def rematch(path: String): Unit = {
+    if (regex.isEmpty || path.matches(regex.get)) {
+      testFiles += path
+    }
+  }
 
   def run(): ListBuffer[TestResult] = {
     val resultList = ListBuffer.empty[TestResult]
@@ -763,7 +769,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, testloc: Lis
       } else {
         file.getName match {
           case fnregex() =>
-            testFiles += file.getAbsolutePath
+            rematch(file.getAbsolutePath)
           case _ => ()
         }
       }

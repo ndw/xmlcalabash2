@@ -1,11 +1,10 @@
 package com.xmlcalabash.runtime
 
 import java.net.URI
-
 import com.jafpl.messages.Metadata
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.util.MediaType
-import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmNode, XdmValue}
 
 import scala.collection.mutable
 
@@ -65,12 +64,24 @@ class XProcMetadata(private val initialContentType: Option[MediaType],
 
   def contentType: MediaType = {
     if (_contentType.isEmpty) {
+      var charset = Option.empty[String]
+      if (_properties.contains(XProcConstants._serialization)) {
+        val pmap = _properties(XProcConstants._serialization).asInstanceOf[XdmMap]
+        val piter = pmap.keySet.iterator()
+        while (piter.hasNext) {
+          val key = piter.next()
+          if (key.getStringValue == "encoding") {
+            charset = Some(pmap.get(key).toString)
+          }
+        }
+      }
+
       if (_properties.contains(XProcConstants._content_type)) {
         val value = _properties(XProcConstants._content_type)
         if (value.size == 0) {
           _contentType = Some(MediaType.OCTET_STREAM)
         } else {
-          _contentType = Some(MediaType.parse(value.itemAt(0).getStringValue)) // FIXME: what about a sequence?
+          _contentType = Some(MediaType.parse(value.itemAt(0).getStringValue, charset)) // FIXME: what about a sequence?
         }
       } else {
         _contentType = Some(MediaType.OCTET_STREAM)

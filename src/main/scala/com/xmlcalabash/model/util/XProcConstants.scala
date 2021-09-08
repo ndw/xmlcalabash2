@@ -246,8 +246,10 @@ object XProcConstants {
   val _test = new QName("", "test")
   val _timeout = new QName("", "timeout")
   val _timestamp = new QName("", "timestamp")
+  val _transfer_encoding = new QName("", "transfer-encoding")
   val _type = new QName("", "type")
   val _undeclare_prefixes = new QName("", "undeclare-prefixes")
+  val _use_when = new QName("", "use-when")
   val _value = new QName("", "value")
   val _values = new QName("", "values")
   val _version = new QName("", "version")
@@ -296,6 +298,7 @@ object XProcConstants {
   val p_inline_expand_text = new QName("p", ns_p, "inline-expand-text")
   val p_message = new QName("p", ns_p, "message")
   val p_exclude_inline_prefixes = new QName( "p", ns_p,"exclude-inline-prefixes")
+  val p_use_when = new QName("p", ns_p, "use-when")
 
   val err_XC0095 = new QName(ns_err, "XC0095")
   val err_XTMM9000 = new QName(ns_xqt_errors, "XTMM9000")

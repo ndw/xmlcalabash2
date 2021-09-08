@@ -99,7 +99,15 @@ object S9Api {
 
   def configureSerializer(serializer: Serializer, options: Map[QName,String]): Unit = {
     for (opt <- options.keySet) {
-      serializer.setOutputProperty(opt, options(opt))
+      try {
+        serializer.setOutputProperty(opt, options(opt))
+      } catch {
+        case _: IllegalArgumentException =>
+          // You attempted to set a serialization parameter that is unknown. Ignore it.
+          ()
+        case ex: Exception =>
+          throw(ex)
+      }
     }
   }
 

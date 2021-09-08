@@ -12,6 +12,8 @@ import org.apache.http.client.config.{AuthSchemes, CookieSpecs, RequestConfig}
 import org.apache.http.client.methods.{HttpDelete, HttpGet, HttpHead, HttpPost, HttpPut, HttpRequestBase}
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.entity.ByteArrayEntity
+import org.apache.http.entity.mime.content.ByteArrayBody
+import org.apache.http.entity.mime.{FormBodyPartBuilder, HttpMultipartMode, MultipartEntityBuilder}
 import org.apache.http.impl.auth.BasicScheme
 import org.apache.http.impl.client.{BasicAuthCache, BasicCookieStore, BasicCredentialsProvider, HttpClientBuilder, StandardHttpRequestRetryHandler}
 import org.apache.http.{Header, HttpHost, HttpResponse, ProtocolVersion}
@@ -102,6 +104,11 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
     if (name.equalsIgnoreCase("content-type")) {
       MediaType.parse(value).assertValid
     }
+
+    if (name.equalsIgnoreCase("transfer-encoding")) {
+      throw XProcException.xcUnsupportedTransferEncoding(value, location)
+    }
+
     headers.put(name, value);
   }
 
@@ -404,7 +411,7 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
 
     if (_sources.size == 1) {
       if (_sourcesMetadata.head.property("content-type").isDefined) {
-        normHeaders.put("content-type", _sourcesMetadata.head.property("content-type").get.toString)
+        normHeaders.put("content-type", _sourcesMetadata.head.contentType.toString)
       }
     }
 
@@ -489,6 +496,20 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
     for ((name,value) <- normalizedHeaders) {
       request.addHeader(name, value)
     }
-    throw new UnsupportedOperationException("Multipart post is not implemented yet")
+
+    val entityBuilder = MultipartEntityBuilder.create()
+    entityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE); // FIXME: make a parameter for this
+
+    for (pos <- _sources.indices) {
+      val source = _sources(pos)
+      val meta = _sourcesMetadata(pos)
+
+      val part = FormBodyPartBuilder.create()
+      part.setBody(new ByteArrayBody(source, meta.contentType.toString))
+      entityBuilder.addPart(part.build())
+    }
+
+    request.setEntity(entityBuilder.build())
+    request
   }
 }

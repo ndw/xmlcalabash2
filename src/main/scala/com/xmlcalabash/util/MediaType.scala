@@ -62,6 +62,10 @@ object MediaType {
   }
 
   def parse(mtype: String): MediaType = {
+    parse(mtype, None)
+  }
+
+  def parse(mtype: String, forceEncoding: Option[String]): MediaType = {
     // [-]type/subtype; name1=val1; name2=val2
     var pos = mtype.indexOf("/")
     var mediaType = if (pos < 0) {
@@ -75,8 +79,6 @@ object MediaType {
     } else {
       mtype.substring(pos + 1).trim
     }
-
-    val plist = ListBuffer.empty[String]
 
     var inclusive = true
     if (mediaType.startsWith("-")) {
@@ -103,16 +105,23 @@ object MediaType {
       mediaSubtype = mediaSubtype.substring(0, pos).trim
     }
 
-    if (params == "") {
+    if (forceEncoding.isEmpty && params == "") {
       new MediaType(mediaType, mediaSubtype, suffix, inclusive, None)
     } else {
       rest = params
       pos = rest.indexOf(";")
+      val plist = ListBuffer.empty[String]
+      if (forceEncoding.isDefined) {
+        plist += "charset=" + forceEncoding.get
+      }
+
       while (pos >= 0) {
         val param = rest.substring(0, pos).trim
         rest = rest.substring(pos+1)
         if (param != "") {
-          plist.append(param)
+          if (forceEncoding.isEmpty || !param.startsWith("encoding=")) {
+            plist.append(param)
+          }
         }
         pos = rest.indexOf(";")
       }
@@ -343,7 +352,7 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
     }
     if (param.isDefined) {
       for (param <- param.get) {
-        ctype = ctype + ";" + param
+        ctype = ctype + "; " + param // Space after ; for compatibility with Morgana XProc results
       }
     }
     ctype

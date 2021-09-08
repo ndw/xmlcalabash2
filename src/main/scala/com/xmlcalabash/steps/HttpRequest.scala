@@ -106,7 +106,7 @@ class HttpRequest() extends DefaultXmlStep {
               headers.put(key.getStringValue, value.getUnderlyingValue.getStringValue)
             }
           case _ =>
-            throw new IllegalArgumentException("Headers is not a map(xs:string,xs:string)")
+            throw new IllegalArgumentException("The 'headers' option is not a map(xs:string,xs:string)")
         }
       case `_auth` =>
         value match {
@@ -119,7 +119,7 @@ class HttpRequest() extends DefaultXmlStep {
               auth.put(key.getStringValue, value)
             }
           case _ =>
-            throw new IllegalArgumentException("Headers is not a map(xs:string,xs:string)")
+            throw new IllegalArgumentException("The 'auth' option is not a map(xs:string,xs:string)")
         }
       case `_parameters` =>
         parameters ++= ValueParser.parseParameters(value, context)
@@ -214,8 +214,19 @@ class HttpRequest() extends DefaultXmlStep {
 
   private def parameterOverrideContentType(value: XdmValue): Unit = {
     try {
-      overrideContentType = Some(MediaType.parse(value.toString))
+      value match {
+        case tv: XdmAtomicValue =>
+          if (tv.getTypeName == XProcConstants.xs_string) {
+            overrideContentType = Some(MediaType.parse(tv.toString))
+          } else {
+            throw XProcException.xcHttpInvalidParameterType("override-content-type", value.toString, location)
+          }
+        case _ =>
+          throw XProcException.xcHttpInvalidParameter("override-content-type", value.toString, location)
+      }
     } catch {
+      case ex: XProcException =>
+        throw(ex)
       case _: Exception =>
         throw XProcException.xcHttpInvalidParameter("override-content-type", value.toString, location)
     }
@@ -350,7 +361,17 @@ class HttpRequest() extends DefaultXmlStep {
       request.httpVersion = httpVersion.get
     }
 
+    request.followRedirectCount = followRedirectCount
+    if (overrideContentType.isDefined) {
+      request.overrideContentType = overrideContentType.get
+    }
+
     val response = request.execute(method)
+
+    if (response.multipart && !acceptMultipart) {
+      throw XProcException.xcHttpMultipartForbidden(href, location)
+    }
+
     val report = response.report.get
 
     if (assert != "") {

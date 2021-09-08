@@ -1,20 +1,23 @@
 package com.xmlcalabash.model.xml
 
 import java.net.URI
-
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.XProcLocation
+import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcLocation, XProcXPathExpression}
 import com.xmlcalabash.util.{MediaType, S9Api}
+import net.sf.saxon.om.AttributeMap
+
 import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.xml.sax.InputSource
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class Parser(config: XMLCalabashConfig) {
   private var _builtInSteps: Option[Library] = config.builtinSteps
+  private var matcher: ProcessMatch = _
 
   // Someone has to load the default steps; feels like here's as good a place as any.
   // It doesn't feel like something the user should have to do explicitly.
@@ -26,12 +29,7 @@ class Parser(config: XMLCalabashConfig) {
   def builtInSteps: Option[Library] = _builtInSteps
 
   def loadLibrary(root: XdmNode): Library = {
-    val node = if (root.getNodeKind == XdmNodeKind.DOCUMENT) {
-      S9Api.documentElement(root).get
-    } else {
-      root
-    }
-
+    val node = stripUseWhen(root)
     if (node.getNodeKind != XdmNodeKind.ELEMENT || node.getNodeName != XProcConstants.p_library) {
       throw new RuntimeException(s"Not a library: ${root.getNodeName}")
     }
@@ -46,12 +44,7 @@ class Parser(config: XMLCalabashConfig) {
   }
 
   def loadDeclareStep(root: XdmNode): DeclareStep = {
-    val node = if (root.getNodeKind == XdmNodeKind.DOCUMENT) {
-      S9Api.documentElement(root).get
-    } else {
-      root
-    }
-
+    val node = stripUseWhen(root)
     if (node.getNodeKind != XdmNodeKind.ELEMENT || node.getNodeName != XProcConstants.p_declare_step) {
       throw new RuntimeException(s"Not a declare-step: ${root.getNodeName}")
     }
@@ -80,6 +73,18 @@ class Parser(config: XMLCalabashConfig) {
     config.clearImportedURIs()
 
     decl
+  }
+
+  private def stripUseWhen(root: XdmNode): XdmNode = {
+    val staticContext = new StaticContext(config, None)
+    matcher = new ProcessMatch(config, new ProcessUseWhen(staticContext), staticContext)
+    matcher.process(root, "*")
+    val node = matcher.result
+    if (node.getNodeKind == XdmNodeKind.DOCUMENT) {
+      S9Api.documentElement(node).get
+    } else {
+      node
+    }
   }
 
   private def parseContainer[T <: Container](node: XdmNode, container: T): T = {
@@ -520,4 +525,72 @@ class Parser(config: XMLCalabashConfig) {
     }
     list.toList
   }
+
+  private class ProcessUseWhen(val staticContext: StaticContext) extends ProcessMatchingNodes {
+    private val useStack = ListBuffer.empty[Boolean]
+    private val inlineStack = ListBuffer.empty[Boolean]
+
+    override def startDocument(node: XdmNode): Boolean = {
+      throw new RuntimeException("This can't happen")
+    }
+
+    override def endDocument(node: XdmNode): Unit = {
+      matcher.endDocument()
+    }
+
+    override def startElement(node: XdmNode, attribute: AttributeMap): Boolean = {
+      val useWhenName = if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
+        XProcConstants._use_when
+      } else {
+        XProcConstants.p_use_when
+      }
+      var useWhen = Option.empty[String]
+
+      val iter = node.axisIterator(Axis.ATTRIBUTE)
+      while (iter.hasNext) {
+        val attr = iter.next
+        if (attr.getNodeName == useWhenName) {
+          useWhen = Some(attr.getStringValue)
+        }
+      }
+
+      var use = true
+      if (useWhen.isDefined && (inlineStack.isEmpty || !inlineStack.last)) {
+        val expr = new XProcXPathExpression(staticContext, useWhen.get)
+        use = config.expressionEvaluator.booleanValue(expr, List(), Map(), None)
+      }
+
+      if (use) {
+        matcher.addStartElement(node, attribute)
+      }
+      useStack += use
+      inlineStack += ((inlineStack.nonEmpty && inlineStack.last) || node.getNodeName == XProcConstants.p_inline)
+      use
+    }
+
+    override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
+      throw new RuntimeException("This can't happen")
+    }
+
+    override def endElement(node: XdmNode): Unit = {
+      if (useStack.last) {
+        matcher.addEndElement()
+      }
+      useStack.dropRight(1)
+      inlineStack.dropRight(1)
+    }
+
+    override def text(node: XdmNode): Unit = {
+      throw new RuntimeException("This can't happen")
+    }
+
+    override def comment(node: XdmNode): Unit = {
+      throw new RuntimeException("This can't happen")
+    }
+
+    override def pi(node: XdmNode): Unit = {
+      throw new RuntimeException("This can't happen")
+    }
+  }
+
 }

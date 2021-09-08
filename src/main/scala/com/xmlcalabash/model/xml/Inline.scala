@@ -39,6 +39,9 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
 
     if (node.getNodeName == XProcConstants.p_inline) {
       _contentType = MediaType.parse(attributes.get(XProcConstants._content_type))
+      if (_contentType.isDefined) {
+        _contentType.get.assertValid
+      }
       _documentProperties = attr(XProcConstants._document_properties)
       _encoding = attr(XProcConstants._encoding)
       _exclude_inline_prefixes = attr(XProcConstants._exclude_inline_prefixes)

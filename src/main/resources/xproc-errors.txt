@@ -346,8 +346,20 @@ Attempt to delete non-empty directory without the recursive option: $1
 XC0115
 Cannot move ($1) onto an existing file ($2).
 
+XC0124/1
+Invalid “$1” parameter value “$2”.
+
+XC0124/2
+Invalid parameter type, “$1” must be a string.
+
+XC0125
+Resource is multipart: $1
+
 XC0126
 Assertion failed: “$1”
+
+XC0131
+Unsupported transfer encoding: “$1”
 
 XC0134
 Cannot return info for URI scheme in “$1”

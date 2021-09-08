@@ -63,7 +63,7 @@ New passing tests: {count($new-pass)}
 New failing tests: {count($new-fail)}
 </xsl:text>
 
-  <xsl:text>Newly passing: </xsl:text>
+  <xsl:text expand-text="yes">Newly passing ({count($new-pass)}): </xsl:text>
   <xsl:choose>
     <xsl:when test="exists($new-pass)">
       <xsl:sequence select="string-join($new-pass, ', ')"/>
@@ -72,7 +72,7 @@ New failing tests: {count($new-fail)}
   </xsl:choose>
   <xsl:text>&#10;</xsl:text>
 
-  <xsl:text>Newly failing: </xsl:text>
+  <xsl:text expand-text="yes">Newly failing ({count($new-fail)}): </xsl:text>
   <xsl:choose>
     <xsl:when test="exists($new-fail)">
       <xsl:sequence select="string-join($new-fail, ', ')"/>
@@ -80,7 +80,18 @@ New failing tests: {count($new-fail)}
     <xsl:otherwise>None</xsl:otherwise>
   </xsl:choose>
   <xsl:text>&#10;</xsl:text>
-  <xsl:text>&#10;</xsl:text>
+
+  <xsl:if test="exists(map:keys($fail))">
+    <xsl:variable name="list"
+                  select="if (count(map:keys($fail)) > 5)
+                          then (subsequence(map:keys($fail), 1, 4), '…')
+                          else map:keys($fail)"/>
+    <xsl:text expand-text="yes"
+      >Failing ({count(map:keys($fail))}): {string-join($list, ', ')}</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+  </xsl:if>
+
 </xsl:template>
 
 </xsl:stylesheet>

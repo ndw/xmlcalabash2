@@ -268,18 +268,25 @@ class DefaultXmlStep extends XmlStep {
     }
   }
 
-  def serializationOptions(): Map[QName, String] = {
-    serializationOptions(XProcConstants._serialization)
-  }
-
-  def serializationOptions(name: QName): Map[QName, String] = {
+  def serializationOptions(metadata: XProcMetadata): Map[QName, String] = {
     val serialOpts = mutable.HashMap.empty[QName, String]
-    val map = mapBinding(name)
+    val map = mapBinding(XProcConstants._serialization)
     val iter = map.keySet.iterator()
     while (iter.hasNext) {
       val key = iter.next()
       serialOpts.put(key.getQNameValue, map.get(key).toString)
     }
+
+    val metaprop = metadata.property(XProcConstants._serialization)
+    if (metaprop.isDefined) {
+      val pmap = metaprop.get.asInstanceOf[XdmMap]
+      val piter = pmap.keySet.iterator()
+      while (piter.hasNext) {
+        val key = piter.next()
+        serialOpts.put(new QName("", key.getStringValue), pmap.get(key).toString)
+      }
+    }
+
     serialOpts.toMap
   }
 
@@ -383,7 +390,8 @@ class DefaultXmlStep extends XmlStep {
           count = is.read(bytes)
         }
       case node: XdmNode =>
-        val serialOpts = serializationOptions()
+        val serialOpts = serializationOptions(metadata)
+
         val serializer = config.processor.newSerializer(output)
 
         val contentType = metadata.contentType

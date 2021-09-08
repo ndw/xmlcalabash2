@@ -298,9 +298,11 @@ object XProcException {
   def xcFileMkdirFail(href: URI, location: Option[Location]): XProcException = stepError(114, href, location)
   def xcFileMoveOverwriteForbidden(href: URI, target: URI, location: Option[Location]): XProcException = stepError(115, List(href, target), location)
   def xcHttpInvalidAuth(name: String, value: String, location: Option[Location]): XProcException = stepError(123, List(name, value), location)
-  def xcHttpInvalidParameter(name: String, value: String, location: Option[Location]): XProcException = stepError(124, List(name, value), location)
-  def xcHttpMultipartForbidden(location: Option[Location]): XProcException = stepError(125, location)
+  def xcHttpInvalidParameter(name: String, value: String, location: Option[Location]): XProcException = stepError((124,1), List(name, value), location)
+  def xcHttpInvalidParameterType(name: String, value: String, location: Option[Location]): XProcException = stepError((124,2), List(name, value), location)
+  def xcHttpMultipartForbidden(href: URI, location: Option[Location]): XProcException = stepError(125, href, location)
   def xcHttpDuplicateHeader(name: String, location: Option[Location]): XProcException = stepError(127, name, location)
+  def xcUnsupportedTransferEncoding(encoding: String, location: Option[Location]): XProcException = stepError(131, encoding, location)
   def xcMultipartRequired(contentType: String, location: Option[Location]): XProcException = stepError(133, contentType, location)
   def xcHttpAssertFailed(assert: String, location: Option[Location]): XProcException = stepError(126, assert, location)
 
