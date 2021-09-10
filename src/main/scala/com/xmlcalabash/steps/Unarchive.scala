@@ -2,14 +2,13 @@ package com.xmlcalabash.steps
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 import java.net.{URI, URLConnection}
-import java.util.regex.Pattern
-
+import java.util.regex.{Pattern, PatternSyntaxException}
 import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
-import net.sf.saxon.s9api.{QName, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmArray, XdmValue}
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.apache.commons.compress.utils.IOUtils
 
@@ -62,8 +61,14 @@ class Unarchive extends DefaultXmlStep {
       throw XProcException.xcUnknownArchiveFormat(format.get, location)
     }
 
-    if (bindings.get(_relativeTo).isDefined) {
-      relativeTo = uriBinding(_relativeTo).get
+    val overrideContentTypes = if (bindings.contains(XProcConstants._override_content_types)) {
+      parseOverrideContentTypes(bindings(XProcConstants._override_content_types))
+    } else {
+      List.empty[Tuple2[Pattern,MediaType]]
+    }
+
+    relativeTo = if (uriBinding(_relativeTo).isDefined) {
+      uriBinding(_relativeTo).get
     } else {
       smeta.baseURI.get
     }

@@ -20,6 +20,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.{InputStream, OutputStream}
 import java.net.URI
+import java.util.regex.{Pattern, PatternSyntaxException}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.IterableHasAsScala
@@ -482,6 +483,35 @@ class DefaultXmlStep extends XmlStep {
     }
   }
 
+  def parseOverrideContentTypes(contentTypes: XdmValue): List[Tuple2[Pattern,MediaType]] = {
+    val overrideContentTypes = ListBuffer.empty[Tuple2[Pattern,MediaType]]
+    var regex = ""
+    try {
+      val ctarrayarray = contentTypes.asInstanceOf[XdmArray];
+      for (apos <- 0 until ctarrayarray.arrayLength()) {
+        val ctarray = ctarrayarray.get(apos).asInstanceOf[XdmArray]
+        if (ctarray.arrayLength() != 2) {
+          throw XProcException.xcOverrideContentTypesMalformed(location)
+        }
+        regex = ctarray.get(0).toString
+        val ctype = MediaType.parse(ctarray.get(1).toString).assertValid
+
+        if (regex == "") {
+          throw XProcException.xcOverrideContentTypesBadRegex(regex, location)
+        }
+
+        val tuple = (Pattern.compile(regex), ctype)
+        overrideContentTypes += tuple
+      }
+    } catch {
+      case _: PatternSyntaxException =>
+        throw XProcException.xcOverrideContentTypesBadRegex(regex, location)
+      case ex: Exception =>
+        throw ex
+    }
+    overrideContentTypes.toList
+  }
+
   class SerializationOptions(map: XdmMap) {
     private val options = mutable.HashMap.empty[QName,XdmValue]
 
@@ -514,6 +544,5 @@ class DefaultXmlStep extends XmlStep {
         None
       }
     }
-
   }
 }

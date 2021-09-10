@@ -11,6 +11,7 @@ import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap}
 import net.sf.saxon.s9api.{QName, XdmArray, XdmValue}
 import org.apache.commons.compress.archivers.zip.{ZipArchiveEntry, ZipFile}
 
+import java.util.regex.Pattern
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -60,19 +61,10 @@ class ArchiveManifest extends DefaultXmlStep {
       throw XProcException.xcUnknownArchiveFormat(format.get, location)
     }
 
-    val overrideContentTypes = ListBuffer.empty[Tuple2[String,MediaType]]
-    if (bindings.contains(XProcConstants._override_content_types)) {
-      val ctarrayarray = bindings(XProcConstants._override_content_types).asInstanceOf[XdmArray];
-      for (apos <- 0 until ctarrayarray.arrayLength()) {
-        val ctarray = ctarrayarray.get(apos).asInstanceOf[XdmArray]
-        if (ctarray.arrayLength() != 2) {
-          throw XProcException.xcOverrideContentTypesMalformed(location)
-        }
-        val regex = ctarray.get(0).toString
-        val ctype = MediaType.parse(ctarray.get(1).toString).assertValid
-        val tuple = (regex, ctype)
-        overrideContentTypes += tuple
-      }
+    val overrideContentTypes = if (bindings.contains(XProcConstants._override_content_types)) {
+      parseOverrideContentTypes(bindings(XProcConstants._override_content_types))
+    } else {
+      List.empty[Tuple2[Pattern,MediaType]]
     }
 
     relativeTo = uriBinding(_relativeTo)

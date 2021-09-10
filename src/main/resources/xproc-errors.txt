@@ -382,6 +382,9 @@ Cannot create temporary file URI scheme in “$1”
 XC0142
 Cannot delete URIs with the scheme in “$1”
 
+XC0147
+Invalid regular expression: “$1”
+
 XC0143
 Delete not allowed: $1
 
