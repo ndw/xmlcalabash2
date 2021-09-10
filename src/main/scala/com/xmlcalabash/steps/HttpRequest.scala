@@ -37,7 +37,7 @@ class HttpRequest() extends DefaultXmlStep {
   private var permitExpiredSslCertificate = false
   private var permitUntrustedSslCertificate = false
   private var followRedirectCount = -1
-  private var timeout = 0
+  private var timeout = Option.empty[Integer]
   private var failOnTimeout = false
   private var statusOnly = false
   private var suppressCookies = false
@@ -142,8 +142,8 @@ class HttpRequest() extends DefaultXmlStep {
         case XProcConstants._accept_multipart =>
           acceptMultipart = booleanParameter(name.getLocalName, value)
         case XProcConstants._timeout =>
-          timeout = integerParameter(name.getLocalName, value)
-          if (timeout < 0) {
+          timeout = Some(integerParameter(name.getLocalName, value))
+          if (timeout.get < 0) {
             throw XProcException.xcHttpInvalidParameter(name.getLocalName, value.toString, location)
           }
         case XProcConstants._permit_expired_ssl_certificate =>
@@ -208,7 +208,7 @@ class HttpRequest() extends DefaultXmlStep {
     } else if (href.getScheme == "http" || href.getScheme == "https") {
       doHttp()
     } else {
-      throw new RuntimeException("Unsupported URI scheme: " + href.toASCIIString)
+      throw XProcException.xcHttpUnsupportedScheme(href, location)
     }
   }
 
@@ -247,7 +247,7 @@ class HttpRequest() extends DefaultXmlStep {
     var minVer = 0
 
     try {
-      val double = value.toString.toDouble // Ok, it's a number
+      value.toString.toDouble // Ok, it's a number
       var str = value.toString
       if (str.indexOf(".") < 0) {
         str += ".0"
@@ -255,12 +255,20 @@ class HttpRequest() extends DefaultXmlStep {
       val pos = str.indexOf(".")
       majVer = str.substring(0, pos).toInt
       minVer = str.substring(pos+1).toInt
+
+      // I object slightly to this error. In theory, you can send any version you want. Only the
+      // server knows if the version is supported.
+      if (majVer != 1 || minVer < 0 || minVer > 1) {
+        throw XProcException.xcHttpUnsupportedHttpVersion(value.toString, location)
+      }
     } catch {
+      case ex: XProcException =>
+        throw ex
       case _: Exception =>
         throw XProcException.xcHttpInvalidParameter("http-version", value.toString, location)
     }
 
-    httpVersion = Some(new Tuple2(minVer, majVer))
+    httpVersion = Some(Tuple2(majVer, minVer))
   }
 
   private def booleanParameter(name: String, value: XdmValue): Boolean = {
@@ -336,9 +344,13 @@ class HttpRequest() extends DefaultXmlStep {
   private def doHttp(): Unit = {
     val request = new InternetProtocolRequest(config, context, href)
 
-    if (parameters.contains(_timeout)) {
-      request.timeout = Integer.parseInt(parameters(_timeout).getUnderlyingValue.getStringValue)
+    if (timeout.isDefined) {
+      request.timeout = timeout.get
     }
+
+    request.sendBodyAnyway = sendBodyAnyway
+    request.statusOnly = statusOnly
+    request.suppressCookies = suppressCookies
 
     if (username.isDefined) {
       request.authentication(authmethod.get, username.get, password.get, sendauth)
@@ -412,6 +424,6 @@ class HttpRequest() extends DefaultXmlStep {
   }
 
   private def doFile(): Unit = {
-    throw new UnsupportedOperationException("Unsupported URI scheme: " + href.toASCIIString)
+    throw XProcException.xcHttpUnsupportedScheme(href, location)
   }
 }

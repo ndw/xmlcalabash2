@@ -63,7 +63,7 @@ class InternetProtocolResponse(val responseURI: URI) {
 
   def singlepart: Boolean = !multipart
 
-  def multipart: Boolean = _response.length > 1
+  def multipart: Boolean = _response.length > 1 || (_mediaType.isDefined && _mediaType.get.mediaType == "multipart")
 
   def response: ListBuffer[InputStream] = _response
 

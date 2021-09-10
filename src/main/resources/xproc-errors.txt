@@ -358,6 +358,15 @@ Resource is multipart: $1
 XC0126
 Assertion failed: “$1”
 
+XC0127
+Duplicate header: “$1”
+
+XC0128
+Unsupported URI scheme: “$1”
+
+XC0129
+Unsupported HTTP version: “$1”
+
 XC0131
 Unsupported transfer encoding: “$1”
 
@@ -381,6 +390,9 @@ Cannot copy directory ($1) to file ($2)
 
 XC0158
 Cannot move directory ($1) to file ($2)
+
+XC0203
+The specified boundary cannot be used in a multipart request: “$1”.
 
 {http://xmlcalabash.com/ns/extensions}XI0016
 No input specified for pipeline port “$1”.

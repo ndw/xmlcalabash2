@@ -302,6 +302,8 @@ object XProcException {
   def xcHttpInvalidParameterType(name: String, value: String, location: Option[Location]): XProcException = stepError((124,2), List(name, value), location)
   def xcHttpMultipartForbidden(href: URI, location: Option[Location]): XProcException = stepError(125, href, location)
   def xcHttpDuplicateHeader(name: String, location: Option[Location]): XProcException = stepError(127, name, location)
+  def xcHttpUnsupportedScheme(href: URI, location: Option[Location]): XProcException = stepError(128, href, location)
+  def xcHttpUnsupportedHttpVersion(version: String, location: Option[Location]): XProcException = stepError(129, version, location)
   def xcUnsupportedTransferEncoding(encoding: String, location: Option[Location]): XProcException = stepError(131, encoding, location)
   def xcMultipartRequired(contentType: String, location: Option[Location]): XProcException = stepError(133, contentType, location)
   def xcHttpAssertFailed(assert: String, location: Option[Location]): XProcException = stepError(126, assert, location)
@@ -324,6 +326,8 @@ object XProcException {
   def xcUnknownCompressionFormat(location: Option[Location]): XProcException = stepError((202,1), location)
   def xcUnknownCompressionFormat(format: QName, location: Option[Location]): XProcException = stepError((202,2), format, location)
   def xcUncompressionError(location: Option[Location]): XProcException = stepError((202,3), location)
+
+  def xcHttpInvalidBoundary(boundary: String, location: Option[Location]): XProcException = stepError(203, boundary, location)
 
   def xcXIncludeFallbackPlacement(location: Option[Location]): XProcException = stepError(999, location)
   def xcXIncludeMultipleFallback(location: Option[Location]): XProcException = stepError(999, location)

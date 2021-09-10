@@ -19,6 +19,7 @@ object MediaType {
   val XHTML = new MediaType("application", "xhtml+xml")
   val ZIP = new MediaType("application", "zip")
   val MULTIPART = new MediaType("multipart", "*")
+  val MULTIPART_MIXED = new MediaType("multipart", "mixed")
 
   val MATCH_XML: Array[MediaType] = Array(
     MediaType.parse("application/xml"),
@@ -161,6 +162,28 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
     this(mediaType, mediaSubtype, Some(suffix), true, None)
   }
 
+  def parameters: List[String] = {
+    if (param.isEmpty) {
+      List.empty[String]
+    } else {
+      val names = ListBuffer.empty[String]
+      for (aparam <- param.get) {
+        val pos = aparam.indexOf("=")
+        if (pos > 0) {
+          names += aparam.substring(0, pos)
+        }
+      }
+      names.toList
+    }
+  }
+
+  def discardParams(): MediaType = {
+    if (param.isEmpty) {
+      return this
+    }
+    discardParams(parameters)
+  }
+
   def discardParams(exclude: List[String]): MediaType = {
     if (param.isEmpty) {
       return this
@@ -189,6 +212,20 @@ class MediaType(val mediaType: String, val mediaSubtype: String, val suffix: Opt
     } else {
       this
     }
+  }
+
+  def addParam(name: String, value: String): MediaType = {
+    val newParam = ListBuffer.empty[String]
+    if (param.isDefined) {
+      val pstr = s"$name="
+      for (aparam <- param.get) {
+        if (!aparam.startsWith(pstr)) {
+          newParam += aparam
+        }
+      }
+    }
+    newParam += s"$name=$value"
+    new MediaType(mediaType, mediaSubtype, suffix, inclusive, Some(newParam.toArray[String]))
   }
 
   def classification: MediaType = {

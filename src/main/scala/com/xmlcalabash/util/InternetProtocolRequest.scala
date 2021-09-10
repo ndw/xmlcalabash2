@@ -7,19 +7,20 @@ import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime, XProcMetadata, XProcXPathExpression}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmValue}
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
-import org.apache.http.client.{CookieStore, CredentialsProvider}
+import org.apache.http.client.CookieStore
 import org.apache.http.client.config.{AuthSchemes, CookieSpecs, RequestConfig}
-import org.apache.http.client.methods.{HttpDelete, HttpGet, HttpHead, HttpPost, HttpPut, HttpRequestBase}
+import org.apache.http.client.methods.{HttpDelete, HttpEntityEnclosingRequestBase, HttpGet, HttpHead, HttpPost, HttpPut, HttpRequestBase}
 import org.apache.http.client.protocol.HttpClientContext
-import org.apache.http.entity.ByteArrayEntity
 import org.apache.http.entity.mime.content.ByteArrayBody
 import org.apache.http.entity.mime.{FormBodyPartBuilder, HttpMultipartMode, MultipartEntityBuilder}
+import org.apache.http.entity.{ByteArrayEntity, ContentType}
 import org.apache.http.impl.auth.BasicScheme
 import org.apache.http.impl.client.{BasicAuthCache, BasicCookieStore, BasicCredentialsProvider, HttpClientBuilder, StandardHttpRequestRetryHandler}
 import org.apache.http.{Header, HttpHost, HttpResponse, ProtocolVersion}
 
 import java.io.ByteArrayInputStream
 import java.net.URI
+import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.format.{DateTimeFormatter, DateTimeParseException}
 import scala.collection.mutable
@@ -47,8 +48,10 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
   private var _usercreds = Option.empty[UsernamePasswordCredentials]
   private var _httpVersion = Option.empty[Tuple2[Int,Int]]
   private var _statusOnly = false
+  private var _suppressCookies = false;
   private var _overrideContentType = Option.empty[MediaType]
   private var _followRedirectCount = -1
+  private var _sendBodyAnyway = false
 
   def this(config: XMLCalabashRuntime, context: StaticContext, uri: URI) =
     this(config.config, context, uri)
@@ -85,14 +88,24 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
     _statusOnly = only
   }
 
+  def suppressCookies: Boolean = _suppressCookies
+  def suppressCookies_=(suppress: Boolean): Unit = {
+    _suppressCookies = suppress
+  }
+
   def overrideContentType: Option[MediaType] = _overrideContentType
   def overrideContentType_=(mtype: MediaType): Unit = {
-    _overrideContentType = Some(mtype)
+    _overrideContentType = Some(mtype.assertValid)
   }
 
   def followRedirectCount: Int = _followRedirectCount
   def followRedirectCount_=(count: Int): Unit = {
     _followRedirectCount = count
+  }
+
+  def sendBodyAnyway: Boolean = _sendBodyAnyway
+  def sendBodyAnyway_=(send: Boolean): Unit = {
+    _sendBodyAnyway = send
   }
 
   def addSource(item: Array[Byte], meta: XProcMetadata): Unit = {
@@ -128,6 +141,10 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
 
   def execute(method: String): InternetProtocolResponse = {
     href = uri
+    executeWithRedirects(method)
+  }
+
+  private def executeWithRedirects(method: String): InternetProtocolResponse = {
     builder = HttpClientBuilder.create()
 
     val rqbuilder = RequestConfig.custom()
@@ -194,15 +211,10 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
       builder.setDefaultCredentialsProvider(bCredsProvider)
     }
 
-    // FIXME: redirect is effectively boolean when it should be counting; will have to do by hand
-    if (followRedirectCount == 0) {
-      builder.disableRedirectHandling()
-    }
-
-    for ((header,value) <- headers) {
-      httpRequest.setHeader(header, value)
-    }
-
+    // We have to do our own redirect handling because (1), we might want to suppress
+    // cookies and (2) the semantics of followRedirectCount aren't implemented by
+    // the underlying library.
+    builder.disableRedirectHandling()
     val httpClient = builder.build()
 
     if (Option(httpClient).isEmpty) {
@@ -215,9 +227,20 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
 
     httpResult = httpClient.execute(httpRequest, localContext)
     finalURI = httpRequest.getURI
-    val locations = Option(localContext.getRedirectLocations)
-    if (locations.isDefined) {
-      finalURI = locations.get.get(locations.get.size() - 1)
+
+    if (List(301, 302, 303).contains(httpResult.getStatusLine.getStatusCode) && (followRedirectCount != 0)) {
+      _followRedirectCount -= 1
+      val locHeader = Option(httpResult.getFirstHeader("Location"))
+      if (locHeader.isDefined) {
+        val redirect = new URI(locHeader.get.getValue);
+        if (suppressCookies) {
+          _cookieStore = None
+        }
+        href = redirect
+        executeWithRedirects(method);
+      } else {
+        throw new RuntimeException(s"Web server returned ${httpResult.getStatusLine.getStatusCode} without a Location: header")
+      }
     }
 
     val response = new InternetProtocolResponse(finalURI);
@@ -230,14 +253,14 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
   private def readResponseEntity(response: InternetProtocolResponse): InternetProtocolResponse = {
     response.mediaType = getFullContentType
 
+    if (statusOnly) {
+      return response
+    }
+
     if (Option(httpResult.getEntity).isEmpty) {
       val stream = new ByteArrayInputStream(Array.emptyByteArray)
       val meta = entityMetadata(httpResult.getAllHeaders.toList)
       response.addResponse(stream, meta)
-      return response
-    }
-
-    if (statusOnly) {
       return response
     }
 
@@ -259,6 +282,10 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
     val contentType = getFullContentType
     val boundary = contentType.paramValue("boundary")
 
+    if (boundary.isEmpty) {
+      throw XProcException.xcHttpInvalidBoundary("(none provided)", location)
+    }
+
     val reader = new MIMEReader(httpResult.getEntity.getContent, boundary.get)
     while (reader.readHeaders()) {
       val pctype = reader.header("Content-Type")
@@ -273,8 +300,6 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
         reader.readBodyPart()
       }
 
-      // FIXME: handle content-disposition: attachment; filename="something.xml"
-      // FIXME: properties
       val partURI = finalURI
 
       val meta = entityMetadata(reader.getHeaders)
@@ -323,7 +348,12 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
   }
 
   private def entityMetadata(headers: List[Header]): XProcMetadata = {
-    var ctype = MediaType.OCTET_STREAM
+    // If the server sends a content type, we'll use it. So this default
+    // only applies if the server doesn't send one. That only happens if
+    // the server isn't sending any content or if the server is broken.
+    // In the former case, text is more useful. In the latter case, all
+    // bets are off anyway.
+    var ctype = MediaType.TEXT
     var location = false
     var baseURI = finalURI
     val props = mutable.HashMap.empty[QName, XdmValue]
@@ -434,34 +464,40 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
   }
 
   private def setupGetOrHead(method: String): HttpRequestBase = {
-    val request = if (method == "HEAD") {
-      new HttpHead(href)
+    val request = if (sendBodyAnyway && _sources.nonEmpty) {
+      new HttpWithForcedBody(href, method)
     } else {
-      new HttpGet(href)
+      if (method == "HEAD") {
+        new HttpHead(href)
+      } else {
+        new HttpGet(href)
+      }
     }
+
     for ((name,value) <- normalizedHeaders) {
       request.addHeader(name, value)
     }
+
+    if (sendBodyAnyway && _sources.nonEmpty) {
+      request.asInstanceOf[HttpWithForcedBody].setEntity(new ByteArrayEntity(_sources.head))
+    }
+
     request
   }
 
   private def setupPutOrPost(method: String): HttpRequestBase = {
-    val normHeaders = normalizedHeaders
-    val contentType = if (normHeaders.contains("content-type")) {
-      if (_sources.size > 1 && !normHeaders("content-type").startsWith("multipart/")) {
-        throw XProcException.xcMultipartRequired(normHeaders("content-type"), location)
+    val headers = normalizedHeaders
+    var contentType = if (headers.contains("content-type")) {
+      if (_sources.size > 1 && !headers("content-type").startsWith("multipart/")) {
+        throw XProcException.xcMultipartRequired(headers("content-type"), location)
       }
-      normHeaders("content-type")
+      MediaType.parse(headers("content-type")).assertValid
     } else {
       if (_sources.size > 1) {
-        "multipart/mixed"
+        MediaType.MULTIPART_MIXED
       } else {
-        "application/octet-stream"
+        MediaType.OCTET_STREAM
       }
-    }
-
-    if (contentType.startsWith("multipart/")) {
-      return doMultipartPost()
     }
 
     val request = if (method == "POST") {
@@ -470,46 +506,91 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
       new HttpPut(href)
     }
 
-    for ((name,value) <- normHeaders) {
-      request.addHeader(name, value)
-    }
+    if (contentType.mediaType == "multipart") {
+      for ((name,value) <- headers) {
+        // The content-type header is used to inform XProc about the desired header, but
+        // for multipart, it may be modified (to include a boundary, for example), so
+        // don't blindly copy it.
+        if (!name.equalsIgnoreCase("content-type")) {
+          request.addHeader(name, value)
+        }
+      }
 
-    if (_sources.nonEmpty) {
-      request.setEntity(new ByteArrayEntity(_sources.head))
+      val entityBuilder = MultipartEntityBuilder.create()
+      entityBuilder.setMode(HttpMultipartMode.STRICT); // FIXME: make a parameter for this?
+
+      if (contentType.paramValue("boundary").isEmpty) {
+        contentType = contentType.addParam("boundary", s"B${java.util.UUID.randomUUID().toString}")
+      }
+
+      val boundary = contentType.paramValue("boundary").get
+
+      if (boundary.startsWith("--")) {
+        throw XProcException.xcHttpInvalidBoundary(boundary, location)
+      }
+
+      entityBuilder.setBoundary(boundary)
+      entityBuilder.setContentType(ContentType.create(contentType.discardParams().toString))
+
+      for (pos <- _sources.indices) {
+        val source = _sources(pos)
+        val meta = _sourcesMetadata(pos)
+
+        val bodyContentType = meta.contentType.discardParams()
+        val charset = meta.contentType.paramValue("charset").getOrElse(StandardCharsets.UTF_8.toString)
+
+        var part = FormBodyPartBuilder.create()
+        part.setName(s"part${pos}")
+
+        var sentDisposition = false
+        for ((name,value) <- meta.properties) {
+          if (name.getNamespaceURI == XProcConstants.ns_chttp) {
+            part = part.addField(name.getLocalName, value.toString)
+            sentDisposition = sentDisposition || name.getLocalName.equalsIgnoreCase("content-disposition")
+          }
+        }
+        if (!sentDisposition) {
+          part = part.addField("Content-Disposition", "attachment")
+        }
+
+        part.setBody(new ByteArrayBody(source, ContentType.create(bodyContentType.toString, charset), null))
+
+        entityBuilder.addPart(part.build())
+      }
+
+      request.setEntity(entityBuilder.build())
+    } else {
+      for ((name,value) <- headers) {
+        request.addHeader(name, value)
+      }
+      if (_sources.nonEmpty) {
+        request.setEntity(new ByteArrayEntity(_sources.head))
+      }
     }
 
     request
   }
 
   private def setupDelete(): HttpRequestBase = {
-    // In theory, you can send content with a DELETE, but the underlying HTTP library doesn't
-    // seem to support that.
-    val request = new HttpDelete(href)
+    val request = if (sendBodyAnyway && _sources.nonEmpty) {
+        new HttpWithForcedBody(href, "DELETE")
+      } else {
+        new HttpDelete(href);
+      }
+
     for ((name,value) <- normalizedHeaders) {
       request.addHeader(name, value)
     }
+
+    if (sendBodyAnyway && _sources.nonEmpty) {
+      request.asInstanceOf[HttpWithForcedBody].setEntity(new ByteArrayEntity(_sources.head))
+    }
+
     request
   }
 
-  private def doMultipartPost(): HttpRequestBase = {
-    val request = new HttpPost(href)
-    for ((name,value) <- normalizedHeaders) {
-      request.addHeader(name, value)
-    }
-
-    val entityBuilder = MultipartEntityBuilder.create()
-    entityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE); // FIXME: make a parameter for this
-
-    for (pos <- _sources.indices) {
-      val source = _sources(pos)
-      val meta = _sourcesMetadata(pos)
-
-      val part = FormBodyPartBuilder.create()
-      part.setBody(new ByteArrayBody(source, meta.contentType.toString))
-      entityBuilder.addPart(part.build())
-    }
-
-    request.setEntity(entityBuilder.build())
-    request
+  private class HttpWithForcedBody(val uri: URI, val method: String) extends HttpEntityEnclosingRequestBase {
+    setURI(uri)
+    override def getMethod: String = method.toUpperCase()
   }
 }
