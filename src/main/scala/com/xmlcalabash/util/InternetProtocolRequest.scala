@@ -18,7 +18,7 @@ import org.apache.http.impl.auth.BasicScheme
 import org.apache.http.impl.client.{BasicAuthCache, BasicCookieStore, BasicCredentialsProvider, HttpClientBuilder, StandardHttpRequestRetryHandler}
 import org.apache.http.{Header, HttpHost, HttpResponse, ProtocolVersion}
 
-import java.io.ByteArrayInputStream
+import java.io.{ByteArrayInputStream, IOException}
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.time.Instant
@@ -258,9 +258,6 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
     }
 
     if (Option(httpResult.getEntity).isEmpty) {
-      val stream = new ByteArrayInputStream(Array.emptyByteArray)
-      val meta = entityMetadata(httpResult.getAllHeaders.toList)
-      response.addResponse(stream, meta)
       return response
     }
 
@@ -272,7 +269,31 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
   }
 
   private def readSinglepartEntity(response: InternetProtocolResponse): InternetProtocolResponse = {
-    val stream = httpResult.getEntity.getContent
+    val entity = httpResult.getEntity
+    val length = entity.getContentLength
+    val ctype = Option(httpResult.getFirstHeader("content-type"))
+
+    var stream = entity.getContent
+    if (length < 0 && ctype.isEmpty) {
+      // We have to see if there's any content here...
+      try {
+        val bytes = stream.readAllBytes()
+        if (bytes.isEmpty) {
+          // No content-type and no content = no document
+          return response
+        }
+        stream = new ByteArrayInputStream(bytes)
+      } catch {
+        case ex: IOException =>
+          if (ex.getMessage.contains("from closed")) {
+            return response
+          }
+          throw ex
+        case ex: Exception =>
+          throw ex
+      }
+    }
+
     val meta = entityMetadata(httpResult.getAllHeaders.toList)
     response.addResponse(stream, meta)
     response
@@ -291,16 +312,12 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
       val pctype = reader.header("Content-Type")
       val pclen = reader.header("Content-Length")
 
-      val contentType = MediaType.parse(getHeaderValue(pctype).getOrElse("application/octet-stream"))
-
       val partStream = if (pclen.isDefined) {
         val len = getHeaderValue(pclen).get.toLong
         reader.readBodyPart(len)
       } else {
         reader.readBodyPart()
       }
-
-      val partURI = finalURI
 
       val meta = entityMetadata(reader.getHeaders)
 
@@ -417,6 +434,7 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
   private def requestReport(): XdmMap = {
     var report = new XdmMap()
     report = report.put(new XdmAtomicValue("status-code"), new XdmAtomicValue(httpResult.getStatusLine.getStatusCode))
+    report = report.put(new XdmAtomicValue("base-uri"), new XdmAtomicValue(finalURI))
 
     var headers = new XdmMap()
     for (header <- httpResult.getAllHeaders) {
