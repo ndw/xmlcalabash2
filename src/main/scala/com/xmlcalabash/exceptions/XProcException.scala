@@ -127,7 +127,7 @@ object XProcException {
   def xdNotWFXML(href: String, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, message), location)
   def xdNotWFXML(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = dynamicError(49, List(href, line, col, message), location)
 
-  def xdCannotEncodeXml(encoding: String, contentType: MediaType, location: Option[Location]): XProcException = dynamicError(54, List(encoding,contentType), location)
+  def xdCannotEncodeMarkup(encoding: String, contentType: MediaType, location: Option[Location]): XProcException = dynamicError(54, List(encoding,contentType), location)
   def xdCharsetWithoutEncoding(contentType: String, location: Option[Location]): XProcException = dynamicError(55, contentType, location)
   def xdNoMarkupAllowedEncoded(name: QName, location: Option[Location]): XProcException = dynamicError(56, name, location)
   def xdInvalidJson(message: String, location: Option[Location]): XProcException = dynamicError(57, message, location)
@@ -240,6 +240,7 @@ object XProcException {
     except
   }
 
+  def xcContentTypeIsNotText(contentType: String, location: Option[Location]): XProcException = stepError(1, contentType, location)
   def xcHttpBadAuth(msg: String, location: Option[Location]): XProcException = stepError(3, msg, location)
   def xcXsltNoMode(mode: QName, msg: String, location: Option[Location]): XProcException = stepError(8, List(mode, msg), location)
   def xcXQueryVersionNotAvailable(version: String, location: Option[Location]): XProcException = stepError(9, version, location)
@@ -257,6 +258,7 @@ object XProcException {
   def xcBadHashAlgorithm(algorithm: String, location: Option[Location]): XProcException = stepError((36,4), algorithm, location)
   def xcHashFailed(message: String, location: Option[Location]): XProcException = stepError((36,5), message, location)
   def xcMissingHmacKey(location: Option[Location]): XProcException = stepError((36,6), location)
+  def xcValueNotFormUrlEncoded(value: String, location: Option[Location]): XProcException = stepError(37, value, location)
   def xcVersionNotAvailable(version: String, location: Option[Location]): XProcException = stepError(38, version, location)
 
   def xcCannotStore(href: URI, location: Option[Location]): XProcException = stepError(50, href, location)
@@ -297,6 +299,8 @@ object XProcException {
   def xcFileDeleteNotRecursive(href: URI, location: Option[Location]): XProcException = stepError(113, href, location)
   def xcFileMkdirFail(href: URI, location: Option[Location]): XProcException = stepError(114, href, location)
   def xcFileMoveOverwriteForbidden(href: URI, target: URI, location: Option[Location]): XProcException = stepError(115, List(href, target), location)
+  def xcInvalidFlattenValue(value: String, location: Option[Location]): XProcException = stepError(119, value, location)
+
   def xcHttpInvalidAuth(name: String, value: String, location: Option[Location]): XProcException = stepError(123, List(name, value), location)
   def xcHttpInvalidParameter(name: String, value: String, location: Option[Location]): XProcException = stepError((124,1), List(name, value), location)
   def xcHttpInvalidParameterType(name: String, value: String, location: Option[Location]): XProcException = stepError((124,2), List(name, value), location)

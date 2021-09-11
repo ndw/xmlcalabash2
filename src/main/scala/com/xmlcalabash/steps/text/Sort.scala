@@ -5,8 +5,9 @@ import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
 import com.xmlcalabash.util.xc.XsltStylesheet
+
 import javax.xml.transform.{ErrorListener, TransformerException}
-import net.sf.saxon.s9api.{QName, SaxonApiException, XdmDestination}
+import net.sf.saxon.s9api.{QName, SaxonApiException, XdmDestination, XdmValue}
 import net.sf.saxon.trans.XPathException
 
 class Sort() extends TextLines {
@@ -22,9 +23,17 @@ class Sort() extends TextLines {
 
   private val elistener = new SortErrorListener()
   private var goesBang = Option.empty[XProcException]
+  private var keyNamespaceBindings = Map.empty[String,String]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.TEXTSOURCE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.TEXTRESULT
+
+  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
+    super.receiveBinding(variable, value, context)
+    if (variable == _sort_key) {
+      keyNamespaceBindings = context.nsBindings
+    }
+  }
 
   override def run(context: StaticContext): Unit = {
     val xslbuilder = new XsltStylesheet(config, context.nsBindings, List(), "2.0")
@@ -53,7 +62,7 @@ class Sort() extends TextLines {
       throw XProcException.xdBadValue(case_order.get, location)
     }
 
-    xslbuilder.startSort(sort_key.getOrElse("."), lang, order, collation, stable, case_order)
+    xslbuilder.startSort(sort_key.getOrElse("."), keyNamespaceBindings, lang, order, collation, stable, case_order)
 
     xslbuilder.endSort()
     xslbuilder.valueOf(".")
@@ -118,8 +127,13 @@ class Sort() extends TextLines {
         case xpe: XPathException =>
           if (xpe.getErrorCodeQName == XProcException.xtte(1020)) {
             goesBang = Some(XProcException.xcSortKeyError(location))
+          } else {
+            // ??? This error is for problems applying the sort-key to a line.
+            // It works for that, but I can't be sure there aren't other possible errors.
+            goesBang = Some(XProcException.xcSortError(e.getMessage, location))
           }
-        case _ => ()
+        case _ =>
+          ()
       }
 
       if (goesBang.isEmpty) {

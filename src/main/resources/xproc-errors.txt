@@ -283,6 +283,9 @@ Static expression references non-static variable “$1”
 XS0108
 It is a static error if a p:if does not specify a primary output port.
 
+XC0001
+The content type is not a valid text content type: “$1”.
+
 XC0013
 Cannot rename PI to a name with a namespace: “$1”.
 
@@ -313,6 +316,9 @@ Attempted p:hash failed: “$1”.
 XC0036/6
 The cx:hmac algorithm requires an ‘accessKey’ parameter.
 
+XC0037
+Value is not correctly x-www-form-urlencoded: “$1”.
+
 XC0038
 The requested version, “$1”, is not available.
 
@@ -340,11 +346,17 @@ Multiple top-level elements are not allowed in p:escape-markup.
 XC0092
 Attribute name collision: “$1”
 
+XC0098
+XPath error occurred: $1
+
 XC0113
 Attempt to delete non-empty directory without the recursive option: $1
 
 XC0115
 Cannot move ($1) onto an existing file ($2).
+
+XC0119
+Invalid flatten-to-depth: “$1”. It must be “unbounded” or a positive integer.
 
 XC0124/1
 Invalid “$1” parameter value “$2”.

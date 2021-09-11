@@ -19,8 +19,10 @@ class TextLines() extends DefaultXmlStep {
     item match {
       case node: XdmNode =>
         text = node
-        val svalue = text.getStringValue
+        var svalue = text.getStringValue
         if (svalue != "") {
+          // I'm a little dubious about this, but see test ab-text-count-004
+          svalue = svalue.replaceAll("\r([^\n])", "\n$1")
           lines ++= svalue.split('\n')
           // String.split() doesn't include trailing empty lines, but we need them.
           var pos = svalue.length - 1

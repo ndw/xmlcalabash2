@@ -7,7 +7,7 @@ import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.MediaType
+import com.xmlcalabash.util.{MediaType, URIUtils}
 import net.sf.saxon.s9api.{QName, XdmArray, XdmValue}
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.apache.commons.compress.utils.IOUtils
@@ -25,6 +25,7 @@ class Unarchive extends DefaultXmlStep {
   private var format = Option.empty[QName]
   private var parameters = Map.empty[QName, XdmValue]
   private var relativeTo: URI = _
+  private var overrideContentTypes = List.empty[Tuple2[Pattern,MediaType]]
   private var includeFilter = ListBuffer.empty[String]
   private var excludeFilter = ListBuffer.empty[String]
 
@@ -61,7 +62,7 @@ class Unarchive extends DefaultXmlStep {
       throw XProcException.xcUnknownArchiveFormat(format.get, location)
     }
 
-    val overrideContentTypes = if (bindings.contains(XProcConstants._override_content_types)) {
+    overrideContentTypes = if (definedBinding(XProcConstants._override_content_types)) {
       parseOverrideContentTypes(bindings(XProcConstants._override_content_types))
     } else {
       List.empty[Tuple2[Pattern,MediaType]]
@@ -130,20 +131,29 @@ class Unarchive extends DefaultXmlStep {
 
             val href = relativeTo.resolve(entry.getName)
 
-            // Using the filename sort of sucks, but it's what the OSes do at this point so...sigh
-            // You can extend the set of known extensions by pointing the system property
-            // `content.types.user.table` at your own mime types file. See
-            // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=JDK-8039362
-            val contentTypeString = Option(URLConnection.guessContentTypeFromName(href.toASCIIString)).getOrElse("application/octet-stream")
+            var contentType = Option.empty[MediaType]
+            for (over <- overrideContentTypes) {
+              val patn = over._1
+              val ctype = over._2
+              if (contentType.isEmpty) {
+                val rmatch = patn.matcher(entry.getName)
+                if (rmatch.matches()) {
+                  contentType = Some(ctype)
+                }
+              }
+            }
 
-            val request = new DocumentRequest(href, MediaType.parse(contentTypeString))
+            if (contentType.isEmpty) {
+              contentType = Some(URIUtils.guessContentType(href))
+            }
+
+            val request = new DocumentRequest(href, contentType.get)
             val response = config.documentManager.parse(request, bais)
             consumer.get.receive("result", response.value, new XProcMetadata(response.contentType))
           } else {
             logger.info(s"Cannot read {$entry.getName} from ZIP")
           }
         }
-
       }
     }
     zipIn.close()

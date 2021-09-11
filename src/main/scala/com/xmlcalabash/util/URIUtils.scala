@@ -72,11 +72,15 @@ object URIUtils {
   }
 
   def guessContentType(href: URI): MediaType = {
+    guessContentType(href.toASCIIString)
+  }
+
+  def guessContentType(href: String): MediaType = {
     // Using the filename sort of sucks, but it's what the OSes do at this point so...sigh
     // You can extend the set of known extensions by pointing the system property
     // `content.types.user.table` at your own mime types file. The default file to
     // start with is in $JAVA_HOME/lib/content-types.properties
-    val contentTypeString = Option(URLConnection.guessContentTypeFromName(href.toASCIIString)).getOrElse("application/octet-stream")
-    MediaType.parse(contentTypeString)
+    val contentTypeString = Option(URLConnection.guessContentTypeFromName(href)).getOrElse("application/octet-stream")
+    MediaType.parse(contentTypeString).assertValid
   }
 }

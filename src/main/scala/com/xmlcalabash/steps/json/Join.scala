@@ -34,10 +34,10 @@ class Join extends DefaultXmlStep {
         flattenDepth = depth.toInt
       } catch {
         case _: Exception =>
-          throw XProcException.xdValueDoesNotSatisfyType(depth, location)
+          throw XProcException.xcInvalidFlattenValue(depth, location)
       }
       if (flattenDepth < 0) {
-        throw XProcException.xdValueDoesNotSatisfyType(depth, location)
+        throw XProcException.xcInvalidFlattenValue(depth, location)
       }
     }
 

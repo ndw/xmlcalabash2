@@ -1,12 +1,12 @@
 package com.xmlcalabash.drivers
 
-import java.io.File
-import java.net.URI
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.testing.TestRunner
 import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.s9api.{QName, Serializer, XdmAtomicValue, XdmDestination, XdmValue}
 
+import java.io.{BufferedReader, File, FileReader, PrintWriter}
+import java.net.URI
 import java.nio.file.{Files, Paths}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -15,6 +15,7 @@ import scala.jdk.javaapi.CollectionConverters.asJava
 object Test extends App {
   private val xmlCalabash = XMLCalabashConfig.newInstance()
 
+  private val testlist = ListBuffer.empty[String]
   private var regex = Option.empty[String]
   private var debug = false
   private var showPassing = false
@@ -36,11 +37,11 @@ object Test extends App {
   private val showAll = !showPassing && !showFailing && !showSkipping
 
   if (testLocations.isEmpty) {
-    println("Usage: com.xmlcalabash.drivers.Test [-h htmloutput] [-j junitoutput] [-r regex] testlocation [testlocation+]")
+    println("Usage: com.xmlcalabash.drivers.Test [-h htmloutput] [-j junitoutput] [-r regex | -l list] testlocation [testlocation+]")
   }
 
   try {
-    val runner = new TestRunner(xmlCalabash, online, regex, testLocations.toList)
+    val runner = new TestRunner(xmlCalabash, online, regex, testlist.toList, testLocations.toList)
 
     if (xmlOutput.isDefined) {
       val junit = runner.junit()
@@ -65,7 +66,26 @@ object Test extends App {
         transformer.setStylesheetParameters(asJava(parameters.toMap))
         val result = new XdmDestination()
         transformer.applyTemplates(junit, result)
-        println(result.getXdmNode.toString)
+        var lines = ListBuffer.empty[String]
+        lines ++= result.getXdmNode.toString.split("\n")
+        var startOfList = false
+        while (!startOfList) {
+          startOfList = lines.isEmpty || lines.head.startsWith("Failing tests:")
+          if (!startOfList) {
+            println(lines.head)
+          }
+          if (lines.nonEmpty) {
+            lines = lines.drop(1)
+          }
+        }
+        if (regex.isEmpty) {
+          val faillist = new PrintWriter(new File("failing.txt"))
+          while (lines.nonEmpty) {
+            faillist.println(lines.head)
+            lines = lines.drop(1)
+          }
+          faillist.close()
+        }
       }
     } else {
       var total = 0
@@ -116,6 +136,7 @@ object Test extends App {
     val opts = "-(s)".r
     val optr = "-r(.*)".r
     val optx = "-(.*)".r
+    val optl = "-l(.*)".r
 
     var pos = 0
     while (pos < args.length) {
@@ -147,6 +168,19 @@ object Test extends App {
           if (!regex.get.endsWith("$")) {
             regex = Some(regex.get + ".*$")
           }
+        case optl(opt) =>
+          var filelist = Some(opt)
+          if (opt == "") {
+            pos += 1
+            filelist = Some(args(pos))
+          }
+          val tfile = new BufferedReader(new FileReader(new File(filelist.get)))
+          var line = tfile.readLine()
+          while (Option(line).isDefined) {
+            testlist += line.trim()
+            line = tfile.readLine()
+          }
+          tfile.close()
         case optx(opt) =>
           throw new RuntimeException(s"Unknown option: -$opt")
         case _ =>

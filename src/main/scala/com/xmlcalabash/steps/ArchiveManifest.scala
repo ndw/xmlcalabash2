@@ -6,7 +6,7 @@ import java.util.zip.ZipEntry
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.{MediaType, TypeUtils}
+import com.xmlcalabash.util.{MediaType, TypeUtils, URIUtils}
 import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap}
 import net.sf.saxon.s9api.{QName, XdmArray, XdmValue}
 import org.apache.commons.compress.archivers.zip.{ZipArchiveEntry, ZipFile}
@@ -27,6 +27,7 @@ class ArchiveManifest extends DefaultXmlStep {
   private var format = Option.empty[QName]
   private var parameters = Map.empty[QName, XdmValue]
   private var relativeTo = Option.empty[URI]
+  private var overrideContentTypes = List.empty[Tuple2[Pattern,MediaType]]
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYXML
@@ -61,7 +62,7 @@ class ArchiveManifest extends DefaultXmlStep {
       throw XProcException.xcUnknownArchiveFormat(format.get, location)
     }
 
-    val overrideContentTypes = if (bindings.contains(XProcConstants._override_content_types)) {
+    overrideContentTypes = if (definedBinding(XProcConstants._override_content_types)) {
       parseOverrideContentTypes(bindings(XProcConstants._override_content_types))
     } else {
       List.empty[Tuple2[Pattern,MediaType]]
@@ -104,19 +105,20 @@ class ArchiveManifest extends DefaultXmlStep {
       if (!entry.isDirectory) {
         var amap: AttributeMap = EmptyAttributeMap.getInstance()
         amap = amap.put(TypeUtils.attributeInfo(XProcConstants._name, entry.getName))
-        if (relativeTo.isDefined) {
-          amap = amap.put(TypeUtils.attributeInfo(XProcConstants._href, relativeTo.get.resolve(entry.getName).toASCIIString))
+
+        val href = if (relativeTo.isDefined) {
+          relativeTo.get.resolve(entry.getName)
         } else {
           if (context.baseURI.isDefined) {
-            amap = amap.put(TypeUtils.attributeInfo(XProcConstants._href, context.baseURI.get.resolve(entry.getName).toASCIIString))
+            context.baseURI.get.resolve(entry.getName)
           } else {
             // I wouldn't expect this to succeed, as the name is unlikely to be an absolute
             // URI, but I've run out of options.
-            amap = amap.put(TypeUtils.attributeInfo(XProcConstants._href, new URI(entry.getName).toASCIIString))
+            new URI(entry.getName)
           }
         }
 
-
+        amap = amap.put(TypeUtils.attributeInfo(XProcConstants._href, href.toASCIIString))
         amap = archiveAttribute(amap, XProcConstants._comment, Option(entry.getComment))
         amap = entry.getMethod match {
           // ZipArchiveEntry inherites from ZipEntry, but ZipArchiveEntry.STORED doesn't resolve???
@@ -134,8 +136,27 @@ class ArchiveManifest extends DefaultXmlStep {
           amap = archiveAttribute(amap, XProcConstants._size, Some(entry.getSize.toString))
         }
 
+        var contentType = Option.empty[MediaType]
+        for (over <- overrideContentTypes) {
+          val patn = over._1
+          val ctype = over._2
+          if (contentType.isEmpty) {
+            val rmatch = patn.matcher(entry.getName)
+            if (rmatch.matches()) {
+              contentType = Some(ctype)
+            }
+          }
+        }
+
+        if (contentType.isEmpty) {
+          contentType = Some(URIUtils.guessContentType(href))
+        }
+
+        amap = archiveAttribute(amap, XProcConstants._content_type, Some(contentType.get.toString))
+
         builder.addStartElement(XProcConstants.c_entry, amap)
         builder.addEndElement()
+        builder.addText("\n")
       }
     }
     zipIn.close()

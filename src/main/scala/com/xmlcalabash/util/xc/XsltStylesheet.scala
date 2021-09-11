@@ -120,7 +120,7 @@ class XsltStylesheet(runtime: XMLCalabashRuntime, val bindings: Map[String,Strin
       amap = amap.put(TypeUtils.attributeInfo(_as, as.get))
     }
 
-    builder.addStartElement(xsl_variable)
+    builder.addStartElement(xsl_variable, amap)
     openStack.push(xsl_variable)
   }
 
@@ -129,10 +129,15 @@ class XsltStylesheet(runtime: XMLCalabashRuntime, val bindings: Map[String,Strin
     openStack.pop()
   }
 
-  def startSort(select: String, lang: Option[String], order: Option[String],
-           collation: Option[String], stable: Option[String], case_order: Option[String]): Unit = {
+  def startSort(select: String, namespaces: Map[String,String], lang: Option[String], order: Option[String],
+                collation: Option[String], stable: Option[String], case_order: Option[String]): Unit = {
     var amap: AttributeMap = EmptyAttributeMap.getInstance()
-    amap.put(TypeUtils.attributeInfo(_select, select))
+    amap = amap.put(TypeUtils.attributeInfo(_select, select))
+
+    var nsmap: NamespaceMap = NamespaceMap.emptyMap()
+    for ((prefix,uri) <- namespaces) {
+      nsmap = nsmap.put(prefix,uri)
+    }
 
     if (lang.isDefined) { amap = amap.put(TypeUtils.attributeInfo(_lang, lang.get)) }
     if (order.isDefined) { amap = amap.put(TypeUtils.attributeInfo(_order, order.get)) }
@@ -140,7 +145,7 @@ class XsltStylesheet(runtime: XMLCalabashRuntime, val bindings: Map[String,Strin
     if (stable.isDefined) { amap = amap.put(TypeUtils.attributeInfo(_stable, stable.get)) }
     if (case_order.isDefined) { amap = amap.put(TypeUtils.attributeInfo(_case_order, case_order.get)) }
 
-    builder.addStartElement(xsl_sort, amap)
+    builder.addStartElement(xsl_sort, amap, nsmap)
     openStack.push(xsl_sort)
   }
 

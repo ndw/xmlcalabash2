@@ -6,8 +6,8 @@ import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime._
 import net.sf.saxon.`type`.BuiltInAtomicType
 import net.sf.saxon.event.ReceiverOption
-import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap, FingerprintedQName}
-import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmNode}
+import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap, FingerprintedQName, NamespaceMap}
+import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmNode, XdmValue}
 
 import java.net.URI
 import scala.jdk.CollectionConverters.IterableHasAsScala
@@ -21,6 +21,7 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
   private var context: StaticContext = _
   private var attribute: QName = _
   private var label: String = _
+  private var labelNamespaceBindings = Map.empty[String, String]
   private var pattern: String = _
   private var replace = true
   private var matcher: ProcessMatch = _
@@ -34,6 +35,13 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
   override def receive(port: String, item: Any, meta: XProcMetadata): Unit = {
     source = item.asInstanceOf[XdmNode]
     metadata = meta
+  }
+
+  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
+    super.receiveBinding(variable, value, context)
+    if (variable == _label) {
+      labelNamespaceBindings = context.nsBindings
+    }
   }
 
   override def run(context: StaticContext): Unit = {
@@ -54,11 +62,15 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
   }
 
   override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
-    val nsmap = node.getUnderlyingNode.getAllNamespaces
+    var nsmap: NamespaceMap = node.getUnderlyingNode.getAllNamespaces
     var amap: AttributeMap = EmptyAttributeMap.getInstance()
 
     val prefix = prefixFor(nsmap, attribute.getPrefix, attribute.getNamespaceURI)
     val aname = new FingerprintedQName(prefix, attribute.getNamespaceURI, attribute.getLocalName)
+
+    if (Option(nsmap.getURI(prefix)).isEmpty) {
+      nsmap = nsmap.put(prefix, attribute.getNamespaceURI)
+    }
 
     var found = false
     for (ainfo <- attributes.asScala) {
@@ -69,14 +81,17 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
         } else {
           amap = amap.put(ainfo)
         }
+      } else {
+        amap = amap.put(ainfo)
       }
     }
 
     if (!found) {
       amap = amap.put(new AttributeInfo(aname, BuiltInAtomicType.UNTYPED_ATOMIC, computedLabel(node), null, ReceiverOption.NONE))
     }
+    p_count += 1
 
-    matcher.addStartElement(node, amap)
+    matcher.addStartElement(node.getNodeName, amap, nsmap)
     true
   }
 
@@ -110,7 +125,9 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
       xcomp.setBaseURI(new URI(location.get.uri.get))
     }
 
-    // FIXME: I need the namespace bindings from the label!
+    for ((prefix,uri) <- labelNamespaceBindings) {
+      xcomp.declareNamespace(prefix, uri)
+    }
 
     xcomp.declareVariable(p_index)
     val xexec = xcomp.compile(label)

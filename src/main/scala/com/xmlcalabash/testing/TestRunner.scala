@@ -24,7 +24,7 @@ import org.xml.sax.InputSource
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Option[String], testloc: List[String]) {
+class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Option[String], testlist: List[String], testloc: List[String]) {
   private val _testsuite = new QName("", "testsuite")
   private val _properties = new QName("", "properties")
   private val _property = new QName("", "property")
@@ -100,6 +100,17 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Optio
   testFiles ++= sortedList
 
   def rematch(path: String): Unit = {
+    if (testlist.nonEmpty) {
+      var found = false
+      for (fn <- testlist) {
+        found = found || path.endsWith(fn)
+      }
+      if (found) {
+        testFiles += path
+      }
+      return
+    }
+
     if (regex.isEmpty || path.matches(regex.get)) {
       testFiles += path
     }

@@ -13,12 +13,13 @@ import net.sf.saxon.event.{PipelineConfiguration, Receiver}
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.functions.ResolveURI
 import net.sf.saxon.lib.{ResultDocumentResolver, SaxonOutputKeys}
-import net.sf.saxon.s9api.{Axis, Destination, MessageListener, QName, RawDestination, ValidationMode, XdmAtomicValue, XdmDestination, XdmEmptySequence, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, Destination, MessageListener, QName, RawDestination, ValidationMode, XdmArray, XdmAtomicValue, XdmDestination, XdmEmptySequence, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.trans.XPathException
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.{IteratorHasAsJava, MapHasAsJava, SetHasAsScala}
 
 class Xslt extends DefaultXmlStep {
   private val _global_context_item = new QName("", "global-context-item")
@@ -42,8 +43,6 @@ class Xslt extends DefaultXmlStep {
   private var primaryDestination: Destination = _
   private val secondaryResults = mutable.HashMap.empty[URI, Destination]
   private val secondaryOutputProperties = mutable.HashMap.empty[URI, Map[QName, XdmValue]]
-
-  import scala.collection.JavaConverters._
 
   override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
     Map("source" -> PortCardinality.ZERO_OR_MORE, "stylesheet" -> PortCardinality.EXACTLY_ONE),
@@ -137,7 +136,7 @@ class Xslt extends DefaultXmlStep {
     }
     val transformer = exec.load30()
 
-    transformer.setStylesheetParameters(asJava(parameters))
+    transformer.setStylesheetParameters(parameters.asJava)
 
     val inputSelection = if (document.isDefined) {
       val iter = inputSequence.iterator.asJava
@@ -320,7 +319,14 @@ class Xslt extends DefaultXmlStep {
       case _: XdmAtomicValue =>
         ctype = Some(MediaType.JSON)
 
-      // explicitly not catching _ because I want anything else to fail
+      case _: XdmArray =>
+        ctype = Some(MediaType.JSON)
+
+      case _: XdmMap =>
+        ctype = Some(MediaType.JSON)
+
+      case _ =>
+        throw new RuntimeException("Unexpected item type produced by XSLT: " + item)
     }
 
     val mtype = new XProcMetadata(ctype, dprop.toMap)

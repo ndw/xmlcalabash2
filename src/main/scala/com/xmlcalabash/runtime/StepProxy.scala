@@ -526,27 +526,23 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
 
   @scala.annotation.tailrec
   private def makeBinaryMessage(item: Any, metadata: XProcMetadata): Message = {
-    val tree = new SaxonTreeBuilder(config)
-    tree.startDocument(metadata.baseURI)
-    tree.endDocument()
-
     item match {
       case value: BinaryNode =>
-        new AnyItemMessage(tree.result, value, metadata, staticContext)
+        new AnyItemMessage(value.node, value, metadata, staticContext)
       case value: String =>
         val binary = new BinaryNode(config, value.getBytes("UTF-8"))
-        new AnyItemMessage(tree.result, binary, metadata, staticContext)
+        new AnyItemMessage(binary.node, binary, metadata, staticContext)
       case value: Array[Byte] =>
         makeBinaryMessage(new ByteArrayInputStream(value), metadata)
       case value: InputStream =>
         val binary = new BinaryNode(config, value)
-        new AnyItemMessage(tree.result, binary, metadata, staticContext)
+        new AnyItemMessage(binary.node, binary, metadata, staticContext)
       case value: XdmNode =>
         val binary = new BinaryNode(config, value.getStringValue.getBytes("UTF-8"))
-        new AnyItemMessage(tree.result, binary, metadata, staticContext)
+        new AnyItemMessage(binary.node, binary, metadata, staticContext)
       case value: XdmValue =>
         val binary = new BinaryNode(config, value.getUnderlyingValue.getStringValue.getBytes("UTF-8"))
-        new AnyItemMessage(tree.result, binary, metadata, staticContext)
+        new AnyItemMessage(binary.node, binary, metadata, staticContext)
       case _ =>
         throw XProcException.xiNotBinary(None)
     }

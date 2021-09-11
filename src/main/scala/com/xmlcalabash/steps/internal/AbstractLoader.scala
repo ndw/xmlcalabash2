@@ -28,10 +28,7 @@ abstract class AbstractLoader() extends DefaultXmlStep {
       case item: XdmValue =>
         contextItem = Some(new XdmValueItemMessage(item, meta, context))
       case binary: BinaryNode =>
-        val tree = new SaxonTreeBuilder(config)
-        tree.startDocument(meta.baseURI)
-        tree.endDocument()
-        contextItem = Some(new AnyItemMessage(tree.result, binary, meta, context))
+        contextItem = Some(new AnyItemMessage(binary.node, binary, meta, context))
       case item: XProcException =>
         if (item.errors.isDefined) {
           contextItem = Some(new XdmNodeItemMessage(item.errors.get, XProcMetadata.XML, context))

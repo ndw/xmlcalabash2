@@ -500,6 +500,14 @@ class DefaultXmlStep extends XmlStep {
           throw XProcException.xcOverrideContentTypesBadRegex(regex, location)
         }
 
+        // Hack: Make the match unanchored...
+        if (!regex.startsWith("^")) {
+          regex = "^.*" + regex;
+        }
+        if (!regex.endsWith("$")) {
+          regex = regex + ".*$"
+        }
+
         val tuple = (Pattern.compile(regex), ctype)
         overrideContentTypes += tuple
       }

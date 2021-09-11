@@ -2,9 +2,8 @@ package com.xmlcalabash.steps
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.util.zip.GZIPOutputStream
-
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmValue}

@@ -441,6 +441,16 @@
   <p:option name="group-adjacent" as="xs:string" cx:as="XPathExpression"/>
 </p:declare-step>
 
+<p:declare-step type="p:www-form-urldecode">
+  <p:output port="result" content-types="application/json"/>
+  <p:option name="value" required="true" as="xs:string"/>       
+</p:declare-step>
+
+<p:declare-step type="p:www-form-urlencode">
+  <p:output port="result" content-types="text/plain"/>
+  <p:option name="parameters" required="true" as="map(xs:string,xs:untypedAtomic+)"/>
+</p:declare-step>
+
 <p:declare-step type="p:xinclude">
   <p:input port="source" content-types="xml html"/>
   <p:output port="result" content-types="xml html"/>

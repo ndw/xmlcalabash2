@@ -44,7 +44,10 @@ class Join() extends DefaultXmlStep {
 
     var contentType = MediaType.TEXT
     if (definedBinding(XProcConstants._override_content_type)) {
-      contentType = MediaType.parse(stringBinding(XProcConstants._override_content_type))
+      contentType = MediaType.parse(stringBinding(XProcConstants._override_content_type)).assertValid
+    }
+    if (!contentType.textContentType) {
+      throw XProcException.xcContentTypeIsNotText(contentType.toString, location)
     }
 
     consumer.get.receive("result", new XdmAtomicValue(result), new XProcMetadata(contentType))

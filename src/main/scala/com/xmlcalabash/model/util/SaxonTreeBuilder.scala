@@ -33,6 +33,21 @@ import scala.jdk.CollectionConverters.{BufferHasAsJava, CollectionHasAsScala}
    But I am not very confident.
  */
 
+object SaxonTreeBuilder {
+  def emptyTree(runtime: XMLCalabashRuntime, baseURI: Option[URI]): XdmNode = {
+    val tree = new SaxonTreeBuilder(runtime)
+    tree.startDocument(baseURI)
+    tree.endDocument()
+    tree.result
+  }
+  def emptyTree(runtime: XMLCalabashRuntime): XdmNode = {
+    val tree = new SaxonTreeBuilder(runtime)
+    tree.startDocument(None)
+    tree.endDocument()
+    tree.result
+  }
+}
+
 class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   protected val config: Configuration = runtime.processor.getUnderlyingConfiguration
   protected val pool: NamePool = config.getNamePool

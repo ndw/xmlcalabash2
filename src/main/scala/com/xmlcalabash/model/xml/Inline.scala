@@ -54,6 +54,10 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
 
       if (_encoding.isDefined) {
         if (_encoding.get == "base64") {
+          if (_contentType.isDefined && _contentType.get.markupContentType) {
+            throw XProcException.xdCannotEncodeMarkup(_encoding.get, _contentType.get, location)
+          }
+
           val charset = if (_contentType.isDefined) {
             _contentType.get.charset.getOrElse("UTF-8")
           } else {
@@ -72,6 +76,8 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
             case ex: Exception =>
               throw ex
           }
+        } else {
+          throw XProcException.xdUnsupportedEncoding(_encoding.get, location)
         }
       }
     }

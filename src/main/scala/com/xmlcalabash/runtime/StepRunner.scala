@@ -19,7 +19,7 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
   private var _location = Option.empty[Location]
   private val consumers = mutable.HashMap.empty[String, ConsumerMap]
   private val bindings = mutable.HashMap.empty[QName, XProcVarValue]
-  private val inputs = mutable.HashMap.empty[String,ListBuffer[(XdmItem, XProcMetadata)]]
+  private val inputs = mutable.HashMap.empty[String,ListBuffer[(Any, XProcMetadata)]]
 
   private val cardMap = mutable.HashMap.empty[String,PortCardinality]
   private val typeMap = mutable.HashMap.empty[String,List[String]]
@@ -74,17 +74,13 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
   // Input to the pipeline
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     // It's too early to set in the runtime, save for later
-    item match {
-      case value: XdmItem =>
-        if (inputs.contains(port)) {
-          val lb = inputs(port)
-          lb += ((value, metadata))
-        } else {
-          val lb = new ListBuffer[(XdmItem, XProcMetadata)]
-          lb += ((value, metadata))
-          inputs.put(port, lb)
-        }
-      case _ => throw new RuntimeException("Unexpected value sent to StepRunner")
+    if (inputs.contains(port)) {
+      val lb = inputs(port)
+      lb += ((item, metadata))
+    } else {
+      val lb = new ListBuffer[(Any, XProcMetadata)]
+      lb += ((item, metadata))
+      inputs.put(port, lb)
     }
   }
 

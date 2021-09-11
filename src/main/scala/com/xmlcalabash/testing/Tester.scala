@@ -67,7 +67,7 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
     try {
       val decl = _parser.loadDeclareStep(_pipeline.get)
       runtime = decl.runtime()
-      val result = new BufferingConsumer()
+      val result = new BufferingConsumer(decl.output("result"))
 
       for (port <- _inputs.keySet) {
         for (item <- _inputs(port)) {

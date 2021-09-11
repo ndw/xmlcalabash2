@@ -9,7 +9,7 @@ class Count() extends DefaultXmlStep {
   private val _limit = new QName("", "limit")
 
   private var count = 0L
-  private var limit = -1L
+  private var limit = 0L
   private var sent = false
 
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.ANYSOURCESEQ
@@ -23,14 +23,14 @@ class Count() extends DefaultXmlStep {
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     if (port == "source") {
-      count += 1
-      if (count == limit) {
-        sendCount()
+      if (limit <= 0 || count != limit) {
+        count += 1
       }
     }
   }
 
   override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
+    super.receiveBinding(variable, value, context)
     if (variable == _limit) {
       limit = value.asInstanceOf[XdmAtomicValue].getLongValue
     }

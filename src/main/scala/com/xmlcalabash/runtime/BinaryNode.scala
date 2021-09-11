@@ -1,14 +1,22 @@
 package com.xmlcalabash.runtime
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileInputStream, FileOutputStream, InputStream}
+import com.xmlcalabash.model.util.SaxonTreeBuilder
+import net.sf.saxon.s9api.XdmNode
 
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileInputStream, FileOutputStream, InputStream}
 import org.apache.http.util.ByteArrayBuffer
 import org.slf4j.{Logger, LoggerFactory}
+
+// Because the XmlStep API doesn't expose messages, the BinaryNode has to keep track
+// of its XdmNode counterpart. (That travels in the message, but we have to be able
+// to tunnel it through XmlStep and I don't want to break the node/binary association
+// by manufacturing another one later.)
 
 class BinaryNode(config: XMLCalabashRuntime, private val rawValue: Any) {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private var cacheBytes = Option.empty[Array[Byte]]
   private var cacheFile = Option.empty[File]
+  private var xdmNodeValue = SaxonTreeBuilder.emptyTree(config)
 
   rawValue match {
     case stream: ByteArrayOutputStream =>
@@ -34,6 +42,7 @@ class BinaryNode(config: XMLCalabashRuntime, private val rawValue: Any) {
   }
 
   def value: Any = rawValue
+  def node: XdmNode = xdmNodeValue
 
   def bytes: Array[Byte] = {
     if (cacheBytes.isDefined) {

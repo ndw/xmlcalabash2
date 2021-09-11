@@ -10,7 +10,7 @@ import com.jafpl.steps.DataConsumer
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.config.{DocumentManager, Signatures, XMLCalabashConfig, XProcConfigurer}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException, XProcException}
-import com.xmlcalabash.messages.XdmValueItemMessage
+import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{ExpressionParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DeclareStep}
 import com.xmlcalabash.util.stores.{DataStore, FallbackDataStore, FileDataStore, HttpDataStore}
@@ -18,7 +18,7 @@ import com.xmlcalabash.util.{MediaType, XProcVarValue}
 
 import javax.xml.transform.URIResolver
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
-import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmValue}
+import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmNode, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.EntityResolver
 
@@ -86,14 +86,17 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
     runtime.inputs(port).send(msg)
   }
 
-  def input(port: String, item: XdmValue, metadata: XProcMetadata): Unit = {
-    if (runtime.inputs.contains(port)) {
-      if (inputSet.isEmpty) {
-        // If there are any defaults for this input port, disable them
-        decl.input(port).disableDefaults()
-      }
-      inputSet += port
-      runtime.inputs(port).send(new XdmValueItemMessage(item, metadata, new StaticContext(this)))
+  def input(port: String, item: Any, metadata: XProcMetadata): Unit = {
+    val context = new StaticContext(this)
+    item match {
+      case xnode: XdmNode =>
+        input(port, new XdmNodeItemMessage(xnode, metadata, context))
+      case xitem: XdmValue =>
+        input(port, new XdmValueItemMessage(xitem, metadata, context))
+      case bitem: BinaryNode =>
+        input(port, new AnyItemMessage(bitem.node, bitem, metadata, context))
+      case _ =>
+        throw new RuntimeException("Unexpected item value pass to input")
     }
   }
 

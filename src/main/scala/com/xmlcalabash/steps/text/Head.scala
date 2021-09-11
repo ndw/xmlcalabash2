@@ -24,14 +24,12 @@ class Head() extends TextLines {
       newLines = lines.drop(-count)
     }
 
-    var hlines = ""
+    val hlines = new StringBuilder()
     for (line <- newLines) {
-      if (hlines != "") {
-        hlines += "\n"
-      }
-      hlines += line
+      hlines.append(line)
+      hlines.append("\n")
     }
 
-    consumer.get.receive("result", new XdmAtomicValue(hlines), new XProcMetadata(MediaType.TEXT))
+    consumer.get.receive("result", new XdmAtomicValue(hlines.toString), new XProcMetadata(MediaType.TEXT))
   }
 }

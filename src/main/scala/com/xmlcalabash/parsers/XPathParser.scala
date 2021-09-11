@@ -5,6 +5,7 @@ import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.parsers.XPath31.EventHandler
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.immutable.HashSet
 import scala.collection.mutable
 
 class XPathParser() extends ExpressionParser {
@@ -27,10 +28,15 @@ class XPathParser() extends ExpressionParser {
   def parse(expr: String): Unit = {
     handler.initialize()
     parser.initialize(expr, handler)
+
+    if (trace) {
+      logger.debug("XPathParser:  parse: {}", expr)
+    }
+
     try {
       parser.parse_XPath
     } catch {
-      case e: Throwable =>
+      case _: Throwable =>
         _errors = true
     }
   }
@@ -56,6 +62,8 @@ class XPathParser() extends ExpressionParser {
     private var functionCall = false
     private var functionName = false
     private var context = false
+    private var quantified = false // I bet this one can nest...
+    private var quantvar = HashSet.empty[String]
 
     def initialize(): Unit = {
       input = null
@@ -88,6 +96,7 @@ class XPathParser() extends ExpressionParser {
         case "PathExpr" => context = true
         case "FunctionCall" => functionCall = true
         case "FunctionName" => functionName = true
+        case "QuantifiedExpr" => quantified = true
         case _ => ()
       }
     }
@@ -108,13 +117,23 @@ class XPathParser() extends ExpressionParser {
         logger.debug(s"XPathParser:   T: $name: ${characters(begin,end)}")
       }
       if (sawDollar) {
-        varlist += characters(begin, end)
+        val varname = characters(begin, end)
+        if (quantified) {
+          quantvar += varname
+        } else {
+          if (!quantvar.contains(varname)) {
+            varlist += varname
+          }
+        }
       } else {
         if (functionCall && functionName) {
           funclist += characters(begin, end)
         }
       }
       sawDollar = name == "'$'"
+      if (quantified && name == "in") {
+        quantified = false
+      }
     }
 
     override def whitespace(begin: Int, end: Int): Unit = {
