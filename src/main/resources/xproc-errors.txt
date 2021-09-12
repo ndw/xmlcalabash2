@@ -346,6 +346,12 @@ Multiple top-level elements are not allowed in p:escape-markup.
 XC0092
 Attribute name collision: “$1”
 
+XC0093
+Error compiling stylesheet: “$1”.
+
+XC0095
+XSLT runtime error “$1”: “$2”.
+
 XC0098
 XPath error occurred: $1
 

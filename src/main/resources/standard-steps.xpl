@@ -472,11 +472,13 @@
   <p:output port="result" primary="true" sequence="true" content-types="any"/>
   <p:output port="secondary" sequence="true" content-types="any"/>
   <p:option name="parameters" as="map(xs:QName,item()*)?"/>     
+  <p:option name="static-parameters" as="map(xs:QName,item()*)?"/>
   <p:option name="global-context-item" as="item()?"/>           
+  <p:option name="populate-default-collection" as="xs:boolean?" select="true()"/>
   <p:option name="initial-mode" as="xs:QName?"/>                
   <p:option name="template-name" as="xs:QName?"/>               
   <p:option name="output-base-uri" as="xs:anyURI?"/>            
-  <p:option name="version" as="xs:string?"/>        
+  <p:option name="version" as="xs:string?"/>                    
 </p:declare-step>
 
 <!-- ============================================================ -->

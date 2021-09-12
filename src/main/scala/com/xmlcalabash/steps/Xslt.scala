@@ -1,14 +1,12 @@
 package com.xmlcalabash.steps
 
-import java.net.URI
 import com.jafpl.steps.PortCardinality
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, XProcCollectionFinder}
 import net.sf.saxon.Configuration
-
-import javax.xml.transform.{ErrorListener, SourceLocator, TransformerException}
 import net.sf.saxon.event.{PipelineConfiguration, Receiver}
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.functions.ResolveURI
@@ -17,6 +15,8 @@ import net.sf.saxon.s9api.{Axis, Destination, MessageListener, QName, RawDestina
 import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.trans.XPathException
 
+import java.net.URI
+import javax.xml.transform.{ErrorListener, SourceLocator, TransformerException}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.{IteratorHasAsJava, MapHasAsJava, SetHasAsScala}
@@ -30,11 +30,14 @@ class Xslt extends DefaultXmlStep {
   private var stylesheet = Option.empty[XdmNode]
   private val inputSequence = ListBuffer.empty[XdmItem]
 
+  private var staticContext: StaticContext = _
   private var globalContextItem = Option.empty[XdmValue]
   private var initialMode = Option.empty[QName]
   private var templateName = Option.empty[QName]
   private var outputBaseURI = Option.empty[String]
   private var parameters = Map.empty[QName, XdmValue]
+  private var staticParameters = Map.empty[QName, XdmValue]
+  private var populateDefaultCollection = true
   private var version = Option.empty[String]
 
   private var goesBang = Option.empty[XProcException]
@@ -63,57 +66,61 @@ class Xslt extends DefaultXmlStep {
     }
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    if (variable == XProcConstants._parameters) {
-      if (value.size() > 0) {
-        parameters = ValueParser.parseParameters(value, context)
-      }
-    } else {
-      // All of the other options should be single values or the empty sequence
-      value.size() match {
-        case 0 => ()
-        case 1 =>
-          if (variable == _global_context_item) {
-            globalContextItem = Some(value)
-          } else {
-            val str = value.getUnderlyingValue.getStringValue
-            variable match {
-              case `_initial_mode` => initialMode = Some(ValueParser.parseQName(str, context))
-              case `_template_name` => templateName = Some(ValueParser.parseQName(str, context))
-              case `_output_base_uri` => outputBaseURI = Some(str)
-              case XProcConstants._version => version = Some(str)
-              case _ =>
-                logger.info("Ignoring unexpected option to p:xslt: " + variable)
-            }
-          }
-        case _ =>
-          throw new RuntimeException(s"The value of $variable may not be a sequence")
-      }
-    }
-  }
-
   override def run(staticContext: StaticContext): Unit = {
-    val document: Option[XdmValue] = inputSequence.headOption
+    this.staticContext = staticContext
+
+    var pmap = mapBinding(XProcConstants._parameters)
+    if (pmap.size() > 0) {
+      parameters = ValueParser.parseParameters(pmap, staticContext)
+    }
+    pmap = mapBinding(XProcConstants._static_parameters)
+    if (pmap.size() > 0) {
+      staticParameters = ValueParser.parseParameters(pmap, staticContext)
+    }
+
+    globalContextItem = bindings.get(_global_context_item)
+    if (globalContextItem.get.size() == 0) {
+      globalContextItem = None
+    }
+
+    initialMode = qnameBinding(_initial_mode)
+    templateName = qnameBinding(_template_name)
+    outputBaseURI = optionalStringBinding(_output_base_uri)
+    version = optionalStringBinding(XProcConstants._version)
+    populateDefaultCollection = booleanBinding(XProcConstants._populate_default_collection).getOrElse(populateDefaultCollection)
 
     if (version.isEmpty && stylesheet.isDefined) {
       val root = S9Api.documentElement(stylesheet.get)
       version = Option(root.get.getAttributeValue(XProcConstants._version))
     }
 
-    if (version.isEmpty || !List("1.0","2.0","3.0").contains(version.get)) {
+    if (version.isEmpty || !List("1.0", "2.0", "3.0").contains(version.get)) {
       throw XProcException.xcVersionNotAvailable(version.getOrElse(""), location)
     }
+
+    version.get match {
+      case "3.0" => xslt30()
+      case "2.0" => throw XProcException.xcVersionNotAvailable(version.get, location)
+      case "1.0" => throw XProcException.xcVersionNotAvailable(version.get, location)
+      case _ => throw XProcException.xcVersionNotAvailable(version.get, location)
+    }
+  }
+
+  private def xslt30(): Unit = {
+    if (globalContextItem.isEmpty && inputSequence.length == 1) {
+      globalContextItem = inputSequence.headOption
+    }
+    val document = inputSequence.headOption
 
     val runtime = this.config.config
     val processor = runtime.processor
     val config = processor.getUnderlyingConfiguration
     // FIXME: runtime.getConfigurer().getSaxonConfigurer().configXSLT(config);
 
-
     val collectionFinder = config.getCollectionFinder
     val unparsedTextURIResolver = config.getUnparsedTextURIResolver
 
-    if (templateName.isDefined || version.get != "3.0") {
+    if (populateDefaultCollection) {
       config.setDefaultCollection(XProcCollectionFinder.DEFAULT)
       val docs = ListBuffer.empty[XdmNode]
       for (value <- inputSequence) {
@@ -132,7 +139,8 @@ class Xslt extends DefaultXmlStep {
       compiler.compile(stylesheet.get.asSource())
     } catch {
       case e: Exception =>
-        throw goesBang.getOrElse(e)
+        val ex = goesBang.getOrElse(e)
+        throw XProcException.xcXsltCompileError(ex.getMessage, ex, location)
     }
     val transformer = exec.load30()
 
@@ -146,7 +154,6 @@ class Xslt extends DefaultXmlStep {
     }
 
     transformer.setMessageListener(new CatchMessages())
-
 
     //transformer.setResultDocumentHandler(new ResultDocumentHandler())
     //transformer.setDestination(new MyDestination(outputProperties))
@@ -168,8 +175,8 @@ class Xslt extends DefaultXmlStep {
         transformer.setBaseOutputURI(outputBaseURI.get)
       }
     } else {
-      if (inputSequence.nonEmpty && inputSequence.head.isInstanceOf[XdmNode]) {
-        val base = inputSequence.head.asInstanceOf[XdmNode].getBaseURI
+      if (document.isDefined && document.get.isInstanceOf[XdmNode]) {
+        val base = document.get.asInstanceOf[XdmNode].getBaseURI
         transformer.setBaseOutputURI(base.toASCIIString)
       }
     }
@@ -436,11 +443,11 @@ class Xslt extends DefaultXmlStep {
     override def warning(e: TransformerException): Unit = ()
 
     override def error(e: TransformerException): Unit = {
-      goesBang = Some(XProcException.xcXsltCompileError(e.getMessage, location))
+      goesBang = Some(XProcException.xcXsltCompileError(e.getMessage, e, location))
     }
 
     override def fatalError(e: TransformerException): Unit = {
-      goesBang = Some(XProcException.xcXsltCompileError(e.getMessage, location))
+      goesBang = Some(XProcException.xcXsltCompileError(e.getMessage, e, location))
     }
   }
 }

@@ -185,6 +185,8 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
       builder.setProxy(host)
     }
 
+    //builder.setProxy(new HttpHost("localhost", 8888, "http"))
+
     if (_usercreds.isDefined) {
       val scope = new AuthScope(uri.getHost, uri.getPort)
       val bCredsProvider = new BasicCredentialsProvider()

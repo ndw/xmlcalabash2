@@ -282,7 +282,7 @@ object XProcException {
   def xcArchiveFormatError(format: QName, location: Option[Location]): XProcException = stepError((85,3), location)
   def xcMultipleTopLevelElements(location: Option[Location]): XProcException = stepError(91, location)
   def xcAttributeNameCollision(qname: QName, location: Option[Location]): XProcException = stepError(92, qname, location)
-  def xcXsltCompileError(msg: String, location: Option[Location]): XProcException = stepError(93, msg, location)
+  def xcXsltCompileError(msg: String, ex: Exception, location: Option[Location]): XProcException = stepError(93, msg, location)
   def xcXsltRuntimeError(code: QName, msg: String, location: Option[Location]): XProcException = stepError(95, msg, location)
   def xcXsltUserTermination(msg: String, location: Option[Location]): XProcException = stepError(96, msg, location)
   def xcSortError(msg: String, location: Option[Location]): XProcException = stepError(98, msg, location)

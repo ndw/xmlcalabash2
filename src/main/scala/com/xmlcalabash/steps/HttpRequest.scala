@@ -5,7 +5,7 @@ import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
+import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{InternetProtocolRequest, MediaType}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmValue}

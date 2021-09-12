@@ -65,6 +65,10 @@ class InlineLoader() extends AbstractLoader {
     }
   }
 
+  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
+    super.receiveBinding(variable, value, context)
+  }
+
   override def run(context: StaticContext): Unit = {
     if (disabled) {
       return

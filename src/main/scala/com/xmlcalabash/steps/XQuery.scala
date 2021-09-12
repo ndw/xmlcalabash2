@@ -207,7 +207,7 @@ class XQuery extends DefaultXmlStep {
     override def warning(e: TransformerException): Unit = ()
 
     override def error(e: TransformerException): Unit = {
-      goesBang = Some(XProcException.xcXsltCompileError(e.getMessage, location))
+      goesBang = Some(XProcException.xcXsltCompileError(e.getMessage, e, location))
     }
 
     override def fatalError(e: TransformerException): Unit = {

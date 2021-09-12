@@ -1,18 +1,43 @@
 package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.runtime.ImplParams
 import net.sf.saxon.s9api.QName
 
+import scala.collection.mutable.ListBuffer
+
 class DataSource(override val config: XMLCalabashConfig) extends Artifact(config) {
+  private val depends = ListBuffer.empty[String]
 
   override protected[model] def validateStructure(): Unit = {
     for (child <- allChildren) {
       child match {
         case _: Pipe => ()
+        case _: NamePipe => ()
         case _ =>
           throw new RuntimeException(s"Invalid content in $this")
       }
+    }
+  }
+
+  override protected[model] def makeBindingsExplicit(): Unit = {
+    super.makeBindingsExplicit()
+
+    // If the ancestor of a data source has a dependency, so does the data source
+    var p = parent
+    while (p.isDefined) {
+      p.get match {
+        case step: Step =>
+          for (name <- step.depends) {
+            if (!depends.contains(name)) {
+              depends += name
+            }
+          }
+        case _ =>
+          ()
+      }
+      p = p.get.parent
     }
   }
 
@@ -29,6 +54,10 @@ class DataSource(override val config: XMLCalabashConfig) extends Artifact(config
 
     val loader = new AtomicStep(config, params, this)
     loader.stepType = stepType
+
+    for (depend <- depends) {
+      loader._depends += depend
+    }
 
     if (allChildren.nonEmpty) {
       val winput = new WithInput(config)

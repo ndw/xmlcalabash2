@@ -35,6 +35,14 @@ class FileCreateTempFile() extends FileStep {
         if (!Files.exists(dir) || !Files.isDirectory(dir)) {
           throw XProcException.xdDoesNotExist(href.get.toString, location)
         }
+      } else {
+        val tdir = System.getProperty("java.io.tmpdir")
+        if (tdir != null) {
+          dir = Paths.get(tdir)
+        } else {
+          // I give up, use the cwd
+          dir = Paths.get(".")
+        }
       }
 
       tempfile = Some(Files.createTempFile(dir, prefix.orNull, suffix.orNull))

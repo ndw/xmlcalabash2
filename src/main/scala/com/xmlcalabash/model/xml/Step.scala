@@ -17,10 +17,8 @@ class Step(override val config: XMLCalabashConfig) extends Artifact(config) with
     _name = Some(name)
   }
 
-  protected[xml] var _depends = List.empty[String]
-  def depends: List[String] = _depends
-
-  protected var dependSteps = ListBuffer.empty[Step]
+  protected[xml] var _depends = ListBuffer.empty[String]
+  def depends: List[String] = _depends.toList
 
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
@@ -44,15 +42,14 @@ class Step(override val config: XMLCalabashConfig) extends Artifact(config) with
       if (_depstr.get.trim == "") {
         throw XProcException.xsBadTypeValue(_depstr.get, "name+", location)
       }
-      val lb = ListBuffer.empty[String]
+
       val tutils = new TypeUtils(config)
       for (name <- _depstr.get.trim().split("\\s+")) {
         if (!tutils.valueMatchesType(name, XProcConstants.xs_NCName)) {
           throw XProcException.xsBadTypeValue(name, "NCName", location)
         }
-        lb += name
+        _depends += name
       }
-      _depends = lb.toList
     }
   }
 
@@ -98,25 +95,19 @@ class Step(override val config: XMLCalabashConfig) extends Artifact(config) with
 
   override protected[model] def makeBindingsExplicit(): Unit = {
     super.makeBindingsExplicit()
+  }
+
+  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     if (depends.nonEmpty) {
+      val thisNode = _graphNode.get
       val env = environment()
       for (stepName <- depends) {
         val step = env.step(stepName)
         if (step.isEmpty) {
           throw XProcException.xsNotAStep(stepName, location)
         } else {
-          dependSteps += step.get
+          thisNode.dependsOn(step.get._graphNode.get)
         }
-      }
-    }
-  }
-
-  override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
-    if (depends.nonEmpty) {
-      val thisNode = _graphNode.get
-      for (step <- dependSteps) {
-        val stepNode = step._graphNode.get
-        thisNode.dependsOn(stepNode)
       }
     }
   }
