@@ -30,28 +30,26 @@ class WwwFormUrlDecode() extends DefaultXmlStep {
       if (pos >= 0) {
         part = parts.substring(0, pos)
         parts = parts.substring(pos + 1).trim
-        if (parts == "") {
-          // trailing & are not allowed
-          throw XProcException.xcValueNotFormUrlEncoded(value, location)
-        }
       } else {
         part = parts
         parts = ""
       }
 
+      var keyname = part
+      var keyvalue = ""
       pos = part.indexOf("=")
-      if (pos > 0) {
-        val keyname = URLDecoder.decode(part.substring(0, pos), encoding)
-        val keyvalue = URLDecoder.decode(part.substring(pos + 1), encoding)
+      if (pos >= 0) {
+        keyname = URLDecoder.decode(part.substring(0, pos), encoding)
+        keyvalue = URLDecoder.decode(part.substring(pos + 1), encoding)
+      }
 
+      if (part != "") {
         if (!decoded.contains(keyname)) {
           decoded.put(keyname, ListBuffer.empty[XdmAtomicValue])
         }
 
         val vlist = decoded(keyname)
         vlist += new XdmAtomicValue(keyvalue)
-      } else {
-        throw XProcException.xcValueNotFormUrlEncoded(value, location)
       }
     }
 

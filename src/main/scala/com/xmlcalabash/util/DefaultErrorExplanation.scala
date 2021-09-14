@@ -97,6 +97,10 @@ class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanatio
   private def template(code: QName, variant: Int, count: Integer): ErrorExplanationTemplate = {
     val clark = code.getClarkName
     // Find all the messages with a matching code and variant, with a cardinality <= details.length
+    val a1 = messages.filter(_.code == clark)
+    val a2 = a1.filter(_.variant == variant)
+    val a3 = a2.filter(_.cardinality <= count)
+
     val templates = messages.filter(_.code == clark).filter(_.variant == variant).filter(_.cardinality <= count)
 
     if (templates.isEmpty) {

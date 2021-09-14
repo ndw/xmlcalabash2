@@ -78,7 +78,7 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
       runtime.output("result", result)
 
       for (bind <- _bindings.keySet) {
-        runtime.option(bind, new XProcVarValue(_bindings(bind), context))
+        runtime.option(bind, _bindings(bind), context)
       }
 
       runtime.run()

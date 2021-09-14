@@ -165,7 +165,7 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
         var iter = node.axisIterator(Axis.ATTRIBUTE)
         while (iter.hasNext) {
           var discardAttribute = false
-          val attr = iter.next().asInstanceOf[XdmNode]
+          val attr = iter.next()
           if (attr.getNodeName == XProcConstants.p_inline_expand_text) {
             if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
               throw XProcException.xsInlineExpandTextNotAllowed(location)
@@ -200,7 +200,8 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
   }
 
   private def findVariablesInString(text: String): Unit = {
-    for (name <- ValueParser.findVariableRefsInString(config, text)) {
+    val expr = staticContext.parseAvt(text)
+    for (name <- ValueParser.findVariableRefsInAvt(config, expr)) {
       nameBindings += name
     }
   }

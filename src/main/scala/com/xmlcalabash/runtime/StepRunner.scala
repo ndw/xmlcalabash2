@@ -117,7 +117,7 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
     }
 
     for ((name, value) <- bindings) {
-      runtime.option(name, value)
+      runtime.option(name, value.value, value.context)
     }
 
     for ((port, consumer) <- consumers) {

@@ -534,6 +534,12 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Optio
         result.skipped = "The 'lazy-eval' feature is not supported"
         return result
       }
+      if (features.contains("xslt-1")) {
+        val result = new TestResult(true) // skipped counts as a pass...
+        result.baseURI = node.getBaseURI
+        result.skipped = "XSLT 1.0 is not supported"
+        return result
+      }
       if (features.contains("webaccess")) {
         if (!online) {
           val result = new TestResult(true) // skipped counts as a pass...

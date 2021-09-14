@@ -1,6 +1,8 @@
 package com.xmlcalabash.model.util
 
+import net.sf.saxon.lib.SaxonOutputKeys
 import net.sf.saxon.s9api.QName
+import net.sf.saxon.serialize.SerializationProperties
 
 object XProcConstants {
   type ValueTemplate = List[String]
@@ -307,4 +309,5 @@ object XProcConstants {
   val err_XTMM9000 = new QName(ns_xqt_errors, "XTMM9000")
   val err_XTDE0040 = new QName(ns_xqt_errors, "XTDE0040")
 
+  val BUILD_TREE = ValueParser.parseClarkName(SaxonOutputKeys.BUILD_TREE)
 }

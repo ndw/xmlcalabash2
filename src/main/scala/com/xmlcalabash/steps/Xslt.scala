@@ -1,7 +1,6 @@
 package com.xmlcalabash.steps
 
 import com.jafpl.steps.PortCardinality
-import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
@@ -11,17 +10,20 @@ import net.sf.saxon.event.{PipelineConfiguration, Receiver}
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.functions.ResolveURI
 import net.sf.saxon.lib.{ResultDocumentResolver, SaxonOutputKeys}
-import net.sf.saxon.s9api.{Axis, Destination, MessageListener, QName, RawDestination, ValidationMode, XdmArray, XdmAtomicValue, XdmDestination, XdmEmptySequence, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.om.NodeInfo
+import net.sf.saxon.s9api.{Action, Axis, Destination, MessageListener, QName, RawDestination, SaxonApiException, ValidationMode, XdmArray, XdmAtomicValue, XdmDestination, XdmEmptySequence, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.trans.XPathException
+import net.sf.saxon.tree.wrapper.RebasedDocument
 
 import java.net.URI
 import javax.xml.transform.{ErrorListener, SourceLocator, TransformerException}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.{IteratorHasAsJava, MapHasAsJava, SetHasAsScala}
+import scala.jdk.FunctionConverters.enrichAsJavaFunction
 
-class Xslt extends DefaultXmlStep {
+class Xslt extends QTProcessor {
   private val _global_context_item = new QName("", "global-context-item")
   private val _initial_mode = new QName("", "initial-mode")
   private val _template_name = new QName("", "template-name")
@@ -29,6 +31,7 @@ class Xslt extends DefaultXmlStep {
 
   private var stylesheet = Option.empty[XdmNode]
   private val inputSequence = ListBuffer.empty[XdmItem]
+  private val inputMetadata = ListBuffer.empty[XProcMetadata]
 
   private var staticContext: StaticContext = _
   private var globalContextItem = Option.empty[XdmValue]
@@ -41,9 +44,9 @@ class Xslt extends DefaultXmlStep {
   private var version = Option.empty[String]
 
   private var goesBang = Option.empty[XProcException]
-  private val outputProperties = mutable.HashMap.empty[QName, XdmValue]
 
   private var primaryDestination: Destination = _
+  private var primaryOutputProperties: Map[QName, XdmValue] = _
   private val secondaryResults = mutable.HashMap.empty[URI, Destination]
   private val secondaryOutputProperties = mutable.HashMap.empty[URI, Map[QName, XdmValue]]
 
@@ -60,13 +63,17 @@ class Xslt extends DefaultXmlStep {
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     port match {
-      case "source" => inputSequence += item.asInstanceOf[XdmItem]
-      case "stylesheet" => stylesheet = Some(item.asInstanceOf[XdmNode])
+      case "source" =>
+        inputSequence += item.asInstanceOf[XdmItem]
+        inputMetadata += metadata
+      case "stylesheet" =>
+        stylesheet = Some(item.asInstanceOf[XdmNode])
       case _ => ()
     }
   }
 
   override def run(staticContext: StaticContext): Unit = {
+    super.run(staticContext)
     this.staticContext = staticContext
 
     var pmap = mapBinding(XProcConstants._parameters)
@@ -100,7 +107,7 @@ class Xslt extends DefaultXmlStep {
 
     version.get match {
       case "3.0" => xslt30()
-      case "2.0" => throw XProcException.xcVersionNotAvailable(version.get, location)
+      case "2.0" => xslt20()
       case "1.0" => throw XProcException.xcVersionNotAvailable(version.get, location)
       case _ => throw XProcException.xcVersionNotAvailable(version.get, location)
     }
@@ -111,7 +118,22 @@ class Xslt extends DefaultXmlStep {
       globalContextItem = inputSequence.headOption
     }
     val document = inputSequence.headOption
+    runXsltProcessor(document)
+  }
 
+  private def xslt20(): Unit = {
+    for (meta <- inputMetadata) {
+      val ctype = meta.contentType
+      if (!ctype.xmlContentType && !ctype.htmlContentType && !ctype.textContentType) {
+        throw XProcException.xcXsltInputNot20Compatible(ctype, location)
+      }
+    }
+    globalContextItem = None
+    val document = inputSequence.headOption
+    runXsltProcessor(document)
+  }
+
+  private def runXsltProcessor(document: Option[XdmItem]): Unit = {
     val runtime = this.config.config
     val processor = runtime.processor
     val config = processor.getUnderlyingConfiguration
@@ -138,12 +160,43 @@ class Xslt extends DefaultXmlStep {
     val exec = try {
       compiler.compile(stylesheet.get.asSource())
     } catch {
-      case e: Exception =>
-        val ex = goesBang.getOrElse(e)
-        throw XProcException.xcXsltCompileError(ex.getMessage, ex, location)
-    }
-    val transformer = exec.load30()
+      case sae: Exception =>
+        // Compile time exceptions are caught
+        if (goesBang.isDefined) {
+          throw goesBang.get
+        }
+        // Runtime ones are not
+        val cause = if (Option(sae.getCause).isDefined) {
+          sae.getCause match {
+            case xe: XPathException =>
+              if (Option(xe.getErrorCodeLocalPart).isDefined) {
+                Some(new QName(xe.getErrorCodeNamespace, xe.getErrorCodeLocalPart))
+              } else {
+                None
+              }
+            case _ =>
+              None
+          }
+        } else {
+          None
+        }
 
+        if (cause.isDefined) {
+          cause.get match {
+            case XProcConstants.err_XTMM9000 =>
+              throw XProcException.xcXsltUserTermination(sae.getMessage, location)
+            case XProcConstants.err_XTDE0040 =>
+              throw XProcException.xcXsltNoTemplate(templateName.get, location)
+            case _ =>
+              throw XProcException.xcXsltRuntimeError(cause.get, sae.getMessage, location)
+          }
+        }
+
+        throw XProcException.xcXsltCompileError(sae.getMessage, sae, location)
+    }
+
+    val transformer = exec.load30()
+    transformer.setResultDocumentHandler(new DocumentHandler().asJava)
     transformer.setStylesheetParameters(parameters.asJava)
 
     val inputSelection = if (document.isDefined) {
@@ -155,9 +208,25 @@ class Xslt extends DefaultXmlStep {
 
     transformer.setMessageListener(new CatchMessages())
 
-    //transformer.setResultDocumentHandler(new ResultDocumentHandler())
-    //transformer.setDestination(new MyDestination(outputProperties))
     transformer.getUnderlyingController.setResultDocumentResolver(new MyResultDocumentResolver(processor.getUnderlyingConfiguration))
+
+    primaryOutputProperties = S9Api.serializationPropertyMap(transformer.getUnderlyingController.getExecutable.getPrimarySerializationProperties)
+    var buildTree = false
+    if (primaryOutputProperties.contains(XProcConstants.BUILD_TREE)) {
+      buildTree = isTrue(primaryOutputProperties.get(XProcConstants.BUILD_TREE))
+    } else {
+      val method = primaryOutputProperties.get(XProcConstants._method)
+      if (method.isDefined) {
+        buildTree = List("xml", "html", "xhtml", "text").contains(method.get.toString)
+      } else {
+        buildTree = true
+      }
+    }
+    primaryDestination = if (buildTree) {
+      new XdmDestination()
+    } else {
+      new RawDestination()
+    }
 
     if (initialMode.isDefined) {
       try {
@@ -184,68 +253,68 @@ class Xslt extends DefaultXmlStep {
     transformer.setSchemaValidationMode(ValidationMode.DEFAULT)
     // FIXME: transformer.getUnderlyingController().setUnparsedTextURIResolver(unparsedTextURIResolver)
 
-    try {
-      val destination = new MyDestination(outputProperties)
-      if (globalContextItem.isDefined) {
-        transformer.setGlobalContextItem(globalContextItem.get.asInstanceOf[XdmItem])
-      }
-      if (templateName.isDefined) {
-        transformer.callTemplate(templateName.get, destination)
-      } else {
-        transformer.applyTemplates(inputSelection, destination)
-      }
-    } catch {
-      case sae: Exception =>
-        // Compile time exceptions are caught
-        if (goesBang.isDefined) {
-          throw goesBang.get
-        }
-        // Runtime ones are not
-        val cause = if (Option(sae.getCause).isDefined) {
-          sae.getCause match {
-            case xe: XPathException =>
-              Some(new QName(xe.getErrorCodeNamespace, xe.getErrorCodeLocalPart))
-            case _ =>
-              None
-          }
-        } else {
-          None
-        }
-
-        if (cause.isDefined) {
-          cause.get match {
-            case XProcConstants.err_XTMM9000 =>
-              throw XProcException.xcXsltUserTermination(sae.getMessage, location)
-            case XProcConstants.err_XTDE0040 =>
-              throw XProcException.xcXsltNoTemplate(templateName.get, location)
-            case _ =>
-              throw XProcException.xcXsltRuntimeError(cause.get, sae.getMessage, location)
-          }
-        }
-
-        throw XProcException.xcXsltRuntimeError(XProcConstants.err_XC0095, sae.getMessage, location)
+    if (globalContextItem.isDefined) {
+      transformer.setGlobalContextItem(globalContextItem.get.asInstanceOf[XdmItem])
     }
 
-    // FIXME: try/finally restore the output URI resolver and collection URI finder
+    try {
+      if (templateName.isDefined) {
+        transformer.callTemplate(templateName.get, primaryDestination)
+      } else {
+        transformer.applyTemplates(inputSelection, primaryDestination)
+      }
+    } catch {
+      case ex: SaxonApiException =>
+        ex.getErrorCode match {
+          case XProcConstants.err_XTMM9000 =>
+            throw XProcException.xcXsltUserTermination(ex.getMessage, location)
+          case XProcConstants.err_XTDE0040 =>
+            throw XProcException.xcXsltNoTemplate(templateName.get, location)
+          case _ =>
+            throw XProcException.xcXsltRuntimeError(ex.getErrorCode, ex.getMessage, location)
+        }
+      case ex: Exception =>
+        throw XProcException.xcXsltRuntimeError(XProcConstants.err_XC0095, ex.getMessage, location)
+    }
 
     primaryDestination match {
       case raw: RawDestination =>
         val iter = raw.getXdmValue.iterator()
+        var result: XdmValue = null
         while (iter.hasNext) {
           val next = iter.next()
-          val prop = outputProperties.clone()
-          next match {
-            case node: XdmNode =>
-              prop(XProcConstants._base_uri) = new XdmAtomicValue(node.getBaseURI)
-            case _ => ()
+          if (result == null) {
+            result = next
+          } else {
+            result = result.append(next)
           }
-          consume(next, "result", prop.toMap)
         }
+
+        val gv = result.getUnderlyingValue.materialize()
+        val x = XdmValue.wrap(gv)
+
+        result match {
+          case node: XdmNode =>
+            if (Option(node.getBaseURI).isDefined) {
+              val prop = mutable.HashMap.empty[QName, XdmValue].addAll(primaryOutputProperties)
+              prop.put(XProcConstants._base_uri, new XdmAtomicValue(node.getBaseURI))
+              consume(result, "result", prop.toMap)
+            } else {
+              consume(result, "result", primaryOutputProperties)
+            }
+          case _ =>
+            consume(result, "result", primaryOutputProperties)
+        }
+
       case xdm: XdmDestination =>
         val tree = xdm.getXdmNode
-        val prop = outputProperties.clone()
-        prop(XProcConstants._base_uri) = new XdmAtomicValue(tree.getBaseURI)
-        consume(tree, "result",  prop.toMap)
+        if (Option(tree.getBaseURI).isDefined) {
+          val prop = mutable.HashMap.empty[QName, XdmValue].addAll(primaryOutputProperties)
+          prop.put(XProcConstants._base_uri, new XdmAtomicValue(tree.getBaseURI))
+          consume(tree, "result", prop.toMap)
+        } else {
+          consume(tree, "result",  primaryOutputProperties)
+        }
     }
 
     for ((uri, destination) <- secondaryResults) {
@@ -269,77 +338,6 @@ class Xslt extends DefaultXmlStep {
     goesBang = None
   }
 
-  private def consume(item: XdmItem, port: String, sprop: Map[QName,XdmValue]): Unit = {
-    var outputItem = item
-    var ctype = Option.empty[MediaType]
-
-    var serialization = new XdmMap()
-    for ((key, value) <- sprop) {
-      serialization = serialization.put(new XdmAtomicValue(key), value)
-    }
-
-    val dprop = mutable.HashMap.empty[QName, XdmValue]
-    dprop.put(XProcConstants._serialization, serialization)
-
-    if (sprop.contains(XProcConstants._method)) {
-      sprop(XProcConstants._method).toString match {
-        case "html" => ctype = Some(MediaType.HTML)
-        case "xhtml" => ctype = Some(MediaType.XHTML)
-        case "text" => ctype = Some(MediaType.TEXT)
-        case _ => ()
-      }
-    }
-
-    item match {
-      case node: XdmNode =>
-        node.getNodeKind match {
-          case XdmNodeKind.DOCUMENT =>
-            var textOnly = true
-            for (child <- S9Api.axis(node, Axis.CHILD)) {
-              textOnly = textOnly && child.getNodeKind == XdmNodeKind.TEXT
-            }
-            if (ctype.isEmpty) {
-              ctype = if (textOnly) {
-                Some(MediaType.TEXT)
-              } else {
-                Some(MediaType.XML)
-              }
-            }
-          case XdmNodeKind.TEXT =>
-            if (ctype.isEmpty) {
-              ctype = Some(MediaType.TEXT)
-            }
-          case _ =>
-            if (ctype.isEmpty) {
-              ctype = Some(MediaType.XML)
-            }
-        }
-
-        if (node.getNodeKind != XdmNodeKind.DOCUMENT) {
-          val builder = new SaxonTreeBuilder(config)
-          builder.startDocument(node.getBaseURI)
-          builder.addSubtree(node)
-          builder.endDocument()
-          outputItem = builder.result
-        }
-
-      case _: XdmAtomicValue =>
-        ctype = Some(MediaType.JSON)
-
-      case _: XdmArray =>
-        ctype = Some(MediaType.JSON)
-
-      case _: XdmMap =>
-        ctype = Some(MediaType.JSON)
-
-      case _ =>
-        throw new RuntimeException("Unexpected item type produced by XSLT: " + item)
-    }
-
-    val mtype = new XProcMetadata(ctype, dprop.toMap)
-    consumer.get.receive(port, outputItem, mtype)
-  }
-
   private class MyDestination(map: mutable.HashMap[QName,XdmValue]) extends RawDestination {
     private var destination = Option.empty[Destination]
     private var destBase = Option.empty[URI]
@@ -351,7 +349,7 @@ class Xslt extends DefaultXmlStep {
       }
     }
 
-    override def getDestinationBaseURI: URI = destBase.getOrElse(null)
+    override def getDestinationBaseURI: URI = destBase.orNull
 
     override def getReceiver(pipe: PipelineConfiguration, params: SerializationProperties): Receiver = {
       val tree = Option(params.getProperty(SaxonOutputKeys.BUILD_TREE))
@@ -398,6 +396,47 @@ class Xslt extends DefaultXmlStep {
       if (destination.isDefined) {
         destination.get.close()
       }
+    }
+  }
+
+  private class DocumentHandler extends Function[URI, Destination] {
+    override def apply(uri: URI): Destination = {
+      val xdmResult: XdmDestination = new XdmDestination
+      xdmResult.setBaseURI(uri)
+      xdmResult.onClose(new DocumentCloseAction(uri, xdmResult))
+      xdmResult
+    }
+  }
+
+  private class BaseURIMapper(val origBase: String) extends Function[NodeInfo, String] {
+    override def apply(node: NodeInfo): String = {
+      var base = node.getBaseURI
+      if (Option(origBase).isDefined && (Option(base).isEmpty || base == "")) {
+        base = origBase
+      }
+      base
+    }
+  }
+
+  private class SystemIdMapper extends Function[NodeInfo, String] {
+    // This is a nop for now
+    override def apply(node: NodeInfo): String = {
+      node.getSystemId
+    }
+  }
+
+  private class DocumentCloseAction(val uri: URI, destination: XdmDestination) extends Action {
+    override def act(): Unit = {
+      var doc = destination.getXdmNode
+      val bmapper = new BaseURIMapper(doc.getBaseURI.toASCIIString)
+      val smapper = new SystemIdMapper()
+      val treeinfo = doc.getUnderlyingNode.getTreeInfo
+      val rebaser = new RebasedDocument(treeinfo, bmapper.asJava, smapper.asJava)
+      val xfixbase = rebaser.wrap(doc.getUnderlyingNode)
+      doc = new XdmNode(xfixbase)
+
+      // FIXME: what should the properties be?
+      consume(doc, "secondary", Map.empty[QName, XdmValue])
     }
   }
 

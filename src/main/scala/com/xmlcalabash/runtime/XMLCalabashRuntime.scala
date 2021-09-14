@@ -45,7 +45,6 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   private var _trim_inline_whitespace = config.trimInlineWhitespace
   private val inputSet = mutable.HashSet.empty[String]
   private val outputSet = mutable.HashSet.empty[String]
-  private val bindingsMap = mutable.HashMap.empty[String,XdmValue]
   private val idMap = mutable.HashMap.empty[String,Artifact]
   private var ran = false
   private var _signatures: Signatures = _
@@ -120,28 +119,9 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
     decl.output(port).serialization
   }
 
-  def option(name: QName, value: String): Unit = {
-    option(name, new XProcVarValue(new XdmAtomicValue(value), new StaticContext(this)))
-  }
-
-  def option(name: QName, value: Integer): Unit = {
-    option(name, new XProcVarValue(new XdmAtomicValue(value), new StaticContext(this)))
-  }
-
-  def option(name: QName, value: Float): Unit = {
-    option(name, new XProcVarValue(new XdmAtomicValue(value), new StaticContext(this)))
-  }
-
-  def option(name: QName, value: URI): Unit = {
-    option(name, new XProcVarValue(new XdmAtomicValue(value), new StaticContext(this)))
-  }
-
-  def option(name: QName, value: XProcVarValue): Unit = {
-    if (decl.bindings.contains(name)) {
-      config.trace(s"Binding option $name to '$value'", "ExternalBindings")
-      //val msg = new XdmValueItemMessage(value.value, XProcMetadata.XML, value.context)
-      //runtime.setOption(name.getClarkName, value)
-      bindingsMap.put(name.getClarkName, value.value)
+  def option(name: QName, value: XdmValue, context: StaticContext): Unit = {
+    if (runtime.bindings.contains(name.getClarkName)) {
+      runtime.bindings(name.getClarkName).setValue(new XdmValueItemMessage(value, XProcMetadata.XML, context))
     }
   }
 

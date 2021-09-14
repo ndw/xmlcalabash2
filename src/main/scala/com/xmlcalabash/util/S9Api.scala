@@ -1,12 +1,14 @@
 package com.xmlcalabash.util
 
 import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime}
 import net.sf.saxon.`type`.BuiltInAtomicType
 import net.sf.saxon.ma.map.MapItem
 import net.sf.saxon.om.{AttributeInfo, FingerprintedQName, NameOfNode, NamespaceBinding, NamespaceMap}
 import net.sf.saxon.s9api._
+import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.value.QNameValue
 import org.xml.sax.InputSource
 
@@ -175,6 +177,14 @@ object S9Api {
       serialize(xproc, value, serializer)
     }
     serializer.serializeXdmValue(CLOSE_SQUARE)
+  }
+
+  def serializationPropertyMap(props: SerializationProperties): Map[QName, XdmValue] = {
+    val map = mutable.HashMap.empty[QName, XdmValue]
+    for ((key,value) <- props.getProperties.asScala) {
+      map.put(ValueParser.parseClarkName(key.asInstanceOf[String]), new XdmAtomicValue(value.asInstanceOf[String]))
+    }
+    map.toMap
   }
 
   def emptyDocument(config: XMLCalabashRuntime): XdmNode = {
@@ -392,5 +402,37 @@ object S9Api {
     val values = selector.iterator()
     val item = values.next.asInstanceOf[XdmAtomicValue]
     item.getBooleanValue
+  }
+
+  def assertDocument(doc: XdmNode): Unit = {
+    if (doc.getNodeKind == XdmNodeKind.DOCUMENT) {
+      assertDocumentContent(doc.axisIterator(Axis.CHILD))
+    } else if (doc.getNodeKind != XdmNodeKind.ELEMENT) {
+      throw new RuntimeException(s"Document root cannot be ${doc.getNodeKind}")
+    }
+  }
+
+  def assertDocumentContent(iter: XdmSequenceIterator[XdmNode]): Unit = {
+    var elemCount = 0
+    while (iter.hasNext) {
+      val child = iter.next()
+      child.getNodeKind match {
+        case XdmNodeKind.ELEMENT =>
+          elemCount += 1
+          if (elemCount > 1) {
+            throw new RuntimeException("Documents must have exactly one top-level element")
+          }
+        case XdmNodeKind.PROCESSING_INSTRUCTION =>
+          ()
+        case XdmNodeKind.COMMENT =>
+          ()
+        case XdmNodeKind.TEXT =>
+          if (child.getStringValue.trim != "") {
+            throw new RuntimeException("Only whitespace text nodes can appear at the top level in a document")
+          }
+        case _ =>
+          throw new RuntimeException(s"Document cannot have top level ${child.getNodeKind}")
+      }
+    }
   }
 }

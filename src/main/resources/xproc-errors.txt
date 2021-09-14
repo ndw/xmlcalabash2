@@ -325,11 +325,14 @@ The requested version, “$1”, is not available.
 XC0050
 Cannot store at “$1”
 
-XC0053
+XC0053/1
 Validity error in “$1” at line $2, column $3: $4
 
-XC0053
+XC0053/2
 Validity error in “$1”: $2
+
+XC0056
+There is no template named “$1”.
 
 XC0059
 Cannot add namespaces, “$1” is invalid.
@@ -349,8 +352,14 @@ Attribute name collision: “$1”
 XC0093
 Error compiling stylesheet: “$1”.
 
+XC0094
+Cannot process “$1” documents with XSLT 2.0.
+
 XC0095
 XSLT runtime error “$1”: “$2”.
+
+XC0096
+User termination: “$1”.
 
 XC0098
 XPath error occurred: $1

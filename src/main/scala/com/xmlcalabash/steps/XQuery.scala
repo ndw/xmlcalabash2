@@ -2,21 +2,22 @@ package com.xmlcalabash.steps
 
 import java.io.ByteArrayOutputStream
 import java.net.URI
-
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, XProcCollectionFinder}
+
 import javax.xml.transform.{ErrorListener, TransformerException}
 import net.sf.saxon.event.{PipelineConfiguration, Receiver}
-import net.sf.saxon.s9api.{QName, Serializer, ValidationMode, XdmAtomicValue, XdmDestination, XdmItem, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.lib.SaxonOutputKeys
+import net.sf.saxon.s9api.{Destination, QName, RawDestination, Serializer, ValidationMode, XdmAtomicValue, XdmDestination, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.serialize.SerializationProperties
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class XQuery extends DefaultXmlStep {
+class XQuery extends QTProcessor {
   private var query = Option.empty[XdmNode]
   private var queryMetadata = Option.empty[XProcMetadata]
   private val defaultCollection = ListBuffer.empty[XdmNode]
@@ -27,6 +28,8 @@ class XQuery extends DefaultXmlStep {
 
   private var goesBang = Option.empty[XProcException]
   private val outputProperties = mutable.HashMap.empty[QName, XdmValue]
+
+  private var primaryDestination: Destination = _
 
   override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
     Map("source" -> PortCardinality.ZERO_OR_MORE, "query" -> PortCardinality.EXACTLY_ONE),
@@ -52,30 +55,16 @@ class XQuery extends DefaultXmlStep {
     }
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    if (variable == XProcConstants._parameters) {
-      if (value.size() > 0) {
-        parameters = ValueParser.parseParameters(value, context)
-      }
-    } else {
-      // All of the other options should be single values or the empty sequence
-      value.size() match {
-        case 0 => ()
-        case 1 =>
-          val str = value.getUnderlyingValue.getStringValue
-          variable match {
-            case XProcConstants._version => version = Some(str)
-            case _ =>
-              logger.info("Ignoring unexpected option to p:xslt: " + variable)
-          }
-        case _ =>
-          throw new RuntimeException(s"The value of $variable may not be a sequence")
-      }
-    }
-  }
-
   override def run(staticContext: StaticContext): Unit = {
     super.run(staticContext)
+
+    val pmap = mapBinding(XProcConstants._parameters)
+    if (pmap.size() > 0) {
+      parameters = ValueParser.parseParameters(pmap, staticContext)
+    }
+
+    version = optionalStringBinding(XProcConstants._version)
+
     val document: Option[XdmItem] = sources.headOption
 
     if (version.isDefined && version.get != "3.0" && version.get != "3.1") {
@@ -125,17 +114,21 @@ class XQuery extends DefaultXmlStep {
       queryEval.setContextItem(document.get)
     }
 
-    val result = new MyDestination(new XdmDestination(), outputProperties)
+    val result = new MyDestination(outputProperties)
     queryEval.setDestination(result)
 
     queryEval.setSchemaValidationMode(ValidationMode.DEFAULT)
     queryEval.setErrorListener(new MyErrorListener(false))
     // FIXME: transformer.getUnderlyingController().setUnparsedTextURIResolver(unparsedTextURIResolver)
 
+    queryEval.run()
+
     try {
       val iter = queryEval.iterator()
       while (iter.hasNext) {
         val item = iter.next()
+        consume(item, "result", outputProperties.toMap)
+        /*
         if (item.isAtomicValue) {
           consumer.get.receive("result", item, new XProcMetadata(MediaType.JSON))
         } else {
@@ -151,6 +144,8 @@ class XQuery extends DefaultXmlStep {
             consumer.get.receive("result", builder.result, new XProcMetadata(MediaType.XML))
           }
         }
+
+         */
       }
     } catch {
       case e: Exception =>
@@ -163,43 +158,49 @@ class XQuery extends DefaultXmlStep {
     goesBang = None
   }
 
-  private class MyDestination(val destination: XdmDestination, map: mutable.HashMap[QName,XdmValue]) extends XdmDestination {
+  private class MyDestination(map: mutable.HashMap[QName,XdmValue]) extends RawDestination {
+    private var destination = Option.empty[Destination]
+    private var destBase = Option.empty[URI]
+
     override def setDestinationBaseURI(baseURI: URI): Unit = {
-      destination.setDestinationBaseURI(baseURI)
+      destBase = Some(baseURI)
+      if (destination.isDefined) {
+        destination.get.setDestinationBaseURI(baseURI)
+      }
     }
 
-    override def getDestinationBaseURI: URI = destination.getDestinationBaseURI
+    override def getDestinationBaseURI: URI = destBase.orNull
 
     override def getReceiver(pipe: PipelineConfiguration, params: SerializationProperties): Receiver = {
-      val props = params.getProperties
-      val enum = props.propertyNames()
-      while (enum.hasMoreElements) {
-        val name: String = enum.nextElement().asInstanceOf[String]
-        val qname = if (name.startsWith("{")) {
-          ValueParser.parseClarkName(name)
-        } else {
-          new QName(name)
-        }
-        val value = props.get(name).asInstanceOf[String]
-        if (value == "yes" || value == "no") {
-          map.put(qname, new XdmAtomicValue(value == "yes"))
-        } else {
-          map.put(qname, new XdmAtomicValue(value))
-        }
+      val tree = Option(params.getProperty(SaxonOutputKeys.BUILD_TREE))
+
+      map.addAll(S9Api.serializationPropertyMap(params))
+
+      val dest = if (tree.getOrElse("no") == "yes") {
+        new XdmDestination()
+      } else {
+        new RawDestination()
       }
-      destination.getReceiver(pipe, params)
+
+      if (destBase.isDefined) {
+        dest.setDestinationBaseURI(destBase.get)
+      }
+
+      destination = Some(dest)
+      primaryDestination = dest
+      dest.getReceiver(pipe, params)
     }
 
     override def closeAndNotify(): Unit = {
-      destination.closeAndNotify()
+      if (destination.isDefined) {
+        destination.get.closeAndNotify()
+      }
     }
 
     override def close(): Unit = {
-      destination.close()
-    }
-
-    override def getXdmNode: XdmNode = {
-      destination.getXdmNode
+      if (destination.isDefined) {
+        destination.get.close()
+      }
     }
   }
 

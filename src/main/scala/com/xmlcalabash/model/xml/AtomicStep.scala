@@ -96,6 +96,7 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
           found = Some(woption)
         }
       }
+
       if (found.isEmpty) {
         if (attributes.contains(doption.name)) {
           val woption = new WithOption(config, doption.name)
@@ -130,6 +131,10 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
             found = Some(woption)
             addChild(woption)
           }
+        }
+      } else {
+        if (attributes.contains(doption.name)) {
+          throw XProcException.xsDupWithOptionName(doption.name, location)
         }
       }
 
