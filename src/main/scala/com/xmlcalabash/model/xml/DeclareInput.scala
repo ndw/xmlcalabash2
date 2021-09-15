@@ -14,7 +14,7 @@ import scala.collection.mutable.ListBuffer
 
 class DeclareInput(override val config: XMLCalabashConfig) extends Port(config) {
   private val _exclude_result_prefixes = List.empty[String]
-  protected[model] var defaultInputs: ListBuffer[AtomicStep] = ListBuffer.empty[AtomicStep]
+  protected[model] val defaultInputs: ListBuffer[DataSource] = ListBuffer.empty[DataSource]
 
   def exclude_result_prefixes: List[String] = _exclude_result_prefixes
 
@@ -43,22 +43,9 @@ class DeclareInput(override val config: XMLCalabashConfig) extends Port(config) 
     }
   }
 
-  override protected[model] def validateStructure(): Unit = {
-    super.validateStructure()
-    if (children[Pipe].nonEmpty) {
-      throw new RuntimeException("Can't have pipe in p:input")
-    }
-  }
-
   override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     for (child <- allChildren) {
       child.graphEdges(runtime, parent)
-    }
-  }
-
-  def disableDefaults(): Unit = {
-    for (atomic <- defaultInputs) {
-      atomic.disable()
     }
   }
 

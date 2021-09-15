@@ -18,7 +18,6 @@ abstract class AbstractLoader() extends DefaultXmlStep {
   protected var docProps = Map.empty[QName, XdmValue]
   protected var exprContext: StaticContext = _
   protected var contentType: MediaType = _
-  protected var disabled = false
 
   override def receive(port: String, item: Any, meta: XProcMetadata): Unit = {
     val context = new StaticContext(config, None)
@@ -36,10 +35,6 @@ abstract class AbstractLoader() extends DefaultXmlStep {
       case _ =>
         throw new RuntimeException("Recieved unexpected item")
     }
-  }
-
-  def disable(): Unit = {
-    disabled = true
   }
 
   override def run(context: StaticContext): Unit = {

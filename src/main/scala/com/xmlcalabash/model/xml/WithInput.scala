@@ -37,88 +37,77 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
   override protected[model] def makeBindingsExplicit(): Unit = {
     super.makeBindingsExplicit()
 
+    if (allChildren.nonEmpty) {
+      // If there are explicit children, we'll check them elsewhere
+      return
+    }
+
     val env = environment()
     val drp = env.defaultReadablePort
 
-    if (allChildren.isEmpty) {
-      if (drp.isDefined) {
-        val pipe = new Pipe(config)
-        pipe.port = drp.get.port
-        pipe.step = drp.get.step.stepName
-        pipe.link = drp.get
-        addChild(pipe)
+    if (drp.isDefined) {
+      val pipe = new Pipe(config)
+      pipe.port = drp.get.port
+      pipe.step = drp.get.step.stepName
+      pipe.link = drp.get
+      addChild(pipe)
+      return
+    }
+
+    // This is err:XS0032 unless it's a special case
+
+    // One of the special cases is, if this is an atomic step, and that
+    // step has a default input for this port, then this is not an error,
+    // the default input should be used. UGH.
+    parent.get match {
+      case atomic: AtomicStep =>
+        if (declaration(atomic.stepType).isDefined) {
+          val sig = declaration(atomic.stepType).get
+          val psig = sig.input(_port, location)
+          if (psig.defaultBindings.nonEmpty) {
+            for (binding <- psig.defaultBindings) {
+              binding match {
+                case b: Inline =>
+                  val inline = new Inline(config, b.node, b.implied)
+                  addChild(inline)
+                case b: Document =>
+                  val doc = new Document(config)
+                  doc.href = b.href
+                  addChild(doc)
+                case _: Empty =>
+                  val empty = new Empty(config)
+                  addChild(empty)
+                case _ =>
+                  throw XProcException.xiThisCantHappen(s"Unexpected binding type in WithInput: ${binding}", location)
+              }
+            }
+            return
+          }
+        }
+      case _ => ()
+    }
+
+    var raiseError = true
+    if (synthetic) {
+      // All the other special cases involve synthetic elements
+      parent.get match {
+        case choose: Choose => raiseError = false
+        case when: When => raiseError = false
+        case otherwise: Otherwise => raiseError = false
+        case _ =>
+          if (parent.get.parent.isDefined
+            && parent.get.parent.get.synthetic
+            && parent.get.parent.get.isInstanceOf[Otherwise]) {
+            raiseError = false
+          }
+      }
+    }
+
+    if (raiseError) {
+      if (primary) {
+        throw XProcException.xsUnconnectedPrimaryInputPort(step.stepName, port, location)
       } else {
-        // This is err:XS0032 unless it's a special case
-        var raiseError = true
-
-        // One of the special cases is, if this is an atomic step, and that
-        // step is a user-defined pipeline and that pipeline has a default
-        // input for this port, then this is not an error, the default input
-        // should be used. UGH.
-        parent.get match {
-          case atomic: AtomicStep =>
-            val sig = declaration(atomic.stepType)
-            val decl = if (sig.isDefined) {
-              sig.get.declaration
-            } else {
-              None
-            }
-
-            var default = false
-            if (decl.isDefined) {
-              for (input <- decl.get.children[DeclareInput]) {
-                if (input.port == port) {
-                  for (child <- input.allChildren) {
-                    child match {
-                      case _: Inline => default = true
-                      case _: Document => default = true
-                      case _: Empty => default = true;
-                      case _ => ()
-                    }
-                  }
-                }
-              }
-            }
-
-            if (default) {
-              // This is a total hack; I really should send a magic message or something,
-              // but this will do for the short term. Anyone who creates and sends a
-              // <cx:use-default-input/> document by hand gets what they deserve.
-              val tree = new SaxonTreeBuilder(config)
-              tree.startDocument(None)
-              tree.addStartElement(XProcConstants.cx_use_default_input)
-              tree.addEndElement()
-              tree.endDocument()
-
-              val inline = new Inline(config, tree.result, true)
-              addChild(inline)
-              raiseError = false
-            }
-          case _ => ()
-        }
-
-        if (raiseError && synthetic) {
-          // All the other special cases involve synthetic elements
-          parent.get match {
-            case choose: Choose => raiseError = false
-            case when: When => raiseError = false
-            case otherwise: Otherwise => raiseError = false
-            case _ =>
-              if (parent.get.parent.isDefined
-                && parent.get.parent.get.synthetic
-                && parent.get.parent.get.isInstanceOf[Otherwise]) {
-                raiseError = false
-              }
-          }
-        }
-
-        if (raiseError) {
-          if (primary) {
-            throw XProcException.xsUnconnectedPrimaryInputPort(step.stepName, port, location)
-          } else {
-            throw XProcException.xsUnconnectedInputPort(step.stepName, port, location)
-          }
-        }
+        throw XProcException.xsUnconnectedInputPort(step.stepName, port, location)
       }
     }
   }

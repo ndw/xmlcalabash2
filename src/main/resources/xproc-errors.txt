@@ -538,6 +538,9 @@ Until loop exceeded maximum iterations: $1
 {http://xmlcalabash.com/ns/extensions}XI0063
 The cx:loop increment may not be zero.
 
+{http://xmlcalabash.com/ns/extensions}XI0999
+It must be time for breakfast at Milliways, something impossible has happened: $1
+
 {http://xmlcalabash.com/ns/extensions}XI9999
 This is the end of the file.
 

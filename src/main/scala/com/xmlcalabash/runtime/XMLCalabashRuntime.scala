@@ -101,10 +101,6 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
 
   def input(port: String, message: Message): Unit = {
     if (runtime.inputs.contains(port)) {
-      if (inputSet.isEmpty) {
-        // If there are any defaults for this input port, disable them
-        decl.input(port).disableDefaults()
-      }
       inputSet += port
       runtime.inputs(port).send(message)
     }

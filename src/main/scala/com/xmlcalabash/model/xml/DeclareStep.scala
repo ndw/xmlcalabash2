@@ -109,36 +109,21 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
 
   protected[xml] def parseDeclarationSignature(): Unit = {
     // If there's only one input and it doesn't have a declared primary status, make it primary
-    var count = 0
-    var pinput = Option.empty[DeclareInput]
-    for (child <- allChildren) {
-      child match {
-        case input: DeclareInput =>
-          count += 1
-          if (pinput.isEmpty) {
-            pinput = Some(input)
-          }
-        case _ => ()
-      }
-    }
-    if (count == 1 && pinput.get._primary.isEmpty) {
+    val pinput = children[DeclareInput].headOption
+    if (children[DeclareInput].length == 1 && pinput.get._primary.isEmpty) {
       pinput.get.primary = true
     }
 
-    // If there's only one output and it doesn't have a declared primary status, make it primary
-    count = 0
-    var poutput = Option.empty[DeclareOutput]
-    for (child <- allChildren) {
-      child match {
-        case output: DeclareOutput =>
-          count += 1
-          if (poutput.isEmpty) {
-            poutput = Some(output)
-          }
-        case _ => ()
-      }
+    // If any of the inputs have defaults, record them
+    for (declinput <- children[DeclareInput]) {
+      declinput.defaultInputs ++= declinput.children[DataSource]
+      // then remove them
+      declinput.removeChildren()
     }
-    if (count == 1 && poutput.get._primary.isEmpty) {
+
+    // If there's only one output and it doesn't have a declared primary status, make it primary
+    val poutput = children[DeclareOutput].headOption
+    if (children[DeclareOutput].length == 1 && poutput.get._primary.isEmpty) {
       poutput.get.primary = true
     }
 
@@ -205,7 +190,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
     for (child <- allChildren) {
       child match {
         case input: DeclareInput =>
-          val portSig = new PortSignature(input.port, input.primary, input.sequence)
+          val portSig = new PortSignature(input.port, input.primary, input.sequence, input.defaultInputs.toList)
           portSig.contentTypes = input.content_types
           stepSig.addInput(portSig, input.location.get)
         case output: DeclareOutput =>
@@ -366,13 +351,15 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
           case pipe: Pipe =>
             pipes += pipe
             val step = pipe.link.get.parent.get
+/*
             step match {
               case atomic: AtomicStep =>
                 input.defaultInputs += atomic
             }
-          case doc: Document =>
+ */
+          case _: Document =>
             ()
-          case inline: Inline =>
+          case _: Inline =>
             ()
           case _ =>
             throw new RuntimeException("children of input not pipe?")

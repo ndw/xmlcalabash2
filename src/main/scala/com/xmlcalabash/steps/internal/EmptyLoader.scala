@@ -30,10 +30,6 @@ class EmptyLoader() extends AbstractLoader {
   }
 
   override def run(context: StaticContext): Unit = {
-    if (disabled) {
-      return
-    }
-
     super.run(context)
     // output nothing
   }

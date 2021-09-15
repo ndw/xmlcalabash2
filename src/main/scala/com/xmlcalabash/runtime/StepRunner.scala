@@ -103,16 +103,9 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
 
     for ((port,lb) <- inputs) {
       for ((value,metadata) <- lb) {
-        value match {
-          case node: XdmNode =>
-            val root = S9Api.documentElement(node)
-            if (root.isDefined && root.get.getNodeName == XProcConstants.cx_use_default_input) {
-              // nop
-            } else {
-              runtime.input(port, value, metadata)
-            }
-          case _ => runtime.input(port, value, metadata)
-        }
+        // An early attempt to deal with default bindings used a magic cx_use_default_input
+        // element. I've removed that, but it was here.
+        runtime.input(port, value, metadata)
       }
     }
 

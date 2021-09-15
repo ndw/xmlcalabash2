@@ -70,10 +70,6 @@ class InlineLoader() extends AbstractLoader {
   }
 
   override def run(context: StaticContext): Unit = {
-    if (disabled) {
-      return
-    }
-
     super.run(context)
 
     val propContentType = if (docProps.contains(XProcConstants._content_type)) {

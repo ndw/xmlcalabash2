@@ -111,7 +111,11 @@ class StepSignature(val stepType: Option[QName]) {
   }
 
   override def toString: String = {
-    stepType.toString
+    if (stepType.isDefined) {
+      stepType.get.toString
+    } else {
+      "anonymous StepSignature"
+    }
   }
 }
 

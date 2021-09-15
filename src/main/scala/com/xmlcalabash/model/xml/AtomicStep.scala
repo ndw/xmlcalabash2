@@ -292,23 +292,6 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
     }
   }
 
-  // This is not (yet?) a generalized mechanism; this is a hack to disable default inputs
-  def disable(): Unit = {
-    _stepImplementation match {
-      case wrapper: StepWrapper =>
-        wrapper.step match {
-          case inline: InlineLoader =>
-            inline.disable()
-          case document: DocumentLoader =>
-            document.disable()
-          case _ =>
-            throw new RuntimeException("Attempt to disable something that's not an inline or document?")
-        }
-      case _ =>
-        throw new RuntimeException("Attempt to disable something that's not a stepwrapper?")
-    }
-  }
-
   override def xdump(xml: ElaboratedPipeline): Unit = {
     xml.startAtomic(tumble_id, stepName, stepType)
     for (child <- rawChildren) {
@@ -316,8 +299,6 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
     }
     xml.endAtomic()
   }
-
-
 
   override def toString: String = {
     s"$stepType $stepName"

@@ -92,6 +92,8 @@ object XProcException {
   def xiMaxRegressionsExceededUntil(max: Long, location: Option[Location]): XProcException = internalError(62, location, max)
   def xiAttempToCountByZero(location: Option[Location]): XProcException = internalError(63, location)
 
+  def xiThisCantHappen(msg: String, location: Option[Location]): XProcException = internalError(999, location, msg)
+
   def xdContextItemSequence(expr: String, msg: String, location: Option[Location]): XProcException = dynamicError(1, List(expr, msg), location)
   def xdSequenceNotAllowedOnIf(location: Option[Location]): XProcException = dynamicError(5, location)
   def xdInputSequenceNotAllowed(port: String, location: Option[Location]): XProcException = dynamicError(6, port, location)
