@@ -372,6 +372,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     // Is the content type ok?
     val mtypes = step.signature.output(port, staticContext.location).contentTypes
     if (mtypes.nonEmpty) {
+      // FIXME: rethrow XC0070 with a location
       if (!metadata.contentType.allowed(mtypes)) {
         throw XProcException.xdBadOutputMediaType(metadata.contentType, mtypes, staticContext.location)
       }

@@ -271,6 +271,7 @@ object XProcException {
   def xcUnsupportedUuidVersion(version: Integer, location: Option[Location]): XProcException = stepError(60, version.toString, location)
   def xcOsExecFailed(rc: Int, location: Option[Location]): XProcException = stepError(64, rc.toString, location)
   def xcContentTypeNotAllowed(location: Option[Location]): XProcException = stepError(69, location)
+  def xcSerializationNotAMap(value: String, location: Option[Location]): XProcException = stepError(70, value, location)
   def xcInvalidBase64(message: String, location: Option[Location]): XProcException = stepError(72, message, location)
   def xcContentTypeMissing(location: Option[Location]): XProcException = stepError(73, location)
   def xcDifferentContentTypes(castTo: String, cdata: String, location: Option[Location]): XProcException = stepError(74, List(castTo,cdata), location)

@@ -2,6 +2,7 @@ package com.xmlcalabash.runtime
 
 import java.net.URI
 import com.jafpl.messages.Metadata
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmNode, XdmValue}
@@ -66,7 +67,13 @@ class XProcMetadata(private val initialContentType: Option[MediaType],
     if (_contentType.isEmpty) {
       var charset = Option.empty[String]
       if (_properties.contains(XProcConstants._serialization)) {
-        val pmap = _properties(XProcConstants._serialization).asInstanceOf[XdmMap]
+        val value = _properties(XProcConstants._serialization)
+        val pmap = try {
+          value.asInstanceOf[XdmMap]
+        } catch {
+          case _: ClassCastException =>
+            throw XProcException.xcSerializationNotAMap(value.toString, None)
+        }
         val piter = pmap.keySet.iterator()
         while (piter.hasNext) {
           val key = piter.next()
