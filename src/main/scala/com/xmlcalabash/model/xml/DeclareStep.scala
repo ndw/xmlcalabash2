@@ -75,7 +75,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
       try {
         _version = Some(vstr.toDouble)
       } catch {
-        case ex: NumberFormatException =>
+        case _: NumberFormatException =>
           throw XProcException.xsBadVersion(vstr, location)
       }
       if (_version.get != 3.0) {

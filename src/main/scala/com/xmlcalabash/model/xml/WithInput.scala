@@ -11,7 +11,7 @@ import net.sf.saxon.functions.ConstantFunction.{False, True}
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
-  private var _exclude_inline_prefixes = List.empty[String]
+  private val _exclude_inline_prefixes = List.empty[String]
   private var _context: StaticContext = _
 
   def exclude_inline_prefixes: List[String] = _exclude_inline_prefixes

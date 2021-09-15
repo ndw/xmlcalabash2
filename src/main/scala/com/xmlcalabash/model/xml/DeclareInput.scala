@@ -13,7 +13,7 @@ import net.sf.saxon.s9api.XdmNode
 import scala.collection.mutable.ListBuffer
 
 class DeclareInput(override val config: XMLCalabashConfig) extends Port(config) {
-  private var _exclude_result_prefixes = List.empty[String]
+  private val _exclude_result_prefixes = List.empty[String]
   protected[model] var defaultInputs: ListBuffer[AtomicStep] = ListBuffer.empty[AtomicStep]
 
   def exclude_result_prefixes: List[String] = _exclude_result_prefixes

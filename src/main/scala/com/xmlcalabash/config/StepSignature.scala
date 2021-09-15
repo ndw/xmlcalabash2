@@ -9,10 +9,10 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class StepSignature(val stepType: Option[QName]) {
-  private var _inputPorts = mutable.HashMap.empty[String, PortSignature]
-  private var _outputPorts = mutable.HashMap.empty[String, PortSignature]
-  private var _options = mutable.HashMap.empty[QName, OptionSignature]
-  private var _implementation = ListBuffer.empty[String]
+  private val _inputPorts = mutable.HashMap.empty[String, PortSignature]
+  private val _outputPorts = mutable.HashMap.empty[String, PortSignature]
+  private val _options = mutable.HashMap.empty[QName, OptionSignature]
+  private val _implementation = ListBuffer.empty[String]
   private var _declaration = Option.empty[DeclareStep]
 
   def addInput(port: PortSignature, location: Location): Unit = {
