@@ -1,11 +1,6 @@
 package com.xmlcalabash.steps
 
-import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.XProcMetadata
-import com.xmlcalabash.util.{MediaType, S9Api}
-import net.sf.saxon.s9api.{Axis, QName, XdmArray, XdmAtomicValue, XdmMap, XdmNode, XdmNodeKind, XdmValue}
-
-import scala.collection.mutable
+import net.sf.saxon.s9api.XdmAtomicValue
 
 class QTProcessor extends DefaultXmlStep {
   def isTrue(value: Option[Any]): Boolean = {
@@ -20,6 +15,7 @@ class QTProcessor extends DefaultXmlStep {
     }
   }
 
+  /*
   protected def consume(item: XdmValue, port: String, sprop: Map[QName,XdmValue]): Unit = {
     if (item.size() > 1) {
       val iter = item.iterator()
@@ -92,10 +88,12 @@ class QTProcessor extends DefaultXmlStep {
         ctype = Some(MediaType.JSON)
 
       case _ =>
-        throw new RuntimeException("Unexpected item type produced by XSLT: " + item)
+        throw XProcException.xiThisCantHappen(s"Unexpected item type consumed: ${item}")
     }
 
     val mtype = new XProcMetadata(ctype, dprop.toMap)
     consumer.get.receive(port, outputItem, mtype)
   }
+
+   */
 }

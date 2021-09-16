@@ -7,7 +7,7 @@ import com.jafpl.steps.BindingSpecification
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
-import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime._
 import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.`type`.TypeHierarchy
@@ -518,6 +518,92 @@ class DefaultXmlStep extends XmlStep {
         throw ex
     }
     overrideContentTypes.toList
+  }
+
+  protected def consume(item: XdmValue, port: String): Unit = {
+    consume(item, port, Map())
+  }
+
+  protected def consume(item: XdmValue, port: String, sprop: Map[QName,XdmValue]): Unit = {
+    if (item.size() > 1) {
+      val iter = item.iterator()
+      while (iter.hasNext) {
+        consume(iter.next, port, sprop)
+      }
+      return
+    }
+
+    var outputItem = item
+    var ctype = Option.empty[MediaType]
+
+    var serialization = new XdmMap()
+    for ((key, value) <- sprop) {
+      serialization = serialization.put(new XdmAtomicValue(key), value)
+    }
+
+    val dprop = mutable.HashMap.empty[QName, XdmValue]
+
+    if (serialization.size() > 0) {
+      dprop.put(XProcConstants._serialization, serialization)
+    }
+
+    if (sprop.contains(XProcConstants._method)) {
+      sprop(XProcConstants._method).toString match {
+        case "html" => ctype = Some(MediaType.HTML)
+        case "xhtml" => ctype = Some(MediaType.XHTML)
+        case "text" => ctype = Some(MediaType.TEXT)
+        case _ => ()
+      }
+    }
+
+    item match {
+      case node: XdmNode =>
+        node.getNodeKind match {
+          case XdmNodeKind.DOCUMENT =>
+            var textOnly = true
+            for (child <- S9Api.axis(node, Axis.CHILD)) {
+              textOnly = textOnly && child.getNodeKind == XdmNodeKind.TEXT
+            }
+            if (ctype.isEmpty) {
+              ctype = if (textOnly) {
+                Some(MediaType.TEXT)
+              } else {
+                Some(MediaType.XML)
+              }
+            }
+          case XdmNodeKind.TEXT =>
+            if (ctype.isEmpty) {
+              ctype = Some(MediaType.TEXT)
+            }
+          case _ =>
+            if (ctype.isEmpty) {
+              ctype = Some(MediaType.XML)
+            }
+        }
+
+        if (node.getNodeKind != XdmNodeKind.DOCUMENT) {
+          val builder = new SaxonTreeBuilder(config)
+          builder.startDocument(node.getBaseURI)
+          builder.addSubtree(node)
+          builder.endDocument()
+          outputItem = builder.result
+        }
+
+      case _: XdmAtomicValue =>
+        ctype = Some(MediaType.JSON)
+
+      case _: XdmArray =>
+        ctype = Some(MediaType.JSON)
+
+      case _: XdmMap =>
+        ctype = Some(MediaType.JSON)
+
+      case _ =>
+        throw XProcException.xiThisCantHappen(s"Unexpected item type consumed: ${item}", location)
+    }
+
+    val mtype = new XProcMetadata(ctype, dprop.toMap)
+    consumer.get.receive(port, outputItem, mtype)
   }
 
   class SerializationOptions(map: XdmMap) {
