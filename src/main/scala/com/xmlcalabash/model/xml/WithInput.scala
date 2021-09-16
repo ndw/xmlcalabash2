@@ -42,10 +42,17 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
       return
     }
 
+    val primaryInput = parent.get match {
+      case atom: AtomicStep =>
+        declaration(atom.stepType).get.input(_port, None).primary
+      case _ =>
+        primary
+    }
+
     val env = environment()
     val drp = env.defaultReadablePort
 
-    if (drp.isDefined) {
+    if (primaryInput && drp.isDefined) {
       val pipe = new Pipe(config)
       pipe.port = drp.get.port
       pipe.step = drp.get.step.stepName
