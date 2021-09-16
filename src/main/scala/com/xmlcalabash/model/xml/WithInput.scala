@@ -144,7 +144,7 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
     for (name <- staticContext.findVariableRefsInString(_select.get)) {
       var binding = _inScopeDynamics.get(name)
       if (binding.isDefined) {
-        val npipe = new NamePipe(config, name,"???", binding.get)
+        val npipe = new NamePipe(config, name, binding.get.tumble_id, binding.get)
         filter.addChild(npipe)
       } else {
         binding = _inScopeStatics.get(name.getClarkName)

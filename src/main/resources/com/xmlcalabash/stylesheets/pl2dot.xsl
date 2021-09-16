@@ -18,7 +18,7 @@
 <xsl:template match="/">
   <dot:digraph name="pg_graph">
     <xsl:apply-templates/>
-    <xsl:apply-templates select="//p:pipe|//p:name-pipe"/>
+    <xsl:apply-templates select="//p:pipe|//p:name-pipe" mode="pipes"/>
   </dot:digraph>
 </xsl:template>
 
@@ -43,7 +43,7 @@
   </xsl:for-each>
 </xsl:template>
 
-<xsl:template match="p:input|p:output|p:with-input|p:with-output"/>
+<xsl:template match="p:input|p:output|p:with-input|p:with-output|p:pipe|p:name-pipe"/>
 
 <xsl:template match="p:variable|p:option">
   <xsl:variable name="label"
@@ -78,7 +78,7 @@
   </dot:subgraph>
 </xsl:template>
 
-<xsl:template match="p:pipe">
+<xsl:template match="p:pipe" mode="pipes">
   <xsl:variable name="name" select="@port"/>
   <xsl:variable name="from" select="key('name', @step)"/>
   <xsl:variable name="port" select="$from/p:input[@port=$name]
@@ -89,19 +89,19 @@
   <xsl:variable name="to-type"
                 select="if (parent::p:input or parent::p:with-input) then 'input' else 'output'"/>
 
-  <dot:arrow from="{generate-id($from)}-{$from-type}-{generate-id($port)}"
+  <dot:arrow k="1" from="{generate-id($from)}-{$from-type}-{generate-id($port)}"
              to="{generate-id(../..)}-{$to-type}-{generate-id(..)}"/>
 </xsl:template>
 
-<xsl:template match="p:name-pipe">
+<xsl:template match="p:name-pipe" mode="pipes">
   <xsl:variable name="from" select="key('name', @step)"/>
-  <dot:arrow from="{$from/@xml:id}-output"
+  <dot:arrow k="2" from="{$from/@xml:id}-output"
              to="{generate-id(../..)}-binding"/>
 </xsl:template>
 
-<xsl:template match="p:name-pipe[ancestor::p:with-option]">
+<xsl:template match="p:name-pipe[ancestor::p:with-option]" mode="pipes">
   <xsl:variable name="from" select="key('name', @step)"/>
-  <dot:arrow from="{$from/@xml:id}-output"
+  <dot:arrow k="3" from="{$from/@xml:id}-output"
              to="{generate-id(../..)}-input-{generate-id(..)}"/>
 </xsl:template>
 
@@ -117,6 +117,9 @@
     <dot:subgraph name="cluster-{generate-id(.)}-outputs" color="gray" label="outputs" fontcolor="gray" style="rounded">
       <xsl:apply-templates select="p:output|p:with-output" mode="io"/>
     </dot:subgraph>
+  </xsl:if>
+  <xsl:if test="p:name-pipe">
+    <dot:anchor name="{generate-id(..)}-binding" label="#bindings"/>
   </xsl:if>
 </xsl:template>
 
