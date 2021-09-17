@@ -1,6 +1,5 @@
 package com.xmlcalabash.runtime
 
-import java.net.URI
 import com.jafpl.config.Jafpl
 import com.jafpl.exceptions.JafplException
 import com.jafpl.graph.Graph
@@ -8,21 +7,22 @@ import com.jafpl.messages.Message
 import com.jafpl.runtime.{GraphRuntime, RuntimeConfiguration}
 import com.jafpl.steps.DataConsumer
 import com.jafpl.util.{ErrorListener, TraceEventManager}
-import com.xmlcalabash.config.{DocumentManager, Signatures, XMLCalabashConfig, XProcConfigurer}
+import com.xmlcalabash.config.{DocumentManager, DocumentResponse, Signatures, XMLCalabashConfig, XProcConfigurer}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{ExpressionParser, XProcConstants}
-import com.xmlcalabash.model.xml.{Artifact, DeclareStep}
+import com.xmlcalabash.model.xml.{Artifact, DataSource, DeclareStep, Document, Empty, Inline}
+import com.xmlcalabash.util.MediaType
 import com.xmlcalabash.util.stores.{DataStore, FallbackDataStore, FileDataStore, HttpDataStore}
-import com.xmlcalabash.util.{MediaType, XProcVarValue}
-
-import javax.xml.transform.URIResolver
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmNode, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.EntityResolver
 
+import java.net.URI
+import javax.xml.transform.URIResolver
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends RuntimeConfiguration {
   val config: XMLCalabashConfig = decl.config
@@ -44,18 +44,39 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   private var _defaultSerializationOptions: Map[String,Map[QName,String]] = Map.empty[String,Map[QName,String]]
   private var _trim_inline_whitespace = config.trimInlineWhitespace
   private val inputSet = mutable.HashSet.empty[String]
-  private val outputSet = mutable.HashSet.empty[String]
   private val idMap = mutable.HashMap.empty[String,Artifact]
   private var ran = false
   private var _signatures: Signatures = _
   private var runtime: GraphRuntime = _
   private var _datastore = Option.empty[DataStore]
+  private val defaultInputs = mutable.HashMap.empty[String, List[DocumentResponse]]
 
   val jafpl: Jafpl = Jafpl.newInstance()
   val graph: Graph = jafpl.newGraph()
 
   protected[xmlcalabash] def init(decl: DeclareStep): Unit = {
     try {
+      for (input <- decl.inputs) {
+        if (input.defaultInputs.nonEmpty) {
+          val defaults = ListBuffer.empty[DocumentResponse]
+          for (default <- input.defaultInputs) {
+            default match {
+              case _: Empty =>
+                ()
+              case inline: Inline =>
+                defaults += new DocumentResponse(inline.node, inline.contentType.getOrElse(MediaType.XML))
+              case doc: Document =>
+                defaults += doc.loadDocument()
+              case _ =>
+                throw XProcException.xiThisCantHappen(s"Unexpected default input type: ${default}", None)
+            }
+          }
+          if (defaults.nonEmpty) {
+            defaultInputs.put(input.port, defaults.toList)
+          }
+        }
+      }
+
       config.debugOptions.dumpOpenGraph(decl, graph)
 
       graph.dumpGraphTransitions = true
@@ -95,7 +116,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
       case bitem: BinaryNode =>
         input(port, new AnyItemMessage(bitem.node, bitem, metadata, context))
       case _ =>
-        throw new RuntimeException("Unexpected item value pass to input")
+        throw XProcException.xiThisCantHappen(s"Unexpected value on pipeline input: ${item}", None)
     }
   }
 
@@ -126,6 +147,14 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
       throw new RuntimeException("You must call reset() before running a pipeline a second time.")
     }
 
+    for ((port, defaults) <- defaultInputs) {
+      if (!inputSet.contains(port)) {
+        for (source <- defaults) {
+          input(port, source.value, new XProcMetadata(source.contentType))
+        }
+      }
+    }
+
     runCommon()
   }
 
@@ -140,9 +169,9 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   }
 
   def reset(): Unit = {
+    inputSet.clear()
     /*
     //_staticOptionBindings.clear()
-    inputSet.clear()
     outputSet.clear()
     bindingsMap.clear()
 

@@ -1,6 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.Node
+import com.jafpl.steps.{Manifold, PortCardinality, PortSpecification}
 import com.xmlcalabash.config.{StepSignature, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.runtime.{XMLCalabashRuntime, XProcXPathExpression}
@@ -179,6 +180,18 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
     }
   }
 
+  def containerManifold: Manifold = {
+    val spec = mutable.HashMap.empty[String, PortCardinality]
+    for (output <- _outputs.values) {
+      if (output.sequence) {
+        spec.put(output.port, PortCardinality.ZERO_OR_MORE)
+      } else {
+        spec.put(output.port, PortCardinality.EXACTLY_ONE)
+      }
+    }
+    new Manifold(Manifold.WILD, new PortSpecification(spec.toMap))
+  }
+
   override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     if (allChildren.nonEmpty) {
       if (_graphNode.isDefined) {
@@ -198,5 +211,4 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
       }
     }
   }
-
 }

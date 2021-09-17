@@ -28,7 +28,8 @@ class Group(override val config: XMLCalabashConfig) extends Container(config) wi
       _graphNode = Some(node)
     } else {
       val start = parNode.asInstanceOf[ContainerStart]
-      val node = start.addGroup(stepName, Manifold.ALLOW_ANY)
+
+      val node = start.addGroup(stepName, containerManifold)
       _graphNode = Some(node)
     }
 

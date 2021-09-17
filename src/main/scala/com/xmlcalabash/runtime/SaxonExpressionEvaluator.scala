@@ -87,13 +87,31 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
             case item: XdmItem =>
               val node = proxy(msg)
               proxies.put(item, node)
-              checkDocument(newContext, node, context.head)
+              checkDocument(newContext, node, msg)
             case _ =>
               () // Whatever it is, it isn't a document
           }
         case msg: AnyItemMessage =>
           proxies.put(msg.shadow, msg.item)
-          checkDocument(newContext, msg.item, context.head)
+          checkDocument(newContext, msg.item, msg)
+        case _ => ()
+      }
+    }
+
+    for (message <- bindings.values) {
+      message match {
+        case msg: XdmValueItemMessage =>
+          msg.item match {
+            case item: XdmItem =>
+              val node = proxy(msg)
+              proxies.put(item, node)
+              checkDocument(newContext, node, msg)
+            case _ =>
+              () // Whatever it is, it isn't a document
+          }
+        case msg: AnyItemMessage =>
+          proxies.put(msg.shadow, msg.item)
+          checkDocument(newContext, msg.item, msg)
         case _ => ()
       }
     }

@@ -33,6 +33,7 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
   }
 
   def node: XdmNode = _node
+  def contentType: Option[MediaType] = _contentType
 
   override def parse(node: XdmNode): Unit = {
     super.parse(node)

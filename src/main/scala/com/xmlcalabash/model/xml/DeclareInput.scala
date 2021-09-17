@@ -14,7 +14,7 @@ import scala.collection.mutable.ListBuffer
 
 class DeclareInput(override val config: XMLCalabashConfig) extends Port(config) {
   private val _exclude_result_prefixes = List.empty[String]
-  protected[model] val defaultInputs: ListBuffer[DataSource] = ListBuffer.empty[DataSource]
+  protected[xmlcalabash] val defaultInputs: ListBuffer[DataSource] = ListBuffer.empty[DataSource]
 
   def exclude_result_prefixes: List[String] = _exclude_result_prefixes
 

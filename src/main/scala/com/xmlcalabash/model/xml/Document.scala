@@ -1,13 +1,15 @@
 package com.xmlcalabash.model.xml
 
-import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.config.{DocumentRequest, DocumentResponse, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.runtime.XProcVtExpression
 import com.xmlcalabash.runtime.params.DocumentLoaderParams
 import com.xmlcalabash.util.MediaType
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.{QName, XdmNode}
 
+import java.net.URI
 import scala.collection.mutable
 
 class Document(override val config: XMLCalabashConfig) extends DataSource(config) {
@@ -83,8 +85,17 @@ class Document(override val config: XMLCalabashConfig) extends DataSource(config
 
   override protected[model] def normalizeToPipes(): Unit = {
     val context = staticContext.withStatics(inScopeStatics)
-    val params = new DocumentLoaderParams(_hrefAvt, _contentType, _parameters, _documentProperties, _context_provided, staticContext)
+    val params = new DocumentLoaderParams(_hrefAvt, _contentType, _parameters, _documentProperties, _context_provided, context)
     normalizeDataSourceToPipes(XProcConstants.cx_document_loader, params)
+  }
+
+  def loadDocument(): DocumentResponse = {
+    val context = staticContext.withStatics(inScopeStatics)
+    val expr = new XProcVtExpression(context, _hrefAvt, true)
+    val msg = config.expressionEvaluator.value(expr, List(), inScopeStatics, None)
+    val href = new URI(msg.item.toString)
+    val req = new DocumentRequest(Some(href), _contentType, location, false)
+    config.documentManager.parse(req)
   }
 
   override def xdump(xml: ElaboratedPipeline): Unit = {
