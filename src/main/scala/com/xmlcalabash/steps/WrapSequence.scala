@@ -38,7 +38,7 @@ class WrapSequence extends DefaultXmlStep {
     wrapper = qnameBinding(_wrapper).get
     groupAdjacent = optionalStringBinding(_group_adjacent)
     if (groupAdjacent.isDefined) {
-      groupAdjacentContext = Some(bindingContexts(_group_adjacent))
+      groupAdjacentContext = Some(bindings(_group_adjacent).context)
     }
 
     if (groupAdjacent.isEmpty) {
@@ -109,7 +109,7 @@ class WrapSequence extends DefaultXmlStep {
   private def adjacentValue(node: XdmNode): XdmValue = {
     val compiler = config.processor.newXPathCompiler()
     compiler.setBaseURI(groupAdjacentContext.get.baseURI.get)
-    for ((pfx, uri) <- bindingContexts(_group_adjacent).nsBindings) {
+    for ((pfx, uri) <- bindings(_group_adjacent).context.nsBindings) {
       compiler.declareNamespace(pfx, uri)
     }
     val exec = compiler.compile(groupAdjacent.get)

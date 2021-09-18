@@ -59,8 +59,7 @@ class DefaultXmlStep extends XmlStep {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   protected var consumer: Option[XProcDataConsumer] = None
   protected var config: XMLCalabashRuntime = _
-  protected val bindingContexts = mutable.HashMap.empty[QName, StaticContext]
-  protected val bindings = mutable.HashMap.empty[QName, XdmValue]
+  protected val bindings = mutable.HashMap.empty[QName, NameValueBinding]
   protected var stepType: QName = _
   protected var stepName = Option.empty[String]
 
@@ -78,9 +77,8 @@ class DefaultXmlStep extends XmlStep {
 
   override def bindingSpec: BindingSpecification = BindingSpecification.ANY
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    bindingContexts.put(variable, context)
-    bindings.put(variable, value)
+  override def receiveBinding(variable: NameValueBinding): Unit = {
+    bindings.put(variable.name, variable)
   }
 
   override def setConsumer(consumer: XProcDataConsumer): Unit = {
@@ -160,7 +158,7 @@ class DefaultXmlStep extends XmlStep {
 
   def definedBinding(name: QName): Boolean = {
     if (bindings.contains(name)) {
-      val value = bindings(name).getUnderlyingValue
+      val value = bindings(name).value.getUnderlyingValue
       value.getLength > 0
     } else {
       false
@@ -169,7 +167,7 @@ class DefaultXmlStep extends XmlStep {
 
   def optionalStringBinding(name: QName): Option[String] = {
     if (definedBinding(name)) {
-      Some(bindings(name).getUnderlyingValue.getStringValue)
+      Some(bindings(name).value.getUnderlyingValue.getStringValue)
     } else {
       None
     }
@@ -181,7 +179,7 @@ class DefaultXmlStep extends XmlStep {
 
   def stringBinding(name: QName, default: String): String = {
     if (definedBinding(name)) {
-      val boundvalue = bindings(name).getUnderlyingValue
+      val boundvalue = bindings(name).value.getUnderlyingValue
       val hierarchy = new TypeHierarchy(config.processor.getUnderlyingConfiguration)
       // I have no idea what diagnostic means
       val diagnostic = new RoleDiagnostic(RoleDiagnostic.VARIABLE, name.getClarkName, RoleDiagnostic.VARIABLE)
@@ -195,7 +193,7 @@ class DefaultXmlStep extends XmlStep {
   def listOfStringBinding(name: QName): List[String] = {
     // N.B. this method blindly returns the string values of whatever kinds of things are in the sequence
     if (definedBinding(name)) {
-      val value = bindings(name).getUnderlyingValue
+      val value = bindings(name).value.getUnderlyingValue
       val ls = ListBuffer.empty[String]
 
       val iter = value.iterate()
@@ -213,8 +211,8 @@ class DefaultXmlStep extends XmlStep {
 
   def uriBinding(name: QName): Option[URI] = {
     if (definedBinding(name)) {
-      val context = bindingContexts(name)
-      Some(context.baseURI.get.resolve(bindings(name).getUnderlyingValue.getStringValue))
+      val context = bindings(name).context
+      Some(context.baseURI.get.resolve(bindings(name).value.getUnderlyingValue.getStringValue))
     } else {
       None
     }
@@ -222,7 +220,7 @@ class DefaultXmlStep extends XmlStep {
 
   def booleanBinding(name: QName): Option[Boolean] = {
     if (definedBinding(name)) {
-      val str = bindings(name).getUnderlyingValue.getStringValue
+      val str = bindings(name).value.getUnderlyingValue.getStringValue
       str match {
         case "true" => Some(true)
         case "false" => Some(false)
@@ -236,7 +234,7 @@ class DefaultXmlStep extends XmlStep {
 
   def integerBinding(name: QName): Option[Integer] = {
     if (definedBinding(name)) {
-      Some(bindings(name).getUnderlyingValue.getStringValue.toInt)
+      Some(bindings(name).value.getUnderlyingValue.getStringValue.toInt)
     } else {
       None
     }
@@ -244,7 +242,7 @@ class DefaultXmlStep extends XmlStep {
 
   def mapBinding(name: QName): XdmMap = {
     if (definedBinding(name)) {
-      val map = bindings(name)
+      val map = bindings(name).value
       if (map.size > 0) {
         map.asInstanceOf[XdmMap]
       } else {
@@ -259,7 +257,8 @@ class DefaultXmlStep extends XmlStep {
     // This method doesn't distinguish between there was no binding for 'name' and
     // the binding for 'name' was not of type QName.
     if (definedBinding(name)) {
-      bindings(name).getUnderlyingValue match {
+      val x = bindings(name).value.getUnderlyingValue
+      bindings(name).value.getUnderlyingValue match {
         case qn: QNameValue =>
           Some(new QName(qn.getPrefix, qn.getNamespaceURI, qn.getLocalName))
         case _ => None

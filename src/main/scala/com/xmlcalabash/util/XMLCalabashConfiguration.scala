@@ -1,11 +1,11 @@
 package com.xmlcalabash.util
 
 import java.io.File
-
 import com.xmlcalabash.model.util.XProcConstants
 import net.sf.saxon.s9api.{Axis, Processor, QName, XdmNode, XdmNodeKind}
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.net.URI
 import scala.collection.mutable
 
 class XMLCalabashConfiguration {
@@ -25,6 +25,7 @@ class XMLCalabashConfiguration {
   private val cc_system_property = new QName("cc", ns_cc, "system-property")
   private val cc_thread_pool = new QName("cc", ns_cc, "thread-pool")
   private val cc_graphviz = new QName("cc", ns_cc, "graphviz")
+  private val cc_http_proxy = new QName("cc", ns_cc, "http-proxy")
   private val cc_debug_output_directory = new QName("cc", ns_cc, "debug-output-directory")
   private val cc_debug_tree = new QName("cc", ns_cc, "tree")
   private val cc_debug_xml_tree = new QName("cc", ns_cc, "xml-tree")
@@ -37,6 +38,9 @@ class XMLCalabashConfiguration {
   private val _value = new QName("value")
   private val _type = new QName("type")
   private val _dot = new QName("dot")
+  private val _host = new QName("host")
+  private val _port = new QName("port")
+  private val _scheme = new QName("scheme")
   private val _thread_count = new QName("thread-count")
 
   private var _show_messages = Option.empty[Boolean]
@@ -51,6 +55,7 @@ class XMLCalabashConfiguration {
   private var _module_uri_resolver = Option.empty[String]
   private var _unparsed_text_uri_resolver = Option.empty[String]
   private var _graphviz_dot = Option.empty[String]
+  private var _proxies = mutable.HashMap.empty[String, URI]
   private var _showErrors = false
   private var _debug_output_directory = Option.empty[String]
   private var _debug_tree = Option.empty[String]
@@ -71,6 +76,7 @@ class XMLCalabashConfiguration {
   def uri_resolver: Option[String] = _uri_resolver
   def module_uri_resolver: Option[String] = _module_uri_resolver
   def unparsed_text_uri_resolver: Option[String] = _unparsed_text_uri_resolver
+  def proxies: Map[String, URI] = _proxies.toMap
   def graphviz_dot: Option[String] = _graphviz_dot
   def showErrors: Boolean = _showErrors
   def debug_output_directory: Option[String] = _debug_output_directory
@@ -166,6 +172,8 @@ class XMLCalabashConfiguration {
         _module_uri_resolver = Some(setString(node, option))
       case `cc_unparsed_text_uri_resolver` =>
         _unparsed_text_uri_resolver = Some(setString(node, option))
+      case `cc_http_proxy` =>
+        parseHttpProxy(node)
       case `cc_graphviz` =>
         parseGraphviz(node)
       case `cc_debug_output_directory` =>
@@ -245,6 +253,20 @@ class XMLCalabashConfiguration {
         }
       }
       _serialization.put(ctype, map)
+    }
+  }
+
+  private def parseHttpProxy(node: XdmNode): Unit = {
+    val host = Option(node.getAttributeValue(_host))
+    val port = Option(node.getAttributeValue(_port))
+    val scheme = Option(node.getAttributeValue(_scheme))
+    if (host.isEmpty || port.isEmpty || scheme.isEmpty) {
+      logger.error("Invalid proxy configuration, host, port and scheme are required")
+    } else {
+      if (_proxies.contains(scheme.get)) {
+        logger.warn(s"Replacing proxy for ${scheme} URIs")
+      }
+      _proxies.put(scheme.get, new URI("http://" + host.get + ":" + port.get + "/"))
     }
   }
 

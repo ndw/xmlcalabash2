@@ -89,12 +89,12 @@ class Parser(config: XMLCalabashConfig) {
 
   private def parseContainer[T <: Container](node: XdmNode, container: T): T = {
     container match {
-      case cont: DeclareStep =>
+      case _: DeclareStep =>
         parseContainer(node, container, List(), List(XProcConstants.p_with_input))
-      case cont: If =>
+      case _: If =>
         parseContainer(node, container, List(), List(XProcConstants.p_input, XProcConstants.p_declare_step,
           XProcConstants.p_import, XProcConstants.p_import_functions))
-      case cont: Choose =>
+      case _: Choose =>
         parseContainer(node, container, List(XProcConstants.p_with_input, XProcConstants.p_when, XProcConstants.p_otherwise), List())
       case _ =>
         parseContainer(node, container, List(), List(XProcConstants.p_input, XProcConstants.p_declare_step,
@@ -456,7 +456,7 @@ class Parser(config: XMLCalabashConfig) {
       throw new RuntimeException("Elements in the XProc namespace cannot be synthetic inlines")
     }
 
-    val inline = new Inline(config, inlineNode,true)
+    val inline = new Inline(config, inlineNode, true)
     inline.parse(node)
     inline
   }

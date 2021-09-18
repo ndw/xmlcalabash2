@@ -31,8 +31,8 @@ class Merge extends DefaultXmlStep {
   }
 
   override def run(staticContext: StaticContext): Unit = {
-    duplicates = bindings(_duplicates).getUnderlyingValue.getStringValue
-    val keyExpr = bindings(_key).getUnderlyingValue.getStringValue
+    duplicates = bindings(_duplicates).value.getUnderlyingValue.getStringValue
+    val keyExpr = bindings(_key).value.getUnderlyingValue.getStringValue
     var index = 0
 
     merged = new XdmMap()

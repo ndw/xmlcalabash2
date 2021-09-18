@@ -85,9 +85,11 @@ class Xslt extends QTProcessor {
       staticParameters = ValueParser.parseParameters(pmap, staticContext)
     }
 
-    globalContextItem = bindings.get(_global_context_item)
-    if (globalContextItem.get.size() == 0) {
-      globalContextItem = None
+    if (bindings.contains(_global_context_item)) {
+      globalContextItem = Some(bindings(_global_context_item).value)
+      if (globalContextItem.get.size() == 0) {
+        globalContextItem = None
+      }
     }
 
     initialMode = qnameBinding(_initial_mode)

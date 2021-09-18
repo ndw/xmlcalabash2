@@ -1,7 +1,7 @@
 package com.xmlcalabash.steps
 
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{NameValueBinding, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, TypeUtils}
 import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap}
 import net.sf.saxon.s9api.{QName, XdmValue}
@@ -12,11 +12,10 @@ class Parameters() extends DefaultXmlStep {
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.NONE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    variable match {
-      case XProcConstants._parameters => parameters = ValueParser.parseParameters(value, context)
-      case _ =>
-        logger.info("Ignoring unexpected option to p:parameters: " + variable)
+  override def receiveBinding(variable: NameValueBinding): Unit = {
+    super.receiveBinding(variable)
+    if (variable.name == XProcConstants._parameters) {
+      parameters = ValueParser.parseParameters(variable.value, variable.context)
     }
   }
 

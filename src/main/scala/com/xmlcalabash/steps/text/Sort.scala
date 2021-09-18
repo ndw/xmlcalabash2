@@ -2,7 +2,7 @@ package com.xmlcalabash.steps.text
 
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{NameValueBinding, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
 import com.xmlcalabash.util.xc.XsltStylesheet
 
@@ -28,10 +28,10 @@ class Sort() extends TextLines {
   override def inputSpec: XmlPortSpecification = XmlPortSpecification.TEXTSOURCE
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.TEXTRESULT
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    super.receiveBinding(variable, value, context)
-    if (variable == _sort_key) {
-      keyNamespaceBindings = context.nsBindings
+  override def receiveBinding(variable: NameValueBinding): Unit = {
+    super.receiveBinding(variable)
+    if (variable.name == _sort_key) {
+      keyNamespaceBindings = variable.context.nsBindings
     }
   }
 

@@ -1,7 +1,7 @@
 package com.xmlcalabash.steps
 
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{NameValueBinding, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, URIUtils}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmValue}
 
@@ -29,10 +29,10 @@ class Count() extends DefaultXmlStep {
     }
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    super.receiveBinding(variable, value, context)
-    if (variable == _limit) {
-      limit = value.asInstanceOf[XdmAtomicValue].getLongValue
+  override def receiveBinding(variable: NameValueBinding): Unit = {
+    super.receiveBinding(variable)
+    if (variable.name == _limit) {
+      limit = variable.value.asInstanceOf[XdmAtomicValue].getLongValue
     }
   }
 

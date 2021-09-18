@@ -116,9 +116,12 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
 
     // If any of the inputs have defaults, record them
     for (declinput <- children[DeclareInput]) {
-      declinput.defaultInputs ++= declinput.children[DataSource]
-      // then remove them
-      declinput.removeChildren()
+      declinput.examineBindings()
+      if (declinput.children[DataSource].nonEmpty) {
+        declinput.defaultInputs ++= declinput.children[DataSource]
+        // then remove them
+        declinput.removeChildren()
+      }
     }
 
     // If there's only one output and it doesn't have a declared primary status, make it primary
@@ -221,8 +224,13 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
     }
     madeStructureExplicit = true
 
-    for (child <- allChildren) {
-      child.makeStructureExplicit()
+    super.makeStructureExplicit()
+
+    // If any of the inputs have defaults, make sure we make the structure explicit
+    for (declinput <- children[DeclareInput]) {
+      for (source <- declinput.defaultInputs) {
+        source.makeStructureExplicit()
+      }
     }
   }
 
@@ -233,6 +241,13 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
     madeBindingsExplicit = true
 
     super.makeBindingsExplicit()
+
+    // If any of the inputs have defaults, make sure we make the bindings explicit
+    for (declinput <- children[DeclareInput]) {
+      for (source <- declinput.defaultInputs) {
+        source.makeBindingsExplicit()
+      }
+    }
   }
 
   override protected[model] def validateStructure(): Unit = {

@@ -7,7 +7,7 @@ import com.xmlcalabash.config.{DocumentManager, DocumentRequest, DocumentRespons
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.xc.Errors
 import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmValue}
 import net.sf.saxon.trans.XPathException
@@ -37,6 +37,17 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
   protected val TRANSPARENT_YAML = false
 
   override def parse(request: DocumentRequest): DocumentResponse = {
+    if (request.node.isDefined) {
+      request.node.get match {
+        case bin: BinaryNode =>
+          return new DocumentResponse(bin.node, bin.bytes, request.contentType.get, request.docprops)
+        case value: XdmValue =>
+          return new DocumentResponse(value, request.contentType.get, request.docprops)
+        case _ =>
+          throw XProcException.xiThisCantHappen(s"Inline document request is neither a value nor binary: ${request.node.get}", None)
+      }
+    }
+
     val baseURI = if (request.baseURI.isDefined) {
       request.baseURI.get
     } else {
@@ -117,7 +128,7 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
 
       loadStream(request, contentType, stream, props.toMap)
     } catch {
-      case ex: FileNotFoundException =>
+      case _: FileNotFoundException =>
         throw XProcException.xdDoesNotExist(href.toASCIIString, request.location)
     }
   }

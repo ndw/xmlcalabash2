@@ -240,7 +240,7 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
         throw new ModelException(ExceptionCode.NOIMPL, stepType.toString, location)
       }
     } else {
-      val klass = Class.forName(implClass.head).newInstance()
+      val klass = Class.forName(implClass.head).getDeclaredConstructor().newInstance()
       klass match {
         case step: XmlStep =>
           new StepWrapper(step, sig)

@@ -1,24 +1,21 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.messages.Message
-import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
+import com.xmlcalabash.runtime.{StaticContext, XProcXPathExpression}
 import com.xmlcalabash.runtime.params.InlineLoaderParams
-import com.xmlcalabash.runtime.XProcVtExpression
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import com.xmlcalabash.util.{MediaType, S9Api}
-import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
+import net.sf.saxon.s9api.{Axis, QName, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 
 import java.io.UnsupportedEncodingException
+import java.net.URI
 import java.util.Base64
 import scala.collection.mutable
 
-class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val implied: Boolean) extends DataSource(config) {
-  def this(config: XMLCalabashConfig, node: XdmNode) = {
-    this(config, node, false)
-  }
-
+class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, implied: Boolean) extends DataSource(config) {
   private var _node: XdmNode = srcNode
   private var _contentType = Option.empty[MediaType]
   private var _documentProperties = Option.empty[String]
@@ -32,11 +29,18 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
     throw new RuntimeException("inline document must be a document")
   }
 
+  def this(config: XMLCalabashConfig, srcNode: XdmNode) = {
+    this(config, srcNode, false)
+  }
+
   def node: XdmNode = _node
   def contentType: Option[MediaType] = _contentType
+  def documentProperties: Option[String] = _documentProperties
 
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
+
+    _synthetic = implied
 
     if (node.getNodeName == XProcConstants.p_inline) {
       _contentType = MediaType.parse(attributes.get(XProcConstants._content_type))
@@ -81,6 +85,20 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
           throw XProcException.xdUnsupportedEncoding(_encoding.get, location)
         }
       }
+
+      if (_contentType.isEmpty) {
+        _contentType = Some(MediaType.XML)
+      }
+    }
+  }
+
+  def encoding: Option[String] = _encoding
+
+  def excludeURIs: Set[String] = {
+    if (_exclude_inline_prefixes.isDefined) {
+      S9Api.urisForPrefixes(node, _exclude_inline_prefixes.get.split("\\s+").toSet)
+    } else {
+      Set()
     }
   }
 
@@ -140,6 +158,7 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
       }
       tree.endDocument()
       _node = tree.result
+      _contentType = Some(MediaType.XML)
     }
   }
 
@@ -147,9 +166,12 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
     // nop
   }
 
+  def inlineContext: StaticContext = {
+    staticContext.withStatics(inScopeStatics)
+  }
+
   override protected[model] def normalizeToPipes(): Unit = {
-    val context = staticContext.withStatics(inScopeStatics)
-    val params = new InlineLoaderParams(_node, _contentType, _documentProperties, _encoding, _exclude_inline_prefixes, expand_text, _context_provided, context)
+    val params = new InlineLoaderParams(_node, _contentType, _documentProperties, _encoding, _exclude_inline_prefixes, expand_text, _context_provided, inlineContext)
     normalizeDataSourceToPipes(XProcConstants.cx_inline_loader, params)
   }
 
@@ -212,6 +234,11 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, val impli
     for (name <- ValueParser.findVariableRefsInAvt(config, expr)) {
       nameBindings += name
     }
+  }
+
+  def loadDocument(): DocumentRequest = {
+      println("hello")
+      new DocumentRequest(new URI("http://example.com/"))
   }
 
   override def xdump(xml: ElaboratedPipeline): Unit = {

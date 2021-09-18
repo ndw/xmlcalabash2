@@ -27,7 +27,7 @@ class Artifact(val config: XMLCalabashConfig) {
   private val _children: ListBuffer[Artifact] = ListBuffer.empty[Artifact]
   private var _staticContext = new XMLContext(config, this)
   private var _xmlId = Option.empty[String]
-  private var _synthetic = true
+  protected var _synthetic = true
   private val _uid = UniqueId.nextId
   private var _tumbleId = s"!syn_$uid"
   private var _expand_text = Option.empty[Boolean]
@@ -287,14 +287,12 @@ class Artifact(val config: XMLCalabashConfig) {
   }
 
   protected[model] def makeStructureExplicit(): Unit = {
-    println(s"Make structure explicit: $this")
     for (child <- allChildren) {
       child.makeStructureExplicit()
     }
   }
 
   protected[model] def validateStructure(): Unit = {
-    println(s"Validate structure: $this")
     for (child <- allChildren) {
       child.validateStructure()
     }

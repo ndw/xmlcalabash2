@@ -12,7 +12,7 @@ trait XmlStep {
   def bindingSpec: BindingSpecification
   def setConsumer(consumer: XProcDataConsumer): Unit
   def setLocation(location: Location): Unit
-  def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit
+  def receiveBinding(variable: NameValueBinding): Unit
   def receive(port: String, item: Any, metadata: XProcMetadata): Unit
   def configure(config: XMLCalabashConfig, stepType: QName, stepName: Option[String], params: Option[ImplParams]): Unit
   def initialize(config: RuntimeConfiguration): Unit

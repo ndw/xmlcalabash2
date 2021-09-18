@@ -47,6 +47,11 @@ class DeclareOutput(override val config: XMLCalabashConfig) extends Port(config)
     }
   }
 
+  override protected[model] def makeStructureExplicit(): Unit = {
+    super.makeStructureExplicit()
+    examineBindings()
+  }
+
   override def makeBindingsExplicit(): Unit = {
     super.makeBindingsExplicit()
     if (mapexpr.isDefined) {

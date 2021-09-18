@@ -21,7 +21,7 @@ class Load() extends DefaultXmlStep {
 
     val params = mutable.HashMap.empty[QName, XdmValue]
     if (definedBinding(XProcConstants._parameters)) {
-      val _params = bindings(XProcConstants._parameters)
+      val _params = bindings(XProcConstants._parameters).value
       _params match {
         case map: XdmMap =>
           for (key <- map.keySet.asScala) {
@@ -39,7 +39,7 @@ class Load() extends DefaultXmlStep {
 
     val docprops = mutable.HashMap.empty[QName, XdmValue]
     if (definedBinding(XProcConstants._document_properties)) {
-      val _props = bindings(XProcConstants._document_properties)
+      val _props = bindings(XProcConstants._document_properties).value
       _props match {
         case map: XdmMap =>
           for (key <- map.keySet.asScala) {

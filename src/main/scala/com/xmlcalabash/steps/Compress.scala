@@ -4,7 +4,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.util.zip.GZIPOutputStream
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{BinaryNode, NameValueBinding, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmValue}
 
@@ -27,13 +27,10 @@ class Compress extends DefaultXmlStep {
     metadata = meta
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    if (variable == XProcConstants._parameters) {
-      if (value.size() > 0) {
-        parameters = ValueParser.parseParameters(value, context)
-      }
-    } else {
-      super.receiveBinding(variable, value, context)
+  override def receiveBinding(variable: NameValueBinding): Unit = {
+    super.receiveBinding(variable)
+    if (variable.name == XProcConstants._parameters && variable.value.size() > 0) {
+      parameters = ValueParser.parseParameters(variable.value, variable.context)
     }
   }
 

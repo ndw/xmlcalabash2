@@ -20,6 +20,8 @@ class Document(override val config: XMLCalabashConfig) extends DataSource(config
   private var _parameters = Option.empty[String]
   private var _context_provided = false
 
+  println("New document")
+
   def href: String = _href
   protected[model] def hrefAvt: List[String] = _hrefAvt
   protected[model] def href_=(href: String): Unit = {
@@ -89,13 +91,16 @@ class Document(override val config: XMLCalabashConfig) extends DataSource(config
     normalizeDataSourceToPipes(XProcConstants.cx_document_loader, params)
   }
 
-  def loadDocument(): DocumentResponse = {
+  def loadDocument(): DocumentRequest = {
     val context = staticContext.withStatics(inScopeStatics)
     val expr = new XProcVtExpression(context, _hrefAvt, true)
     val msg = config.expressionEvaluator.value(expr, List(), inScopeStatics, None)
-    val href = new URI(msg.item.toString)
-    val req = new DocumentRequest(Some(href), _contentType, location, false)
-    config.documentManager.parse(req)
+    val href = if (context.baseURI.isDefined) {
+      context.baseURI.get.resolve(msg.item.toString)
+    } else {
+      new URI(msg.item.toString)
+    }
+    new DocumentRequest(Some(href), _contentType, location, false)
   }
 
   override def xdump(xml: ElaboratedPipeline): Unit = {

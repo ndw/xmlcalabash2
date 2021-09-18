@@ -34,14 +34,14 @@ import scala.jdk.CollectionConverters.{BufferHasAsJava, CollectionHasAsScala}
  */
 
 object SaxonTreeBuilder {
-  def emptyTree(runtime: XMLCalabashRuntime, baseURI: Option[URI]): XdmNode = {
-    val tree = new SaxonTreeBuilder(runtime)
+  def emptyTree(config: XMLCalabashConfig, baseURI: Option[URI]): XdmNode = {
+    val tree = new SaxonTreeBuilder(config)
     tree.startDocument(baseURI)
     tree.endDocument()
     tree.result
   }
-  def emptyTree(runtime: XMLCalabashRuntime): XdmNode = {
-    val tree = new SaxonTreeBuilder(runtime)
+  def emptyTree(config: XMLCalabashConfig): XdmNode = {
+    val tree = new SaxonTreeBuilder(config)
     tree.startDocument(None)
     tree.endDocument()
     tree.result

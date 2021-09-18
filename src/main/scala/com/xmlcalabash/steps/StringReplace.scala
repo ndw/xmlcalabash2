@@ -36,7 +36,7 @@ class StringReplace() extends DefaultXmlStep with ProcessMatchingNodes {
   override def run(context: StaticContext): Unit = {
     pattern = stringBinding(XProcConstants._match)
     replace = stringBinding(_replace)
-    replContext = bindingContexts(_replace)
+    replContext = bindings(_replace).context
 
     matcher = new ProcessMatch(config, this, context)
     matcher.process(source, pattern)

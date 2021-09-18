@@ -3,8 +3,9 @@ package com.xmlcalabash.steps
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{NameValueBinding, StaticContext, XMLCalabashRuntime, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.TypeUtils
+
 import javax.script.ScriptEngineManager
 import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 
@@ -36,9 +37,10 @@ class JavaScript extends DefaultXmlStep {
     }
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    if (variable == XProcConstants._parameters) {
-      parameters = ValueParser.parseParameters(value, context)
+  override def receiveBinding(variable: NameValueBinding): Unit = {
+    super.receiveBinding(variable)
+    if (variable.name == XProcConstants._parameters && variable.value.size() > 0) {
+      parameters = ValueParser.parseParameters(variable.value, variable.context)
     }
   }
 

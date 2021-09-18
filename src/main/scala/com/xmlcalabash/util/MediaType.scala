@@ -120,14 +120,17 @@ object MediaType {
         val param = rest.substring(0, pos).trim
         rest = rest.substring(pos+1)
         if (param != "") {
-          if (forceEncoding.isEmpty || !param.startsWith("encoding=")) {
+          if (forceEncoding.isEmpty || !param.startsWith("charset=")) {
             plist.append(param)
           }
         }
         pos = rest.indexOf(";")
       }
       if (rest.trim != "") {
-        plist.append(rest.trim)
+        rest = rest.trim
+        if (forceEncoding.isEmpty || !rest.startsWith("charset=")) {
+          plist.append(rest)
+        }
       }
       new MediaType(mediaType, mediaSubtype, suffix, inclusive, Some(plist.toArray))
     }

@@ -37,10 +37,10 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
     metadata = meta
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    super.receiveBinding(variable, value, context)
-    if (variable == _label) {
-      labelNamespaceBindings = context.nsBindings
+  override def receiveBinding(variable: NameValueBinding): Unit = {
+    super.receiveBinding(variable)
+    if (variable.name == _label) {
+      labelNamespaceBindings = variable.context.nsBindings
     }
   }
 

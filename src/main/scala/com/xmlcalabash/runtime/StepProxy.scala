@@ -148,24 +148,24 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
               throw XProcException.xdValueNotInList(value.getStringValue, valuemsg.context.location)
             }
           }
-          step.receiveBinding(qname, value, valuemsg.context)
+          step.receiveBinding(new NameValueBinding(qname, value, valuemsg))
         case _ => ()
           val xvalue = valuemsg.item.getUnderlyingValue
           xvalue match {
             case map: MapItem =>
               if (optsig.forceQNameKeys) {
                 val qmap = S9Api.forceQNameKeys(map, staticContext)
-                step.receiveBinding(qname, qmap, valuemsg.context)
+                step.receiveBinding(new NameValueBinding(qname, qmap, valuemsg))
               } else {
-                step.receiveBinding(qname, valuemsg.item, valuemsg.context)
+                step.receiveBinding(new NameValueBinding(qname, valuemsg))
               }
             case _ =>
-              step.receiveBinding(qname, valuemsg.item, valuemsg.context)
+              step.receiveBinding(new NameValueBinding(qname, valuemsg))
           }
       }
     } else {
       // Just pass it through, it's probably an extension attribute
-      step.receiveBinding(qname, valuemsg.item, valuemsg.context)
+      step.receiveBinding(new NameValueBinding(qname, valuemsg))
     }
   }
 
@@ -218,7 +218,7 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
         val opttype: Option[SequenceType] = optsig.declaredType
         if (optsig.defaultSelect.isDefined) {
           val value = typeUtils.castAtomicAs(new XdmAtomicValue(optsig.defaultSelect.get), opttype, staticContext)
-          step.receiveBinding(qname, value, staticContext)
+          step.receiveBinding(new NameValueBinding(qname, value, XProcMetadata.ANY, staticContext))
         }
       }
     }

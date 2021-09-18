@@ -38,7 +38,7 @@ class DirectoryList() extends DefaultXmlStep {
     val exclude = ListBuffer.empty[Regex]
 
     if (definedBinding(_include_filter)) {
-      val filter = bindings(_include_filter)
+      val filter = bindings(_include_filter).value
       val iter = filter.iterator()
       while (iter.hasNext) {
         val item = iter.next()
@@ -47,7 +47,7 @@ class DirectoryList() extends DefaultXmlStep {
     }
 
     if (definedBinding(_exclude_filter)) {
-      val filter = bindings(_exclude_filter)
+      val filter = bindings(_exclude_filter).value
       val iter = filter.iterator()
       while (iter.hasNext) {
         val item = iter.next()

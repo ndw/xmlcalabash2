@@ -34,8 +34,8 @@ class SplitSequence() extends DefaultXmlStep {
   }
 
   override def run(staticContext: StaticContext): Unit = {
-    var initialOnly = bindings(_initial_only).getUnderlyingValue.effectiveBooleanValue()
-    var testExpr = bindings(XProcConstants._test).getUnderlyingValue.getStringValue
+    val initialOnly = bindings(_initial_only).value.getUnderlyingValue.effectiveBooleanValue()
+    val testExpr = bindings(XProcConstants._test).value.getUnderlyingValue.getStringValue
     var more = true
     var index = 0
 
@@ -48,7 +48,7 @@ class SplitSequence() extends DefaultXmlStep {
         if (staticContext.baseURI.isDefined) {
           compiler.setBaseURI(staticContext.baseURI.get)
         }
-        for ((pfx, uri) <- bindingContexts(XProcConstants._test).nsBindings) {
+        for ((pfx, uri) <- bindings(XProcConstants._test).context.nsBindings) {
           compiler.declareNamespace(pfx, uri)
         }
         val exec = compiler.compile(testExpr)

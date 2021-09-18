@@ -73,6 +73,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
   private var _entityResolver: EntityResolver = _
   private var _moduleURIResolver: ModuleURIResolver = _
   private var _unparsedTextURIResolver: UnparsedTextURIResolver = _
+  private var _proxies = Map.empty[String,URI]
   private var _errorExplanation: ErrorExplanation = _
   private var _documentManager: DocumentManager = _
   private var _htmlSerializer = false
@@ -117,7 +118,10 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
   def psviSupported: Boolean = processor.isSchemaAware
 
   def safeMode: Boolean = false
-  def proxies: Map[String,URI] = Map.empty[String,URI]
+  def proxies: Map[String,URI] = _proxies
+  def proxies_=(map: Map[String,URI]): Unit = {
+    _proxies = map
+  }
 
   def processorRequired: Boolean = _processor == null
   def processor: Processor = {

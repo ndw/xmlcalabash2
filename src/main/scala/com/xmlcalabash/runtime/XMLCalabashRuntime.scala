@@ -7,11 +7,12 @@ import com.jafpl.messages.Message
 import com.jafpl.runtime.{GraphRuntime, RuntimeConfiguration}
 import com.jafpl.steps.DataConsumer
 import com.jafpl.util.{ErrorListener, TraceEventManager}
-import com.xmlcalabash.config.{DocumentManager, DocumentResponse, Signatures, XMLCalabashConfig, XProcConfigurer}
+import com.xmlcalabash.config.{DocumentManager, DocumentRequest, DocumentResponse, Signatures, XMLCalabashConfig, XProcConfigurer}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.messages.{AnyItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{ExpressionParser, XProcConstants}
 import com.xmlcalabash.model.xml.{Artifact, DataSource, DeclareStep, Document, Empty, Inline}
+import com.xmlcalabash.steps.internal.InlineExpander
 import com.xmlcalabash.util.MediaType
 import com.xmlcalabash.util.stores.{DataStore, FallbackDataStore, FileDataStore, HttpDataStore}
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
@@ -49,7 +50,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   private var _signatures: Signatures = _
   private var runtime: GraphRuntime = _
   private var _datastore = Option.empty[DataStore]
-  private val defaultInputs = mutable.HashMap.empty[String, List[DocumentResponse]]
+  private val defaultInputs = mutable.HashMap.empty[String, List[DocumentRequest]]
 
   val jafpl: Jafpl = Jafpl.newInstance()
   val graph: Graph = jafpl.newGraph()
@@ -58,13 +59,17 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
     try {
       for (input <- decl.inputs) {
         if (input.defaultInputs.nonEmpty) {
-          val defaults = ListBuffer.empty[DocumentResponse]
+          val defaults = ListBuffer.empty[DocumentRequest]
           for (default <- input.defaultInputs) {
             default match {
               case _: Empty =>
                 ()
               case inline: Inline =>
-                defaults += new DocumentResponse(inline.node, inline.contentType.getOrElse(MediaType.XML))
+                val expander = new InlineExpander(inline)
+                if (inline.documentProperties.isDefined) {
+                  expander.documentProperties = inline.documentProperties.get
+                }
+                defaults += expander.loadDocument()
               case doc: Document =>
                 defaults += doc.loadDocument()
               case _ =>
@@ -150,7 +155,8 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
     for ((port, defaults) <- defaultInputs) {
       if (!inputSet.contains(port)) {
         for (source <- defaults) {
-          input(port, source.value, new XProcMetadata(source.contentType))
+          val resp = config.documentManager.parse(source)
+          input(port, resp.value, new XProcMetadata(resp.contentType, resp.props))
         }
       }
     }
@@ -296,7 +302,7 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
       throw new ModelException(ExceptionCode.NOIMPL, stepType.toString, location)
     }
 
-    val klass = Class.forName(implClass.head).newInstance()
+    val klass = Class.forName(implClass.head).getDeclaredConstructor().newInstance()
     klass match {
       case step: XmlStep =>
         new StepWrapper(step, sig)

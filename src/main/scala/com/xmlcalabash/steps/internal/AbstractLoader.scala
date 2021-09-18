@@ -3,7 +3,7 @@ package com.xmlcalabash.steps.internal
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{AnyItemMessage, XProcItemMessage, XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{BinaryNode, DynamicContext, StaticContext, XProcExpression, XProcMetadata, XProcXPathExpression}
+import com.xmlcalabash.runtime.{BinaryNode, DynamicContext, NameValueBinding, StaticContext, XProcExpression, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.steps.DefaultXmlStep
 import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.s9api.{QName, XdmItem, XdmMap, XdmNode, XdmValue}
@@ -39,18 +39,18 @@ abstract class AbstractLoader() extends DefaultXmlStep {
 
   override def run(context: StaticContext): Unit = {
     if (bindings.contains(XProcConstants._content_type)) {
-      content_type = Some(MediaType.parse(bindings(XProcConstants._content_type).getUnderlyingValue.getStringValue))
+      content_type = Some(MediaType.parse(bindings(XProcConstants._content_type).value.getUnderlyingValue.getStringValue))
     }
 
     // Fake the statics
     for ((name,message) <- exprContext.statics) {
       val msg = message.asInstanceOf[XdmValueItemMessage]
       val qname = ValueParser.parseClarkName(name)
-      receiveBinding(qname, msg.item, exprContext)
+      receiveBinding(new NameValueBinding(qname, msg))
     }
 
-    for ((name, value) <- bindings) {
-      value match {
+    for ((name, binding) <- bindings) {
+      binding.value match {
         case node: XdmNode =>
           val message = new XdmNodeItemMessage(node, XProcMetadata.XML, context)
           msgBindings.put(name.getClarkName, message)
@@ -76,6 +76,6 @@ abstract class AbstractLoader() extends DefaultXmlStep {
     val dynContext = new DynamicContext()
     val eval = config.expressionEvaluator.newInstance()
     val msg = eval.withContext(dynContext) { eval.singletonValue(expr, contextItem.toList, msgBindings.toMap, None) }
-    msg.asInstanceOf[XdmValueItemMessage].item
+    msg.item
   }
 }

@@ -26,6 +26,7 @@ class DeclareInput(override val config: XMLCalabashConfig) extends Port(config) 
     } else {
       throw XProcException.xsMissingRequiredAttribute(XProcConstants._port, location)
     }
+
     _sequence = staticContext.parseBoolean(attr(XProcConstants._sequence))
     _primary = staticContext.parseBoolean(attr(XProcConstants._primary))
     _select = attr(XProcConstants._select)

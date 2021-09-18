@@ -10,7 +10,7 @@ import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
-import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.runtime.{BinaryNode, NameValueBinding, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils, ValueUtils}
 import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap}
 import net.sf.saxon.s9api.{Axis, QName, SaxonApiException, XdmAtomicValue, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
@@ -31,12 +31,12 @@ class CastContentType() extends DefaultXmlStep {
     this.metadata = Some(metadata)
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    variable match {
+  override def receiveBinding(variable: NameValueBinding): Unit = {
+    variable.name match {
       case XProcConstants._content_type =>
-        castTo = MediaType.parse(ValueUtils.singletonStringValue(value, context.location))
+        castTo = MediaType.parse(ValueUtils.singletonStringValue(variable.value, variable.context.location))
       case XProcConstants._parameters =>
-        parameters = Some(value)
+        parameters = Some(variable.value)
       case _ => ()
     }
   }
@@ -205,7 +205,7 @@ class CastContentType() extends DefaultXmlStep {
     val serialOpts = mutable.HashMap.empty[QName, String]
     serialOpts.put(XProcConstants._omit_xml_declaration, "true")
     // If parameters is defined, it's either a map or the empty sequence
-    if (parameters.isDefined && parameters.get.isInstanceOf[Map[Any, Any]]) {
+    if (parameters.isDefined && parameters.get.isInstanceOf[XdmMap]) {
       val opts = TypeUtils.castAsScala(parameters.get).asInstanceOf[Map[Any, Any]]
       for (opt <- opts.keySet) {
         opt match {

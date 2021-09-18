@@ -42,7 +42,7 @@ class Wrap() extends DefaultXmlStep with ProcessMatchingNodes {
     wrapper = qnameBinding(_wrapper).get
     groupAdjacent = optionalStringBinding(_group_adjacent)
     if (groupAdjacent.isDefined) {
-      groupAdjacentContext = Some(bindingContexts(_group_adjacent))
+      groupAdjacentContext = Some(bindings(_group_adjacent).context)
     }
 
     inGroup.push(false)

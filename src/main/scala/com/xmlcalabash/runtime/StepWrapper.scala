@@ -13,8 +13,8 @@ class StepWrapper(protected[xmlcalabash] val step: XmlStep, val signature: StepS
   override def setConsumer(consumer: XProcDataConsumer): Unit = step.setConsumer(consumer)
   override def setLocation(location: Location): Unit = step.setLocation(location)
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    step.receiveBinding(variable, value, context)
+  override def receiveBinding(variable: NameValueBinding): Unit = {
+    step.receiveBinding(variable)
   }
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     step.receive(port,item,metadata)

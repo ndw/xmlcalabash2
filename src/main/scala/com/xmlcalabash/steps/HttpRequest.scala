@@ -6,7 +6,7 @@ import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.runtime.{BinaryNode, NameValueBinding, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
 import com.xmlcalabash.util.{InternetProtocolRequest, MediaType}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmValue}
 
@@ -71,7 +71,8 @@ class HttpRequest() extends DefaultXmlStep {
     sourceMeta += metadata
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
+  // FIXME: why is this so different from the other steps?
+  override def receiveBinding(variable: NameValueBinding): Unit = {
     val _href = XProcConstants._href
     val _method = XProcConstants._method
     val _serialization = XProcConstants._serialization
@@ -80,11 +81,14 @@ class HttpRequest() extends DefaultXmlStep {
     val _parameters = XProcConstants._parameters
     val _assert = new QName("", "assert")
 
-    if (value.size() == 0) {
+    if (variable.value.size() == 0) {
       return
     }
 
-    variable match {
+    val value = variable.value
+    val context = variable.context
+
+    variable.name match {
       case `_href` =>
         href = if (context.baseURI.isDefined) {
           context.baseURI.get.resolve(value.getUnderlyingValue.getStringValue)

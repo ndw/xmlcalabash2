@@ -9,7 +9,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.params.ContentTypeCheckerParams
-import com.xmlcalabash.runtime.{ImplParams, StaticContext, XMLCalabashRuntime, XProcDataConsumer, XProcMetadata, XProcXPathExpression, XmlPortSpecification, XmlStep}
+import com.xmlcalabash.runtime.{ImplParams, NameValueBinding, StaticContext, XMLCalabashRuntime, XProcDataConsumer, XProcMetadata, XProcXPathExpression, XmlPortSpecification, XmlStep}
 import com.xmlcalabash.util.{MediaType, S9Api, XProcVarValue}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
@@ -66,12 +66,12 @@ class ContentTypeChecker() extends XmlStep {
 
   override def bindingSpec: BindingSpecification = BindingSpecification.ANY
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    value match {
+  override def receiveBinding(variable: NameValueBinding): Unit = {
+    variable.value match {
       case node: XdmNode =>
-        bindings.put(variable.getClarkName, new XdmNodeItemMessage(node, XProcMetadata.xml(node), context))
+        bindings.put(variable.name.getClarkName, new XdmNodeItemMessage(node, XProcMetadata.xml(node), variable.context))
       case item: XdmItem =>
-        bindings.put(variable.getClarkName, new XdmValueItemMessage(item, XProcMetadata.JSON, context))
+        bindings.put(variable.name.getClarkName, new XdmValueItemMessage(item, XProcMetadata.JSON, variable.context))
     }
   }
 

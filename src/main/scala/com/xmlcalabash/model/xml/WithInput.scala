@@ -35,6 +35,7 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
   }
 
   override protected[model] def makeBindingsExplicit(): Unit = {
+    examineBindings()
     super.makeBindingsExplicit()
 
     if (allChildren.nonEmpty) {
@@ -73,9 +74,11 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
           val psig = sig.input(_port, location)
           if (psig.defaultBindings.nonEmpty) {
             for (binding <- psig.defaultBindings) {
+              addChild(binding)
+              /*
               binding match {
                 case b: Inline =>
-                  val inline = new Inline(config, b.node, b.implied)
+                  val inline = new Inline(config, b.node, b.synthetic)
                   addChild(inline)
                 case b: Document =>
                   val doc = new Document(config)
@@ -87,6 +90,8 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
                 case _ =>
                   throw XProcException.xiThisCantHappen(s"Unexpected binding type in WithInput: ${binding}", location)
               }
+
+               */
             }
             return
           }

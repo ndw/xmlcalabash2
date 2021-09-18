@@ -64,8 +64,8 @@ class SelectFilter() extends DefaultXmlStep {
 
     msgBindings.clear()
     msgBindings ++= selectContext.statics
-    for ((name, value) <- bindings) {
-      msgBindings.put(name.getClarkName, new XdmValueItemMessage(value, XProcMetadata.ANY, context))
+    for ((name, binding) <- bindings) {
+      msgBindings.put(name.getClarkName, new XdmValueItemMessage(binding.value, binding.meta, context))
     }
 
     if (nodes.isEmpty) {

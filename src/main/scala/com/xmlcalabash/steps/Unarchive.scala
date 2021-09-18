@@ -6,7 +6,7 @@ import java.util.regex.{Pattern, PatternSyntaxException}
 import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{BinaryNode, NameValueBinding, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, URIUtils}
 import net.sf.saxon.s9api.{QName, XdmArray, XdmValue}
 import org.apache.commons.compress.archivers.zip.ZipFile
@@ -37,13 +37,10 @@ class Unarchive extends DefaultXmlStep {
     smeta = metadata
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    if (variable == XProcConstants._parameters) {
-      if (value.size() > 0) {
-        parameters = ValueParser.parseParameters(value, context)
-      }
-    } else {
-      super.receiveBinding(variable, value, context)
+  override def receiveBinding(variable: NameValueBinding): Unit = {
+    super.receiveBinding(variable)
+    if (variable.name == XProcConstants._parameters && variable.value.size() > 0) {
+      parameters = ValueParser.parseParameters(variable.value, variable.context)
     }
   }
 
@@ -63,7 +60,7 @@ class Unarchive extends DefaultXmlStep {
     }
 
     overrideContentTypes = if (definedBinding(XProcConstants._override_content_types)) {
-      parseOverrideContentTypes(bindings(XProcConstants._override_content_types))
+      parseOverrideContentTypes(bindings(XProcConstants._override_content_types).value)
     } else {
       List.empty[Tuple2[Pattern,MediaType]]
     }
@@ -75,7 +72,7 @@ class Unarchive extends DefaultXmlStep {
     }
 
     if (bindings.contains(XProcConstants._include_filter)) {
-      val value = bindings(XProcConstants._include_filter)
+      val value = bindings(XProcConstants._include_filter).value
       val iter = value.iterator()
       while (iter.hasNext) {
         includeFilter += iter.next().getStringValue
@@ -83,7 +80,7 @@ class Unarchive extends DefaultXmlStep {
     }
 
     if (bindings.contains(XProcConstants._exclude_filter)) {
-      val value = bindings(XProcConstants._exclude_filter)
+      val value = bindings(XProcConstants._exclude_filter).value
       val iter = value.iterator()
       while (iter.hasNext) {
         excludeFilter += iter.next().getStringValue

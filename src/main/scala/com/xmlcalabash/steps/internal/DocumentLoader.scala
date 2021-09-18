@@ -55,7 +55,7 @@ class DocumentLoader() extends AbstractLoader {
   override def run(context: StaticContext): Unit = {
     super.run(context)
 
-    var parts = ListBuffer.empty[String]
+    val parts = ListBuffer.empty[String]
     var exprseg = false
     for (item <- _hrefAvt) {
       if (exprseg) {

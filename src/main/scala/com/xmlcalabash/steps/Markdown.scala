@@ -1,10 +1,9 @@
 package com.xmlcalabash.steps
 
 import java.io.ByteArrayInputStream
-
 import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{NameValueBinding, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
 import org.commonmark.parser.Parser
@@ -25,9 +24,10 @@ class Markdown() extends DefaultXmlStep {
     }
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    if (variable == XProcConstants._parameters) {
-      parameters = ValueParser.parseParameters(value, context)
+  override def receiveBinding(variable: NameValueBinding): Unit = {
+    super.receiveBinding(variable)
+    if (variable.name == XProcConstants._parameters && variable.value.size() > 0) {
+      parameters = ValueParser.parseParameters(variable.value, variable.context)
     }
   }
 

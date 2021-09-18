@@ -7,7 +7,7 @@ import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{BinaryNode, NameValueBinding, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils}
 import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap}
 import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmNode, XdmNodeKind, XdmValue}
@@ -81,13 +81,10 @@ class Archive extends DefaultXmlStep {
     }
   }
 
-  override def receiveBinding(variable: QName, value: XdmValue, context: StaticContext): Unit = {
-    if (variable == XProcConstants._parameters) {
-      if (value.size() > 0) {
-        parameters = ValueParser.parseParameters(value, context)
-      }
-    } else {
-      super.receiveBinding(variable, value, context)
+  override def receiveBinding(variable: NameValueBinding): Unit = {
+    super.receiveBinding(variable)
+    if (variable.name == XProcConstants._parameters && variable.value.size() > 0) {
+      parameters = ValueParser.parseParameters(variable.value, variable.context)
     }
   }
 

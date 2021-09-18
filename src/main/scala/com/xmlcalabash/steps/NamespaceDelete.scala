@@ -27,7 +27,7 @@ class NamespaceDelete() extends DefaultXmlStep {
     super.run(context)
 
     namespaces = mutable.HashSet.empty[String]
-    val prefixes = bindings(XProcConstants._prefixes).getUnderlyingValue.getStringValue.split("\\s+")
+    val prefixes = bindings(XProcConstants._prefixes).value.getUnderlyingValue.getStringValue.split("\\s+")
     for (prefix <- prefixes) {
       val uri = context.nsBindings.get(prefix)
       if (uri.isDefined) {

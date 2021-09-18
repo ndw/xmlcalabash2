@@ -43,6 +43,10 @@ class XProcMetadata(private val initialContentType: Option[MediaType],
     _properties.put(XProcConstants._content_type, new XdmAtomicValue(initialContentType.get.toString))
   }
 
+  def this(contentType: Option[MediaType]) = {
+    this(contentType, Map.empty[QName, XdmValue])
+  }
+
   def this(contentType: MediaType) = {
     this(Some(contentType), Map.empty[QName,XdmValue])
   }
