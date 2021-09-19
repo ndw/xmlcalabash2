@@ -34,7 +34,7 @@ class CastContentType() extends DefaultXmlStep {
   override def receiveBinding(variable: NameValueBinding): Unit = {
     variable.name match {
       case XProcConstants._content_type =>
-        castTo = MediaType.parse(ValueUtils.singletonStringValue(variable.value, variable.context.location))
+        castTo = MediaType.parse(ValueUtils.singletonStringValue(variable.value))
       case XProcConstants._parameters =>
         parameters = Some(variable.value)
       case _ => ()

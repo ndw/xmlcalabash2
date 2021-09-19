@@ -17,7 +17,7 @@ import net.sf.saxon.serialize.SerializationProperties
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class XQuery extends QTProcessor {
+class XQuery extends DefaultXmlStep {
   private var query = Option.empty[XdmNode]
   private var queryMetadata = Option.empty[XProcMetadata]
   private val defaultCollection = ListBuffer.empty[XdmNode]

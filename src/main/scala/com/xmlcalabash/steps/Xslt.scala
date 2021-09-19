@@ -4,14 +4,14 @@ import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.{MediaType, S9Api, XProcCollectionFinder}
+import com.xmlcalabash.util.{S9Api, ValueUtils, XProcCollectionFinder}
 import net.sf.saxon.Configuration
 import net.sf.saxon.event.{PipelineConfiguration, Receiver}
 import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.functions.ResolveURI
 import net.sf.saxon.lib.{ResultDocumentResolver, SaxonOutputKeys}
 import net.sf.saxon.om.NodeInfo
-import net.sf.saxon.s9api.{Action, Axis, Destination, MessageListener, QName, RawDestination, SaxonApiException, ValidationMode, XdmArray, XdmAtomicValue, XdmDestination, XdmEmptySequence, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Action, Destination, MessageListener, QName, RawDestination, SaxonApiException, ValidationMode, XdmAtomicValue, XdmDestination, XdmEmptySequence, XdmItem, XdmNode, XdmValue}
 import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.trans.XPathException
 import net.sf.saxon.tree.wrapper.RebasedDocument
@@ -23,7 +23,7 @@ import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.{IteratorHasAsJava, MapHasAsJava, SetHasAsScala}
 import scala.jdk.FunctionConverters.enrichAsJavaFunction
 
-class Xslt extends QTProcessor {
+class Xslt extends DefaultXmlStep {
   private val _global_context_item = new QName("", "global-context-item")
   private val _initial_mode = new QName("", "initial-mode")
   private val _template_name = new QName("", "template-name")
@@ -215,7 +215,7 @@ class Xslt extends QTProcessor {
     primaryOutputProperties = S9Api.serializationPropertyMap(transformer.getUnderlyingController.getExecutable.getPrimarySerializationProperties)
     var buildTree = false
     if (primaryOutputProperties.contains(XProcConstants.BUILD_TREE)) {
-      buildTree = isTrue(primaryOutputProperties.get(XProcConstants.BUILD_TREE))
+      buildTree = ValueUtils.isTrue(primaryOutputProperties.get(XProcConstants.BUILD_TREE))
     } else {
       val method = primaryOutputProperties.get(XProcConstants._method)
       if (method.isDefined) {

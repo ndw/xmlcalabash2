@@ -1,10 +1,9 @@
 package com.xmlcalabash.util
 
-import com.jafpl.graph.Location
-import net.sf.saxon.s9api.XdmValue
+import net.sf.saxon.s9api.{XdmAtomicValue, XdmValue}
 
 object ValueUtils {
-  def singletonStringValue(value: XdmValue, location: Option[Location]): String = {
+  def singletonStringValue(value: XdmValue): String = {
     if (value.size() == 1) {
       value.itemAt(0).getStringValue
     } else {
@@ -19,5 +18,17 @@ object ValueUtils {
       s += iter.next.getStringValue
     }
     s
+  }
+
+  def isTrue(value: Option[Any]): Boolean = {
+    if (value.isEmpty) {
+      return false
+    }
+
+    value.get match {
+      case string: String => List("1", "true", "yes").contains(string)
+      case atomic: XdmAtomicValue => List("1", "true", "yes").contains(atomic.getStringValue)
+      case _ => false
+    }
   }
 }
