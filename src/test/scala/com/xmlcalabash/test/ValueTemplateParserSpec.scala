@@ -3,6 +3,7 @@ package com.xmlcalabash.test
 import com.xmlcalabash.model.util.XProcConstants.ValueTemplate
 import com.xmlcalabash.util.ValueTemplateParser
 import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers.{a, be}
 
 class ValueTemplateParserSpec extends AnyFlatSpec /* with Matchers */ {
   "Parsing |test|" should "succeed" in {
@@ -47,7 +48,12 @@ class ValueTemplateParserSpec extends AnyFlatSpec /* with Matchers */ {
     assertCorrect(template, List("", "concat( { not really valid XPath } )"))
   }
 
-  /* Matchers?
+  "Parsing |{p:system-property('Q{someURI}localname')}|" should "succeed" in {
+    val parser = new ValueTemplateParser("{p:system-property('Q{someURI}localname')}")
+    val template = parser.template()
+    assertCorrect(template, List("", "p:system-property('Q{someURI}localname')"))
+  }
+
   it should "throw RuntimeException parsing |{test|" in {
     val parser = new ValueTemplateParser("{test")
     a [RuntimeException] should be thrownBy {
@@ -68,7 +74,6 @@ class ValueTemplateParserSpec extends AnyFlatSpec /* with Matchers */ {
       parser.template()
     }
   }
-  */
 
   private def assertCorrect(template: ValueTemplate, expected: List[String]): Unit = {
     assert(template.size == expected.size)
