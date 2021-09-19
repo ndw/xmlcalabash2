@@ -507,6 +507,10 @@ class XProcException(val code: QName, val variant: Int, val message: Option[Stri
     this(code, 1, None, context.location, List.empty[String])
   }
 
+  def withLocation(location: Location): XProcException = {
+    new XProcException(code, variant, message, Some(location), details)
+  }
+
   override def jafplExceptionCode: Any = code
 
   def underlyingCauses: List[Exception] = _underlyingCauses.toList

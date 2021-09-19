@@ -224,11 +224,20 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     }
 
     try {
-      // This smells bad
-      if (staticContext.location.isDefined) {
-        step.setLocation(staticContext.location.get)
+      DynamicContext.withContext(dynamicContext) {
+        step.run(staticContext)
       }
-      DynamicContext.withContext(dynamicContext) { step.run(staticContext) }
+    } catch {
+      case ex: XProcException =>
+        // If an exception was thrown without a location, and we have a location for
+        // this step, add the step location to the exception. Somewhere is better than anywhere.
+        if (ex.location.isEmpty && staticContext.location.isDefined) {
+          throw ex.withLocation(staticContext.location.get)
+        } else {
+          throw ex
+        }
+      case ex: Exception =>
+        throw ex
     } finally {
       running = false
       var thrown = Option.empty[Exception]
