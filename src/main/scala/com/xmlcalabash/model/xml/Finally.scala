@@ -27,7 +27,7 @@ class Finally(override val config: XMLCalabashConfig) extends Container(config) 
 
     for (output <- children[DeclareOutput]) {
       if (output.primary) {
-        throw new RuntimeException("No output on p:finally may be primary")
+        throw XProcException.xsPrimaryOutputOnFinally(output.port, location)
       }
     }
   }

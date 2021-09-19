@@ -11,9 +11,6 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class Try(override val config: XMLCalabashConfig) extends Container(config) with NamedArtifact {
-  private var hasWhen = false
-  private var hasOtherwise = false
-
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
     if (attributes.nonEmpty) {
@@ -33,24 +30,24 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
       child match {
         case output: DeclareOutput =>
           if (hasSubpipeline || hasCatch || hasFinally) {
-            throw new RuntimeException("invalid children in p:try")
+            throw XProcException.xsInvalidPipeline("p:output is not allowed here", location)
           }
           subpipeline += output
         case cat: Catch =>
           if (hasFinally) {
-            throw new RuntimeException("catch cannot follow finally")
+            throw XProcException.xsInvalidPipeline("p:catch cannot follow p:finally", location)
           }
           catches += cat
           hasCatch = true
         case fin: Finally =>
           if (hasFinally) {
-            throw new RuntimeException("at most one p:finally is allowed")
+            throw XProcException.xsInvalidTryCatch("at most one p:finally is allowed", location)
           }
           catches += fin
           hasFinally = true
         case step: Step =>
           if (hasCatch || hasFinally) {
-            throw new RuntimeException("steps cannot follow catch/finally")
+            throw XProcException.xsInvalidPipeline("steps cannot follow p:catch or p:finally", location)
           }
           subpipeline += step
           hasSubpipeline = true
@@ -58,7 +55,7 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
     }
 
     if (!hasSubpipeline || !(hasCatch || hasFinally)) {
-      throw XProcException.xsMissingTryCatch(location)
+      throw XProcException.xsInvalidTryCatch("p:try must have a subpipeline and at least one of p:catch and p:finally", location)
     }
 
     val codes = mutable.HashSet.empty[QName]
@@ -66,13 +63,17 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
     for (child <- children[Catch]) {
       if (child.codes.isEmpty) {
         if (noCode) {
-          throw new RuntimeException("Only the last catch can omit the code")
+          throw XProcException.xsCatchMissingCode(location)
         }
         noCode = true
+      } else {
+        if (child.codes.nonEmpty && noCode) {
+          throw XProcException.xsCatchMissingCode(location)
+        }
       }
       for (code <- child.codes) {
         if (codes.contains(code)) {
-          throw new RuntimeException("Only a single catch may specify a particular code")
+          throw XProcException.xsCatchBadCode(code, location)
         }
         codes += code
       }
@@ -118,6 +119,7 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
             if (child.primary) {
               if (primaryOutput.isDefined) {
                 if (primaryOutput.get != child.port) {
+                  println(child.primary)
                   throw XProcException.xsBadTryOutputs(primaryOutput.get, child.port, location)
                 }
               } else {
@@ -128,6 +130,7 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
         case fin: Finally =>
           for (child <- fin.children[DeclareOutput]) {
             if (outputSet.contains(child.port)) {
+              throw XProcException.xsInvalidFinallyPortName(child.port, location)
               throw new RuntimeException("Bad output in p:finally")
             }
             outputSet += child.port

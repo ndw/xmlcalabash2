@@ -292,9 +292,6 @@ class Xslt extends QTProcessor {
           }
         }
 
-        val gv = result.getUnderlyingValue.materialize()
-        val x = XdmValue.wrap(gv)
-
         result match {
           case node: XdmNode =>
             if (Option(node.getBaseURI).isDefined) {

@@ -535,9 +535,24 @@ class DefaultXmlStep extends XmlStep {
     var outputItem = item
     var ctype = Option.empty[MediaType]
 
+    // Saxon reports boolean values with yes/no, but XProc expects booleans.
+    // I don't much like this hack, but...
+    val booleanProperties = List(XProcConstants._indent, XProcConstants._suppress_indentation,
+      XProcConstants.sx_suppress_indentation, XProcConstants._omit_xml_declaration,
+      XProcConstants._standalone, XProcConstants._allow_duplicate_names)
+
     var serialization = new XdmMap()
     for ((key, value) <- sprop) {
-      serialization = serialization.put(new XdmAtomicValue(key), value)
+      var setValue = value
+      if (booleanProperties.contains(key)) {
+        value.toString match {
+          case "yes" => setValue = new XdmAtomicValue(true)
+          case "no" => setValue = new XdmAtomicValue(false)
+          case _ => () // In particular, omit-xml-declaration can be yes, no, or "omit"
+        }
+      }
+
+      serialization = serialization.put(new XdmAtomicValue(key), setValue)
     }
 
     val dprop = mutable.HashMap.empty[QName, XdmValue]

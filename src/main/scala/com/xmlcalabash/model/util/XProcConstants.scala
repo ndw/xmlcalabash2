@@ -178,6 +178,7 @@ object XProcConstants {
   val cx_empty_loader = new QName("cx", ns_cx, "empty-loader")
   val cx_use_default_input = new QName("cx", ns_cx, "use-default-input")
 
+  val _allow_duplicate_names = new QName("", "allow-duplicate-names")
   val _accept_multipart = new QName("", "accept-multipart")
   val _as = new QName("", "as")
   val _byte_order_mark = new QName("", "byte-order-mark")
@@ -240,6 +241,7 @@ object XProcConstants {
   val _status_only = new QName("", "status-only")
   val _send_body_anyway = new QName("", "send-body-anyway")
   val _sequence = new QName("", "sequence")
+  val _suppress_indentation = new QName("", "suppress-indentation")
   val _serialization = new QName("", "serialization")
   val _standalone = new QName("", "standalone")
   val _size = new QName("", "size")

@@ -172,15 +172,19 @@ object XProcException {
   def xsInvalidVersion(version: Double, location: Option[Location]): XProcException = staticError(60, version, location)
   def xsVersionRequired(location: Option[Location]): XProcException = staticError(62, location)
   def xsBadVersion(version: String, location: Option[Location]): XProcException = staticError(63, version, location)
+  def xsCatchMissingCode(location: Option[Location]): XProcException = staticError((64,1), location)
+  def xsCatchBadCode(code: QName, location: Option[Location]): XProcException = staticError((64,2), code, location)
+  def xsCatchRepeatedCode(code: QName, location:Option[Location]): XProcException = staticError((64,3), code, location)
   def xsPrimaryInputPortRequired(stepType: QName, location: Option[Location]): XProcException = staticError(65, stepType, location)
 
   def xsPipeWithoutStepOrDrp(location: Option[Location]): XProcException = staticError((67,1), location)
   def xsPipeWithoutPortOrPrimaryOutput(location: Option[Location]): XProcException = staticError((67,2), location)
 
   def xsUnsupportedEncoding(encoding: String, location: Option[Location]): XProcException = staticError(69, encoding, location)
+  def xsInvalidFinallyPortName(port: String, location: Option[Location]): XProcException = staticError(72, port, location)
   def xsNotAStep(name: String, location: Option[Location]): XProcException = staticError(73, name, location)
   def xsMissingWhen(location: Option[Location]): XProcException = staticError(74, location)
-  def xsMissingTryCatch(location: Option[Location]): XProcException = staticError(75, location)
+  def xsInvalidTryCatch(msg: String, location: Option[Location]): XProcException = staticError(75, msg, location)
 
   def xsBadTypeValue(value: String, reqdType: String, location: Option[Location]): XProcException = staticError(77, List(value, reqdType), location)
 
@@ -191,6 +195,7 @@ object XProcException {
 
   def xsHrefAndOtherSources(location: Option[Location]): XProcException = staticError(81, location)
   def xsPipeAndOtherSources(location: Option[Location]): XProcException = staticError(82, location)
+  def xsCatchInvalidCode(code: String, location:Option[Location]): XProcException = staticError(83, code, location)
   def xsInlineExpandTextNotAllowed(location: Option[Location]): XProcException = staticError(84, location)
   def xsPipeAndHref(location: Option[Location]): XProcException = staticError(85, location)
   def xsDupWithInputPort(port: String, location: Option[Location]): XProcException = staticError(86, port, location)
@@ -224,6 +229,7 @@ object XProcException {
 
   def xsPrimaryOutputRequired(location: Option[Location]): XProcException = staticError(108, location)
   def xsUnrecognizedContentTypeShortcut(ctype: String, location: Option[Location]): XProcException = staticError(111, ctype, location)
+  def xsPrimaryOutputOnFinally(port: String, location: Option[Location]): XProcException = staticError(112, port, location)
 
   def xcGeneralException(code: QName, errors: Option[XdmNode], location: Option[Location]): XProcException = {
     val except = new XProcException(code, 1, None, location, List())

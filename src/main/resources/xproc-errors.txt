@@ -189,6 +189,15 @@ Error p:import cannot import a “$1”.
 XS0053
 An imported pipeline must have a type.
 
+XS0064/1
+Only the last p:catch may omit the code.
+
+XS0064/2
+Code “$1” repeated; only one catch may contain a given code
+
+XS0064/3
+Error codes may not be repeated, “$1” occurs more than once.
+
 XS0065
 Port name omitted, but “$1” has no primary input port.
 
@@ -215,10 +224,13 @@ XS0070
 It is an error to specify an encoding, “$1”, if the content type is an XML media type: “$2”.
 
 XS0072
-For p:inline “$1” content, only text is allowed. Found: “$2”.
+Invalid output port: “$1”. The outputs of p:finally must be different from the p:try and p:catch outputs.
 
 XS0073
 There is no in-scope step named “$1”.
+
+XS0075
+Invalid p:try: $1.
 
 XS0077
 Invalid value specified: “$1”. Value must be $2.
@@ -240,6 +252,9 @@ If an href attribute is present, no other data bindings may be specified.
 
 XS0082
 If a pipe attribute is present, no other data bindings may be specified.
+
+XS0083
+The code attribute on p:catch must be a list of EQNames, “$1” is not valid.
 
 XS0085
 The pipe and href attributes may not both be specified.
@@ -282,6 +297,9 @@ Static expression references non-static variable “$1”
 
 XS0108
 It is a static error if a p:if does not specify a primary output port.
+
+XS0112
+No output on p:finally may be primary: “$1”
 
 XC0001
 The content type is not a valid text content type: “$1”.

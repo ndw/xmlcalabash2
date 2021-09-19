@@ -20,8 +20,21 @@ class Catch(override val config: XMLCalabashConfig) extends Container(config) wi
 
     if (attributes.contains(XProcConstants._code)) {
       val str = attr(XProcConstants._code).get
+      var repeated = Option.empty[QName]
       for (code <- str.split("\\s+")) {
-        _codes += staticContext.parseQName(code)
+        try {
+          val qname = staticContext.parseQName(code)
+          if (repeated.isEmpty && _codes.contains(qname)) {
+            repeated = Some(qname)
+          }
+          _codes += qname
+        } catch {
+          case _: Exception =>
+            throw XProcException.xsCatchInvalidCode(code, location)
+        }
+      }
+      if (repeated.isDefined) {
+        throw XProcException.xsCatchRepeatedCode(repeated.get, location)
       }
     }
 
