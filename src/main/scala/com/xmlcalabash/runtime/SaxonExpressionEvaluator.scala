@@ -15,6 +15,7 @@ import net.sf.saxon.ma.arrays.ArrayItem
 import net.sf.saxon.om.{Item, SpaceStrippingRule}
 import net.sf.saxon.s9api.{ItemTypeFactory, QName, SaxonApiException, SaxonApiUncheckedException, SequenceType, XPathExecutable, XdmArray, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.trans.XPathException
+import net.sf.saxon.value.StringValue
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.net.URI
@@ -504,13 +505,16 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         if (p.getNodeKind == XdmNodeKind.DOCUMENT) {
           dynContext.addDocument(p, msg)
         }
-      /*
-      I don't think I need items in this map. If I change my mind, beware that you
-      can't put StringValues in it because the .equals method on StringValue is
-      a booby trap.
       case item: XdmItem =>
-        dynContext.addItem(item.getUnderlyingValue, msg)
-       */
+        // If the underlying value is a simple type, don't put it in the map.
+        // I don't think simple types have identity, and regardless, the Saxon
+        // implementation of .equals() on StringValue is a booby trap
+        val value = item.getUnderlyingValue
+        value match {
+          case _: StringValue => ()
+          case _ =>
+            dynContext.addItem(value, msg)
+        }
       case _ => ()
     }
   }
