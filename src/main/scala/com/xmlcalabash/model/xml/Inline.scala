@@ -71,10 +71,15 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, implied: 
 
           // Can I trust you?
           try {
-            val bytes = Base64.getDecoder.decode(srcNode.getStringValue)
-            val string = new String(bytes, charset)
+            // Apparently the decode won't acept newlines in the data...
+            val str = srcNode.getStringValue.trim.replace("\n", "")
+            val bytes = Base64.getDecoder.decode(str)
+            if (contentType.isDefined && contentType.get.textContentType) {
+              new String(bytes, charset)
+            }
           } catch {
-            case _: IllegalArgumentException =>
+            case ex: IllegalArgumentException =>
+              println(ex)
               throw XProcException.xdIncorrectEncoding(_encoding.get, location)
             case _: UnsupportedEncodingException =>
               throw XProcException.xdUnsupportedCharset(charset, location)
@@ -234,11 +239,6 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, implied: 
     for (name <- ValueParser.findVariableRefsInAvt(config, expr)) {
       nameBindings += name
     }
-  }
-
-  def loadDocument(): DocumentRequest = {
-      println("hello")
-      new DocumentRequest(new URI("http://example.com/"))
   }
 
   override def xdump(xml: ElaboratedPipeline): Unit = {
