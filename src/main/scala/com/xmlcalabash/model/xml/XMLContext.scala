@@ -1,13 +1,12 @@
 package com.xmlcalabash.model.xml
 
 import java.net.URI
-
 import com.jafpl.graph.Location
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.StaticContext
-import com.xmlcalabash.util.{MediaType, TypeUtils}
+import com.xmlcalabash.util.{MediaType, TypeUtils, ValueTemplateParser}
 import net.sf.saxon.expr.parser.ExpressionTool
 import net.sf.saxon.s9api.{ItemType, QName, SaxonApiException, SequenceType, XdmAtomicValue}
 
@@ -134,68 +133,8 @@ class XMLContext(override val config: XMLCalabashConfig, override val artifact: 
   }
 
   def parseAvt(value: String): List[String] = {
-    val list = ListBuffer.empty[String]
-    var state = StateChange.STRING
-    var pos = 0
-    var substr = ""
-
-    while (pos < value.length) {
-      val ch = value.substring(pos, pos + 1)
-      val nextch = if (pos + 1 < value.length) {
-        value.substring(pos + 1, pos + 2)
-      } else {
-        ""
-      }
-      ch match {
-        case "{" =>
-          if (nextch == "{") {
-            pos += 2
-            substr += "{"
-          } else {
-            state match {
-              case StateChange.STRING =>
-                list += substr
-                substr = ""
-                state = StateChange.EXPR
-                pos += 1
-              case StateChange.EXPR =>
-                substr += "{"
-                pos += 1
-            }
-          }
-        case "}" =>
-          if (nextch == "}") {
-            pos += 2
-            substr += "}"
-          } else {
-            state match {
-              case StateChange.STRING =>
-                throw new RuntimeException("Invalid AVT")
-              case StateChange.EXPR =>
-                if (list.isEmpty) {
-                  list += ""
-                }
-                list += substr
-                substr = ""
-                state = StateChange.STRING
-                pos += 1
-            }
-          }
-        case _ =>
-          substr += ch
-          pos += 1
-      }
-    }
-
-    if (state != StateChange.STRING) {
-      throw new RuntimeException("Invalid AVT")
-    }
-
-    if (substr != "") {
-      list += substr
-    }
-
-    list.toList
+    val parser = new ValueTemplateParser(value)
+    parser.template()
   }
 
   def findVariableRefsInAvt(list: List[String]): Set[QName] = {
@@ -301,5 +240,7 @@ class XMLContext(override val config: XMLCalabashConfig, override val artifact: 
   object StateChange {
     val STRING = 0
     val EXPR = 1
+    val SQUOTE = 2
+    val DQUOTE = 3
   }
 }
