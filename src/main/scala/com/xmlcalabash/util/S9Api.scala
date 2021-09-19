@@ -6,7 +6,7 @@ import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime}
 import net.sf.saxon.`type`.BuiltInAtomicType
 import net.sf.saxon.ma.map.MapItem
-import net.sf.saxon.om.{AttributeInfo, FingerprintedQName, NameOfNode, NamespaceBinding, NamespaceMap}
+import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap, FingerprintedQName, NameOfNode, NamespaceBinding, NamespaceMap, NodeName}
 import net.sf.saxon.s9api._
 import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.value.QNameValue
@@ -320,6 +320,34 @@ object S9Api {
         var excludeDefault = false
         var changed = false
 
+        val usedNS = mutable.HashSet.empty[String]
+        usedNS += s"${node.getNodeName.getPrefix}:${node.getNodeName.getNamespaceURI}"
+
+        val attrs = inode.attributes()
+        for (attr <- attrs.asList().asScala) {
+          if (attr.getNodeName.getPrefix != "") {
+            usedNS += s"${attr.getNodeName.getPrefix}:${attr.getNodeName.getURI}"
+          }
+        }
+
+        var attrList: AttributeMap = EmptyAttributeMap.getInstance()
+        for (attr <- attrs.asList().asScala) {
+          var newAttr: AttributeInfo = attr
+          if (attr.getNodeName.getPrefix != "") {
+            val attrns = attr.getNodeName.getURI
+            val nsb = s"${attr.getNodeName.getPrefix}:${attrns}"
+            if (excludeNS.contains(attrns) && (!preserveUsed || !usedNS.contains(nsb))) {
+              val newAttrName = new FingerprintedQName("", "", attr.getNodeName.getLocalPart)
+              newAttr = new AttributeInfo(newAttrName, attr.getType, attr.getValue, attr.getLocation, attr.getProperties)
+            }
+          }
+
+          if (Option(attrList.get(newAttr.getNodeName.getURI, newAttr.getNodeName.getLocalPart)).isDefined) {
+            throw XProcException.xcNamespaceDeleteCollision(newAttr.getNodeName.getURI, None)
+          }
+          attrList = attrList.put(newAttr)
+        }
+
         val newNS = ListBuffer.empty[NamespaceBinding]
         val pfxiter = nsmap.iteratePrefixes()
         while (pfxiter.hasNext) {
@@ -329,9 +357,12 @@ object S9Api {
           var delete = excludeNS.contains(uri)
           excludeDefault = excludeDefault || (pfx == "" && delete)
 
-          // You can't exclude the default namespace if it's in use
-          if (pfx == "" && usesDefaultNS && preserveUsed) {
-            delete = false
+          // If we're preserving namespaces in use...
+          if (preserveUsed) {
+            if (pfx == "" && usesDefaultNS) {
+              delete = false
+            }
+            delete = delete && !usedNS.contains(s"${pfx}:${uri}")
           }
 
           changed |= delete
@@ -341,29 +372,15 @@ object S9Api {
           }
         }
 
-        val attrs = inode.attributes()
-        val attrList = ListBuffer.empty[AttributeInfo]
         var newName = NameOfNode.makeName(inode)
         if (!preserveUsed) {
           val binding = newName.getNamespaceBinding
           if (excludeNS.contains(binding.getURI)) {
             newName = new FingerprintedQName("", "", newName.getLocalPart)
           }
-
-          // In this case we may need to change some attributes too
-          for (attr <- attrs.asList().asScala) {
-            val attrns = attr.getNodeName.getURI
-            if (excludeNS.contains(attrns)) {
-              val newAttrName = new FingerprintedQName("", "", attr.getNodeName.getLocalPart)
-              val newAttr = new AttributeInfo(newAttrName, attr.getType, attr.getValue, attr.getLocation, attr.getProperties)
-              attrList += newAttr
-            } else {
-              attrList += attr
-            }
-          }
         }
 
-        tree.addStartElement(newName, attrs, inode.getSchemaType, new NamespaceMap(newNS.toList.asJava))
+        tree.addStartElement(newName, attrList, inode.getSchemaType, new NamespaceMap(newNS.toList.asJava))
 
         for (child <- S9Api.axis(node, Axis.CHILD)) {
           removeNamespacesWriter(tree, child, excludeNS, preserveUsed)
