@@ -1,6 +1,6 @@
 package com.xmlcalabash.util
 
-import net.sf.saxon.s9api.{XdmAtomicValue, XdmValue}
+import net.sf.saxon.s9api.{Axis, XdmAtomicValue, XdmNode, XdmNodeKind, XdmValue}
 
 object ValueUtils {
   def singletonStringValue(value: XdmValue): String = {

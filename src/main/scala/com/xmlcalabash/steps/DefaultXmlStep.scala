@@ -520,14 +520,14 @@ class DefaultXmlStep extends XmlStep {
   }
 
   protected def consume(item: XdmValue, port: String): Unit = {
-    consume(item, port, Map())
+    consume(item, port, Map(), Map())
   }
 
-  protected def consume(item: XdmValue, port: String, sprop: Map[QName,XdmValue]): Unit = {
+  protected def consume(item: XdmValue, port: String, docprop: Map[QName,XdmValue], sprop: Map[QName,XdmValue]): Unit = {
     if (item.size() > 1) {
       val iter = item.iterator()
       while (iter.hasNext) {
-        consume(iter.next, port, sprop)
+        consume(iter.next, port, docprop, sprop)
       }
       return
     }
@@ -555,7 +555,7 @@ class DefaultXmlStep extends XmlStep {
       serialization = serialization.put(new XdmAtomicValue(key), setValue)
     }
 
-    val dprop = mutable.HashMap.empty[QName, XdmValue]
+    val dprop = mutable.HashMap.empty[QName, XdmValue] ++ docprop
 
     if (serialization.size() > 0) {
       dprop.put(XProcConstants._serialization, serialization)

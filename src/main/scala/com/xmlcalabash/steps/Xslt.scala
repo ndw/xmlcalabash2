@@ -249,6 +249,9 @@ class Xslt extends DefaultXmlStep {
       if (document.isDefined && document.get.isInstanceOf[XdmNode]) {
         val base = document.get.asInstanceOf[XdmNode].getBaseURI
         transformer.setBaseOutputURI(base.toASCIIString)
+      } else if (stylesheet.isDefined && stylesheet.get.isInstanceOf[XdmNode]) {
+        val base = stylesheet.get.getBaseURI
+        transformer.setBaseOutputURI(base.toASCIIString)
       }
     }
 
@@ -295,39 +298,43 @@ class Xslt extends DefaultXmlStep {
         result match {
           case node: XdmNode =>
             if (Option(node.getBaseURI).isDefined) {
-              val prop = mutable.HashMap.empty[QName, XdmValue].addAll(primaryOutputProperties)
+              val prop = mutable.HashMap.empty[QName, XdmValue]
               prop.put(XProcConstants._base_uri, new XdmAtomicValue(node.getBaseURI))
-              consume(result, "result", prop.toMap)
+              consume(result, "result", prop.toMap, primaryOutputProperties)
             } else {
-              consume(result, "result", primaryOutputProperties)
+              consume(result, "result", Map(), primaryOutputProperties)
             }
           case _ =>
-            consume(result, "result", primaryOutputProperties)
+            consume(result, "result", Map(), primaryOutputProperties)
         }
 
       case xdm: XdmDestination =>
         val tree = xdm.getXdmNode
         if (Option(tree.getBaseURI).isDefined) {
-          val prop = mutable.HashMap.empty[QName, XdmValue].addAll(primaryOutputProperties)
+          val prop = mutable.HashMap.empty[QName, XdmValue]
           prop.put(XProcConstants._base_uri, new XdmAtomicValue(tree.getBaseURI))
-          consume(tree, "result", prop.toMap)
+          consume(tree, "result", prop.toMap, primaryOutputProperties)
         } else {
-          consume(tree, "result",  primaryOutputProperties)
+          consume(tree, "result", Map(), primaryOutputProperties)
         }
     }
 
     for ((uri, destination) <- secondaryResults) {
-      val props = secondaryOutputProperties(uri)
+      val serprops = secondaryOutputProperties(uri)
       destination match {
         case raw: RawDestination =>
           val iter = raw.getXdmValue.iterator()
           while (iter.hasNext) {
             val next = iter.next()
-            consume(next, "secondary", props + Tuple2(XProcConstants._base_uri, new XdmAtomicValue(uri)))
+            val prop = mutable.HashMap.empty[QName, XdmValue]
+            prop.put(XProcConstants._base_uri, new XdmAtomicValue(uri))
+            consume(next, "secondary", prop.toMap, serprops)
           }
         case xdm: XdmDestination =>
           val tree = xdm.getXdmNode
-          consume(tree, "secondary", props + Tuple2(XProcConstants._base_uri, new XdmAtomicValue(uri)))
+          val prop = mutable.HashMap.empty[QName, XdmValue]
+          prop.put(XProcConstants._base_uri, new XdmAtomicValue(uri))
+          consume(tree, "secondary", prop.toMap, serprops)
       }
     }
   }
@@ -435,7 +442,7 @@ class Xslt extends DefaultXmlStep {
       doc = new XdmNode(xfixbase)
 
       // FIXME: what should the properties be?
-      consume(doc, "secondary", Map.empty[QName, XdmValue])
+      consume(doc, "secondary", Map(), Map())
     }
   }
 

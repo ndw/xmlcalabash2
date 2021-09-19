@@ -1,18 +1,16 @@
 package com.xmlcalabash.model.xml
 
-import java.net.URI
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcLocation, XProcXPathExpression}
 import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.om.AttributeMap
-
-import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.xml.sax.InputSource
 
-import scala.collection.mutable
+import java.net.URI
+import javax.xml.transform.sax.SAXSource
 import scala.collection.mutable.ListBuffer
 
 class Parser(config: XMLCalabashConfig) {
@@ -561,6 +559,7 @@ class Parser(config: XMLCalabashConfig) {
       }
 
       if (use) {
+        matcher.location = node.getUnderlyingNode.saveLocation()
         matcher.addStartElement(node, attribute)
       }
       useStack += use

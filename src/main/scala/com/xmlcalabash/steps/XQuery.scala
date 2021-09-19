@@ -127,7 +127,7 @@ class XQuery extends DefaultXmlStep {
       val iter = queryEval.iterator()
       while (iter.hasNext) {
         val item = iter.next()
-        consume(item, "result", outputProperties.toMap)
+        consume(item, "result", Map(), outputProperties.toMap)
         /*
         if (item.isAtomicValue) {
           consumer.get.receive("result", item, new XProcMetadata(MediaType.JSON))

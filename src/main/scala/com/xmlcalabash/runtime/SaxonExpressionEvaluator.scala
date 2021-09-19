@@ -504,8 +504,13 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         if (p.getNodeKind == XdmNodeKind.DOCUMENT) {
           dynContext.addDocument(p, msg)
         }
+      /*
+      I don't think I need items in this map. If I change my mind, beware that you
+      can't put StringValues in it because the .equals method on StringValue is
+      a booby trap.
       case item: XdmItem =>
         dynContext.addItem(item.getUnderlyingValue, msg)
+       */
       case _ => ()
     }
   }

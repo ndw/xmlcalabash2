@@ -8,7 +8,7 @@ import net.sf.saxon.`type`.{BuiltInType, SchemaType, SimpleType, Untyped}
 import net.sf.saxon.event.{NamespaceReducer, Receiver}
 import net.sf.saxon.expr.instruct.Executable
 import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap, FingerprintedQName, NameOfNode, NamePool, NamespaceBinding, NamespaceMap, NodeName, StandardNames}
-import net.sf.saxon.s9api.{Axis, QName, XdmDestination, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, Location, QName, XdmDestination, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.trans.XPathException
 import net.sf.saxon.{Configuration, Controller}
@@ -59,9 +59,15 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   private var _inDocument = false
   protected var seenRoot = false
   private val emptyAttributeMap = EmptyAttributeMap.getInstance()
+  private var _location = Option.empty[Location]
 
   def this(runtime: XMLCalabashRuntime) = {
     this(runtime.config)
+  }
+
+  def location: Option[Location] = _location
+  def location_=(loc: Location): Unit = {
+    _location = Some(loc)
   }
 
   def result: XdmNode = destination.getXdmNode
@@ -79,9 +85,10 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
     _inDocument = true
     seenRoot  = false
     try {
-      exec = new Executable(controller.getConfiguration)
       destination = new XdmDestination()
       val pipe = controller.makePipelineConfiguration()
+      // Make sure line numbers get preserved
+      pipe.getConfiguration.setLineNumbering(true);
       receiver = destination.getReceiver(pipe, new SerializationProperties())
       receiver = new NamespaceReducer(receiver)
 
@@ -238,14 +245,19 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
       }
     }
 
-    val sysId = receiver.getSystemId
-    val loc = if (sysId == null) {
+
+    val loc = if (_location.isDefined) {
+      _location.get
+    } else if (receiver.getSystemId == null) {
       VoidLocation.instance()
     } else {
-      new SysIdLocation(sysId)
+      new SysIdLocation(receiver.getSystemId)
     }
-    try receiver.startElement(elemName, typeCode, attrs, nsmap, loc, 0)
-    catch {
+
+    try {
+      receiver.startElement(elemName, typeCode, attrs, nsmap, loc, 0)
+      _location = None
+    } catch {
       case e: XPathException =>
         // FIXME: some sort of XProcException
         throw new RuntimeException(e)
