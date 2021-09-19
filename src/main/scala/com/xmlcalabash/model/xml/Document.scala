@@ -20,8 +20,6 @@ class Document(override val config: XMLCalabashConfig) extends DataSource(config
   private var _parameters = Option.empty[String]
   private var _context_provided = false
 
-  println("New document")
-
   def href: String = _href
   protected[model] def hrefAvt: List[String] = _hrefAvt
   protected[model] def href_=(href: String): Unit = {
