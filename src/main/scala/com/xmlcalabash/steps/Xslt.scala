@@ -326,16 +326,31 @@ class Xslt extends DefaultXmlStep {
           val iter = raw.getXdmValue.iterator()
           while (iter.hasNext) {
             val next = iter.next()
-            val prop = mutable.HashMap.empty[QName, XdmValue]
-            prop.put(XProcConstants._base_uri, new XdmAtomicValue(uri))
-            consume(next, "secondary", prop.toMap, serprops)
+            consumeSecondary(next, uri, serprops)
           }
         case xdm: XdmDestination =>
           val tree = xdm.getXdmNode
-          val prop = mutable.HashMap.empty[QName, XdmValue]
-          prop.put(XProcConstants._base_uri, new XdmAtomicValue(uri))
-          consume(tree, "secondary", prop.toMap, serprops)
+          consumeSecondary(tree, uri, serprops)
       }
+    }
+  }
+
+  private def consumeSecondary(item: XdmItem, uri: URI, serprops: Map[QName,XdmValue]): Unit = {
+    val prop = mutable.HashMap.empty[QName, XdmValue]
+    prop.put(XProcConstants._base_uri, new XdmAtomicValue(uri))
+
+    // Sigh. Secondary output documents don't have the correct intrinsict base URI,
+    // so we rebuild documents around them where we can with the correct URI.
+
+    item match {
+      case node: XdmNode =>
+        val rebuild = new SaxonTreeBuilder(this.config)
+        rebuild.startDocument(uri)
+        rebuild.addSubtree(node)
+        rebuild.endDocument()
+        consume(rebuild.result, "secondary", prop.toMap, serprops)
+      case _ =>
+        consume(item, "secondary", prop.toMap, serprops)
     }
   }
 

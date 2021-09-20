@@ -11,7 +11,7 @@ object DebugUtils {
           dumpTreeLocations(diter.next())
         }
       case XdmNodeKind.ELEMENT =>
-        println(s"${node.getNodeName}: ${node.getLineNumber}")
+        println(s"${node.getNodeName}: ${node.getBaseURI}:${node.getLineNumber}")
         val diter = node.axisIterator(Axis.CHILD)
         while (diter.hasNext) {
           dumpTreeLocations(diter.next())
