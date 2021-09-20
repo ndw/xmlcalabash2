@@ -310,6 +310,7 @@ object XProcException {
   def xcFileMkdirFail(href: URI, location: Option[Location]): XProcException = stepError(114, href, location)
   def xcFileMoveOverwriteForbidden(href: URI, target: URI, location: Option[Location]): XProcException = stepError(115, List(href, target), location)
   def xcInvalidFlattenValue(value: String, location: Option[Location]): XProcException = stepError(119, value, location)
+  def xcArchiveNoBaseURI(location: Option[Location]): XProcException = stepError(120, location)
 
   def xcHttpInvalidAuth(name: String, value: String, location: Option[Location]): XProcException = stepError(123, List(name, value), location)
   def xcHttpInvalidParameter(name: String, value: String, location: Option[Location]): XProcException = stepError((124,1), List(name, value), location)

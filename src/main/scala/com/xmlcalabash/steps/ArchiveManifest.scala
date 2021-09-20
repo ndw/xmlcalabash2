@@ -65,7 +65,13 @@ class ArchiveManifest extends DefaultXmlStep {
       List.empty[Tuple2[Pattern,MediaType]]
     }
 
-    relativeTo = uriBinding(_relativeTo)
+    relativeTo = if (uriBinding(_relativeTo).isDefined) {
+      uriBinding(_relativeTo)
+    } else if (smeta.baseURI.isDefined) {
+      smeta.baseURI
+    } else {
+      throw XProcException.xcArchiveNoBaseURI(location)
+    }
 
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(smeta.baseURI)

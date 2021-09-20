@@ -523,6 +523,10 @@ class DefaultXmlStep extends XmlStep {
     consume(item, port, Map(), Map())
   }
 
+  protected def consume(item: XdmValue, port: String, docprops: Map[QName,XdmValue]): Unit = {
+    consume(item, port, docprops, Map())
+  }
+
   protected def consume(item: XdmValue, port: String, docprop: Map[QName,XdmValue], sprop: Map[QName,XdmValue]): Unit = {
     if (item.size() > 1) {
       val iter = item.iterator()

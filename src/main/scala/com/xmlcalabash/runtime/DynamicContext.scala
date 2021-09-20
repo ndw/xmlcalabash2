@@ -1,12 +1,12 @@
 package com.xmlcalabash.runtime
 
 import java.net.URI
-
 import com.jafpl.graph.{Location, LoopStart}
 import com.jafpl.messages.Message
 import com.xmlcalabash.model.xml.{Artifact, ForEach, ForLoop, ForUntil}
 import net.sf.saxon.om.Item
 import net.sf.saxon.s9api.{QName, XdmNode, XdmValue}
+import net.sf.saxon.value.StringValue
 
 import scala.collection.mutable
 import scala.util.DynamicVariable
@@ -57,7 +57,13 @@ class DynamicContext() {
   def iterationSize: Long = _iterationSize
 
   def message(document: Item): Option[Message] = {
-    _documents.get(document)
+    // The Saxon implementation of .equals on StringValue is a bomb. Avoid.
+    document match {
+      case s: StringValue =>
+        _documents.get(s.toString)
+      case _ =>
+        _documents.get(document)
+    }
   }
 
   def document(message: Message): Option[XdmValue] = {
@@ -103,7 +109,14 @@ class DynamicContext() {
   }
 
   def addItem(item: Item, msg: Message): Unit = {
-    _documents.put(item, msg)
-    _imessages.put(msg, item)
+    // The Saxon implementation of .equals on StringValue is a bomb. Avoid.
+    item match {
+      case s: StringValue =>
+        _documents.put(s.toString, msg)
+        _imessages.put(msg, item)
+      case _ =>
+        _documents.put(item, msg)
+        _imessages.put(msg, item)
+    }
   }
 }

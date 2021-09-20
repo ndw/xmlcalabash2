@@ -54,6 +54,12 @@ class ValueTemplateParserSpec extends AnyFlatSpec /* with Matchers */ {
     assertCorrect(template, List("", "p:system-property('Q{someURI}localname')"))
   }
 
+  "Parsing |Q{}error|" should "succeed" in {
+    val parser = new ValueTemplateParser("{Q{}error}")
+    val template = parser.template()
+    assertCorrect(template, List("", "Q{}error"))
+  }
+
   it should "throw RuntimeException parsing |{test|" in {
     val parser = new ValueTemplateParser("{test")
     a [RuntimeException] should be thrownBy {

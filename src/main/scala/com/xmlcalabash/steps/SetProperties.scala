@@ -2,7 +2,7 @@ package com.xmlcalabash.steps
 
 import java.net.URI
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode, XdmValue}
 
@@ -46,6 +46,7 @@ class SetProperties() extends DefaultXmlStep {
       newprops.put(qname, value)
     }
 
+    var result = source
     // The base URI is special; make sure it's not some bogus string
     if (newprops.contains(XProcConstants._base_uri)) {
       val uri = if (context.baseURI.isDefined) {
@@ -54,9 +55,23 @@ class SetProperties() extends DefaultXmlStep {
         new URI(newprops(XProcConstants._base_uri).toString)
       }
       newprops.put(XProcConstants._base_uri, new XdmAtomicValue(uri))
+    } else {
+      if (metadata.properties.contains(XProcConstants._base_uri)) {
+        // The base URI property has been removed...
+        source match {
+          case node: XdmNode =>
+            val rebuild = new SaxonTreeBuilder(this.config)
+            rebuild.startDocument(None)
+            rebuild.addSubtree(node)
+            rebuild.endDocument()
+            result = rebuild.result
+          case _ =>
+            logger.debug(s"Cannot remove base URI from non-node: ${source}")
+        }
+      }
     }
 
     val newmeta = new XProcMetadata(metadata.contentType, newprops.toMap)
-    consumer.get.receive("result", source, newmeta)
+    consumer.get.receive("result", result, newmeta)
   }
 }

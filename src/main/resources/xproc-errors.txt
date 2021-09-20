@@ -394,6 +394,9 @@ Cannot move ($1) onto an existing file ($2).
 XC0119
 Invalid flatten-to-depth: “$1”. It must be “unbounded” or a positive integer.
 
+XC0120
+Archive has no base URI, and no relative-to provided.
+
 XC0124/1
 Invalid “$1” parameter value “$2”.
 

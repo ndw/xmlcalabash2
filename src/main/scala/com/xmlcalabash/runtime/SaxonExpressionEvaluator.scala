@@ -506,15 +506,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
           dynContext.addDocument(p, msg)
         }
       case item: XdmItem =>
-        // If the underlying value is a simple type, don't put it in the map.
-        // I don't think simple types have identity, and regardless, the Saxon
-        // implementation of .equals() on StringValue is a booby trap
-        val value = item.getUnderlyingValue
-        value match {
-          case _: StringValue => ()
-          case _ =>
-            dynContext.addItem(value, msg)
-        }
+        dynContext.addItem(item.getUnderlyingValue, msg)
       case _ => ()
     }
   }
