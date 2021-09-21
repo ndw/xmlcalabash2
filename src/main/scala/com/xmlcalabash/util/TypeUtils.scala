@@ -261,8 +261,11 @@ class TypeUtils(val processor: Processor, val context: StaticContext) {
           case _ =>
             throw new RuntimeException(s"Unexpected map syntax: map($mbody)")
         }
-      case atypere(itemseqtype, cardchar) =>
-        val itemtype = parseSequenceType(itemseqtype)
+      case atypere(abody, cardchar) =>
+        if (abody.trim == "*") {
+          return SequenceType.makeSequenceType(ItemType.ANY_ARRAY, cardinality(cardchar))
+        }
+        val itemtype = parseSequenceType(abody)
         SequenceType.makeSequenceType(typeFactory.getArrayType(itemtype), cardinality(cardchar))
       case ftypere(params, cardchar) =>
         SequenceType.makeSequenceType(ItemType.ANY_FUNCTION, cardinality(cardchar))
