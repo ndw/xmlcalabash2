@@ -10,7 +10,7 @@ import com.xmlcalabash.runtime.{XMLCalabashRuntime, XProcMetadata, XProcVtExpres
 import com.xmlcalabash.util.{TvtExpander, TypeUtils}
 import net.sf.saxon.ma.map.MapType
 import net.sf.saxon.om.StructuredQName
-import net.sf.saxon.s9api.{ItemType, ItemTypeFactory, QName, SaxonApiException, SequenceType, XdmAtomicValue, XdmNode}
+import net.sf.saxon.s9api.{QName, SaxonApiException, SequenceType, XdmAtomicValue, XdmNode}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -27,6 +27,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   protected var _visibility = Option.empty[String]
   protected var _allowedValues = Option.empty[List[XdmAtomicValue]]
   protected var _staticValue = Option.empty[XdmValueItemMessage]
+  protected var _dependentNameBindings: ListBuffer[NamePipe] = ListBuffer.empty[NamePipe]
   protected var collection = List("false")
 
   private var _qnameKeys = false
@@ -292,13 +293,11 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
           if (binding.isEmpty) {
             throw new RuntimeException("Reference to undefined variable")
           }
-          /* don't do this here, we do it in makeBindingsExplicit
           if (!binding.get.static) {
             val pipe = new NamePipe(config, ref, binding.get.tumble_id, binding.get)
+            _dependentNameBindings += pipe
             addChild(pipe)
           }
-
-           */
         }
       }
     }

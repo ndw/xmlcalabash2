@@ -2,6 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.ImplParams
 import net.sf.saxon.s9api.QName
 
@@ -52,7 +53,7 @@ class DataSource(override val config: XMLCalabashConfig) extends Artifact(config
       }
     }
 
-    val loader = new AtomicStep(config, params, this)
+    val loader = new AtomicLoader(config, params, this)
     loader.stepType = stepType
 
     for (depend <- depends) {

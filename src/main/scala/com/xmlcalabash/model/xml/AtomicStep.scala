@@ -138,7 +138,16 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
         }
       }
 
-      if (found.isDefined && doption.declaredType.isDefined) {
+      // Work out any preceding options that might not be defined
+      var prec = true
+      for (precopt <- decl.options) {
+        prec = prec && precopt.name != found.get.name
+        if (prec) {
+          found.get.precedingOption(precopt)
+        }
+      }
+
+      if (doption.declaredType.isDefined) {
         found.get.declaredType = doption.declaredType.get
       }
     }
@@ -276,12 +285,8 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
     val node = start.addAtomic(proxy, s"$stepType $stepName")
     _graphNode = Some(node)
 
-    for (child <- allChildren) {
-      child match {
-        case woption: WithOption =>
-          woption.graphNodes(runtime, _graphNode.get)
-        case _ => ()
-      }
+    for (child <- children[WithOption]) {
+      child.graphNodes(runtime, _graphNode.get)
     }
   }
 

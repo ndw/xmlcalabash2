@@ -85,6 +85,50 @@ class Artifact(val config: XMLCalabashConfig) {
     }
   }
 
+  protected[model] def findAll[T <: Artifact](implicit tag: ClassTag[T]): List[T] = {
+    root.findDescendants(tag)
+  }
+
+  protected[model] def findDescendants[T <: Artifact](implicit tag: ClassTag[T]): List[T] = {
+    val arts = ListBuffer.empty[T]
+    for (child <- allChildren) {
+      child match {
+        case t: T =>
+          arts += t
+          arts ++= t.findDescendants(tag)
+        case _ =>
+          arts ++= child.findDescendants(tag)
+      }
+    }
+    arts.toList
+  }
+
+  protected[model] def root: Artifact = {
+    var root: Artifact = this
+    while (root.parent.isDefined) {
+      root = root.parent.get
+    }
+    root
+  }
+
+  protected[model] def findInScopeOption(name: QName): NameBinding = {
+    findInScopeOption(this, name)
+  }
+
+    protected[model] def findInScopeOption(art: Artifact, name: QName): NameBinding = {
+    var found = Option.empty[NameBinding]
+    for (nb <- art.children[NameBinding]) {
+      if (nb.name == name) {
+        found = Some(nb)
+      }
+    }
+    if (found.isDefined) {
+      found.get
+    } else {
+      findInScopeOption(art.parent.get, name)
+    }
+  }
+
   protected[model] def ancestor(art: Artifact): Boolean = {
     var p: Option[Artifact] = parent
     while (p.isDefined) {
@@ -99,10 +143,12 @@ class Artifact(val config: XMLCalabashConfig) {
   protected[model] def containingStep: Option[Step] = {
     var p: Option[Artifact] = Some(this)
     while (p.isDefined) {
-      if (p.get.isInstanceOf[Step]) {
-        return Some(p.get.asInstanceOf[Step])
+      p.get match {
+        case step: Step =>
+          return Some(step)
+        case _ =>
+          p = p.get.parent
       }
-      p = p.get.parent
     }
     None
   }

@@ -395,7 +395,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
       } catch {
         case sae: SaxonApiException =>
           sae.getCause match {
-            case xpe: XPathException =>
+            case _: XPathException =>
               throw XProcException.xsStaticErrorInExpression(xpath, sae.getMessage, exprContext.location)
             case _ => throw sae
           }

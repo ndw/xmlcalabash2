@@ -1,7 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Node}
-import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.config.{OptionSignature, XMLCalabashConfig}
 import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime._
@@ -11,13 +11,19 @@ import com.xmlcalabash.util.{S9Api, TypeUtils}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmMap, XdmValue}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class WithOption(override val config: XMLCalabashConfig) extends NameBinding(config) {
   val typeUtils = new TypeUtils(config)
+  private val _precOptions = ListBuffer.empty[OptionSignature]
 
   def this(config: XMLCalabashConfig, name: QName) = {
     this(config)
     _name = name
+  }
+
+  def precedingOption(opt: OptionSignature): Unit = {
+    _precOptions += opt
   }
 
   override protected[model] def makeBindingsExplicit(): Unit = {
@@ -124,13 +130,19 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
       val expr = staticContext.parseAvt(_avt.get)
       new XProcVtExpression(staticContext, expr, true)
     } else {
-      val params = new XPathBindingParams(collection)
+      val params = new XPathBindingParams(statics.toMap, collection)
       new XProcXPathExpression(staticContext, _select.getOrElse("()"), as, _allowedValues, params)
     }
     val node = cnode.addOption(_name.getClarkName, init, params)
     _graphNode = Some(node)
-  }
 
+    // The binding links we created earlier now need to be patched so that this
+    // is the node they go to.
+    for (np <- _dependentNameBindings) {
+      val binding = findInScopeOption(np.name)
+      np.patchNode(binding.graphNode.get)
+    }
+  }
 
   override def graphEdges(runtime: XMLCalabashRuntime, parNode: Node): Unit = {
     if (staticValue.isDefined) {

@@ -21,11 +21,12 @@ object Environment {
   def newEnvironment(step: Artifact): Environment = {
     // Walk "up" the tree until we find a valid starting point
     step match {
-      case step: Step => ()
-      case input: DeclareInput => ()
-      case output: DeclareOutput => ()
-      case variable: Variable => ()
-      case option: DeclareOption => ()
+      case _: Step => ()
+      case _: DeclareInput => ()
+      case _: DeclareOutput => ()
+      case _: Variable => ()
+      case _: DeclareOption => ()
+      case _: WithOption => ()
       case _ =>
         return Environment.newEnvironment(step.parent.get)
     }
@@ -46,6 +47,8 @@ object Environment {
           ancestors.insert(0, output)
         case library: Library =>
           ancestors.insert(0, library)
+        case option: WithOption =>
+          ancestors.insert(0, option)
         case step: Step =>
           ancestors.insert(0, step)
         case _ => ()
@@ -73,6 +76,31 @@ object Environment {
     }
 
     head match {
+      case wi: WithOption =>
+        if (wi.parent.isDefined) {
+          wi.parent.get match {
+            case atom: AtomicStep =>
+              val stepsig = atom.declaration(atom.stepType)
+              // This appears not to be defined for built-in steps. I'm not sure why, but none
+              // of them have options that depend on preceding options, so I'm not worrying
+              // about it today.
+              if (stepsig.get.declaration.isDefined) {
+                val decl = stepsig.get.declaration.get
+                var found = false
+                for (opt <- decl.children[DeclareOption]) {
+                  found = found || opt.name == wi.name
+                  if (!found) {
+                    env.addVariable(opt)
+                  }
+                }
+              }
+              env
+            case _ =>
+              throw XProcException.xiThisCantHappen("Parent of p:with-option is not an atomic step?", None)
+          }
+        } else {
+          throw XProcException.xiThisCantHappen("Parent of p:with-option is undefined?", None)
+        }
       case lib: Library =>
         env.defaultReadablePort = None
 
@@ -208,10 +236,9 @@ object Environment {
         if (next.isEmpty) {
           // This is us.
           return env
+        } else {
+          return walk(env, ancestors.tail)
         }
-
-        // If we got here, something has gone terribly wrong
-        throw new RuntimeException("Atomic step with children?")
 
       case option: DeclareOption =>
         if (next.isEmpty) {

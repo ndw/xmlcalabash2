@@ -168,6 +168,7 @@ class TypeUtils(val processor: Processor, val context: StaticContext) {
     if (xsdtype == ItemType.QNAME) {
       val qnamev = value.getPrimitiveTypeName match {
         case XProcConstants.xs_string => new XdmAtomicValue(ValueParser.parseQName(value.getStringValue, context))
+        case XProcConstants.xs_untypedAtomic => new XdmAtomicValue(ValueParser.parseQName(value.getStringValue, context))
         case XProcConstants.xs_QName => value
         case _ =>
           throw new RuntimeException(s"Don't know how to convert $value to an xs:QName")

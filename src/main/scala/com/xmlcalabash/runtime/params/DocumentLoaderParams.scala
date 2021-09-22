@@ -1,6 +1,5 @@
 package com.xmlcalabash.runtime.params
 
-import com.jafpl.messages.Message
 import com.xmlcalabash.runtime.{ImplParams, StaticContext}
 import com.xmlcalabash.util.MediaType
 

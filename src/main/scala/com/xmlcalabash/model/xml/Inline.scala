@@ -1,17 +1,16 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.messages.Message
-import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
+import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{StaticContext, XProcXPathExpression}
+import com.xmlcalabash.runtime.StaticContext
 import com.xmlcalabash.runtime.params.InlineLoaderParams
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import com.xmlcalabash.util.{MediaType, S9Api}
-import net.sf.saxon.s9api.{Axis, QName, XdmMap, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 
 import java.io.UnsupportedEncodingException
-import java.net.URI
 import java.util.Base64
 import scala.collection.mutable
 

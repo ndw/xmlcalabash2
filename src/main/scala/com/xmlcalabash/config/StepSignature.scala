@@ -11,7 +11,7 @@ import scala.collection.mutable.ListBuffer
 class StepSignature(val stepType: Option[QName]) {
   private val _inputPorts = mutable.HashMap.empty[String, PortSignature]
   private val _outputPorts = mutable.HashMap.empty[String, PortSignature]
-  private val _options = mutable.HashMap.empty[QName, OptionSignature]
+  private val _options = ListBuffer.empty[OptionSignature]
   private val _implementation = ListBuffer.empty[String]
   private var _declaration = Option.empty[DeclareStep]
 
@@ -32,11 +32,12 @@ class StepSignature(val stepType: Option[QName]) {
   }
 
   def addOption(opt: OptionSignature, location: Location): Unit = {
-    if (_options.contains(opt.name)) {
-      throw new ModelException(ExceptionCode.DUPOPTSIG, opt.name.toString, location)
-    } else {
-      _options.put(opt.name, opt)
+    for (exopt <- _options) {
+      if (exopt.name == opt.name) {
+        throw new ModelException(ExceptionCode.DUPOPTSIG, opt.name.toString, location)
+      }
     }
+    _options += opt
   }
 
   def implementation_=(className: String): Unit = {
@@ -65,8 +66,14 @@ class StepSignature(val stepType: Option[QName]) {
   def outputPorts: Set[String] = _outputPorts.keySet.toSet
   def outputs: Set[PortSignature] = _outputPorts.values.toSet
 
-  def optionNames: Set[QName] = _options.keySet.toSet
-  def options: Set[OptionSignature] = _options.values.toSet
+  def optionNames: List[QName] = {
+    val names = ListBuffer.empty[QName]
+    for (opt <- _options) {
+      names += opt.name
+    }
+    names.toList
+  }
+  def options: List[OptionSignature] = _options.toList
 
   def input(port: String, location: Option[Location]): PortSignature = {
     if (_inputPorts.contains(port)) {
@@ -85,11 +92,12 @@ class StepSignature(val stepType: Option[QName]) {
   }
 
   def option(name: QName, location: Option[Location]): OptionSignature = {
-    if (_options.contains(name)) {
-      _options(name)
-    } else {
-      throw new ModelException(ExceptionCode.BADOPTSIG, List(stepType.toString, name.toString), location)
+    for (opt <- _options) {
+      if (opt.name == name) {
+        return opt
+      }
     }
+    throw new ModelException(ExceptionCode.BADOPTSIG, List(stepType.toString, name.toString), location)
   }
 
   def primaryInput: Option[PortSignature] = {

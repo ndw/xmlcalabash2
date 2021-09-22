@@ -29,8 +29,7 @@ class DeclareOption(override val config: XMLCalabashConfig) extends NameBinding(
     for (child <- allChildren) {
       child match {
         case _: WithInput => ()
-        case _: NamePipe =>
-          throw XProcException.xsStaticErrorInExpression(select.get, "Non-static variable reference", location)
+        case _: NamePipe => ()
         case _ =>
           throw new RuntimeException(s"Invalid content in $this")
       }
@@ -60,7 +59,14 @@ class DeclareOption(override val config: XMLCalabashConfig) extends NameBinding(
       new XProcXPathExpression(staticContext, _select.getOrElse("()"), as, _allowedValues, params)
     }
 
-    val node = runtime.graph.addOption(_name.getClarkName, init, xpathBindingParams())
+    val node = parent.asInstanceOf[ContainerStart].addOption(_name.getClarkName, init, xpathBindingParams())
+
+    for (np <- _dependentNameBindings) {
+      val binding = findInScopeOption(np.name)
+      np.patchNode(binding.graphNode.get)
+      np.graphEdges(runtime, node)
+    }
+
     _graphNode = Some(node)
   }
 

@@ -40,7 +40,7 @@ object XMLCalabashConfig {
   }
 
   private def newInstance(processor: Option[Processor]): XMLCalabashConfig = {
-    val configurer = Class.forName(configClass).newInstance().asInstanceOf[XProcConfigurer]
+    val configurer = Class.forName(configClass).getDeclaredConstructor().newInstance().asInstanceOf[XProcConfigurer]
     val config = new XMLCalabashConfig(configurer, processor)
     configurer.xmlCalabashConfigurer.configure(config)
     config.close()
