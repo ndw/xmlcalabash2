@@ -42,6 +42,7 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
     } else {
       val input = new WithInput(config)
       input.port = "source"
+      input.primary = true
       addChild(input, first)
     }
 

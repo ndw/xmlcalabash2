@@ -211,15 +211,15 @@ object Environment {
           }
           xstep match {
             // The children of choose and try aren't ordinary children
-            case container: Choose => ()
-            case container: Try => ()
+            case _: Choose => ()
+            case _: Try => ()
             case _ =>
               child match {
                 case option: DeclareOption =>
                   env.addVariable(option)
                 case variable: Variable =>
                   env.addVariable(variable)
-                case decl: DeclareStep =>
+                case _: DeclareStep =>
                   ()
                 case childstep: Step =>
                   env.defaultReadablePort = childstep.primaryOutput

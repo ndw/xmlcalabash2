@@ -89,8 +89,13 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
 
     if (attributes.contains(XProcConstants._name)) {
       _name = staticContext.parseQName(attr(XProcConstants._name).get)
-      if (_name.getNamespaceURI == XProcConstants.ns_p) {
-        throw XProcException.xsOptionInXProcNamespace(_name, location)
+      this match {
+        case _: WithOption =>
+          () // This would be ok if the step has an option declared in the p: namespace
+        case _ =>
+          if (_name.getNamespaceURI == XProcConstants.ns_p) {
+            throw XProcException.xsOptionInXProcNamespace(_name, location)
+          }
       }
     } else {
       throw XProcException.xsMissingRequiredAttribute(XProcConstants._name, location)
@@ -119,9 +124,16 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
 
     val _collection = attr(XProcConstants._collection)
     if (_collection.isDefined) {
-      collection = staticContext.parseAvt(_collection.get)
-    } else {
-      collection = List("false")
+      val coll = _collection.get
+      if (List("1", "true", "yes").contains(coll)) {
+        collection = List("true")
+      } else {
+        if (List("0", "false", "no").contains(coll)) {
+          collection = List("false")
+        } else {
+          throw XProcException.xsBadTypeValue(coll, "literal boolean", location)
+        }
+      }
     }
 
     _href = attr(XProcConstants._href)

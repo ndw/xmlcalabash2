@@ -4,7 +4,7 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.util.xc.ElaboratedPipeline
-import net.sf.saxon.s9api.{QName, XdmNode}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode}
 
 import scala.collection.mutable
 
@@ -15,7 +15,16 @@ class When(override val config: XMLCalabashConfig) extends ChooseBranch(config) 
 
     _collection = attr(XProcConstants._collection)
     if (_collection.isDefined) {
-      _collAvt = staticContext.parseAvt(_collection.get)
+      val coll = _collection.get
+      if (List("1", "true", "yes").contains(coll)) {
+        _collAvt = List("true")
+      } else {
+        if (List("0", "false", "no").contains(coll)) {
+          _collAvt = List("false")
+        } else {
+          throw XProcException.xsBadTypeValue(coll, "literal boolean", location)
+        }
+      }
     }
 
     if (attributes.contains(XProcConstants._test)) {

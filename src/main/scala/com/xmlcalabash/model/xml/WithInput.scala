@@ -75,23 +75,6 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
           if (psig.defaultBindings.nonEmpty) {
             for (binding <- psig.defaultBindings) {
               addChild(binding)
-              /*
-              binding match {
-                case b: Inline =>
-                  val inline = new Inline(config, b.node, b.synthetic)
-                  addChild(inline)
-                case b: Document =>
-                  val doc = new Document(config)
-                  doc.href = b.href
-                  addChild(doc)
-                case _: Empty =>
-                  val empty = new Empty(config)
-                  addChild(empty)
-                case _ =>
-                  throw XProcException.xiThisCantHappen(s"Unexpected binding type in WithInput: ${binding}", location)
-              }
-
-               */
             }
             return
           }
