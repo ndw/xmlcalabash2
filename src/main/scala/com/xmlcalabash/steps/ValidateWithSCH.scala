@@ -5,6 +5,7 @@ import com.jafpl.graph.Location
 import java.io.InputStream
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XProcLocation, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{MediaType, S9Api, SchematronImpl}
 
@@ -17,8 +18,6 @@ import org.xml.sax.InputSource
 import scala.xml.SAXParseException
 
 class ValidateWithSCH() extends DefaultXmlStep {
-  private val _untyped = StructuredQName.fromClarkName("{http://www.w3.org/2001/XMLSchema}untyped")
-  private val _assert_valid = new QName("", "assert-valid")
   private val _phase = new QName("", "phase")
 
   private var source: XdmNode = _
@@ -26,8 +25,7 @@ class ValidateWithSCH() extends DefaultXmlStep {
   private var schema: XdmNode = _
   private var assert_valid = true
   private var phase = Option.empty[String]
-  private var schemaAware = false
-  private var skeleton: InputStream = _
+  private var format = "svrl"
 
   override def inputSpec: XmlPortSpecification = new XmlPortSpecification(
     Map("source" -> PortCardinality.EXACTLY_ONE,
@@ -59,6 +57,10 @@ class ValidateWithSCH() extends DefaultXmlStep {
   override def run(context: StaticContext): Unit = {
     super.run(context)
 
+    assert_valid = booleanBinding(XProcConstants._assert_valid).getOrElse(assert_valid)
+    phase = optionalStringBinding(_phase)
+    format = stringBinding(XProcConstants._report_format, format)
+
     val impl = new SchematronImpl(config)
     // FIXME: handle parameters
 
@@ -67,7 +69,7 @@ class ValidateWithSCH() extends DefaultXmlStep {
     if (assert_valid) {
       val failed = impl.failedAssertions(report)
       if (failed.nonEmpty) {
-        val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, "Schematron assertions failed", location)
+        val except = XProcException.xcNotSchematronValid(source.getBaseURI, "Schematron assertions failed", location)
         except.errors = report
         throw except
       }

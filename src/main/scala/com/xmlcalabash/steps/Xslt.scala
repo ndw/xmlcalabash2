@@ -3,7 +3,7 @@ package com.xmlcalabash.steps
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
-import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.{S9Api, ValueUtils, XProcCollectionFinder}
 import net.sf.saxon.Configuration
 import net.sf.saxon.event.{PipelineConfiguration, Receiver}
@@ -11,7 +11,7 @@ import net.sf.saxon.expr.XPathContext
 import net.sf.saxon.functions.ResolveURI
 import net.sf.saxon.lib.{ResultDocumentResolver, SaxonOutputKeys}
 import net.sf.saxon.om.NodeInfo
-import net.sf.saxon.s9api.{Action, Destination, MessageListener, QName, RawDestination, SaxonApiException, ValidationMode, XdmAtomicValue, XdmDestination, XdmEmptySequence, XdmItem, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{Action, Destination, MessageListener, QName, RawDestination, SaxonApiException, ValidationMode, XdmArray, XdmAtomicValue, XdmDestination, XdmEmptySequence, XdmFunctionItem, XdmItem, XdmMap, XdmNode, XdmValue}
 import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.trans.XPathException
 import net.sf.saxon.tree.wrapper.RebasedDocument
@@ -32,6 +32,7 @@ class Xslt extends DefaultXmlStep {
   private var stylesheet = Option.empty[XdmNode]
   private val inputSequence = ListBuffer.empty[XdmItem]
   private val inputMetadata = ListBuffer.empty[XProcMetadata]
+  private val binaryMap = mutable.HashMap.empty[XdmNode, BinaryNode]
 
   private var staticContext: StaticContext = _
   private var globalContextItem = Option.empty[XdmValue]
@@ -64,8 +65,15 @@ class Xslt extends DefaultXmlStep {
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
     port match {
       case "source" =>
-        inputSequence += item.asInstanceOf[XdmItem]
         inputMetadata += metadata
+        item match {
+          case b: BinaryNode =>
+            inputSequence += b.node
+          case n: XdmItem =>
+            inputSequence += n
+          case _ =>
+            throw XProcException.xiThisCantHappen(s"Unexpected node type on XSLT input: ${item}", location);
+        }
       case "stylesheet" =>
         stylesheet = Some(item.asInstanceOf[XdmNode])
       case _ => ()
@@ -119,8 +127,7 @@ class Xslt extends DefaultXmlStep {
     if (globalContextItem.isEmpty && inputSequence.length == 1) {
       globalContextItem = inputSequence.headOption
     }
-    val document = inputSequence.headOption
-    runXsltProcessor(document)
+    runXsltProcessor(inputSequence.headOption, inputMetadata.headOption)
   }
 
   private def xslt20(): Unit = {
@@ -130,12 +137,27 @@ class Xslt extends DefaultXmlStep {
         throw XProcException.xcXsltInputNot20Compatible(ctype, location)
       }
     }
+
+    for ((name, value) <- parameters) {
+      value match {
+        case _: XdmAtomicValue => ()
+        case _: XdmNode => ()
+        case _: XdmMap =>
+          throw XProcException.xcXsltInvalidParameterType(name, "map", location)
+        case _: XdmArray => ()
+          throw XProcException.xcXsltInvalidParameterType(name, "array", location)
+        case _: XdmFunctionItem => ()
+          throw XProcException.xcXsltInvalidParameterType(name, "function", location)
+        case _ =>
+          logger.debug(s"Unexpected parameter type: ${value} passed to p:xslt")
+      }
+    }
+
     globalContextItem = None
-    val document = inputSequence.headOption
-    runXsltProcessor(document)
+    runXsltProcessor(inputSequence.headOption, inputMetadata.headOption)
   }
 
-  private def runXsltProcessor(document: Option[XdmItem]): Unit = {
+  private def runXsltProcessor(document: Option[XdmItem], docmeta: Option[XProcMetadata]): Unit = {
     val runtime = this.config.config
     val processor = runtime.processor
     val config = processor.getUnderlyingConfiguration
@@ -246,12 +268,17 @@ class Xslt extends DefaultXmlStep {
         transformer.setBaseOutputURI(outputBaseURI.get)
       }
     } else {
-      if (document.isDefined && document.get.isInstanceOf[XdmNode]) {
-        val base = document.get.asInstanceOf[XdmNode].getBaseURI
-        transformer.setBaseOutputURI(base.toASCIIString)
-      } else if (stylesheet.isDefined && stylesheet.get.isInstanceOf[XdmNode]) {
-        val base = stylesheet.get.getBaseURI
-        transformer.setBaseOutputURI(base.toASCIIString)
+      if (document.isDefined) {
+        if (docmeta.get.baseURI.isDefined) {
+          transformer.setBaseOutputURI(docmeta.get.baseURI.get.toASCIIString)
+        } else if (document.get.isInstanceOf[XdmNode]) {
+          val base = document.get.asInstanceOf[XdmNode].getBaseURI
+          transformer.setBaseOutputURI(base.toASCIIString)
+        }
+      } else {
+        if (stylesheet.isDefined && stylesheet.get.isInstanceOf[XdmNode]) {
+          transformer.setBaseOutputURI(stylesheet.get.getBaseURI.toASCIIString)
+        }
       }
     }
 

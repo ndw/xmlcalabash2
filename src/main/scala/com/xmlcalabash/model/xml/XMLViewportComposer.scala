@@ -36,8 +36,10 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
       case msg: XdmNodeItemMessage =>
         source = msg.item
         metadata = msg.metadata
+      case msg: XdmValueItemMessage =>
+        throw XProcException.xdBadViewportInput(msg.metadata.contentType, context.location)
       case _ =>
-        throw new RuntimeException("viewport expects an xml document")
+        throw XProcException.xiThisCantHappen("Viewport message without metadata?", context.location)
     }
 
     val bindings = mutable.HashMap.empty[String,Message] ++ context.statics

@@ -117,6 +117,9 @@ Mismatched content types: “$1” is not the same as “$2”.
 XD0063
 When an non-XML (and non-HTML) encoding is specified for a p:inline, markup is not allowed: “$1”.
 
+XD0072
+Cannot pass “$1” documents to p:viewport (only HTML and XML are allowed).
+
 XD0079
 Invalid media type: “$1”.
 
@@ -307,6 +310,9 @@ No output on p:finally may be primary: “$1”
 XC0001
 The content type is not a valid text content type: “$1”.
 
+XC0007
+Parameter “$1” has invalid type “$2” for an XSLT 2.0 stylesheet.
+
 XC0013
 Cannot rename PI to a name with a namespace: “$1”.
 
@@ -350,7 +356,10 @@ XC0053/1
 Validity error in “$1” at line $2, column $3: $4
 
 XC0053/2
-Validity error in “$1”: $2
+Validity error in “$1”: $2.
+
+XC0054
+Validity error in “$1”: $2.
 
 XC0056
 There is no template named “$1”.

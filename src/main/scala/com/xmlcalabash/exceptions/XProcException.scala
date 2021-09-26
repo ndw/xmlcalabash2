@@ -139,6 +139,7 @@ object XProcException {
   def xdNoMarkupAllowed(name: QName, location: Option[Location]): XProcException = dynamicError(63, name, location)
   def xdInvalidURI(uri: String, location: Option[Location]): XProcException = dynamicError(64, uri, location)
   def xdBadMapKey(key: String, location: Option[Location]): XProcException = dynamicError(70, key, location)
+  def xdBadViewportInput(contentType: MediaType, location: Option[Location]): XProcException = dynamicError(72, contentType, location)
   def xdBadViewportResult(location: Option[Location]): XProcException = dynamicError(73, location)
   def xdUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = dynamicError(79, ctype, location)
   def xdValueNotInList(value: String, location: Option[Location]): XProcException = dynamicError(101, value, location)
@@ -252,6 +253,7 @@ object XProcException {
 
   def xcContentTypeIsNotText(contentType: String, location: Option[Location]): XProcException = stepError(1, contentType, location)
   def xcHttpBadAuth(msg: String, location: Option[Location]): XProcException = stepError(3, msg, location)
+  def xcXsltInvalidParameterType(name: QName, typename: String, location: Option[Location]): XProcException = stepError(7, List(name, typename), location)
   def xcXsltNoMode(mode: QName, msg: String, location: Option[Location]): XProcException = stepError(8, List(mode, msg), location)
   def xcXQueryVersionNotAvailable(version: String, location: Option[Location]): XProcException = stepError(9, version, location)
   def xcBadRenamePI(name: QName, location: Option[Location]): XProcException = stepError(13, name, location)
@@ -274,6 +276,7 @@ object XProcException {
   def xcCannotStore(href: URI, location: Option[Location]): XProcException = stepError(50, href, location)
   def xcNotSchemaValid(href: String, message: String, location: Option[Location]): XProcException = stepError(53, List(href, message), location)
   def xcNotSchemaValid(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = stepError(53, List(href, line, col, message), location)
+  def xcNotSchematronValid(href: URI, message: String, location: Option[Location]): XProcException = stepError(54, List(href, message), location)
   def xcXsltNoTemplate(template: QName, location: Option[Location]): XProcException = stepError(56, template, location)
   def xcCannotAddNamespaces(name: QName, location: Option[Location]): XProcException = stepError(59, name, location)
   def xcUnsupportedUuidVersion(version: Integer, location: Option[Location]): XProcException = stepError(60, version.toString, location)

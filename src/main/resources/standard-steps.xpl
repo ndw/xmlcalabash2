@@ -407,11 +407,12 @@
 <p:declare-step type="p:validate-with-schematron">
   <p:input port="source" primary="true" content-types="xml html"/>
   <p:input port="schema" content-types="xml"/>
-  <p:output port="result" primary="true" content-types="application/xml"/>
-  <p:output port="report" sequence="true" content-types="application/xml"/>
-  <p:option name="parameters" as="map(xs:QName,item())?"/>
-  <p:option name="phase" select="'#ALL'" as="xs:string"/>
+  <p:output port="result" primary="true" content-types="xml html"/>
+  <p:output port="report" sequence="true" content-types="xml json"/>
+  <p:option name="parameters" as="map(xs:QName,item()*)?"/>     
+  <p:option name="phase" select="'#DEFAULT'" as="xs:string"/>   
   <p:option name="assert-valid" select="true()" as="xs:boolean"/>
+  <p:option name="report-format" select="'svrl'" as="xs:string"/>
 </p:declare-step>
 
 <p:declare-step type="p:validate-with-xml-schema">
