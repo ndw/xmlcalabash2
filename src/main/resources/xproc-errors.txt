@@ -159,6 +159,9 @@ There’s no primary output port on the step named “$1”.
 XS0022/4
 The port “$2” on “$1” is not readable from here.
 
+XS0028
+Name cannot be in the XProc namespace: “$1”.
+
 XS0030
 Attempt to make port ‘$1’ primary when ‘$2’ is already primary.
 

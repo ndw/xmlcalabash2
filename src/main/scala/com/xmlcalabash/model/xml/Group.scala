@@ -24,7 +24,7 @@ class Group(override val config: XMLCalabashConfig) extends Container(config) wi
   override def graphNodes(runtime: XMLCalabashRuntime, parNode: Node): Unit = {
     if (parent.get.isInstanceOf[Try]) {
       val start = parNode.asInstanceOf[TryCatchStart]
-      val node = start.addTry(stepName)
+      val node = start.addTry(stepName, containerManifold)
       _graphNode = Some(node)
     } else {
       val start = parNode.asInstanceOf[ContainerStart]

@@ -56,7 +56,7 @@ class Catch(override val config: XMLCalabashConfig) extends Container(config) wi
 
   override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[TryCatchStart]
-    val node = start.addCatch(stepName, codes.toList)
+    val node = start.addCatch(stepName, codes.toList, containerManifold)
     _graphNode = Some(node)
 
     for (child <- children[Step]) {

@@ -90,7 +90,7 @@ class ChooseBranch(override val config: XMLCalabashConfig) extends Container(con
         }
         if (!binding.get.static) {
           val pipe = new NamePipe(config, ref, binding.get.tumble_id, binding.get)
-          winput.get.addChild(pipe)
+          addChild(pipe)
         }
       }
     }
@@ -128,7 +128,7 @@ class ChooseBranch(override val config: XMLCalabashConfig) extends Container(con
 
   override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[ChooseStart]
-    val node = start.addWhen(testExpr, stepName, Manifold.ALLOW_ANY)
+    val node = start.addWhen(testExpr, stepName, containerManifold)
     _graphNode = Some(node)
 
     for (child <- children[Step]) {

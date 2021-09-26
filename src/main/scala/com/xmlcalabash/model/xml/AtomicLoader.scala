@@ -17,8 +17,11 @@ class AtomicLoader(override val config: XMLCalabashConfig, params: Option[ImplPa
 
     for ((name, np) <- _inScopeDynamics) {
       val binding = findInScopeOption(name)
-      val pipe = new NamePipe(config, name, this.tumble_id, binding)
-      pipe.graphEdges(runtime, _graphNode.get)
+      if (binding.isDefined) {
+        // Can be undefined if it's on an atomic step
+        val pipe = new NamePipe(config, name, this.tumble_id, binding.get)
+        pipe.graphEdges(runtime, _graphNode.get)
+      }
     }
   }
 }

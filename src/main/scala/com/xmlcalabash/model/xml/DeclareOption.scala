@@ -53,17 +53,35 @@ class DeclareOption(override val config: XMLCalabashConfig) extends NameBinding(
     }
 
     val params = new XPathBindingParams(collection)
-    var init = if (_runtimeBindings.contains(name)) {
+    val init = if (_runtimeBindings.contains(name)) {
       new XProcXPathValue(staticContext, _runtimeBindings(name), as, _allowedValues, params)
     } else {
-      new XProcXPathExpression(staticContext, _select.getOrElse("()"), as, _allowedValues, params)
+      val extext = _select.getOrElse("()")
+      val expr = new XProcXPathExpression(staticContext, extext, as, _allowedValues, params)
+
+      // Let's see if we think this is a syntactically valid expression (see bug #506 and test ab-option-024)
+      // I have reservations about this...
+      try {
+        config.expressionEvaluator.value(expr, List(), Map(), Some(params))
+      } catch {
+        case ex: XProcException =>
+          if (ex.code == XProcException.xs0107) {
+            throw ex
+          }
+        case _: Throwable => ()
+      }
+
+      expr
     }
 
-    val node = parent.asInstanceOf[ContainerStart].addOption(_name.getClarkName, init, xpathBindingParams())
+    val node = parent.asInstanceOf[ContainerStart].addOption(_name.getClarkName, init, xpathBindingParams(), topLevel = true)
 
     for (np <- _dependentNameBindings) {
       val binding = findInScopeOption(np.name)
-      np.patchNode(binding.graphNode.get)
+      if (binding.isEmpty) {
+        throw XProcException.xsNoBindingInExpression(np.name, location)
+      }
+      np.patchNode(binding.get.graphNode.get)
       np.graphEdges(runtime, node)
     }
 

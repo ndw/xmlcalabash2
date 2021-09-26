@@ -26,6 +26,7 @@ import java.net.{URI, URLConnection}
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZonedDateTime}
 import java.util.Date
+import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
 import scala.collection.mutable
@@ -222,14 +223,16 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
         source.setSystemId(request.href.get.toASCIIString)
       }
 
-      var reader = source.asInstanceOf[SAXSource].getXMLReader
+      var reader = source.getXMLReader
       if (reader == null) {
         try {
-          reader = XMLReaderFactory.createXMLReader
-          source.asInstanceOf[SAXSource].setXMLReader(reader)
+          val parserFactory = SAXParserFactory.newInstance
+          val parser = parserFactory.newSAXParser
+          reader = parser.getXMLReader
+          source.setXMLReader(reader)
           reader.setEntityResolver(xmlCalabash.entityResolver)
         } catch {
-          case se: SAXException => ()
+          case _: SAXException => ()
           case t: Throwable => throw t
         }
       }

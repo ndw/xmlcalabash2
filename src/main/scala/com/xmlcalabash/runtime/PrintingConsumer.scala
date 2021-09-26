@@ -26,7 +26,7 @@ class PrintingConsumer private(config: XMLCalabashRuntime, output: DeclareOutput
     message match {
       case msg: XProcItemMessage =>
         // Check that the message content type is allowed on the output port
-        val mtypes = output.content_types;
+        val mtypes = output.contentTypes;
         val metadata = msg.metadata;
         if (mtypes.nonEmpty) {
           if (!metadata.contentType.allowed(mtypes)) {

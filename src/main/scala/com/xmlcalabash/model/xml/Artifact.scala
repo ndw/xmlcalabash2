@@ -111,22 +111,29 @@ class Artifact(val config: XMLCalabashConfig) {
     root
   }
 
-  protected[model] def findInScopeOption(name: QName): NameBinding = {
-    findInScopeOption(this, name)
+  protected[model] def findInScopeOption(name: QName): Option[NameBinding] = {
+    findInScopeOption(this, name, this)
   }
 
-    protected[model] def findInScopeOption(art: Artifact, name: QName): NameBinding = {
-    var found = Option.empty[NameBinding]
-    for (nb <- art.children[NameBinding]) {
-      if (nb.name == name) {
-        found = Some(nb)
+    protected[model] def findInScopeOption(art: Artifact, name: QName, self: Artifact): Option[NameBinding] = {
+      var found = Option.empty[NameBinding]
+
+      art match {
+        case _: AtomicStep =>
+          () // No one can see the options of atomic steps
+        case _ =>
+          for (nb <- art.children[NameBinding]) {
+            if ((nb ne self) && nb.name == name) {
+              found = Some(nb)
+            }
+          }
       }
-    }
-    if (found.isDefined) {
-      found.get
-    } else {
-      findInScopeOption(art.parent.get, name)
-    }
+
+      if (found.isEmpty && art.parent.isDefined) {
+        findInScopeOption(art.parent.get, name, self)
+      } else {
+        found
+      }
   }
 
   protected[model] def ancestor(art: Artifact): Boolean = {

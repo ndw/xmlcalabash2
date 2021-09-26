@@ -86,7 +86,7 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
     val start = parent.asInstanceOf[ContainerStart]
     val context = staticContext.withStatics(inScopeStatics)
     val composer = new XMLViewportComposer(config, context, _match)
-    val node = start.addViewport(composer, stepName)
+    val node = start.addViewport(composer, stepName, containerManifold)
     _graphNode = Some(node)
 
     for (child <- children[Step]) {

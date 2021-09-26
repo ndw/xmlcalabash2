@@ -2,6 +2,8 @@ package com.xmlcalabash.model.xml
 
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
+import com.xmlcalabash.model.util.XProcConstants
+import com.xmlcalabash.runtime.params.SelectFilterParams
 import com.xmlcalabash.util.MediaType
 
 import scala.collection.mutable.ListBuffer
@@ -29,7 +31,7 @@ class Port(override val config: XMLCalabashConfig) extends Artifact(config) {
     _primary = Some(primary)
   }
   def select: Option[String] = _select
-  def content_types: List[MediaType] = _content_types
+  def contentTypes: List[MediaType] = _content_types
 
   def step: NamedArtifact = {
     if (parent.isDefined) {
@@ -103,15 +105,6 @@ class Port(override val config: XMLCalabashConfig) extends Artifact(config) {
       }
     }
   }
-
-/*
-  override protected[model] def makeStructureExplicit(): Unit = {
-    for (child <- allChildren) {
-      child.makeStructureExplicit()
-    }
-  }
-
- */
 
   override protected[model] def validateStructure(): Unit = {
     for (child <- allChildren) {

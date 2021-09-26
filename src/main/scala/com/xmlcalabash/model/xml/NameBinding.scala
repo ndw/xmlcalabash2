@@ -89,6 +89,9 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
 
     if (attributes.contains(XProcConstants._name)) {
       _name = staticContext.parseQName(attr(XProcConstants._name).get)
+      if (_name.getNamespaceURI == XProcConstants.ns_p) {
+        throw XProcException.xsOptionInXProcNamespace(_name, location)
+      }
     } else {
       throw XProcException.xsMissingRequiredAttribute(XProcConstants._name, location)
     }

@@ -34,7 +34,7 @@ class Finally(override val config: XMLCalabashConfig) extends Container(config) 
 
   override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[TryCatchStart]
-    val node = start.addFinally(stepName)
+    val node = start.addFinally(stepName, containerManifold)
     _graphNode = Some(node)
 
     for (child <- children[Step]) {

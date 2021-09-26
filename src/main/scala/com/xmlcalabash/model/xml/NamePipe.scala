@@ -2,6 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.Node
 import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.{QName, XdmNode}
@@ -27,16 +28,19 @@ class NamePipe(override val config: XMLCalabashConfig, val name: QName, val step
   }
 
   override def graphEdges(runtime: XMLCalabashRuntime, parNode: Node): Unit = {
-    // If there's no node in the graph, this is a default that we will
-    // compute at runtime from the select expression (which may have references
-    // to preceding options).
-    if (_node.isDefined) {
-      val toNode = parNode
-      val toPort = "#bindings"
-      val fromNode = _node.get
-      val fromPort = "result"
-      runtime.graph.addEdge(fromNode, fromPort, toNode, toPort)
+    if (_node.isEmpty) {
+      _node = link._graphNode
     }
+
+    if (_node.isEmpty) {
+      throw XProcException.xiThisCantHappen(s"Attempt to link from non-existant graph node for ${link}", None)
+    }
+
+    val toNode = parNode
+    val toPort = "#bindings"
+    val fromNode = _node.get
+    val fromPort = "result"
+    runtime.graph.addEdge(fromNode, fromPort, toNode, toPort)
   }
 
   override def xdump(xml: ElaboratedPipeline): Unit = {

@@ -394,7 +394,14 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
       case ex: XProcException =>
         // The only way this can happen is if we're in a catch or finally
         // and reading the error port.
-        consumer.get.consume(port, new XdmNodeItemMessage(ex.errors.get, XProcMetadata.XML, staticContext))
+        if (ex.errors.isEmpty) {
+          val builder = new SaxonTreeBuilder(config)
+          builder.startDocument(None)
+          builder.endDocument()
+          consumer.get.consume(port, new XdmNodeItemMessage(builder.result, XProcMetadata.XML, staticContext))
+        } else {
+          consumer.get.consume(port, new XdmNodeItemMessage(ex.errors.get, XProcMetadata.XML, staticContext))
+        }
       case _ =>
         val contentType = metadata.contentType
         val sendMessage = contentType.classification match {

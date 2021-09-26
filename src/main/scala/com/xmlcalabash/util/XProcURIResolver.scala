@@ -14,7 +14,6 @@ import net.sf.saxon.lib.{ModuleURIResolver, StandardModuleURIResolver, StandardU
 import net.sf.saxon.s9api.XdmNode
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.{EntityResolver, InputSource}
-import org.xmlresolver.CatalogSource
 
 import scala.collection.mutable
 
@@ -57,8 +56,8 @@ class XProcURIResolver(config: XMLCalabashConfig) extends URIResolver with Entit
               val cat = new URL(catalog)
               val source = new InputSource(cat.openStream())
               source.setSystemId(catalog)
-              val catsource = new CatalogSource.InputSourceCatalogSource(source)
-              res.getCatalog.addSource(catsource)
+              val catconfig = res.getConfiguration
+              catconfig.addCatalog(cat.toURI, source)
             } catch {
               case e: MalformedURIException =>
                 logger.info("Malformed catalog URI: " + catalog)

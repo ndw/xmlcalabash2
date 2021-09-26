@@ -540,13 +540,11 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Optio
         result.skipped = "XSLT 1.0 is not supported"
         return result
       }
-      if (features.contains("webaccess")) {
-        if (!online) {
-          val result = new TestResult(true) // skipped counts as a pass...
-          result.baseURI = node.getBaseURI
-          result.skipped = "The 'webaccess' feature is not supported when the test runner is offline"
-          return result
-        }
+      if (!online && features.contains("webaccess")) {
+        val result = new TestResult(true) // skipped counts as a pass...
+        result.baseURI = node.getBaseURI
+        result.skipped = "The 'webaccess' feature is not supported when the test runner is offline"
+        return result
       }
       if (features.contains("p-validate-with-xsd")) {
         if (runtimeConfig.processor.getSchemaManager == null) {
@@ -575,8 +573,8 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Optio
 
     var pipeline = Option.empty[XdmNode]
     var schematron = Option.empty[XdmNode]
-    var inputs = mutable.HashMap.empty[String, ListBuffer[XdmNode]]
-    var bindings = mutable.HashMap.empty[QName, XdmValue]
+    val inputs = mutable.HashMap.empty[String, ListBuffer[XdmNode]]
+    val bindings = mutable.HashMap.empty[QName, XdmValue]
 
     val iter = node.axisIterator(Axis.CHILD)
     while (iter.hasNext) {

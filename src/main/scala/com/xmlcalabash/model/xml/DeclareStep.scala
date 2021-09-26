@@ -1,6 +1,7 @@
 package com.xmlcalabash.model.xml
 
 import com.jafpl.exceptions.JafplLoopDetected
+import com.jafpl.graph.Node
 import com.jafpl.steps.{Manifold, PortCardinality, PortSpecification}
 import com.xmlcalabash.config.{OptionSignature, PortSignature, StepSignature, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
@@ -194,11 +195,11 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
       child match {
         case input: DeclareInput =>
           val portSig = new PortSignature(input.port, input.primary, input.sequence, input.defaultInputs.toList)
-          portSig.contentTypes = input.content_types
+          portSig.contentTypes = input.contentTypes
           stepSig.addInput(portSig, input.location.get)
         case output: DeclareOutput =>
           val portSig = new PortSignature(output.port, output.primary, output.sequence)
-          portSig.contentTypes = output.content_types
+          portSig.contentTypes = output.contentTypes
           stepSig.addOutput(portSig, output.location.get)
         case option: DeclareOption =>
           val optSig = new OptionSignature(option.name, option.declaredType, option.required)
@@ -273,7 +274,6 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
 
     if (!atomic) {
       normalizeToPipes()
-      addContentTypeCheckers()
       addFilters()
     }
   }
@@ -294,10 +294,23 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
 
     graphNodes(runtime, pipeline)
 
+    // Look for name bindings that have to be patched
+    val declOptions = mutable.HashMap.empty[NameBinding, Node]
+    for (child <- children[DeclareOption]) {
+      if (!child.static) {
+        declOptions.put(child, child._graphNode.get)
+      }
+    }
+    for (nb <- findDescendants[NamePipe]) {
+      if (declOptions.contains(nb.link)) {
+        nb.patchNode(declOptions(nb.link))
+      }
+    }
+
     for (child <- allChildren) {
       child match {
-        case doc: Documentation => ()
-        case pipe: PipeInfo => ()
+        case _: Documentation => ()
+        case _: PipeInfo => ()
         case _ =>
           child.graphEdges(runtime, pipeline)
       }
@@ -306,7 +319,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
     try {
       runtime.init(this)
     } catch {
-      case loop: JafplLoopDetected =>
+      case _: JafplLoopDetected =>
         throw XProcException.xsLoop("???", "???", location)
     }
     runtime
@@ -335,63 +348,6 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
       }
     }
     new Manifold(new PortSpecification(inputMap.toMap), new PortSpecification(outputMap.toMap))
-  }
-
-  def addContentTypeCheckers(): Unit = {
-    // I don't know if it's safe to manipulate a list while I'm traversing it or not.
-    // So don't.
-    val inputs = ListBuffer.empty[DeclareInput] ++ children[DeclareInput]
-
-    for (input <- inputs) {
-      val params = new ContentTypeCheckerParams(input.port, input.content_types, staticContext, input.select, input.sequence)
-      val atomic = new AtomicStep(config, Some(params))
-      atomic.stepType = XProcConstants.cx_content_type_checker
-      addChild(atomic, firstStepChild)
-
-      // Save the pipes
-      val pipes = ListBuffer.empty[Pipe]
-
-      val winput = new WithInput(config)
-      winput.port = "source"
-      atomic.addChild(winput)
-
-      val pipe = new Pipe(config)
-      pipe.step = stepName
-      pipe.port = input.port
-      pipe.link = input
-      pipes += pipe
-
-      for (child <- input.allChildren) {
-        child match {
-          case pipe: Pipe =>
-            pipes += pipe
-            val step = pipe.link.get.parent.get
-/*
-            step match {
-              case atomic: AtomicStep =>
-                input.defaultInputs += atomic
-            }
- */
-          case _: Document =>
-            ()
-          case _: Inline =>
-            ()
-          case _ =>
-            throw new RuntimeException("children of input not pipe?")
-        }
-      }
-
-      input.removeChildren()
-      val woutput = new WithOutput(config)
-      woutput.port = "result"
-      atomic.addChild(woutput)
-      replumb(input, woutput)
-
-      // Put in the pipes after we replumb, so we don't replumb ourselves!
-      for (pipe <- pipes) {
-        winput.addChild(pipe)
-      }
-    }
   }
 
   def patchOptions(bindings: Map[QName,XProcVarValue]): Unit = {

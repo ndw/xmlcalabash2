@@ -103,9 +103,9 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
     if (synthetic) {
       // All the other special cases involve synthetic elements
       parent.get match {
-        case choose: Choose => raiseError = false
-        case when: When => raiseError = false
-        case otherwise: Otherwise => raiseError = false
+        case _: Choose => raiseError = false
+        case _: When => raiseError = false
+        case _: Otherwise => raiseError = false
         case _ =>
           if (parent.get.parent.isDefined
             && parent.get.parent.get.synthetic

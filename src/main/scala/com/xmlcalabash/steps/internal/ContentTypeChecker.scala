@@ -38,6 +38,7 @@ class ContentTypeChecker() extends XmlStep {
   protected var selectContext: StaticContext = _
   protected var portName: String = _
   protected var sequence = false
+  protected var inputPort = false
 
   def location: Option[Location] = _location
 
@@ -83,7 +84,11 @@ class ContentTypeChecker() extends XmlStep {
     if (allowedTypes.nonEmpty) {
       val allowed = meta.contentType.allowed(allowedTypes)
       if (!allowed) {
-        throw XProcException.xdBadInputMediaType(meta.contentType, allowedTypes, location)
+        if (inputPort) {
+          throw XProcException.xdBadInputMediaType(meta.contentType, allowedTypes, location)
+        } else {
+          throw XProcException.xdBadOutputMediaType(meta.contentType, allowedTypes, location)
+        }
       }
     }
 
@@ -111,6 +116,7 @@ class ContentTypeChecker() extends XmlStep {
           sequence = cp.sequence
           selectContext = cp.context
           select = cp.select
+          inputPort = cp.inputPort
         case _ => throw XProcException.xiWrongImplParams()
       }
     }

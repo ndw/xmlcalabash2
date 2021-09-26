@@ -97,12 +97,15 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
         addChild(input)
         winput = Some(input)
       }
-      for (ref <- bindings) {
-        val binding = env.variable(ref).get
-        if (!binding.static) {
-          val pipe = new NamePipe(config, ref, binding.tumble_id, binding)
-          winput.get.addChild(pipe)
-        }
+    }
+
+    // FIXME: does this result in duplicates sometimes?
+    for (ref <- bindings) {
+      val binding = env.variable(ref).get
+      if (!binding.static) {
+        val pipe = new NamePipe(config, ref, binding.tumble_id, binding)
+        _dependentNameBindings += pipe
+        addChild(pipe)
       }
     }
   }
@@ -140,7 +143,9 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
     // is the node they go to.
     for (np <- _dependentNameBindings) {
       val binding = findInScopeOption(np.name)
-      np.patchNode(binding.graphNode.get)
+      if (binding.isDefined) {
+        np.patchNode(binding.get.graphNode.get)
+      }
     }
   }
 

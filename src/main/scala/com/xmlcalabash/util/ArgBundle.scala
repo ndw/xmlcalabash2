@@ -22,7 +22,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
   private val _data = mutable.HashMap.empty[String, List[String]]
   private val _injectables = ListBuffer.empty[String]
   private val _nsbindings = mutable.HashMap.empty[String,String]
-  private val _params = mutable.HashMap.empty[QName, XProcVarValue]
+  private val _options = mutable.HashMap.empty[QName, XProcVarValue]
   private var _pipeline = Option.empty[String]
   private var _verbose = false
   private var _debugOptions = xmlCalabash.debugOptions
@@ -38,7 +38,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
   def injectables: List[String] = _injectables.toList
   def inScopeNamespaces: Map[String,String] = _nsbindings.toMap
   def data: Map[String, List[String]] = _data.toMap
-  def params: Map[QName, XProcVarValue] = _params.toMap
+  def options: Map[QName, XProcVarValue] = _options.toMap
   def pipeline: String = {
     if (_pipeline.isDefined) {
       _pipeline.get
@@ -79,17 +79,17 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
         case paramRegex(kind, name, value) =>
           val scontext = new XMLContext(xmlCalabash, None, _nsbindings.toMap, None)
           val qname = ValueParser.parseQName(name, scontext)
-          if (_params.contains(qname)) {
+          if (_options.contains(qname)) {
             throw XProcException.xiArgBundleRedefined(qname)
           }
 
           kind match {
             case "+" =>
               val node = xmlCalabash.parse(value, URIUtils.cwdAsURI)
-              _params.put(qname, new XProcVarValue(node, scontext))
+              _options.put(qname, new XProcVarValue(node, scontext))
             case "?" =>
               val paramBind = mutable.HashMap.empty[String, Message]
-              for ((qname, value) <- _params) {
+              for ((qname, value) <- _options) {
                 val clark = qname.getClarkName
                 val msg = new XdmValueItemMessage(value.value, XProcMetadata.ANY, value.context)
                 paramBind.put(clark, msg)
@@ -99,12 +99,12 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
               val msg = xmlCalabash.expressionEvaluator.newInstance().singletonValue(expr, List(), paramBind.toMap, None)
               val eval = msg.asInstanceOf[XdmValueItemMessage].item
 
-              _params.put(qname, new XProcVarValue(eval, scontext))
+              _options.put(qname, new XProcVarValue(eval, scontext))
             case null =>
               // Ordinary parameters are created as 'untypedAtomic' values so that numbers
               // can be treated as numbers, etc.
               val untypedValue = new XdmAtomicValue(value, untypedAtomic)
-              _params.put(qname, new XProcVarValue(untypedValue, scontext))
+              _options.put(qname, new XProcVarValue(untypedValue, scontext))
             case _ =>
               throw XProcException.xiArgBundlePfxChar(kind)
           }

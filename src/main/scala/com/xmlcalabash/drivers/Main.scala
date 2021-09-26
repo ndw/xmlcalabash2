@@ -1,13 +1,12 @@
 package com.xmlcalabash.drivers
 
 import java.net.URI
-
 import com.jafpl.exceptions.{JafplException, JafplLoopDetected}
 import com.jafpl.graph.{Binding, Node}
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.{ModelException, ParseException, XProcException}
 import com.xmlcalabash.model.xml.{DeclareStep, Parser}
-import com.xmlcalabash.runtime.{PrintingConsumer, XProcMetadata}
+import com.xmlcalabash.runtime.{PrintingConsumer, StaticContext, XProcMetadata}
 import com.xmlcalabash.util.{ArgBundle, URIUtils}
 import net.sf.saxon.s9api.QName
 
@@ -54,6 +53,10 @@ object Main extends App {
         new PrintingConsumer(runtime, output)
       }
       runtime.output(port, pc)
+    }
+
+    for ((name, value) <- options.options) {
+      runtime.option(name, value.value, new StaticContext(config))
     }
 
     runtime.run()

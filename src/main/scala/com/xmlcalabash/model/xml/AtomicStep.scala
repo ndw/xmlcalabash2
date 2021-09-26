@@ -288,6 +288,23 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
     for (child <- children[WithOption]) {
       child.graphNodes(runtime, _graphNode.get)
     }
+
+    // If there are any with-options that have name-bindings to preceding
+    // options, patch those bindings to refer to the preceding with-options
+    // See test ab-option-050
+    val declOptions = mutable.HashMap.empty[QName, Node]
+    for (child <- children[WithOption]) {
+      if (!child.static) {
+        if (child._graphNode.isDefined) {
+          declOptions.put(child.name, child._graphNode.get)
+        }
+      }
+    }
+    for (nb <- findDescendants[NamePipe]) {
+      if (declOptions.contains(nb.link.name)) {
+        nb.patchNode(declOptions(nb.link.name))
+      }
+    }
   }
 
   override def graphEdges(runtime: XMLCalabashRuntime, parent: Node): Unit = {

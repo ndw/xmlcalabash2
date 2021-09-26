@@ -156,7 +156,7 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
 
   override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val start = parent.asInstanceOf[ContainerStart]
-    val node = start.addTryCatch(stepName)
+    val node = start.addTryCatch(stepName, containerManifold)
     _graphNode = Some(node)
 
     for (child <- children[Container]) {

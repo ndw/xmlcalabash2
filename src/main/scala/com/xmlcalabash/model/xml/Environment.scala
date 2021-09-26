@@ -140,6 +140,11 @@ object Environment {
         // This step is in the environment
         env.addStep(xstep)
 
+        // Its options are in-scope
+        for (option <- xstep.children[DeclareOption]) {
+          env.addVariable(option)
+        }
+
         if (next.isDefined) {
           // Its inputs are readable
           for (port <- xstep.children[DeclareInput]) {
@@ -147,11 +152,6 @@ object Environment {
               env.defaultReadablePort =  port
             }
             env.addPort(port)
-          }
-
-          // Its options are in-scope
-          for (option <- xstep.children[DeclareOption]) {
-            env.addVariable(option)
           }
 
           xstep match {

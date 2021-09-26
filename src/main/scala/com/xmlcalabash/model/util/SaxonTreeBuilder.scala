@@ -211,7 +211,11 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
   }
 
   def addStartElement(newName: QName, attrs: AttributeMap): Unit = {
-    addStartElement(newName, attrs, NamespaceMap.emptyMap())
+    var nsmap = NamespaceMap.emptyMap()
+    if (newName.getNamespaceURI != "") {
+      nsmap = nsmap.put(newName.getPrefix, newName.getNamespaceURI)
+    }
+    addStartElement(newName, attrs, nsmap)
   }
 
   def addStartElement(newName: QName, attrs: AttributeMap, nsmap: NamespaceMap): Unit = {
@@ -244,7 +248,6 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
         newmap = updateMap(newmap, attr.getNodeName.getPrefix, attr.getNodeName.getURI)
       }
     }
-
 
     val loc = if (_location.isDefined) {
       _location.get

@@ -17,6 +17,7 @@ import org.xml.sax.helpers.XMLReaderFactory
 import org.xml.sax.{EntityResolver, InputSource}
 
 import java.net.URI
+import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.URIResolver
 import javax.xml.transform.sax.SAXSource
 import scala.collection.mutable
@@ -445,7 +446,9 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
       source = new SAXSource(new InputSource(resURI.toASCIIString))
       var reader = source.asInstanceOf[SAXSource].getXMLReader
       if (reader == null) {
-        reader = XMLReaderFactory.createXMLReader
+        val parserFactory = SAXParserFactory.newInstance
+        val parser = parserFactory.newSAXParser
+        reader = parser.getXMLReader
         source.asInstanceOf[SAXSource].setXMLReader(reader)
         reader.setEntityResolver(entityResolver)
       }

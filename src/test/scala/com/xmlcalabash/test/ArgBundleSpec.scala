@@ -363,7 +363,7 @@ class ArgBundleSpec extends AnyFlatSpec {
     val bundle = new ArgBundle(config)
     val args = "foo=bar pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(ValueUtils.singletonStringValue(bundle.params(new QName("", "foo")).value) == "bar")
+    assert(ValueUtils.singletonStringValue(bundle.options(new QName("", "foo")).value) == "bar")
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -371,7 +371,7 @@ class ArgBundleSpec extends AnyFlatSpec {
     val bundle = new ArgBundle(config)
     val args = "foo=2 pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(ValueUtils.singletonStringValue(bundle.params(new QName("", "foo")).value) == "2")
+    assert(ValueUtils.singletonStringValue(bundle.options(new QName("", "foo")).value) == "2")
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -379,7 +379,7 @@ class ArgBundleSpec extends AnyFlatSpec {
     val bundle = new ArgBundle(config)
     val args = "-bex=foo ex:foo=bar pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(ValueUtils.singletonStringValue(bundle.params(new QName("foo", "foo")).value) == "bar")
+    assert(ValueUtils.singletonStringValue(bundle.options(new QName("foo", "foo")).value) == "bar")
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -387,7 +387,7 @@ class ArgBundleSpec extends AnyFlatSpec {
     val bundle = new ArgBundle(config)
     val args = "--bind ex=foo ex:foo=bar pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(ValueUtils.singletonStringValue(bundle.params(new QName("foo", "foo")).value) == "bar")
+    assert(ValueUtils.singletonStringValue(bundle.options(new QName("foo", "foo")).value) == "bar")
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -409,7 +409,7 @@ class ArgBundleSpec extends AnyFlatSpec {
     val bundle = new ArgBundle(config)
     val args = "?foo=3+4 pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(ValueUtils.singletonStringValue(bundle.params(new QName("", "foo")).value) == "7")
+    assert(ValueUtils.singletonStringValue(bundle.options(new QName("", "foo")).value) == "7")
     assert(bundle.pipeline == "pipe.xpl")
   }
 
@@ -417,8 +417,8 @@ class ArgBundleSpec extends AnyFlatSpec {
     val bundle = new ArgBundle(config)
     val args = "?foo=3+4 ?bar=3+$foo pipe.xpl".split("\\s+")
     bundle.parse(args.toList)
-    assert(ValueUtils.singletonStringValue(bundle.params(new QName("", "foo")).value) == "7")
-    assert(ValueUtils.singletonStringValue(bundle.params(new QName("", "bar")).value) == "10")
+    assert(ValueUtils.singletonStringValue(bundle.options(new QName("", "foo")).value) == "7")
+    assert(ValueUtils.singletonStringValue(bundle.options(new QName("", "bar")).value) == "10")
     assert(bundle.pipeline == "pipe.xpl")
   }
 

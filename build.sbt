@@ -1,7 +1,7 @@
 import java.io.{BufferedReader, InputStreamReader}
 
-lazy val xmlCalabashVersion = "1.99.25"
-lazy val jafplVersion = "0.3.34"
+lazy val xmlCalabashVersion = "1.99.27"
+lazy val jafplVersion = "0.3.46"
 lazy val saxonVersion = "10.6"
 lazy val useSaxonEE = true
 
@@ -147,7 +147,7 @@ libraryDependencies ++= Seq(
   "org.restlet.jee" % "org.restlet" % "2.2.2",
   "org.restlet.jee" % "org.restlet.ext.fileupload" % "2.2.2",
   "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
-  "org.xmlresolver" % "xmlresolver" % "1.0.6",
+  "org.xmlresolver" % "xmlresolver" % "3.1.0",
   "nu.validator" % "htmlparser" % "1.4.12",
   "com.atlassian.commonmark" % "commonmark" % "0.12.1",
   "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.10.2",
