@@ -41,8 +41,7 @@ class Markdown() extends DefaultXmlStep {
     // that it returns them with no namespace declarations.
     val markup = "<body xmlns='http://www.w3.org/1999/xhtml'>" + renderer.render(document) + "</body>"
 
-    val request = new DocumentRequest(markdown.get.getBaseURI, Some(MediaType.HTML), location, false)
-    request.params = parameters
+    val request = new DocumentRequest(Some(markdown.get.getBaseURI), Some(MediaType.HTML), location, parameters)
 
     val stream = new ByteArrayInputStream(markup.getBytes)
 

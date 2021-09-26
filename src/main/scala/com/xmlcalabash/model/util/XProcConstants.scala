@@ -78,6 +78,7 @@ object XProcConstants {
   val p_identity = new QName("p", ns_p, "identity")
   val p_sink = new QName("p", ns_p, "sink")
 
+  val cx_dtd_validate = new QName("cx", ns_cx,"dtd-validate")
   val cx_encoding = new QName("cx", ns_cx, "encoding")
   val cx_until = new QName("cx", ns_cx, "until")
   val cx_while = new QName("cx", ns_cx, "while")

@@ -406,7 +406,7 @@ class HttpRequest() extends DefaultXmlStep {
       val doc = response.response(pos)
       val meta = response.responseMetadata(pos)
 
-      val request = new DocumentRequest(meta.baseURI, Some(meta.contentType), location, false)
+      val request = new DocumentRequest(meta.baseURI, Some(meta.contentType), location)
       val result = try {
         config.documentManager.parse(request, doc)
       } catch {

@@ -98,7 +98,7 @@ class Document(override val config: XMLCalabashConfig) extends DataSource(config
     } else {
       new URI(msg.item.toString)
     }
-    new DocumentRequest(Some(href), _contentType, location, false)
+    new DocumentRequest(href, _contentType, location)
   }
 
   override def xdump(xml: ElaboratedPipeline): Unit = {

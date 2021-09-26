@@ -265,7 +265,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
 
             val href = staticContext.baseURI.get.resolve(parts.mkString(""))
 
-            val request = new DocumentRequest(href, None, location, false)
+            val request = new DocumentRequest(href, None, location)
             val response = config.documentManager.parse(request)
             context += new XdmValueItemMessage(response.value, XProcMetadata.XML, doc.staticContext)
           case empty: Empty =>

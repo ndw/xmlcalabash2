@@ -112,18 +112,7 @@ class DocumentLoader() extends AbstractLoader {
       }
     }
 
-    val dtdValidate = if (params.contains(XProcConstants._dtd_validate)) {
-      if (params(XProcConstants._dtd_validate).size > 1) {
-        throw new IllegalArgumentException("dtd validate parameter is not a singleton")
-      } else {
-        params(XProcConstants._dtd_validate).itemAt(0).getStringValue == "true"
-      }
-    } else {
-      false
-    }
-
-    val request = new DocumentRequest(href, Some(contentType), location, dtdValidate)
-    request.params = params
+    val request = new DocumentRequest(Some(href), Some(contentType), location, params)
     request.docprops = docProps
 
     val result = config.documentManager.parse(request)

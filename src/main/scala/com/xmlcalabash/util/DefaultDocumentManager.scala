@@ -35,6 +35,10 @@ import scala.xml.SAXParseException
 class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentManager {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
+  private val _liberal = new QName("", "liberal")
+  private val _duplicates = new QName("", "duplicates")
+  private val _escape = new QName("", "escape")
+  private val _fallback = new QName("", "fallback")
   protected val TRANSPARENT_YAML = false
 
   override def parse(request: DocumentRequest): DocumentResponse = {
@@ -318,7 +322,42 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
       }
 
       val context = new StaticContext(xmlCalabash)
-      val expr = new XProcXPathExpression(context, "parse-json($json)")
+
+      // This is a horrible hack
+      val opts = new StringBuilder()
+      opts.append("map{")
+
+      var sep = ""
+      val lib = request.booleanParameter(_liberal)
+      val dup = request.stringParameter(_duplicates)
+      val esc = request.booleanParameter(_escape)
+      // FIXME: fallback
+
+      if (lib.isDefined) {
+        opts.append("'liberal': ")
+        opts.append(lib.get.toString)
+        opts.append("()")
+        sep = ","
+      }
+
+      if (dup.isDefined) {
+        opts.append(sep)
+        opts.append("'duplicates': '")
+        opts.append(dup.get)
+        opts.append("'")
+        sep = ","
+      }
+
+      if (esc.isDefined) {
+        opts.append("'escape': ")
+        opts.append(esc.get.toString)
+        opts.append("()")
+        sep = ","
+      }
+
+      opts.append("}")
+
+      val expr = new XProcXPathExpression(context, s"parse-json($$json, ${opts.toString})")
       val bindingsMap = mutable.HashMap.empty[String, Message]
       val vmsg = new XdmValueItemMessage(new XdmAtomicValue(json), XProcMetadata.JSON, context)
       bindingsMap.put("{}json", vmsg)

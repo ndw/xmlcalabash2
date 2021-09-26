@@ -299,7 +299,7 @@ class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
 
   private def readText(href: String, node: XdmNode, base: String, xpointer: XPointer, matcher: SaxonTreeBuilder): Unit = {
     val uri = staticContext.baseURI.get.resolve(href)
-    val request = new DocumentRequest(uri, Some(MediaType.TEXT), location, false)
+    val request = new DocumentRequest(uri, Some(MediaType.TEXT), location)
     val response = config.documentManager.parse(request)
     if (response.contentType.matches(MediaType.TEXT)) {
       matcher.addText(response.value.getUnderlyingValue.getStringValue)
@@ -317,7 +317,7 @@ class XInclude() extends DefaultXmlStep with ProcessMatchingNodes {
       Some(ptr)
     } else {
       val uri = staticContext.baseURI.get.resolve(href)
-      val request = new DocumentRequest(uri, Some(MediaType.XML), location, false)
+      val request = new DocumentRequest(uri, Some(MediaType.XML), location)
       val response = config.documentManager.parse(request)
       if (response.contentType.matches(MediaType.XML)) {
         Some(response.value.asInstanceOf[XdmNode])

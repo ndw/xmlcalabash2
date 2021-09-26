@@ -149,7 +149,7 @@ class OsExec extends DefaultXmlStep {
       throw XProcException.xcOsExecFailed(rc, location)
     }
 
-    val outreq = new DocumentRequest(None, Some(resultContentType), location, false)
+    val outreq = new DocumentRequest(None, Some(resultContentType), location)
     val outres = config.documentManager.parse(outreq, new ByteArrayInputStream(stdout.toArray))
 
     if (outres.shadow.isDefined) {
@@ -159,7 +159,7 @@ class OsExec extends DefaultXmlStep {
       consumer.get.receive("result", outres.value, new XProcMetadata(resultContentType))
     }
 
-    val errreq = new DocumentRequest(None, Some(errorContentType), location, false)
+    val errreq = new DocumentRequest(None, Some(errorContentType), location)
     val errres = config.documentManager.parse(errreq, new ByteArrayInputStream(stderr.toArray))
 
     if (errres.shadow.isDefined) {

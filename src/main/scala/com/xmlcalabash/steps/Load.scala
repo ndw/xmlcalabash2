@@ -71,8 +71,7 @@ class Load() extends DefaultXmlStep {
       false
     }
 
-    val request = new DocumentRequest(href, declContentType, location, dtdValidate)
-    request.params = params.toMap
+    val request = new DocumentRequest(href, declContentType, location, params.toMap)
     request.docprops = docprops.toMap
 
     val result = config.documentManager.parse(request)

@@ -84,7 +84,7 @@ class Uncompress extends DefaultXmlStep {
 
     var result: DocumentResponse = null
     try {
-      val request = new DocumentRequest(context.baseURI.get, Some(outputContentType), location, false)
+      val request = new DocumentRequest(context.baseURI.get, Some(outputContentType), location)
       result = config.documentManager.parse(request, gis)
     } catch {
       case _: XProcException =>
