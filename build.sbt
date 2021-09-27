@@ -201,22 +201,6 @@ mappings in (Compile, packageBin) := {
 
 // ============================================================
 
-Compile / unmanagedJars ++= (
-  if (useSaxonEE) {
-    Seq(file(s"${baseDirectory.value}/eelib/$saxonVersion/saxon9ee.jar"))
-  } else {
-    Seq()
-  }
-)
-
-Runtime / unmanagedJars ++= (
-  if (useSaxonEE) {
-    Seq(file(s"${baseDirectory.value}/eelib/$saxonVersion/saxon9ee.jar"))
-  } else {
-    Seq()
-  }
-)
-
 Runtime / unmanagedClasspath ++= (
   if (useSaxonEE) {
     Seq(file(s"${baseDirectory.value}/eelib"))
