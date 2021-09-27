@@ -7,8 +7,8 @@ import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 class RunFailingTestsSpec extends XProcTestSpec {
-  if (Option(System.getenv("TRAVIS")).isDefined) {
-    println("Failing tests are not run on Travis")
+  if (Option(System.getenv("GO_SERVER_URL")).isDefined) {
+    println("Failing tests are not run on CI")
   } else {
     val tests = ListBuffer.empty[String]
 
