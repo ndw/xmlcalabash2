@@ -63,49 +63,37 @@ protected class XMLCalabashDebugOptions(config: XMLCalabashConfig) {
   def stackTrace: Option[String] = _stack_trace
   def stackTrace_=(trace: Option[String]): Unit = {
     _stack_trace = trace
-    if (_stack_trace.isDefined) {
-      debugOptions += STACKTRACE
-    }
+    debugOptions += STACKTRACE
   }
 
   def tree: Option[String] = _tree
   def tree_=(tree: Option[String]): Unit = {
     _tree = tree
-    if (_tree.isDefined) {
-      debugOptions += TREE
-    }
+    debugOptions += TREE
   }
 
   def xmlTree: Option[String] = _xml_tree
   def xmlTree_=(xml_tree: Option[String]): Unit = {
     _xml_tree = xml_tree
-    if (_xml_tree.isDefined) {
-      debugOptions += XMLTREE
-    }
+    debugOptions += XMLTREE
   }
 
   def graph: Option[String] = _graph
   def graph_=(graph: Option[String]): Unit = {
     _graph = graph
-    if (_graph.isDefined) {
-      debugOptions += GRAPH
-    }
+    debugOptions += GRAPH
   }
 
   def jafplGraph: Option[String] = _jafpl_graph
   def jafplGraph_=(graph: Option[String]): Unit = {
     _jafpl_graph = graph
-    if (_graph.isDefined) {
-      debugOptions += JAFPLGRAPH
-    }
+    debugOptions += JAFPLGRAPH
   }
 
   def openGraph: Option[String] = _open_graph
   def openGraph_=(graph: Option[String]): Unit = {
     _open_graph = graph
-    if (_graph.isDefined) {
-      debugOptions += OPENGRAPH
-    }
+    debugOptions += OPENGRAPH
   }
 
   // ===========================================================================================
