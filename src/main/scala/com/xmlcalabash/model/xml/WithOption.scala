@@ -2,6 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.{ContainerStart, Node}
 import com.xmlcalabash.config.{OptionSignature, XMLCalabashConfig}
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.{XdmNodeItemMessage, XdmValueItemMessage}
 import com.xmlcalabash.model.util.ValueParser
 import com.xmlcalabash.runtime._
@@ -39,7 +40,12 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
         val depends = staticContext.dependsOnContextAvt(avt)
         if (!depends) {
           val expr = new XProcVtExpression(staticContext, _avt.get, true)
-          var msg = config.expressionEvaluator.newInstance().value(expr, List(), inScopeStatics, None)
+          var msg = try {
+            config.expressionEvaluator.newInstance().value(expr, List(), inScopeStatics, None)
+          } catch {
+            case ex: Throwable =>
+              throw XProcException.xdGeneralError(ex.getMessage, location)
+          }
           // Ok, now we have a string value
           val avalue = msg.item.getUnderlyingValue.getStringValue
           var tvalue = typeUtils.castAtomicAs(XdmAtomicValue.makeAtomicValue(avalue), Some(declaredType), staticContext)
@@ -152,6 +158,16 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
   override def graphEdges(runtime: XMLCalabashRuntime, parNode: Node): Unit = {
     if (staticValue.isDefined) {
       return
+    }
+
+    val env = environment()
+    for (stepName <- depends) {
+      val step = env.step(stepName)
+      if (step.isEmpty) {
+        throw XProcException.xsNotAStep(stepName, location)
+      } else {
+        _graphNode.get.dependsOn(step.get._graphNode.get)
+      }
     }
 
     val toNode = parNode

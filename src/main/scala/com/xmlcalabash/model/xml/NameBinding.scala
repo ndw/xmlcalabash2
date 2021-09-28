@@ -33,6 +33,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   private var _qnameKeys = false
   private var resolvedStatically = false
   private val structuredQName = new StructuredQName("xs", XProcConstants.ns_xs, "QName")
+  protected val depends = ListBuffer.empty[String]
 
   protected var _href = Option.empty[String]
   protected var _pipe = Option.empty[String]
@@ -199,6 +200,22 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
 
   override protected[model] def makeBindingsExplicit(): Unit = {
     super.makeBindingsExplicit()
+
+    // If the ancestor of a data source has a dependency, so does the data source
+    var p = parent
+    while (p.isDefined) {
+      p.get match {
+        case step: Step =>
+          for (name <- step.depends) {
+            if (!depends.contains(name)) {
+              depends += name
+            }
+          }
+        case _ =>
+          ()
+      }
+      p = p.get.parent
+    }
 
     val ds = ListBuffer.empty[DataSource]
     for (child <- allChildren) {
