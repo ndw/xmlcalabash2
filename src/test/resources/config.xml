@@ -13,9 +13,7 @@
   <cc:schema-aware>true</cc:schema-aware>
   <cc:trim-inline-whitespace>true</cc:trim-inline-whitespace>
 
-<!--
   <cc:graphviz dot="/usr/local/bin/dot /usr/bin/dot"/>
--->
   <cc:show-errors>true</cc:show-errors>
 
   <cc:saxon-configuration-property
