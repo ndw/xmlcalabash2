@@ -23,7 +23,7 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
   private val _parser   = new Parser(runtimeConfig)
   private val context   = new StaticContext(runtimeConfig)
 
-  runtimeConfig.debugOptions.jafplGraph = None
+  //runtimeConfig.debugOptions.jafplGraph = None
 
   def pipeline: Option[XdmNode] = _pipeline
   def pipeline_=(tpipe: XdmNode): Unit = {
