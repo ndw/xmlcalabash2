@@ -139,6 +139,12 @@
   <p:option name="fail-on-error" as="xs:boolean" select="true()"/>
 </p:declare-step>
 
+<p:declare-step type="p:filter">
+  <p:input port="source" content-types="xml html"/>
+  <p:output port="result" sequence="true" content-types="text xml html"/>
+  <p:option name="select" required="true" as="xs:string"/>
+</p:declare-step>
+
 <p:declare-step type="p:hash">
   <p:input port="source" primary="true" content-types="xml html"/>
   <p:output port="result" content-types="text xml html"/>
