@@ -1,8 +1,9 @@
 package com.xmlcalabash.drivers
 
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.testing.TestRunner
-import com.xmlcalabash.util.{MediaType, S9Api}
+import com.xmlcalabash.util.{DefaultErrorExplanation, MediaType, S9Api}
 import net.sf.saxon.s9api.{QName, Serializer, XdmAtomicValue, XdmDestination, XdmValue}
 
 import java.io.{BufferedReader, File, FileReader, PrintWriter}
@@ -13,7 +14,7 @@ import scala.collection.mutable.ListBuffer
 import scala.jdk.javaapi.CollectionConverters.asJava
 
 object Test extends App {
-  private val xmlCalabash = XMLCalabashConfig.newInstance()
+  private var xmlCalabash: XMLCalabashConfig = _
 
   private val testlist = ListBuffer.empty[String]
   private var regex = Option.empty[String]
@@ -22,7 +23,8 @@ object Test extends App {
   private var showFailing = false
   private var showSkipping = false
   private var xmlOutput: Option[String] = None
-  private var testLocations = ListBuffer.empty[String]
+  private var configFile: Option[String] = None
+  private val testLocations = ListBuffer.empty[String]
 
   protected val online: Boolean = try {
     val docreq = new DocumentRequest(new URI("http://www.w3.org/"), MediaType.HTML)
@@ -40,7 +42,13 @@ object Test extends App {
     println("Usage: com.xmlcalabash.drivers.Test [-h htmloutput] [-j junitoutput] [-r regex | -l list] testlocation [testlocation+]")
   }
 
+  if (configFile.isDefined) {
+    System.setProperty("com.xmlcalabash.configFile", configFile.get)
+  }
+
   try {
+    xmlCalabash = XMLCalabashConfig.newInstance()
+
     val runner = new TestRunner(xmlCalabash, online, regex, testlist.toList, testLocations.toList)
 
     if (xmlOutput.isDefined) {
@@ -119,6 +127,34 @@ object Test extends App {
       }
     }
   } catch {
+    case xproc: XProcException =>
+      if (debug) {
+        xproc.printStackTrace()
+      }
+
+      val errExplain = if (Option(xmlCalabash).isDefined) {
+        xmlCalabash.errorExplanation
+      } else {
+        new DefaultErrorExplanation()
+      }
+
+      val code = xproc.code
+      val message = if (xproc.message.isDefined) {
+        xproc.message.get
+      } else {
+        code match {
+          case qname: QName =>
+            errExplain.message(qname, xproc.variant, xproc.details)
+          case _ =>
+            s"Configuration error: code ($code) is not a QName"
+        }
+      }
+      if (xproc.location.isDefined) {
+        println(s"ERROR ${xproc.location.get} $code $message")
+      } else {
+        println(s"ERROR $code $message")
+      }
+
     case ex: Exception =>
       println(ex.getMessage)
       if (debug) {
@@ -129,19 +165,26 @@ object Test extends App {
   private def crudeArgParse(): Unit = {
     // Read the command line arguments crudely
 
+    val optc = "-c(.*)".r
     val optd = "-(d)".r
     val optj = "-[jx](.*)".r
     val optp = "-(p)".r
     val optf = "-(f)".r
     val opts = "-(s)".r
     val optr = "-r(.*)".r
-    val optx = "-(.*)".r
     val optl = "-l(.*)".r
+    val optx = "-(.*)".r
 
     var pos = 0
     while (pos < args.length) {
       val arg = args(pos)
       arg match {
+        case optc(opt) =>
+          configFile = Some(opt)
+          if (opt == "") {
+            pos += 1
+            configFile = Some(args(pos))
+          }
         case optd(opt) =>
           debug = true
         case optp(opt) =>

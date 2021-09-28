@@ -1,5 +1,7 @@
 package com.xmlcalabash.util
 
+import com.xmlcalabash.exceptions.XProcException
+
 import java.io.File
 import com.xmlcalabash.model.util.XProcConstants
 import net.sf.saxon.s9api.{Axis, Processor, QName, XdmNode, XdmNodeKind}
@@ -96,17 +98,30 @@ class XMLCalabashConfiguration {
   }
 
   def load(): Unit = {
-    var fn = URIUtils.homeAsURI.resolve(".xmlcalabash")
-    var cfg = new File(fn.getPath)
-
-    if (cfg.exists()) {
+    val systemConfig = Option(System.getProperty("com.xmlcalabash.configFile"))
+    if (systemConfig.isDefined) {
+      val fn = URIUtils.resolve(URIUtils.cwdAsURI, systemConfig.get)
+      if (fn.getScheme != "file") {
+        throw XProcException.xiBadConfigSchema(fn.getScheme)
+      }
+      val cfg = new File(fn.getPath)
+      if (!cfg.exists()) {
+        throw XProcException.xiConfigNotFound(fn)
+      }
       load(cfg)
-    }
+    } else {
+      var fn = URIUtils.resolve(URIUtils.homeAsURI, ".xmlcalabash")
+      var cfg = new File(fn.getPath)
 
-    fn = URIUtils.cwdAsURI.resolve(".xmlcalabash")
-    cfg = new File(fn.getPath)
-    if (cfg.exists()) {
-      load(cfg)
+      if (cfg.exists()) {
+        load(cfg)
+      }
+
+      fn = URIUtils.resolve(URIUtils.cwdAsURI, ".xmlcalabash")
+      cfg = new File(fn.getPath)
+      if (cfg.exists()) {
+        load(cfg)
+      }
     }
   }
 
@@ -273,7 +288,14 @@ class XMLCalabashConfiguration {
   private def parseGraphviz(node: XdmNode): Unit = {
     val dot = node.getAttributeValue(_dot)
     if (dot != null) {
-      _graphviz_dot = Some(dot)
+      for (path <- dot.trim.split("\\s")) {
+        val ex = new File(path)
+        if (ex.exists() && ex.canExecute) {
+          _graphviz_dot = Some(path)
+          return
+        }
+      }
+      logger.warn(s"No executables found in ${node.getAttributeValue(_dot)}")
     }
   }
 

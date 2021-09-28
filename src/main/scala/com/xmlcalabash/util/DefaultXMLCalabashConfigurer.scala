@@ -17,9 +17,10 @@ import scala.collection.mutable
 class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   val config = new XMLCalabashConfiguration()
-  config.load()
 
   override def configure(configuration: XMLCalabashConfig): Unit = {
+    config.load()
+
     if (configuration.processorRequired) {
       try {
         configuration.processor = if (config.saxon_configuration_file.isDefined) {
@@ -59,7 +60,7 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
     // FIXME: support an alternate error listener (maybe)
     configuration.errorListener = new DefaultErrorListener()
 
-    configuration.errorExplanation = new DefaultErrorExplanation(configuration)
+    configuration.errorExplanation = new DefaultErrorExplanation()
     configuration.documentManager = new DefaultDocumentManager(configuration)
     configuration.defaultSerializationOptions = config.serialization
     configuration.trimInlineWhitespace = config.trim_inline_whitespace

@@ -92,6 +92,10 @@ object XProcException {
   def xiMaxRegressionsExceededUntil(max: Long, location: Option[Location]): XProcException = internalError(62, location, max)
   def xiAttempToCountByZero(location: Option[Location]): XProcException = internalError(63, location)
 
+  def xiBadConfigSchema(scheme: String): XProcException = internalError(64, None, scheme)
+  def xiConfigNotFound(cfg: URI): XProcException = internalError(65, None, cfg)
+  def xiMalformedURI(uri: String, message: String, location: Option[Location]): XProcException = internalError(66, location, List(uri, message))
+
   def xiThisCantHappen(msg: String, location: Option[Location]): XProcException = internalError(999, location, msg)
 
   def xdContextItemSequence(expr: String, msg: String, location: Option[Location]): XProcException = dynamicError(1, List(expr, msg), location)

@@ -14,6 +14,28 @@ object URIUtils {
     dirAsURI(System.getProperty("user.dir"))
   }
 
+  def resolve(baseURI: URI, relativeURI: URI): URI = {
+    try {
+      baseURI.resolve(relativeURI)
+    } catch {
+      case ex: IllegalArgumentException =>
+        throw XProcException.xiMalformedURI(relativeURI.toString, ex.getMessage, None)
+      case ex: Throwable =>
+        throw ex
+    }
+  }
+
+  def resolve(baseURI: URI, relativeURI: String): URI = {
+    try {
+      baseURI.resolve(relativeURI)
+    } catch {
+      case ex: IllegalArgumentException =>
+        throw XProcException.xiMalformedURI(relativeURI, ex.getMessage, None)
+      case ex: Throwable =>
+        throw ex
+    }
+  }
+
   def dirAsURI(dir: String): URI = {
     var path = encode(dir)
     if (!path.endsWith("/")) {

@@ -574,6 +574,15 @@ Until loop exceeded maximum iterations: $1
 {http://xmlcalabash.com/ns/extensions}XI0063
 The cx:loop increment may not be zero.
 
+{http://xmlcalabash.com/ns/extensions}XI0064
+Invalid configuration file scheme, “$1:”. Only file: is allowed.
+
+{http://xmlcalabash.com/ns/extensions}XI0065
+Configuration file not found: “$1”.
+
+{http://xmlcalabash.com/ns/extensions}XI0066
+Malformed URI: “$1”: $2.
+
 {http://xmlcalabash.com/ns/extensions}XI0999
 It must be time for breakfast at Milliways, something impossible has happened: $1
 

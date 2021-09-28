@@ -1,16 +1,14 @@
 package com.xmlcalabash.util
 
-import java.io.InputStreamReader
-
-import com.xmlcalabash.config.{ErrorExplanation, XMLCalabashConfig}
-import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
+import com.xmlcalabash.config.ErrorExplanation
+import com.xmlcalabash.model.util.XProcConstants
 import net.sf.saxon.s9api.QName
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
-class DefaultErrorExplanation(config: XMLCalabashConfig) extends ErrorExplanation {
+class DefaultErrorExplanation() extends ErrorExplanation {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val messages = ListBuffer.empty[ErrorExplanationTemplate]
 

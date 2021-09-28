@@ -131,7 +131,7 @@ object Main extends App {
           }
 
           if (options.verbose && code.isInstanceOf[QName]) {
-            val explanation = config.errorExplanation.explanation(code.asInstanceOf[QName], xproc.variant)
+            val explanation = config.errorExplanation.explanation(code, xproc.variant)
             if (explanation != "") {
               println(explanation)
             }
