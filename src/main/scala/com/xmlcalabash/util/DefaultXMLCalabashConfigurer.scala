@@ -28,7 +28,7 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
           new Processor(config.schema_aware)
         }
       } catch {
-        case ex: RuntimeException =>
+        case _: RuntimeException =>
           throw XProcException.xiNoSaxon()
       }
 
@@ -112,7 +112,7 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
   private def loadResolver(klass: Option[String], default: XProcURIResolver): Object = {
     if (klass.isDefined) {
       // FIXME: implement instantiation of resolvers
-      logger.error(s"Alternate resolvers not yet implmeented: $klass.get")
+      logger.error(s"Alternate resolvers not yet implemented: $klass.get")
       default
     } else {
       default
