@@ -1,5 +1,7 @@
 <!-- -*- nxml -*- -->
 <cc:xmlcalabash xmlns:cc="http://xmlcalabash.com/ns/configuration">
+  <cc:system-property key="log4j.configurationFile"
+                      value="src/test/resources/log4j2.xml"/>
   <cc:system-property key="com.xmlcalabash.trace"
                       value="XALL"/>
 
@@ -11,7 +13,9 @@
   <cc:schema-aware>true</cc:schema-aware>
   <cc:trim-inline-whitespace>true</cc:trim-inline-whitespace>
 
+<!--
   <cc:graphviz dot="/usr/local/bin/dot /usr/bin/dot"/>
+-->
   <cc:show-errors>true</cc:show-errors>
 
   <cc:saxon-configuration-property
