@@ -264,6 +264,24 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
     _stepImplementation = stepImplementation(staticContext)
     _stepImplementation.configure(config, stepType, _name, params)
 
+    _stepImplementation match {
+      // If we're running an instance of a pipeline, work out which
+      // ports actually received inputs (even p:empty) so that
+      // we can tell the runtime for the pipeline. We need to do this
+      // so that p:empty isn't misinterpreted as an unbound port.
+      // Unbound ports will get default inputs if they're provided.
+      case runner: StepRunner =>
+        val usedPorts = mutable.HashSet.empty[String]
+        for (input <- children[WithInput]) {
+          val bound = input.children[DataSource].nonEmpty
+          if (bound) {
+            usedPorts += input.port
+          }
+        }
+        runner.usedPorts(usedPorts.toSet)
+      case _ => ()
+    }
+
     var proxyParams: Option[ImplParams] = params
 
     // Handle any with-option values for this step that have been computed statically

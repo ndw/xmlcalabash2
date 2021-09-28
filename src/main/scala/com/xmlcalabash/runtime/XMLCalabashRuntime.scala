@@ -44,13 +44,13 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   private var _episode = config.computeEpisode
   private var _defaultSerializationOptions: Map[String,Map[QName,String]] = Map.empty[String,Map[QName,String]]
   private var _trim_inline_whitespace = config.trimInlineWhitespace
-  private val inputSet = mutable.HashSet.empty[String]
   private val idMap = mutable.HashMap.empty[String,Artifact]
   private var ran = false
   private var _signatures: Signatures = _
   private var runtime: GraphRuntime = _
   private var _datastore = Option.empty[DataStore]
   private val defaultInputs = mutable.HashMap.empty[String, List[DocumentRequest]]
+  private val _usedPorts = mutable.HashSet.empty[String]
 
   val jafpl: Jafpl = Jafpl.newInstance()
   val graph: Graph = jafpl.newGraph()
@@ -127,7 +127,6 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
 
   def input(port: String, message: Message): Unit = {
     if (runtime.inputs.contains(port)) {
-      inputSet += port
       runtime.inputs(port).send(message)
     }
   }
@@ -147,13 +146,17 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
     }
   }
 
+  def usedPorts(ports: Set[String]): Unit = {
+    _usedPorts ++= ports
+  }
+
   def run(): Unit = {
     if (ran) {
       throw new RuntimeException("You must call reset() before running a pipeline a second time.")
     }
 
     for ((port, defaults) <- defaultInputs) {
-      if (!inputSet.contains(port)) {
+      if (!_usedPorts.contains(port)) {
         for (source <- defaults) {
           val resp = config.documentManager.parse(source)
           input(port, resp.value, new XProcMetadata(resp.contentType, resp.props))
@@ -175,7 +178,6 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   }
 
   def reset(): Unit = {
-    inputSet.clear()
     /*
     //_staticOptionBindings.clear()
     outputSet.clear()

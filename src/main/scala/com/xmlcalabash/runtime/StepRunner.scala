@@ -20,6 +20,7 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
   private val consumers = mutable.HashMap.empty[String, ConsumerMap]
   private val bindings = mutable.HashMap.empty[QName, XProcVarValue]
   private val inputs = mutable.HashMap.empty[String,ListBuffer[(Any, XProcMetadata)]]
+  private var _usedPorts = Set.empty[String]
 
   private val cardMap = mutable.HashMap.empty[String,PortCardinality]
   private val typeMap = mutable.HashMap.empty[String,List[String]]
@@ -92,6 +93,10 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
     // nop
   }
 
+  def usedPorts(ports: Set[String]): Unit = {
+    _usedPorts = ports
+  }
+
   override def run(context: StaticContext): Unit = {
     //println("=======================================")
     //decl.dump()
@@ -117,6 +122,7 @@ class StepRunner(private val pruntime: XMLCalabashConfig, val decl: DeclareStep,
       runtime.output(port, consumer)
     }
 
+    runtime.usedPorts(_usedPorts)
     runtime.run()
   }
 

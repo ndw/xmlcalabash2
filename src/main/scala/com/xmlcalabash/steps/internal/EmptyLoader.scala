@@ -5,11 +5,6 @@ import com.xmlcalabash.runtime.params.EmptyLoaderParams
 import com.xmlcalabash.runtime.{ImplParams, StaticContext, XmlPortSpecification}
 import net.sf.saxon.s9api.QName
 
-// N.B. This looks like a step, but it isn't really. It gets passed all of the variable bindings
-// and the context item and it evaluates its "options" directly. This is necessary because in
-// the case where this is a default binding, it must *not* evaluate its options if the default
-// is not used.
-
 class EmptyLoader() extends AbstractLoader {
   override def inputSpec: XmlPortSpecification = {
     XmlPortSpecification.NONE
@@ -31,6 +26,6 @@ class EmptyLoader() extends AbstractLoader {
 
   override def run(context: StaticContext): Unit = {
     super.run(context)
-    // output nothing
+    // Produce nothing.
   }
 }
