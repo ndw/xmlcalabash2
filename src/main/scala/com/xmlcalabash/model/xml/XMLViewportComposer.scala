@@ -22,7 +22,6 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
   private var metadata: XProcMetadata = _
   private var items = ListBuffer.empty[XMLViewportItem]
   private var itemIndex = 0
-  private var pattern = patternString
   private var dynBindings = Map.empty[String, Message]
 
   override def runtimeBindings(bindings: Map[String, Message]): Unit = {
@@ -55,7 +54,7 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
     */
 
     matcher = new ProcessMatch(config, new Decomposer(), context, bindings.toMap)
-    matcher.process(source, pattern)
+    matcher.process(source, patternString)
     decomposed = matcher.result
     items.toList
   }
@@ -74,14 +73,14 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
     }
 
     override def startDocument(node: XdmNode): Boolean = {
-      items += new XMLViewportItem(node)
+      items += new XMLViewportItem(node, metadata)
       insertMarker()
       matcher.addEndElement()
       false
     }
 
     override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
-      items += new XMLViewportItem(node)
+      items += new XMLViewportItem(node, metadata.withBaseURI(Option(node.getBaseURI)))
       insertMarker()
       false
     }
@@ -99,19 +98,19 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
     }
 
     override def text(node: XdmNode): Unit = {
-      items += new XMLViewportItem(node)
+      items += new XMLViewportItem(node, metadata.withBaseURI(Option(node.getBaseURI)))
       insertMarker()
       matcher.addEndElement()
     }
 
     override def comment(node: XdmNode): Unit = {
-      items += new XMLViewportItem(node)
+      items += new XMLViewportItem(node, metadata.withBaseURI(Option(node.getBaseURI)))
       insertMarker()
       matcher.addEndElement()
     }
 
     override def pi(node: XdmNode): Unit = {
-      items += new XMLViewportItem(node)
+      items += new XMLViewportItem(node, metadata.withBaseURI(Option(node.getBaseURI)))
       insertMarker()
       matcher.addEndElement()
     }
@@ -149,7 +148,7 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
     }
 
     override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
-      throw XProcException.xcInvalidSelection(pattern, "attribute", None)
+      throw XProcException.xcInvalidSelection(patternString, "attribute", None)
     }
 
     override def text(node: XdmNode): Unit = {
@@ -165,13 +164,15 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
     }
   }
 
-  private class XMLViewportItem(item: XdmNode) extends ViewportItem {
+  private class XMLViewportItem(item: XdmNode, meta: XProcMetadata) extends ViewportItem {
     private var replacement: XdmNode = _
 
     def getReplacement: XdmNode = replacement
 
-    override def getItem: Any = item
-    override def getMetadata: Metadata = XProcMetadata.XML
+    override def getItem: Any = {
+      item
+    }
+    override def getMetadata: Metadata = meta
     override def putItems(items: List[Any]): Unit = {
       val lb = ListBuffer.empty[XdmNode]
       for (item <- items) {

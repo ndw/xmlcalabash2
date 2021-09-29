@@ -183,6 +183,9 @@ Only whitespace text nodes allowed: “$1”.
 XS0038
 Required attribute “$1” is missing.
 
+XS0043
+The port attribute is not allowed on p:with-input for $2.
+
 XS0044
 There’s no in-scope declaration for steps of type “$1”.
 
@@ -205,7 +208,7 @@ XS0064/3
 Error codes may not be repeated, “$1” occurs more than once.
 
 XS0065
-Port name omitted, but “$1” has no primary input port.
+Steps of type “$1” have no primary input port.
 
 XS0067/1
 Pipe has no step and there’s no default readable port

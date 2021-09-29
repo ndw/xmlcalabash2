@@ -59,6 +59,24 @@ class XProcMetadata(private val initialContentType: Option[MediaType],
     this(Some(contentType), metadata.properties)
   }
 
+  def withBaseURI(uri: URI): XProcMetadata = {
+    if (baseURI.isEmpty || baseURI.get != uri) {
+      val props = mutable.HashMap.empty[QName, XdmValue] ++ _properties
+      props.put(XProcConstants._base_uri, new XdmAtomicValue(uri))
+      new XProcMetadata(initialContentType, props.toMap)
+    } else {
+      this
+    }
+  }
+
+  def withBaseURI(uri: Option[URI]): XProcMetadata = {
+    if (uri.isDefined) {
+      withBaseURI(uri.get)
+    } else {
+      this
+    }
+  }
+
   def properties: Map[QName,XdmValue] = _properties.toMap
   def property(name: QName): Option[XdmValue] = {
     _properties.get(name)

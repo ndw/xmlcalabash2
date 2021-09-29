@@ -1,7 +1,7 @@
 import java.io.{BufferedReader, InputStreamReader}
 
-lazy val xmlCalabashVersion = "1.99.30"
-lazy val jafplVersion = "0.3.51"
+lazy val xmlCalabashVersion = "1.99.31"
+lazy val jafplVersion = "0.3.53"
 lazy val saxonVersion = "10.6"
 lazy val useSaxonEE = true
 
@@ -202,6 +202,14 @@ mappings in (Compile, packageBin) := {
 // ============================================================
 
 Runtime / unmanagedClasspath ++= (
+  if (useSaxonEE) {
+    Seq(file(s"${baseDirectory.value}/eelib"))
+  } else {
+    Seq()
+  }
+)
+
+Test / unmanagedClasspath ++= (
   if (useSaxonEE) {
     Seq(file(s"${baseDirectory.value}/eelib"))
   } else {

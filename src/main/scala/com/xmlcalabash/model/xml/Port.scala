@@ -86,6 +86,9 @@ class Port(override val config: XMLCalabashConfig) extends Artifact(config) {
               if (pname != "") {
                 port = Some(pname)
               }
+              if (sname == "") {
+                throw XProcException.xsInvalidPipeToken(shortcut, location)
+              }
               step = Some(sname)
           }
         } else {

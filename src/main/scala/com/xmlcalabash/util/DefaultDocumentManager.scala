@@ -9,7 +9,7 @@ import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XProcXPathExpression}
 import com.xmlcalabash.util.xc.Errors
-import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmValue}
+import net.sf.saxon.s9api.{QName, SaxonApiException, XdmAtomicValue, XdmNode, XdmValue}
 import net.sf.saxon.trans.XPathException
 import nu.validator.htmlparser.common.XmlViolationPolicy
 import nu.validator.htmlparser.dom.HtmlDocumentBuilder
@@ -43,13 +43,29 @@ class DefaultDocumentManager(xmlCalabash: XMLCalabashConfig) extends DocumentMan
 
   override def parse(request: DocumentRequest): DocumentResponse = {
     if (request.node.isDefined) {
+      var resultNode = request.node.get match {
+        case bin: BinaryNode => bin.node
+        case value: XdmValue => value
+        case _ =>
+          throw XProcException.xiThisCantHappen(s"Inline document request is neither a value nor binary: ${request.node.get}", None)
+      }
+
+      val metabase = request.docprops.get(XProcConstants._base_uri)
+      if (metabase.isDefined && request.contentType.get.markupContentType) {
+        // It must have come from document properties; try to patch the node
+        val baseuri = metabase.get.toString
+        val builder = new SaxonTreeBuilder(xmlCalabash)
+        builder.startDocument(new URI(baseuri))
+        builder.addSubtree(resultNode.asInstanceOf[XdmNode])
+        builder.endDocument()
+        resultNode = builder.result
+      }
+
       request.node.get match {
         case bin: BinaryNode =>
           return new DocumentResponse(bin.node, bin.bytes, request.contentType.get, request.docprops)
-        case value: XdmValue =>
-          return new DocumentResponse(value, request.contentType.get, request.docprops)
         case _ =>
-          throw XProcException.xiThisCantHappen(s"Inline document request is neither a value nor binary: ${request.node.get}", None)
+          return new DocumentResponse(resultNode, request.contentType.get, request.docprops)
       }
     }
 

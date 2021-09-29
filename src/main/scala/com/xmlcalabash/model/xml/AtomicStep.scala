@@ -182,8 +182,11 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
     // Now make sure there are no extra inputs
     val seenInput = mutable.HashSet.empty[String]
     for (winput <- children[WithInput]) {
+      if (decl.inputPorts.isEmpty && winput.port == "") {
+        throw XProcException.xsNoPrimaryInputPort(stepType, location)
+      }
       if (!decl.inputPorts.contains(winput.port)) {
-        throw new RuntimeException(s"No port named ${winput.port} on this step")
+        throw XProcException.xsBadPortName(stepType, winput.port, location)
       }
       if (seenInput.contains(winput.port)) {
         throw XProcException.xsDupWithInputPort(winput.port, location)

@@ -114,7 +114,7 @@ class ForUntil(override val config: XMLCalabashConfig) extends Container(config)
   override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
     val compare = new XmlItemComparator(config, comparator, maxIterations, this)
     val start = parent.asInstanceOf[ContainerStart]
-    val node = start.addUntil(compare, returnSet=="all", stepName, Manifold.ALLOW_ANY)
+    val node = start.addUntil(compare, returnSet=="all", stepName, containerManifold)
     _graphNode = Some(node)
 
     for (child <- children[Step]) {

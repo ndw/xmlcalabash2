@@ -171,6 +171,7 @@ object XProcException {
   def xsDupStepType(stepType: QName, location: Option[Location]): XProcException = staticError(36, stepType, location)
   def xsTextNotAllowed(text: String, location: Option[Location]): XProcException = staticError(37, text, location)
   def xsMissingRequiredAttribute(attName: QName, location: Option[Location]): XProcException = staticError(38, attName, location)
+  def xsPortNotAllowed(port: String, step: String, location: Option[Location]): XProcException = staticError(43, List(port,step), location)
   def xsMissingDeclaration(name: QName, location: Option[Location]): XProcException = staticError(44, name, location)
 
   def xsImportFailed(href: URI, location: Option[Location]): XProcException = staticError((52,1), href, location)
@@ -182,7 +183,7 @@ object XProcException {
   def xsCatchMissingCode(location: Option[Location]): XProcException = staticError((64,1), location)
   def xsCatchBadCode(code: QName, location: Option[Location]): XProcException = staticError((64,2), code, location)
   def xsCatchRepeatedCode(code: QName, location:Option[Location]): XProcException = staticError((64,3), code, location)
-  def xsPrimaryInputPortRequired(stepType: QName, location: Option[Location]): XProcException = staticError(65, stepType, location)
+  def xsNoPrimaryInputPort(stepType: QName, location: Option[Location]): XProcException = staticError(65, stepType, location)
 
   def xsPipeWithoutStepOrDrp(location: Option[Location]): XProcException = staticError((67,1), location)
   def xsPipeWithoutPortOrPrimaryOutput(location: Option[Location]): XProcException = staticError((67,2), location)

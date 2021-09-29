@@ -39,6 +39,8 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
       if (bindings.isEmpty && parent.get.isInstanceOf[AtomicStep]) {
         val depends = staticContext.dependsOnContextAvt(avt)
         if (!depends) {
+          // When you come back to optimize this, make sure ab-option-056 passes.
+          /*
           val expr = new XProcVtExpression(staticContext, _avt.get, true)
           var msg = try {
             config.expressionEvaluator.newInstance().value(expr, List(), inScopeStatics, None)
@@ -54,6 +56,7 @@ class WithOption(override val config: XMLCalabashConfig) extends NameBinding(con
           }
           msg = new XdmValueItemMessage(tvalue, XProcMetadata.XML, staticContext)
           staticValue = msg
+           */
         }
       }
     } else if (_select.isDefined) {

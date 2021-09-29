@@ -51,7 +51,7 @@ class Wrap() extends DefaultXmlStep with ProcessMatchingNodes {
     matcher.process(source, pattern)
 
     val result = matcher.result
-    consumer.get.receive("result", result, new XProcMetadata(MediaType.XML))
+    consumer.get.receive("result", result, source_metadata)
     }
 
   override def startDocument(node: XdmNode): Boolean = {

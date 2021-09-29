@@ -90,6 +90,18 @@ class InlineLoader() extends AbstractLoader {
     }
 
     val meta = new XProcMetadata(contentType, docProps)
+
+    if (meta.baseURI.isDefined) {
+      // It must have come from document properties; try to patch the node
+      if (contentType.markupContentType) {
+        val builder = new SaxonTreeBuilder(config)
+        builder.startDocument(meta.baseURI.get)
+        builder.addSubtree(node)
+        builder.endDocument()
+        node = builder.result
+      }
+    }
+
     val expander = new InlineExpander(config.config, node, meta, exprContext, location)
     expander.contentType = contentType
     expander.encoding = encoding

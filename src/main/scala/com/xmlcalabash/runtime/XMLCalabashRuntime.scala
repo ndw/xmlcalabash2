@@ -123,12 +123,14 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
       case _ =>
         throw XProcException.xiThisCantHappen(s"Unexpected value on pipeline input: ${item}", None)
     }
+    _usedPorts += port
   }
 
   def input(port: String, message: Message): Unit = {
     if (runtime.inputs.contains(port)) {
       runtime.inputs(port).send(message)
     }
+    _usedPorts += port
   }
 
   def output(port: String, consumer: DataConsumer): Unit = {

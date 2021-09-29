@@ -15,6 +15,7 @@ import net.sf.saxon.expr.parser.RoleDiagnostic
 import net.sf.saxon.lib.NamespaceConstant
 import net.sf.saxon.om.NamespaceMap
 import net.sf.saxon.s9api._
+import net.sf.saxon.trans.XPathException
 import net.sf.saxon.value.QNameValue
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -183,7 +184,14 @@ class DefaultXmlStep extends XmlStep {
       val hierarchy = new TypeHierarchy(config.processor.getUnderlyingConfiguration)
       // I have no idea what diagnostic means
       val diagnostic = new RoleDiagnostic(RoleDiagnostic.VARIABLE, name.getClarkName, RoleDiagnostic.VARIABLE)
-      val converted = hierarchy.applyFunctionConversionRules(boundvalue, net.sf.saxon.value.SequenceType.SINGLE_STRING, diagnostic, null)
+      val converted = try {
+        hierarchy.applyFunctionConversionRules(boundvalue, net.sf.saxon.value.SequenceType.SINGLE_STRING, diagnostic, null)
+      } catch {
+        case ex: XPathException =>
+          throw XProcException.xdBadType(boundvalue.getStringValue, "xs:string", location)
+        case ex: Throwable =>
+          throw XProcException.xdGeneralError(ex.getMessage, location)
+      }
       converted.head.getStringValue
     } else {
       default

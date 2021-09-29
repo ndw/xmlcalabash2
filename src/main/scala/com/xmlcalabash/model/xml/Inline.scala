@@ -218,7 +218,7 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, implied: 
           findVariablesInTVT(child, newExpand)
         }
       case XdmNodeKind.TEXT =>
-        var str = node.getStringValue
+        val str = node.getStringValue
         if (expandText && str.contains("{")) {
           findVariablesInNodes(str)
         }

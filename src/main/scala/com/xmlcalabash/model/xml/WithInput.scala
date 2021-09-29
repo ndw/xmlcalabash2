@@ -2,6 +2,7 @@ package com.xmlcalabash.model.xml
 
 import com.jafpl.graph.Node
 import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.exceptions
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.params.SelectFilterParams
@@ -13,6 +14,7 @@ import net.sf.saxon.s9api.{QName, XdmNode}
 class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
   private val _exclude_inline_prefixes = List.empty[String]
   private var _context: StaticContext = _
+  private var portSpecified = false
 
   def exclude_inline_prefixes: List[String] = _exclude_inline_prefixes
 
@@ -20,6 +22,7 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
     super.parse(node)
 
     if (attributes.contains(XProcConstants._port)) {
+      portSpecified = true
       _port = staticContext.parseNCName(attr(XProcConstants._port)).get
     }
     _context = new StaticContext(config, this, node)
@@ -35,6 +38,20 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
   }
 
   override protected[model] def makeBindingsExplicit(): Unit = {
+    if (portSpecified) {
+      parent.get match {
+        case _: ForEach =>
+          throw XProcException.xsPortNotAllowed(_port, "p:for-each", location)
+        case _: Viewport =>
+          throw XProcException.xsPortNotAllowed(_port, "p:viewport", location)
+        case _: Choose =>
+          throw XProcException.xsPortNotAllowed(_port, "p:choose or p:if", location)
+        case _: When =>
+          throw XProcException.xsPortNotAllowed(_port, "p:when", location)
+        case _ => ()
+      }
+    }
+
     examineBindings()
     super.makeBindingsExplicit()
 
