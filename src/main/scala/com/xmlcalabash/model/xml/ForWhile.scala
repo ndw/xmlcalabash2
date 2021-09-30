@@ -10,7 +10,7 @@ import com.xmlcalabash.util.XmlItemTester
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.{QName, XdmNode}
 
-class ForWhile(override val config: XMLCalabashConfig) extends Container(config) with NamedArtifact {
+class ForWhile(override val config: XMLCalabashConfig) extends ForContainer(config) with NamedArtifact {
   private val _max_iterations = new QName("max-iterations")
   private val _return = new QName("return")
   private var maxIterations: Long = -1
@@ -21,17 +21,17 @@ class ForWhile(override val config: XMLCalabashConfig) extends Container(config)
     super.parse(node)
 
     if (attributes.contains(_max_iterations)) {
-      maxIterations = attr(_max_iterations).get.toString.toInt
+      maxIterations = attr(_max_iterations).get.toInt
     }
 
     if (attributes.contains(XProcConstants._test)) {
-      test = attr(XProcConstants._test).get.toString
+      test = attr(XProcConstants._test).get
     } else {
       throw new RuntimeException("test is required")
     }
 
     if (attributes.contains(_return)) {
-      returnSet = attr(_return).get.toString
+      returnSet = attr(_return).get
       if (returnSet != "last" && returnSet != "all") {
         throw new RuntimeException("return must be last or all")
       }
@@ -44,19 +44,7 @@ class ForWhile(override val config: XMLCalabashConfig) extends Container(config)
   }
 
   override protected[model] def makeStructureExplicit(): Unit = {
-    val fc = firstChild
-    if (firstWithInput.isEmpty) {
-      val winput = new WithInput(config)
-      winput.port = "#source"
-      addChild(winput, fc)
-    }
-
-    val input = new DeclareInput(config)
-    input.port = "current"
-    input.primary = true
-    addChild(input, fc)
-
-    makeContainerStructureExplicit()
+    setupLoopInputs(Some(true))
 
     // Now let's consider what making the container structure explicit has done.
     // If either the primary output or the test output haven't been specified,
@@ -154,6 +142,6 @@ class ForWhile(override val config: XMLCalabashConfig) extends Container(config)
   }
 
   override def toString: String = {
-    s"cx:until $stepName"
+    s"cx:while $stepName"
   }
 }

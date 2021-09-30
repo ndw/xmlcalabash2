@@ -49,6 +49,8 @@
        <s:rule context="/">
          <s:assert test="/count(result) = 1">Result should be a single text node.</s:assert>
        </s:rule>
+     </s:pattern>
+     <s:pattern>
        <s:rule context="/result">
          <s:assert test="string(.) = 'Spoon!'">Value should be ‘Spoon!’ not <s:value-of select="."/></s:assert>
        </s:rule>

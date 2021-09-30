@@ -14,6 +14,7 @@ object XProcConstants {
   val ns_html = "http://www.w3.org/1999/xhtml"
   val ns_xs  = "http://www.w3.org/2001/XMLSchema"
   val ns_cx  = "http://xmlcalabash.com/ns/extensions"
+  val ns_cxerr = "http://xmlcalabash.com/ns/extension-errors"
   val ns_exf = "http://exproc.org/standard/functions"
   val ns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
   val ns_xsl = "http://www.w3.org/1999/XSL/Transform"

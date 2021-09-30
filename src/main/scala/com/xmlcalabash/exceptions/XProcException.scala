@@ -370,6 +370,9 @@ object XProcException {
   def xcXIncludeLoop(href: String, location: Option[Location]): XProcException = stepError(29, href, location)
   def xcXIncludeResourceError(href: String, location: Option[Location]): XProcException = stepError(29, href, location)
 
+  def xxUnmappedException(ex: JafplException, details: List[Any]): XProcException = extensionError(999, List(ex.getMessage(), details))
+  def xxInvalidLoop(details: List[Any]): XProcException = extensionError(60, details)
+
   def staticErrorCode(code: Int): QName = {
     new QName("err", XProcConstants.ns_err, "XS%04d".format(code))
   }
@@ -380,6 +383,10 @@ object XProcException {
 
   def stepErrorCode(code: Int): QName = {
     new QName("err", XProcConstants.ns_err, "XC%04d".format(code))
+  }
+
+  def extensionErrorCode(code: Int): QName = {
+    new QName("cxerr", XProcConstants.ns_cxerr, "XX%04d".format(code))
   }
 
   private def internalError(code: Int, location: Option[Location]): XProcException = {
@@ -474,6 +481,33 @@ object XProcException {
 
   private def stepError(code: Int, location: Option[Location]): XProcException = {
     stepError((code, 1), List(), location)
+  }
+
+  // ====================================================================================
+
+  private def extensionError(code: (Int, Int), details: List[Any]): XProcException = {
+    val qname = extensionErrorCode(code._1)
+    new XProcException(qname, code._2, None, None, details)
+  }
+
+  private def extensionError(code: Int, details: List[Any]): XProcException = {
+    extensionError((code, 1), details)
+  }
+
+  private def extensionError(code: (Int, Int), details: Any): XProcException = {
+    extensionError(code, List(details))
+  }
+
+  private def extensionError(code: Int, details: Any): XProcException = {
+    extensionError((code, 1), List(details))
+  }
+
+  private def extensionError(code: (Int, Int)): XProcException = {
+    extensionError(code, List())
+  }
+
+  private def extensionError(code: Int): XProcException = {
+    extensionError((code, 1), List())
   }
 
   // ====================================================================================

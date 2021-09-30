@@ -248,6 +248,7 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
     val response = new InternetProtocolResponse(finalURI);
     response.statusCode = httpResult.getStatusLine.getStatusCode
     response.cookieStore = cookieStore.get
+    response.headers = requestHeaders()
     response.report = requestReport()
     readResponseEntity(response)
   }
@@ -439,13 +440,35 @@ class InternetProtocolRequest(val config: XMLCalabashConfig, val context: Static
     report = report.put(new XdmAtomicValue("base-uri"), new XdmAtomicValue(finalURI))
 
     var headers = new XdmMap()
-    for (header <- httpResult.getAllHeaders) {
-      val key = header.getName.toLowerCase
-      val value = header.getValue
-      headers = headers.put(new XdmAtomicValue(key), new XdmAtomicValue(value))
+    for ((name,value) <- requestHeaders()) {
+      headers = headers.put(new XdmAtomicValue(name), value)
     }
 
     report.put(new XdmAtomicValue("headers"), headers)
+  }
+
+  private def requestHeaders(): Map[String,XdmAtomicValue] = {
+    val headers = mutable.HashMap.empty[String, XdmAtomicValue]
+
+    for (header <- httpResult.getAllHeaders) {
+      val key = header.getName.toLowerCase
+      if (Option(header.getValue).isDefined) {
+        var value = new XdmAtomicValue(header.getValue)
+        try {
+          if (key.contains("date") || key.contains("modified")) {
+            value = new XdmAtomicValue(Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(header.getValue)))
+          } else if (key.contains("length")) {
+            value = new XdmAtomicValue(Integer.parseInt(header.getValue))
+          }
+        } catch {
+          case _: Throwable =>
+            ()
+        }
+        headers.put(key, value)
+      }
+    }
+
+    headers.toMap
   }
 
   private def normalizedHeaders: Map[String,String] = {

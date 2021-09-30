@@ -78,7 +78,7 @@ class HttpDataStore(config: XMLCalabashConfig, fallback: DataStore) extends Data
       if (response.statusCode.isEmpty || response.statusCode.get >= 400) {
         throw new RuntimeException("Failed to GET resource " + uri.toString)
       }
-      handler.list(response.finalURI, stringMap(response.responseMetadata.head.properties))
+      handler.list(response.finalURI, response.headers)
     } else {
       fallback.infoEntry(href, baseURI, accept, handler)
     }
@@ -130,16 +130,16 @@ class HttpDataStore(config: XMLCalabashConfig, fallback: DataStore) extends Data
           pos = href.indexOf("/")
           if (href != "" && (pos < 0 || pos == href.length)) {
             val itemuri = uri.resolve(href)
-            val irequest = new InternetProtocolRequest(config, uri)
+            val irequest = new InternetProtocolRequest(config, itemuri)
             val iresponse = irequest.execute("HEAD")
 
             if (accept.contains("*/*")) {
-              handler.list(itemuri, stringMap(iresponse.responseMetadata.head.properties))
+              handler.list(itemuri, iresponse.headers)
             } else {
               val ctype = iresponse.mediaType.getOrElse(MediaType.OCTET_STREAM)
               val ctypestr = ctype.mediaType + "/" + ctype.mediaSubtype
               if (accept.contains(ctypestr) || accept.contains(ctype.mediaType + "/*")) {
-                handler.list(itemuri, stringMap(iresponse.responseMetadata.head.properties))
+                handler.list(itemuri, iresponse.headers)
               }
             }
           }

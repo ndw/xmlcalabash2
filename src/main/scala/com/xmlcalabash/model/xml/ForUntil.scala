@@ -9,7 +9,7 @@ import com.xmlcalabash.util.XmlItemComparator
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.{QName, XdmNode}
 
-class ForUntil(override val config: XMLCalabashConfig) extends Container(config) with NamedArtifact {
+class ForUntil(override val config: XMLCalabashConfig) extends ForContainer(config) with NamedArtifact {
   private val _max_iterations = new QName("max-iterations")
   private val _comparator = new QName("comparator")
   private val _return = new QName("return")
@@ -42,19 +42,7 @@ class ForUntil(override val config: XMLCalabashConfig) extends Container(config)
   }
 
   override protected[model] def makeStructureExplicit(): Unit = {
-    val fc = firstChild
-    if (firstWithInput.isEmpty) {
-      val winput = new WithInput(config)
-      winput.port = "#source"
-      addChild(winput, fc)
-    }
-
-    val input = new DeclareInput(config)
-    input.port = "current"
-    input.primary = true
-    addChild(input, fc)
-
-    makeContainerStructureExplicit()
+    setupLoopInputs(Some(true))
 
     // Now let's consider what making the container structure explicit has done.
     // If either the primary output or the test output haven't been specified,

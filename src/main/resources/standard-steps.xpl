@@ -520,11 +520,6 @@
   <p:option name="parameters" as="map(xs:QName,item()*)?"/>
 </p:declare-step>
 
-<p:declare-step type="cx:peephole">
-  <p:input port="source"/>
-  <p:output port="result"/>
-</p:declare-step>
-
 <p:declare-step type="cx:option-value">
   <p:output port="result"/>
   <p:option name="option"/>

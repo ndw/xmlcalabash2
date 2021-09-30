@@ -117,7 +117,7 @@ class SchematronImpl(runtimeConfig: XMLCalabashConfig) {
     val nsBindings = mutable.HashMap.empty[String,String]
     nsBindings.put("svrl", "http://purl.oclc.org/dsdl/svrl")
 
-    val xpath = "//svrl:failed-assert"
+    val xpath = "//svrl:failed-assert|//svrl:suppressed-rule"
     val results = ListBuffer.empty[XdmNode]
 
     val xcomp = runtimeConfig.processor.newXPathCompiler()

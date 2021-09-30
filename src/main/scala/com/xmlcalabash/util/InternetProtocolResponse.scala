@@ -1,7 +1,7 @@
 package com.xmlcalabash.util
 
 import com.xmlcalabash.runtime.XProcMetadata
-import net.sf.saxon.s9api.XdmMap
+import net.sf.saxon.s9api.{XdmAtomicValue, XdmMap}
 import org.apache.http.client.CookieStore
 import org.apache.http.cookie.Cookie
 import org.apache.http.impl.client.BasicCookieStore
@@ -14,6 +14,7 @@ import scala.jdk.CollectionConverters.CollectionHasAsScala
 class InternetProtocolResponse(val responseURI: URI) {
   private var _statusCode = Option.empty[Int]
   private var _report = Option.empty[XdmMap]
+  private var _headers = Map.empty[String, XdmAtomicValue]
   private var _mediaType = Option.empty[MediaType]
   private val _response = ListBuffer.empty[InputStream]
   private val _responseMetadata = ListBuffer.empty[XProcMetadata]
@@ -41,6 +42,11 @@ class InternetProtocolResponse(val responseURI: URI) {
     for (cookie <- store.getCookies.asScala) {
       _cookieStore.get.addCookie(cookie)
     }
+  }
+
+  def headers: Map[String, XdmAtomicValue] = _headers
+  def headers_=(headers: Map[String, XdmAtomicValue]): Unit = {
+    _headers = headers
   }
 
   def report: Option[XdmMap] = _report

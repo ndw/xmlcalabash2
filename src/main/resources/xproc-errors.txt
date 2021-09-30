@@ -592,3 +592,7 @@ It must be time for breakfast at Milliways, something impossible has happened: $
 {http://xmlcalabash.com/ns/extensions}XI9999
 This is the end of the file.
 
+{http://xmlcalabash.com/ns/extension-errors}XX0060
+Invalid cx:loop bounds: “$1” to “$2” by “$3”.
+
+

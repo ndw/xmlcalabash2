@@ -45,6 +45,8 @@
       <s:rule context="/">
         <s:assert test="wrapper">The pipeline root is not “wrapper”.</s:assert>
       </s:rule>
+    </s:pattern>
+    <s:pattern>
       <s:rule context="wrapper">
         <s:assert test="count(doc) = 0">There aren’t exactly zero doc elements</s:assert>
       </s:rule>

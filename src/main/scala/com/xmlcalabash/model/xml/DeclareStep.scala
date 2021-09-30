@@ -19,8 +19,8 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
   private var _type = Option.empty[QName]
   private var _visibility = Option.empty[String]
   private var _signature = Option.empty[StepSignature]
-  private var _inputs = mutable.HashMap.empty[String, DeclareInput]
-  private var _bindings = mutable.HashMap.empty[QName, DeclareOption]
+  private val _inputs = mutable.HashMap.empty[String, DeclareInput]
+  private val _bindings = mutable.HashMap.empty[QName, DeclareOption]
   private var _excludeUriBindings = Set.empty[String]
 
   // These are a bit of a hack. It's very hard to tell the difference
@@ -60,7 +60,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
         val ncname = typeUtils.castAtomicAs(XdmAtomicValue.makeAtomicValue(aname.get), ItemType.NCNAME, staticContext)
         _name = Some(ncname.getStringValue)
       } catch {
-        case sae: SaxonApiException =>
+        case _: SaxonApiException =>
           throw XProcException.xsBadTypeValue(aname.get, "NCName", location)
       }
     }
@@ -188,6 +188,9 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
         stepSig.implementation = config.atomicStepImplementation(stepType.get).get
       } else {
         stepSig.declaration = this
+        if (atomic) {
+          throw new RuntimeException(s"Attempt to declare pipeline ${stepType.get} but no steps provided")
+        }
       }
     }
 

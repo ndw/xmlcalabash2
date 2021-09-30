@@ -48,6 +48,12 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
           throw XProcException.xsPortNotAllowed(_port, "p:choose or p:if", location)
         case _: When =>
           throw XProcException.xsPortNotAllowed(_port, "p:when", location)
+        case _: ForLoop =>
+          throw XProcException.xsPortNotAllowed(_port, "cx:loop", location)
+        case _: ForUntil =>
+          throw XProcException.xsPortNotAllowed(_port, "cx:until", location)
+        case _: ForWhile =>
+          throw XProcException.xsPortNotAllowed(_port, "cx:while", location)
         case _ => ()
       }
     }

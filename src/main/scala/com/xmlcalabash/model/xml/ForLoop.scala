@@ -8,7 +8,7 @@ import com.xmlcalabash.runtime.XMLCalabashRuntime
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.{QName, XdmNode}
 
-class ForLoop(override val config: XMLCalabashConfig) extends Container(config) with NamedArtifact {
+class ForLoop(override val config: XMLCalabashConfig) extends ForContainer(config) with NamedArtifact {
   private val _from = new QName("from")
   private val _to = new QName("to")
   private val _by = new QName("by")
@@ -49,12 +49,7 @@ class ForLoop(override val config: XMLCalabashConfig) extends Container(config) 
   }
 
   override protected[model] def makeStructureExplicit(): Unit = {
-    val input = new DeclareInput(config)
-    input.port = "current"
-    input.primary = true
-    addChild(input, firstChild)
-
-    makeContainerStructureExplicit()
+    setupLoopInputs(None)
   }
 
   override def graphNodes(runtime: XMLCalabashRuntime, parent: Node): Unit = {
