@@ -342,7 +342,13 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
           }
         }
         buf.toString
-      case _ => item.getStringValue
+      case _ =>
+        try {
+          item.getStringValue
+        } catch {
+          case ex: Throwable =>
+            throw XProcException.xdGeneralError(ex.getMessage, None)
+        }
     }
   }
 
