@@ -60,12 +60,6 @@ protected[xmlcalabash] class InlineExpander(val config: XMLCalabashConfig, val n
   }
 
   def loadDocument(): DocumentRequest = {
-    val propContentType = if (_documentProperties.contains(XProcConstants._content_type)) {
-      Some(MediaType.parse(_documentProperties.get(XProcConstants._content_type).toString))
-    } else {
-      None
-    }
-
     if (encoding.isDefined) {
       if (contentType.xmlContentType || contentType.htmlContentType) {
         throw XProcException.xdCannotEncodeMarkup(encoding.get, contentType, exprContext.location)
