@@ -31,9 +31,18 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
 
   override protected[model] def makeStructureExplicit(): Unit = {
     val first = firstChild
-    if (firstWithInput.isEmpty) {
+    if (firstWithInput.isDefined) {
+      val fwi = firstWithInput.get
+      fwi.port match {
+        case "" =>
+          // It may be anonymous in XProc, but it mustn't be anonymous in the graph
+          fwi.port = "source"
+        case "source" => ()
+        case _ => throw XProcException.xiThisCantHappen(s"Viewport withinput is named '${fwi.port}''", location)
+      }
+    } else {
       val input = new WithInput(config)
-      input.port = "#source"
+      input.port = "source"
       input.primary = true
       addChild(input, first)
     }

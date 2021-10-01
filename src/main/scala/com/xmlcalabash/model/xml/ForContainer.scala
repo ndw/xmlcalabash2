@@ -10,7 +10,7 @@ abstract class ForContainer(override val config: XMLCalabashConfig) extends Cont
     if (primary.isDefined) {
       if (firstWithInput.isEmpty) {
         val input = new WithInput(config)
-        input.port = "#source"
+        input.port = "source"
         input.primary = primary.get
         addChild(input, first)
       }

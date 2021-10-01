@@ -82,6 +82,8 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
       pipe.port = lastStep.get.primaryOutput.get.port
       pipe.link = lastStep.get.primaryOutput.get
       output.addChild(pipe)
+      _outputs.put(output.port, output)
+      lastOutput = Some(output)
 
       if (firstChild.isDefined) {
         addChild(output, firstChild.get)

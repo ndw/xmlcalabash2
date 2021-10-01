@@ -66,7 +66,7 @@ class Choose(override val config: XMLCalabashConfig) extends Container(config) {
 
     if (input.isEmpty) {
       val winput = new WithInput(config)
-      winput.port = "#source"
+      winput.port = "source"
       winput.primary = true
       if (firstChild.isDefined) {
         addChild(winput, firstChild.get)

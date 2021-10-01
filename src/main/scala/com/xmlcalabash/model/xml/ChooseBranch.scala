@@ -69,7 +69,7 @@ class ChooseBranch(override val config: XMLCalabashConfig) extends Container(con
     var winput = firstWithInput
     if (winput.isEmpty) {
       winput = Some(new WithInput(config))
-      winput.get.port = "#source"
+      winput.get.port = "source"
       winput.get.primary = true
       addChild(winput.get, firstChild)
     }
@@ -105,7 +105,7 @@ class ChooseBranch(override val config: XMLCalabashConfig) extends Container(con
     var winput = firstWithInput
     if (winput.isEmpty) {
       winput = Some(new WithInput(config))
-      winput.get.port = "#source"
+      winput.get.port = "source"
       winput.get.primary = true
       addChild(winput.get, firstChild)
     } else {

@@ -21,14 +21,14 @@ class ForEach(override val config: XMLCalabashConfig) extends Container(config) 
     val fc = firstChild
     if (firstWithInput.isEmpty) {
       val winput = new WithInput(config)
-      winput.port = "#source"
+      winput.port = "source"
       winput.primary = true
       addChild(winput, fc)
     } else {
       val wi = firstWithInput.get
       wi.primary = true
       if (wi.port == "") {
-        wi.port = "#source"
+        wi.port = "source"
       }
     }
 
