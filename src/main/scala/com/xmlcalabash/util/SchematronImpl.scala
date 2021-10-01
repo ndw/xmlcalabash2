@@ -5,7 +5,7 @@ import com.xmlcalabash.exceptions.{TestException, XProcException}
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.om.StructuredQName
-import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmDestination, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{Axis, QName, XdmAtomicValue, XdmDestination, XdmNode, XdmNodeKind, XdmValue}
 import org.xml.sax.InputSource
 
 import java.net.URI
@@ -85,9 +85,26 @@ class SchematronImpl(runtimeConfig: XMLCalabashConfig) {
 
     schemaCompiler.setInitialContextNode(schema)
     schemaCompiler.setDestination(result)
+    if (Option(schema.getBaseURI).isDefined) {
+      schemaCompiler.setBaseOutputURI(schema.getBaseURI.toASCIIString)
+    }
 
     schemaCompiler.transform()
-    val compiledSchema = result.getXdmNode
+
+    // SchXslt 1.8.4 has a bug where it makes the base URI of every node in the compiled schema
+    // the same as the static base URI of the compiler stylesheet. This hack puts the right base URI
+    // back. Note that it's not especially clever, it doesn't handle embedded xml:base attributes,
+    // for example. But how likely are they in a Schematron schema? And I hope David fixes this bug...
+    val compiledSchema = if (Option(schema.getBaseURI).isDefined && schema.getBaseURI.toASCIIString != "") {
+      val patcher = new SaxonTreeBuilder(runtimeConfig)
+      patcher.startDocument(schema.getBaseURI)
+      patchBaseUri(patcher, result.getXdmNode, schema.getBaseURI)
+      patcher.endDocument()
+      patcher.result
+    } else {
+      result.getXdmNode
+    }
+
     val compiledRoot = S9Api.documentElement(compiledSchema)
     if (compiledRoot.isEmpty) {
       throw XProcException.xcNotASchematronDocument()
@@ -105,11 +122,35 @@ class SchematronImpl(runtimeConfig: XMLCalabashConfig) {
       transformer.setParameter(name, new XdmAtomicValue(value.toString))
     }
 
+    transformer.setURIResolver(uResolver)
     transformer.setInitialContextNode(sourceXML)
     transformer.setDestination(result)
+    if (Option(sourceXML.getBaseURI).isDefined) {
+      transformer.setBaseOutputURI(sourceXML.getBaseURI.toASCIIString)
+    }
+
     transformer.transform()
 
     result.getXdmNode
+  }
+
+  private def patchBaseUri(patcher: SaxonTreeBuilder, node: XdmNode, baseURI: URI): Unit = {
+    node.getNodeKind match {
+      case XdmNodeKind.DOCUMENT =>
+        val iter = node.axisIterator(Axis.CHILD)
+        while (iter.hasNext) {
+          patchBaseUri(patcher, iter.next(), baseURI)
+        }
+      case XdmNodeKind.ELEMENT =>
+        patcher.addStartElement(node, baseURI)
+        val iter = node.axisIterator(Axis.CHILD)
+        while (iter.hasNext) {
+          patchBaseUri(patcher, iter.next(), baseURI)
+        }
+        patcher.addEndElement()
+      case _ =>
+        patcher.addSubtree(node)
+    }
   }
 
   def failedAssertions(node: XdmNode): List[XdmNode] = {
