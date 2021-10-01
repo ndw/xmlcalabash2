@@ -70,7 +70,7 @@ class SchematronImpl(runtimeConfig: XMLCalabashConfig) {
     compiler.setSchemaAware(schemaAware)
     compiler.setURIResolver(uResolver)
 
-    val schpipeline = uResolver.resolve("/etc/schxslt-1.8.3/2.0/pipeline-for-svrl.xsl", fakeBaseURI)
+    val schpipeline = uResolver.resolve("/etc/schxslt-1.8.4/2.0/pipeline-for-svrl.xsl", fakeBaseURI)
     var exec = compiler.compile(schpipeline)
     val schemaCompiler = exec.load()
 
