@@ -243,7 +243,7 @@ class Xslt extends DefaultXmlStep {
       if (method.isDefined) {
         buildTree = List("xml", "html", "xhtml", "text").contains(method.get.toString)
       } else {
-        buildTree = true
+        buildTree = false
       }
     }
     primaryDestination = if (buildTree) {
@@ -312,27 +312,29 @@ class Xslt extends DefaultXmlStep {
     primaryDestination match {
       case raw: RawDestination =>
         val iter = raw.getXdmValue.iterator()
-        var result: XdmValue = null
+        var result = Option.empty[XdmValue]
         while (iter.hasNext) {
           val next = iter.next()
-          if (result == null) {
-            result = next
+          if (result.isDefined) {
+            result = Some(next)
           } else {
-            result = result.append(next)
+            result = Some(result.get.append(next))
           }
         }
 
-        result match {
-          case node: XdmNode =>
-            if (Option(node.getBaseURI).isDefined) {
-              val prop = mutable.HashMap.empty[QName, XdmValue]
-              prop.put(XProcConstants._base_uri, new XdmAtomicValue(node.getBaseURI))
-              consume(result, "result", prop.toMap, primaryOutputProperties)
-            } else {
-              consume(result, "result", Map(), primaryOutputProperties)
-            }
-          case _ =>
-            consume(result, "result", Map(), primaryOutputProperties)
+        if (result.isDefined) {
+          result.get match {
+            case node: XdmNode =>
+              if (Option(node.getBaseURI).isDefined) {
+                val prop = mutable.HashMap.empty[QName, XdmValue]
+                prop.put(XProcConstants._base_uri, new XdmAtomicValue(node.getBaseURI))
+                consume(result.get, "result", prop.toMap, primaryOutputProperties)
+              } else {
+                consume(result.get, "result", Map(), primaryOutputProperties)
+              }
+            case _ =>
+              consume(result.get, "result", Map(), primaryOutputProperties)
+          }
         }
 
       case xdm: XdmDestination =>
