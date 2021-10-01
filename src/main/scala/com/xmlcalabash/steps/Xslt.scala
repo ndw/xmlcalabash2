@@ -243,7 +243,7 @@ class Xslt extends DefaultXmlStep {
       if (method.isDefined) {
         buildTree = List("xml", "html", "xhtml", "text").contains(method.get.toString)
       } else {
-        buildTree = false
+        buildTree = true
       }
     }
     primaryDestination = if (buildTree) {
