@@ -49,8 +49,8 @@ class StaticContext(val config: XMLCalabashConfig, val artifact: Option[Artifact
     this(context, Some(artifact))
   }
 
-  def this(config: XMLCalabashConfig, artifact: Artifact, node: XdmNode) = {
-    this(config, Some(artifact))
+  def this(config: XMLCalabashConfig, artifact: Option[Artifact], node: XdmNode) = {
+    this(config, artifact)
     _baseURI = Option(node.getBaseURI)
     _inScopeNS = S9Api.inScopeNamespaces(node)
     _location = Some(new XProcLocation(node))

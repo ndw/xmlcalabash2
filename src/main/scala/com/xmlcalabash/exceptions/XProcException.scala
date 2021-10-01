@@ -345,6 +345,7 @@ object XProcException {
   def xcOverrideContentTypesMalformed(location: Option[Location]): XProcException = stepError(146, location)
   def xcOverrideContentTypesBadRegex(regex: String, location: Option[Location]): XProcException = stepError(147, regex, location)
   def xcFileMoveBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(148, uri, location)
+  def xcNotASchematronDocument(): XProcException = stepError(151, None)
   def xcFileCopyDirToFile(source: URI, target: URI, location: Option[Location]): XProcException = stepError(157, List(source, target), location)
   def xcFileMoveDirToFile(source: URI, target: URI, location: Option[Location]): XProcException = stepError(158, List(source, target), location)
 

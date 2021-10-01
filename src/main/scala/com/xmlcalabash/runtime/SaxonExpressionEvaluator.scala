@@ -210,7 +210,7 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
       xdmval.itemAt(0) match {
         case atomic: XdmAtomicValue =>
           //System.err.println(s"$xpath = ${atomic.getBooleanValue}")
-          atomic.getBooleanValue
+          atomic.getUnderlyingValue.effectiveBooleanValue()
         case _ =>
           //System.err.println(s"$xpath = true")
           true

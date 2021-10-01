@@ -454,6 +454,9 @@ Invalid regular expression: “$1”
 XC0143
 Delete not allowed: $1
 
+XC0151
+Schema is not a valid schematron document.
+
 XC0157
 Cannot copy directory ($1) to file ($2)
 

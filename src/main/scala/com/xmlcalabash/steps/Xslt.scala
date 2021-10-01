@@ -315,7 +315,7 @@ class Xslt extends DefaultXmlStep {
         var result = Option.empty[XdmValue]
         while (iter.hasNext) {
           val next = iter.next()
-          if (result.isDefined) {
+          if (result.isEmpty) {
             result = Some(next)
           } else {
             result = Some(result.get.append(next))

@@ -9,9 +9,12 @@ import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
 import net.sf.saxon.functions.AccessorFn.Component
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
 import net.sf.saxon.om.{Item, Sequence, StructuredQName}
-import net.sf.saxon.s9api.{QName, XdmEmptySequence, XdmItem, XdmNode, XdmValue}
+import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmEmptySequence, XdmItem, XdmNode, XdmValue}
 import net.sf.saxon.tree.iter.ArrayIterator
+import net.sf.saxon.tree.tiny.{TinyDocumentImpl, TinyElementImpl, TinyTextImpl}
 import net.sf.saxon.value.{AnyURIValue, QNameValue, SequenceType, StringValue}
+
+import java.net.URI
 
 class DocumentProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
   val funcname = new StructuredQName("p", XProcConstants.ns_p, "document-property")
@@ -40,8 +43,18 @@ class DocumentProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
         throw XProcException.xiExtFunctionNotAllowed()
       }
 
-      val msg = getMessage(arguments(0).head, exprEval)
-      val prop: QName = arguments(1).head match {
+      val item = arguments(0).head
+      val propname = arguments(1).head
+
+      val itemBaseUri = item match {
+        case i: TinyDocumentImpl => Option(i.getBaseURI)
+        case i: TinyElementImpl => Option(i.getBaseURI)
+        case i: TinyTextImpl => Option(i.getBaseURI)
+        case _ => None
+      }
+
+      val msg = getMessage(item, exprEval)
+      val prop: QName = propname match {
         case pval: QNameValue =>
           new QName(pval.getComponent(Component.NAMESPACE).getStringValue, pval.getComponent(Component.LOCALNAME).getStringValue)
         case sval: StringValue =>
@@ -84,7 +97,13 @@ class DocumentProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
               XdmEmptySequence.getInstance().getUnderlyingValue
           }
         } else {
-          XdmEmptySequence.getInstance().getUnderlyingValue
+          if (prop == XProcConstants._base_uri && itemBaseUri.isDefined) {
+            // I wonder if there's a better way?
+            val iter = new ArrayIterator[Item](Array(new XdmAtomicValue(itemBaseUri.get).getUnderlyingValue))
+            iter.materialize()
+          } else {
+            XdmEmptySequence.getInstance().getUnderlyingValue
+          }
         }
       }
     }

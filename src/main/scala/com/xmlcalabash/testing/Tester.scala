@@ -96,6 +96,8 @@ class Tester(runtimeConfig: XMLCalabashConfig) {
       if (_schematron.isDefined) {
         var fail = ""
         val schematest = new Schematron(runtimeConfig)
+        val x = schematron.get
+        val y = x.getBaseURI
         val results = schematest.test(resultDoc, schematron.get)
         for (result <- results) {
           val xpath = result.getAttributeValue(_test)

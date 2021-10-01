@@ -23,14 +23,16 @@ class DirectoryList() extends DefaultXmlStep {
 
   override def run(context: StaticContext): Unit = {
     val builder = new SaxonTreeBuilder(config)
-    builder.startDocument(URIUtils.cwdAsURI)
-    builder.addStartElement(XProcConstants.c_directory)
 
     val path = if (context.baseURI.isDefined) {
-      context.baseURI.get.resolve(stringBinding(XProcConstants._path)).toString
+      context.baseURI.get.resolve(stringBinding(XProcConstants._path))
     } else {
-      new URI(stringBinding(XProcConstants._path)).toString
+      new URI(stringBinding(XProcConstants._path))
     }
+
+    builder.startDocument(path)
+    builder.addStartElement(XProcConstants.c_directory)
+
 
     val detailed = booleanBinding(_detailed).getOrElse(false)
     val fileDS = new FileDataStore(config.config, new FallbackDataStore())
@@ -55,7 +57,7 @@ class DirectoryList() extends DefaultXmlStep {
       }
     }
 
-    fileDS.listEachEntry(path, context.baseURI.getOrElse(URIUtils.cwdAsURI), "*/*", new DataInfo() {
+    fileDS.listEachEntry(path.toString, context.baseURI.getOrElse(URIUtils.cwdAsURI), "*/*", new DataInfo() {
       override def list(id: URI, props: Map[String, XdmAtomicValue]): Unit = {
         var filename = id.getPath
         if (filename.endsWith("/")) {
@@ -124,6 +126,6 @@ class DirectoryList() extends DefaultXmlStep {
 
     builder.addEndElement()
     builder.endDocument()
-    consumer.get.receive("result", builder.result, new XProcMetadata(MediaType.XML))
+    consumer.get.receive("result", builder.result, new XProcMetadata(MediaType.XML, path))
   }
 }

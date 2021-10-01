@@ -1,7 +1,7 @@
 package com.xmlcalabash.util
 
 import com.xmlcalabash.config.XMLCalabashConfig
-import com.xmlcalabash.exceptions.TestException
+import com.xmlcalabash.exceptions.{TestException, XProcException}
 import com.xmlcalabash.model.util.SaxonTreeBuilder
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 import net.sf.saxon.om.StructuredQName
@@ -90,8 +90,7 @@ class SchematronImpl(runtimeConfig: XMLCalabashConfig) {
     val compiledSchema = result.getXdmNode
     val compiledRoot = S9Api.documentElement(compiledSchema)
     if (compiledRoot.isEmpty) {
-      // FIXME: throw some sort of xproc exception
-      throw new RuntimeException("Failed to compile schema provided")
+      throw XProcException.xcNotASchematronDocument()
     }
 
     compiler = runtimeConfig.processor.newXsltCompiler()

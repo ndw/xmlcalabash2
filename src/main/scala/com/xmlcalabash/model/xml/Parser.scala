@@ -5,7 +5,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.{ProcessMatch, ProcessMatchingNodes, StaticContext, XProcLocation, XProcXPathExpression}
 import com.xmlcalabash.util.{MediaType, S9Api}
-import net.sf.saxon.om.AttributeMap
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap, FingerprintedQName}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind}
 import org.xml.sax.InputSource
 
@@ -538,29 +538,23 @@ class Parser(config: XMLCalabashConfig) {
 
     override def startElement(node: XdmNode, attribute: AttributeMap): Boolean = {
       val useWhenName = if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
-        XProcConstants._use_when
+        new FingerprintedQName("", "", "use-when")
       } else {
-        XProcConstants.p_use_when
+        new FingerprintedQName("p", XProcConstants.ns_p, "use-when")
       }
-      var useWhen = Option.empty[String]
 
-      val iter = node.axisIterator(Axis.ATTRIBUTE)
-      while (iter.hasNext) {
-        val attr = iter.next
-        if (attr.getNodeName == useWhenName) {
-          useWhen = Some(attr.getStringValue)
-        }
-      }
+      val useWhen = Option(attribute.get(useWhenName))
 
       var use = true
       if (useWhen.isDefined && (inlineStack.isEmpty || !inlineStack.last)) {
-        val expr = new XProcXPathExpression(staticContext, useWhen.get)
+        val exprContext = new StaticContext(config, None, node)
+        val expr = new XProcXPathExpression(exprContext, useWhen.get.getValue)
         use = config.expressionEvaluator.booleanValue(expr, List(), Map(), None)
       }
 
       if (use) {
         matcher.location = node.getUnderlyingNode.saveLocation()
-        matcher.addStartElement(node, attribute)
+        matcher.addStartElement(node, attribute.remove(useWhenName))
       }
       useStack += use
       inlineStack += ((inlineStack.nonEmpty && inlineStack.last) || node.getNodeName == XProcConstants.p_inline)
