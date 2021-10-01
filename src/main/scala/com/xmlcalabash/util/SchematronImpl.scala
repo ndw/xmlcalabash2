@@ -70,7 +70,7 @@ class SchematronImpl(runtimeConfig: XMLCalabashConfig) {
     compiler.setSchemaAware(schemaAware)
     compiler.setURIResolver(uResolver)
 
-    val schpipeline = uResolver.resolve("/etc/schxslt/2.0/pipeline-for-svrl.xsl", fakeBaseURI)
+    val schpipeline = uResolver.resolve("/etc/schxslt-1.8.3/2.0/pipeline-for-svrl.xsl", fakeBaseURI)
     var exec = compiler.compile(schpipeline)
     val schemaCompiler = exec.load()
 
@@ -117,7 +117,8 @@ class SchematronImpl(runtimeConfig: XMLCalabashConfig) {
     val nsBindings = mutable.HashMap.empty[String,String]
     nsBindings.put("svrl", "http://purl.oclc.org/dsdl/svrl")
 
-    val xpath = "//svrl:failed-assert|//svrl:suppressed-rule"
+    val xpath = "//svrl:failed-assert"        // The suppressed-rule problem is in SchXslt, I believe
+                                              // https://github.com/schxslt/schxslt/issues/216
     val results = ListBuffer.empty[XdmNode]
 
     val xcomp = runtimeConfig.processor.newXPathCompiler()

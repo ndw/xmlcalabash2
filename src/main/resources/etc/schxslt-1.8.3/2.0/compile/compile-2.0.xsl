@@ -26,8 +26,9 @@
   <xsl:include href="../version.xsl"/>
 
   <xsl:param name="phase" as="xs:string">#DEFAULT</xsl:param>
-  <xsl:param name="schxslt.compile.typed-variables" as="xs:boolean" select="true()"/>
+  <xsl:variable name="schxslt.compile.typed-variables" as="xs:boolean" select="true()"/>
   <xsl:param name="schxslt.compile.streamable" as="xs:boolean" select="false()"/>
+  <xsl:param name="schxslt.compile.metadata" as="xs:boolean" select="true()"/>
 
   <xsl:template match="/sch:schema">
     <xsl:call-template name="schxslt:compile">
@@ -89,6 +90,7 @@
       <xsl:sequence select="$schematron/xsl:function[not(preceding-sibling::sch:pattern)]"/>
       <xsl:if test="$xslt-version eq '3.0'">
         <xsl:sequence select="$schematron/xsl:accumulator[not(preceding-sibling::sch:pattern)]"/>
+        <xsl:sequence select="$schematron/xsl:use-package[not(preceding-sibling::sch:pattern)]"/>
       </xsl:if>
 
       <!-- See https://github.com/dmj/schxslt/issues/25 -->
@@ -110,17 +112,14 @@
       <template match="/">
         <xsl:sequence select="$schematron/sch:phase[@id eq $effective-phase]/@xml:base"/>
 
-        <xsl:call-template name="schxslt:let-variable">
-          <xsl:with-param name="bindings" select="$schematron/sch:phase[@id eq $effective-phase]/sch:let"/>
-          <xsl:with-param name="typed-variables" as="xs:boolean" select="$schxslt.compile.typed-variables"/>
-        </xsl:call-template>
-
         <variable name="metadata" as="element()?">
-          <xsl:call-template name="schxslt-api:metadata">
-            <xsl:with-param name="schema" as="element(sch:schema)" select="$schematron"/>
-            <xsl:with-param name="source" as="element(rdf:Description)" select="$version"/>
-            <xsl:with-param name="xslt-version" as="xs:string" tunnel="yes" select="$xslt-version"/>
-          </xsl:call-template>
+          <xsl:if test="$schxslt.compile.metadata">
+            <xsl:call-template name="schxslt-api:metadata">
+              <xsl:with-param name="schema" as="element(sch:schema)" select="$schematron"/>
+              <xsl:with-param name="source" as="element(rdf:Description)" select="$version"/>
+              <xsl:with-param name="xslt-version" as="xs:string" tunnel="yes" select="$xslt-version"/>
+            </xsl:call-template>
+          </xsl:if>
         </variable>
 
         <variable name="report" as="element(schxslt:report)">
@@ -134,9 +133,11 @@
         <!-- Unwrap the intermediary report -->
         <variable name="schxslt:report" as="node()*">
           <sequence select="$metadata"/>
-          <for-each select="$report/schxslt:pattern">
-            <sequence select="node()"/>
-            <sequence select="$report/schxslt:rule[@pattern = current()/@id]/node()"/>
+          <for-each select="$report/schxslt:document">
+            <for-each select="schxslt:pattern">
+              <sequence select="node()"/>
+              <sequence select="../schxslt:rule[@pattern = current()/@id]/node()"/>
+            </for-each>
           </for-each>
         </variable>
 
@@ -223,25 +224,29 @@
         <xsl:with-param name="typed-variables" as="xs:boolean" select="$typed-variables"/>
       </xsl:call-template>
 
-      <schxslt:rule pattern="{generate-id(..)}">
-        <choose>
-          <when test="$schxslt:patterns-matched[. = '{generate-id(..)}']">
+      <choose>
+        <when test="$schxslt:patterns-matched[. = '{generate-id(..)}']">
+          <schxslt:rule pattern="{generate-id(..)}">
             <xsl:call-template name="schxslt-api:suppressed-rule">
               <xsl:with-param name="rule" as="element(sch:rule)" select="."/>
             </xsl:call-template>
-          </when>
-          <otherwise>
+          </schxslt:rule>
+          <next-match>
+            <with-param name="schxslt:patterns-matched" as="xs:string*" select="$schxslt:patterns-matched"/>
+          </next-match>
+        </when>
+        <otherwise>
+          <schxslt:rule pattern="{generate-id(..)}">
             <xsl:call-template name="schxslt-api:fired-rule">
               <xsl:with-param name="rule" as="element(sch:rule)" select="."/>
             </xsl:call-template>
             <xsl:apply-templates select="sch:assert | sch:report" mode="schxslt:compile"/>
-          </otherwise>
-        </choose>
-      </schxslt:rule>
-
-      <next-match>
-        <with-param name="schxslt:patterns-matched" as="xs:string*" select="($schxslt:patterns-matched, '{generate-id(..)}')"/>
-      </next-match>
+          </schxslt:rule>
+          <next-match>
+            <with-param name="schxslt:patterns-matched" as="xs:string*" select="($schxslt:patterns-matched, '{generate-id(..)}')"/>
+          </next-match>
+        </otherwise>
+      </choose>
     </template>
 
   </xsl:template>
@@ -258,16 +263,18 @@
     <xsl:param name="streamable" as="xs:boolean" required="yes"/>
     <xsl:param name="xslt-version" as="xs:string" tunnel="yes" required="yes"/>
 
+    <xsl:if test="$xslt-version = '3.0'">
+      <mode use-accumulators="#all">
+        <xsl:if test="$streamable">
+          <xsl:attribute name="streamable">yes</xsl:attribute>
+        </xsl:if>
+      </mode>
+    </xsl:if>
+
     <xsl:for-each-group select="$patterns" group-by="string-join((base-uri(.), @documents), '~')">
       <xsl:variable name="mode" as="xs:string" select="generate-id()"/>
-      <xsl:variable name="baseUri" as="xs:anyURI" select="base-uri(.)"/>
 
       <xsl:if test="$xslt-version = '3.0'">
-        <mode use-accumulators="#all">
-          <xsl:if test="$streamable">
-            <xsl:attribute name="streamable">yes</xsl:attribute>
-          </xsl:if>
-        </mode>
         <mode name="{$mode}" use-accumulators="#all">
           <xsl:if test="$streamable">
             <xsl:attribute name="streamable">yes</xsl:attribute>
@@ -283,57 +290,60 @@
             <xsl:choose>
               <xsl:when test="$xslt-version = '3.0'">
                 <for-each select="{@documents}">
-                  <source-document href="{{resolve-uri(., '{$baseUri}')}}">
+                  <schxslt:document>
+                    <source-document href="{{.}}">
+                      <xsl:for-each select="current-group()">
+                        <schxslt:pattern id="{generate-id()}">
+                          <for-each select=".">
+                            <xsl:call-template name="schxslt-api:active-pattern">
+                              <xsl:with-param name="pattern" as="element(sch:pattern)" select="."/>
+                            </xsl:call-template>
+                          </for-each>
+                        </schxslt:pattern>
+                        <apply-templates mode="{$mode}" select="."/>
+                      </xsl:for-each>
+                    </source-document>
+                  </schxslt:document>
+                </for-each>
+              </xsl:when>
+              <xsl:otherwise>
+                <for-each select="{@documents}">
+                  <schxslt:document>
+                    <variable name="document" as="item()" select="document(.)"/>
                     <xsl:for-each select="current-group()">
                       <schxslt:pattern id="{generate-id()}">
-                        <if test="exists(base-uri(.))">
-                          <attribute name="documents" select="base-uri(.)"/>
+                        <if test="exists(base-uri($document))">
+                          <attribute name="documents" select="base-uri($document)"/>
                         </if>
-                        <for-each select=".">
+                        <for-each select="$document">
                           <xsl:call-template name="schxslt-api:active-pattern">
                             <xsl:with-param name="pattern" as="element(sch:pattern)" select="."/>
                           </xsl:call-template>
                         </for-each>
                       </schxslt:pattern>
-                      <apply-templates mode="{$mode}" select="."/>
+                      <apply-templates mode="{$mode}" select="$document"/>
                     </xsl:for-each>
-                  </source-document>
-                </for-each>
-              </xsl:when>
-              <xsl:otherwise>
-                <for-each select="{@documents}">
-                  <variable name="document" as="item()" select="document(resolve-uri(., '{$baseUri}'))"/>
-                  <xsl:for-each select="current-group()">
-                    <schxslt:pattern id="{generate-id()}">
-                      <if test="exists(base-uri($document))">
-                        <attribute name="documents" select="base-uri($document)"/>
-                      </if>
-                      <for-each select="$document">
-                        <xsl:call-template name="schxslt-api:active-pattern">
-                          <xsl:with-param name="pattern" as="element(sch:pattern)" select="."/>
-                        </xsl:call-template>
-                      </for-each>
-                    </schxslt:pattern>
-                    <apply-templates mode="{$mode}" select="$document"/>
-                  </xsl:for-each>
+                  </schxslt:document>
                 </for-each>
               </xsl:otherwise>
             </xsl:choose>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:for-each select="current-group()">
-              <schxslt:pattern id="{generate-id()}">
-                <if test="exists(base-uri(/))">
-                  <attribute name="documents" select="base-uri(/)"/>
-                </if>
-                <for-each select="/">
-                  <xsl:call-template name="schxslt-api:active-pattern">
-                    <xsl:with-param name="pattern" as="element(sch:pattern)" select="."/>
-                  </xsl:call-template>
-                </for-each>
-              </schxslt:pattern>
+            <schxslt:document>
+              <xsl:for-each select="current-group()">
+                <schxslt:pattern id="{generate-id()}">
+                  <if test="exists(base-uri(/))">
+                    <attribute name="documents" select="base-uri(/)"/>
+                  </if>
+                  <for-each select="/">
+                    <xsl:call-template name="schxslt-api:active-pattern">
+                      <xsl:with-param name="pattern" as="element(sch:pattern)" select="."/>
+                    </xsl:call-template>
+                  </for-each>
+                </schxslt:pattern>
+              </xsl:for-each>
               <apply-templates mode="{$mode}" select="/"/>
-            </xsl:for-each>
+            </schxslt:document>
           </xsl:otherwise>
         </xsl:choose>
 

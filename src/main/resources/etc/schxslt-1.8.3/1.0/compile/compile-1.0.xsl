@@ -16,6 +16,7 @@
   <xsl:key name="schxslt:properties" match="sch:property" use="@id"/>
 
   <xsl:param name="phase">#DEFAULT</xsl:param>
+  <xsl:param name="schxslt.compile.metadata" select="true()"/>
 
   <xsl:template match="/sch:schema">
 
@@ -93,20 +94,22 @@
       <template match="/">
 
         <variable name="schxslt:report">
-          <xsl:call-template name="schxslt-api:metadata">
-            <xsl:with-param name="schema" select="."/>
-            <xsl:with-param name="source">
-              <xsl:call-template name="schxslt:version"/>
-            </xsl:with-param>
-          </xsl:call-template>
+          <xsl:if test="$schxslt.compile.metadata">
+            <xsl:call-template name="schxslt-api:metadata">
+              <xsl:with-param name="schema" select="."/>
+              <xsl:with-param name="source">
+                <xsl:call-template name="schxslt:version"/>
+              </xsl:with-param>
+            </xsl:call-template>
+          </xsl:if>
           <xsl:choose>
             <xsl:when test="$effective-phase = '#ALL'">
-              <xsl:for-each select="sch:pattern">
+              <xsl:for-each select="sch:pattern[sch:rule]">
                 <call-template name="{generate-id()}"/>
               </xsl:for-each>
             </xsl:when>
             <xsl:otherwise>
-              <xsl:for-each select="sch:pattern[@id = current()/sch:phase[@id = $effective-phase]/sch:active/@pattern]">
+              <xsl:for-each select="sch:pattern[@id = current()/sch:phase[@id = $effective-phase]/sch:active/@pattern][sch:rule]">
                 <call-template name="{generate-id()}"/>
               </xsl:for-each>
             </xsl:otherwise>
@@ -208,22 +211,39 @@
     </if>
   </xsl:template>
 
-  <xsl:template match="sch:name[@path]" mode="schxslt:compile">
-    <value-of select="{@path}"/>
-  </xsl:template>
-
-  <xsl:template match="sch:name[not(@path)]" mode="schxslt:compile">
-    <value-of select="name()"/>
-  </xsl:template>
-
-  <xsl:template match="sch:value-of" mode="schxslt:compile">
-    <value-of select="{@select}"/>
-  </xsl:template>
-
   <xsl:template match="node() | @*" mode="schxslt:compile">
     <xsl:copy>
       <xsl:apply-templates select="node() | @*" mode="schxslt:compile"/>
     </xsl:copy>
+  </xsl:template>
+
+  <!-- Message templates -->
+  <xsl:template match="comment() | processing-instruction()" mode="schxslt:message-template" priority="-10">
+    <xsl:copy-of select="."/>
+  </xsl:template>
+
+  <xsl:template match="*" mode="schxslt:message-template" priority="-10">
+    <element namespace="{namespace-uri(.)}" name="{local-name(.)}">
+      <xsl:apply-templates select="node() | @*" mode="schxslt:message-template"/>
+    </element>
+  </xsl:template>
+
+  <xsl:template match="@*" mode="schxslt:message-template">
+    <attribute namespace="{namespace-uri(.)}" name="{local-name(.)}">
+      <value-of select="."/>
+    </attribute>
+  </xsl:template>
+
+  <xsl:template match="sch:name[@path]" mode="schxslt:message-template">
+    <value-of select="{@path}"/>
+  </xsl:template>
+
+  <xsl:template match="sch:name[not(@path)]" mode="schxslt:message-template">
+    <value-of select="name()"/>
+  </xsl:template>
+
+  <xsl:template match="sch:value-of" mode="schxslt:message-template">
+    <value-of select="{@select}"/>
   </xsl:template>
 
   <!-- Copy variable content -->
@@ -239,7 +259,7 @@
 
   <xsl:template match="@*" mode="schxslt:variable-content">
     <attribute namespace="{namespace-uri(.)}" name="{local-name(.)}">
-      <value-of select="."/>
+      <xsl:value-of select="."/>
     </attribute>
   </xsl:template>
 
