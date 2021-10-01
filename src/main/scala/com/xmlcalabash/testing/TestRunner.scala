@@ -167,7 +167,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Optio
       val percfail = ((total - failures) * 100.0) / total
 
       // 1/2141 (0.0%, 3 fail, 0.0% pass)
-      logger.info(f"$count%d/$total%d ($percdone%04.1f%%; $failures%d fail, $percfail%5.2f%% pass): ${fnsuffix(fn)}%s")
+      logger.info(f"$count%d/$total%d, $percdone%04.1f%% ($failures%d fail, $percfail%5.2f%% pass): ${fnsuffix(fn)}%s")
 
       val stdout = new ByteArrayOutputStream()
       val psout = new PrintStream(stdout)
