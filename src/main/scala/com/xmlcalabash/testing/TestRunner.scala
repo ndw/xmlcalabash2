@@ -160,9 +160,14 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Optio
     var count = 0
     var failures = 0
     var skip = 0
+    val total = testFiles.length
     for (fn <- testFiles) {
       count += 1
-      logger.info(s"Running $count of ${testFiles.length}: $fn")
+      val percdone = (count * 100.0) / total
+      val percfail = ((total - failures) * 100.0) / total
+
+      // 1/2141 (0.0%, 3 fail, 0.0% pass)
+      logger.info(f"$count%d/$total%d ($percdone%3.1f%%; $failures%d failed, $percfail%3.1f%% pass): ${fnsuffix(fn)}%s")
 
       val stdout = new ByteArrayOutputStream()
       val psout = new PrintStream(stdout)
@@ -263,7 +268,6 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Optio
     val suite_end_ms = Calendar.getInstance().getTimeInMillis
 
     logger.info(s"$failures of $count tests failed")
-
 
     val wrapper = new SaxonTreeBuilder(runtimeConfig)
     wrapper.startDocument(URIUtils.cwdAsURI)
@@ -367,6 +371,23 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Optio
     wrapper.addEndElement()
     wrapper.endDocument()
     wrapper.result
+  }
+
+  private def fnsuffix(fn: String): String = {
+    var pwd = System.getProperty("user.dir").split("[\\/]")
+    var path = fn.split("[\\/]")
+    var common = false
+    while (pwd.nonEmpty && path.nonEmpty && pwd.head == path.head) {
+      pwd = pwd.drop(1)
+      path = path.drop(1)
+      common = true
+    }
+    val res = path.mkString(System.getProperty("file.separator"))
+    if (common) {
+      s".../$res"
+    } else {
+      res
+    }
   }
 
   private def runTestDocument(node: XdmNode): ListBuffer[TestResult] = {
