@@ -149,12 +149,23 @@ class ElaboratedPipeline(config: XMLCalabashConfig) {
     var amap = tid(tumble_id)
     amap = amap.put(TypeUtils.attributeInfo(XProcConstants._href, href))
 
-    val element = XProcConstants.p_inline
+    val element = XProcConstants.p_document
     builder.addStartElement(element, amap)
     openStack.push(element)
   }
 
   def endDocument(): Unit = {
+    end()
+  }
+
+  def startEmpty(tumble_id: String): Unit = {
+    var amap = tid(tumble_id)
+    val element = XProcConstants.p_empty
+    builder.addStartElement(element, amap)
+    openStack.push(element)
+  }
+
+  def endEmpty(): Unit = {
     end()
   }
 
