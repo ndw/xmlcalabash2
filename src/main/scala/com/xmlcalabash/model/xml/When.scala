@@ -7,22 +7,22 @@ import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmNode}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class When(override val config: XMLCalabashConfig) extends ChooseBranch(config) {
 
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
 
-    _collection = attr(XProcConstants._collection)
-    if (_collection.isDefined) {
-      val coll = _collection.get
-      if (List("1", "true", "yes").contains(coll)) {
-        _collAvt = List("true")
+    val coll = attr(XProcConstants._collection)
+    if (coll.isDefined) {
+      if (List("1", "true", "yes").contains(coll.get)) {
+        _collection = true
       } else {
-        if (List("0", "false", "no").contains(coll)) {
-          _collAvt = List("false")
+        if (List("0", "false", "no").contains(coll.get)) {
+          _collection = false
         } else {
-          throw XProcException.xsBadTypeValue(coll, "literal boolean", location)
+          throw XProcException.xsBadTypeValue(coll.get, "xs:boolean", location)
         }
       }
     }
@@ -42,10 +42,9 @@ class When(override val config: XMLCalabashConfig) extends ChooseBranch(config) 
   override protected[model] def makeBindingsExplicit(): Unit = {
     super.makeBindingsExplicit()
 
-    val env = environment()
-
     val bindings = mutable.HashSet.empty[QName]
-    bindings ++= staticContext.findVariableRefsInAvt(_collAvt)
+
+    val env = environment()
 
     for (ref <- bindings) {
       val binding = env.variable(ref)

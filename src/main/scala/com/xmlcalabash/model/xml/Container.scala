@@ -312,6 +312,7 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
         case _: DeclareOutput => ()
         case _: Step => ()
         case _: NamePipe => () // For Viweport
+        case _: Variable => ()
         case _ =>
           throw new RuntimeException(s"Unexpected content in $this: $child")
       }

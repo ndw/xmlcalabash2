@@ -18,6 +18,9 @@ A sequence of documents is not allowed on the “$1” output port.
 XD0008
 A sequence is not allowed as the context item in expression: “$1” (Saxon: $2)
 
+XD0010
+A p:viewport cannot process attributes: “$1”.
+
 XD0015
 There is no in-scope namespace for the QName “$1”.
 

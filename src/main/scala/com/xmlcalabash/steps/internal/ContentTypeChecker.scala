@@ -34,6 +34,7 @@ class ContentTypeChecker() extends XmlStep {
   private val nodeMeta = mutable.HashMap.empty[XdmNode, XProcMetadata]
   private val nodes = ListBuffer.empty[XdmNode]
   protected var allowedTypes = List.empty[MediaType]
+  protected var errCode = XProcException.xd0038
   protected var select = Option.empty[String]
   protected var selectContext: StaticContext = _
   protected var portName: String = _
@@ -84,10 +85,15 @@ class ContentTypeChecker() extends XmlStep {
     if (allowedTypes.nonEmpty) {
       val allowed = meta.contentType.allowed(allowedTypes)
       if (!allowed) {
-        if (inputPort) {
-          throw XProcException.xdBadInputMediaType(meta.contentType, allowedTypes, location)
+        // Hack
+        if (errCode == XProcException.xd0072) {
+          throw XProcException.xdBadViewportInput(meta.contentType, location)
         } else {
-          throw XProcException.xdBadOutputMediaType(meta.contentType, allowedTypes, location)
+          if (inputPort) {
+            throw XProcException.xdBadInputMediaType(meta.contentType, allowedTypes, location)
+          } else {
+            throw XProcException.xdBadOutputMediaType(meta.contentType, allowedTypes, location)
+          }
         }
       }
     }
@@ -115,6 +121,7 @@ class ContentTypeChecker() extends XmlStep {
           portName = cp.port
           sequence = cp.sequence
           selectContext = cp.context
+          errCode = cp.errCode
           select = cp.select
           inputPort = cp.inputPort
         case _ => throw XProcException.xiWrongImplParams()
@@ -159,7 +166,7 @@ class ContentTypeChecker() extends XmlStep {
           case value: XdmItem =>
             consumer.get.receive("result", value, XProcMetadata.JSON)
           case _ =>
-            throw new RuntimeException(s"Didn't expect that $item")
+            throw XProcException.xiThisCantHappen(s"Content type checker didn't expect ${item}", location)
         }
       }
     }

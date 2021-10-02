@@ -74,7 +74,27 @@ class Pipe(override val config: XMLCalabashConfig, shortcut: Option[String]) ext
       }
 
       val step = env.step(_step.get)
-      val thisStep = containingStep.get
+
+      // Figure out what our containing step is. But along the way, note if
+      // we're inside a variable because they're allowed to read from the
+      // containing steps inputs.
+      var thisStep: Step = null
+      var varbinding = false
+
+      var p: Option[Artifact] = Some(this)
+      while (p.isDefined) {
+        p.get match {
+          case step: Step =>
+            thisStep = step
+            p = None
+          case _: Variable =>
+            varbinding = true
+            p = p.get.parent
+          case _ =>
+            p = p.get.parent
+        }
+      }
+
       if (_port.isEmpty) {
         if (step.isEmpty) {
           throw XProcException.xsPortNotReadableNoStep(_step.get, location)
@@ -98,7 +118,7 @@ class Pipe(override val config: XMLCalabashConfig, shortcut: Option[String]) ext
         throw XProcException.xsPortNotReadableNoStep(_step.get, location)
       }
 
-      if (thisStep == step.get) {
+      if (thisStep == step.get && !varbinding) {
         // Special case of a loop
         throw XProcException.xsLoop(_step.get, _port.get, location)
       }

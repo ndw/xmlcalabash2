@@ -6,13 +6,17 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.XMLCalabashRuntime
+import com.xmlcalabash.runtime.params.ContentTypeCheckerParams
+import com.xmlcalabash.util.MediaType
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.{QName, XdmNode}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class Viewport(override val config: XMLCalabashConfig) extends Container(config) with NamedArtifact {
   private var _match: String = _
+  protected var _dependentNameBindings: ListBuffer[NamePipe] = ListBuffer.empty[NamePipe]
 
   override def parse(node: XdmNode): Unit = {
     super.parse(node)
@@ -63,24 +67,52 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
     val bindings = mutable.HashSet.empty[QName]
     bindings ++= staticContext.findVariableRefsInString(_match)
 
-    if (bindings.nonEmpty) {
-      var winput = firstWithInput
-      if (winput.isEmpty) {
-        val input = new WithInput(config)
-        input.port = "source"
-        addChild(input, firstChild)
-        winput = Some(input)
+    for (ref <- bindings) {
+      val binding = env.variable(ref)
+      if (binding.isEmpty) {
+        throw XProcException.xsStaticErrorInExpression(s"$$${ref.toString}", "Reference to undefined variable", location)
       }
-      for (ref <- bindings) {
-        val binding = env.variable(ref)
-        if (binding.isEmpty) {
-          throw new RuntimeException("Reference to undefined variable")
-        }
-        if (!binding.get.static) {
-          val pipe = new NamePipe(config, ref, binding.get.tumble_id, binding.get)
-          winput.get.addChild(pipe)
-        }
+      if (!binding.get.static) {
+        val pipe = new NamePipe(config, ref, binding.get.tumble_id, binding.get)
+        _dependentNameBindings += pipe
+        addChild(pipe)
       }
+    }
+  }
+
+  override protected[model] def normalizeToPipes(): Unit = {
+    super.normalizeToPipes()
+
+    // Viewport needs a content type checker in front of its source
+    val input = children[WithInput].head
+
+    logger.debug(s"Adding content-type-checker for viewport source")
+    val params = new ContentTypeCheckerParams(input.port, List(MediaType.XML, MediaType.HTML, MediaType.XHTML), staticContext, None,
+      XProcException.xd0072, inputPort = true, true)
+    val atomic = new AtomicStep(config, params)
+    atomic.stepType = XProcConstants.cx_content_type_checker
+    // Put this outside the viewport so that its output is attached to the viewport input, not the viewport output
+    parent.get.addChild(atomic)
+
+    val winput = new WithInput(config)
+    winput.port = "source"
+    atomic.addChild(winput)
+
+    val woutput = new WithOutput(config)
+    woutput.port = "result"
+    atomic.addChild(woutput)
+
+    val pipes = ListBuffer.empty[Pipe] ++ input.children[Pipe]
+    input.removeChildren()
+    for (origpipe <- pipes) {
+      winput.addChild(origpipe)
+
+      val opipe = new Pipe(config)
+      opipe.step = atomic.stepName
+      opipe.port = "result"
+      opipe.link = atomic.children[WithOutput].head
+      input.addChild(opipe)
+      opipe.makeBindingsExplicit()
     }
   }
 
@@ -93,6 +125,15 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
 
     for (child <- children[Step]) {
       child.graphNodes(runtime, node)
+    }
+
+    // The binding links we created earlier now need to be patched so that this
+    // is the node they go to.
+    for (np <- _dependentNameBindings) {
+      val binding = findInScopeOption(np.name)
+      if (binding.isDefined) {
+        np.patchNode(binding.get.graphNode.get)
+      }
     }
   }
 
@@ -110,6 +151,10 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
           case _ => ()
         }
       }
+    }
+
+    for (pipe <- children[NamePipe]) {
+      pipe.graphEdges(runtime, _graphNode.get)
     }
 
     for (output <- children[DeclareOutput]) {

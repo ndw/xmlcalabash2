@@ -16,6 +16,9 @@ import scala.collection.mutable.ListBuffer
 
 object XProcException {
   val xd0011 = new QName("err", XProcConstants.ns_err, "XD0011")
+  val xd0038 = new QName("err", XProcConstants.ns_err, "XD0038")
+  val xd0072 = new QName("err", XProcConstants.ns_err, "XD0072")
+
   val xc0070 = new QName("err", XProcConstants.ns_err, "XC0070")
   val xs0107 = new QName("err", XProcConstants.ns_err, "XS0107")
 
@@ -103,6 +106,7 @@ object XProcException {
   def xdInputSequenceNotAllowed(port: String, location: Option[Location]): XProcException = dynamicError(6, port, location)
   def xdOutputSequenceNotAllowed(port: String, location: Option[Location]): XProcException = dynamicError(7, port, location)
   def xdSequenceNotAllowedAsContext(location: Option[Location]): XProcException = dynamicError(8, location)
+  def xdViewportOnAttribute(pattern: String, location: Option[Location]): XProcException = dynamicError(10, pattern, location)
   def xdDoesNotExist(href: String, location: Option[Location]): XProcException = dynamicError(11, href, location)
   def xdCannotResolveQName(name: String, location: Option[Location]): XProcException = dynamicError(15, name, location)
   def xdInvalidSelection(expr: String, selected: String, location: Option[Location]): XProcException = dynamicError(16, List(expr,selected), location)

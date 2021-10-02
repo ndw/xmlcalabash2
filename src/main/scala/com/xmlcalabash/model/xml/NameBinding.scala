@@ -28,12 +28,12 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
   protected var _allowedValues = Option.empty[List[XdmAtomicValue]]
   protected var _staticValue = Option.empty[XdmValueItemMessage]
   protected var _dependentNameBindings: ListBuffer[NamePipe] = ListBuffer.empty[NamePipe]
-  protected var collection = List("false")
+  protected var collection = false
 
   private var _qnameKeys = false
   private var resolvedStatically = false
   private val structuredQName = new StructuredQName("xs", XProcConstants.ns_xs, "QName")
-  protected val depends = ListBuffer.empty[String]
+  protected val depends: ListBuffer[String] = ListBuffer.empty[String]
 
   protected var _href = Option.empty[String]
   protected var _pipe = Option.empty[String]
@@ -127,12 +127,12 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
     if (_collection.isDefined) {
       val coll = _collection.get
       if (List("1", "true", "yes").contains(coll)) {
-        collection = List("true")
+        collection = true
       } else {
         if (List("0", "false", "no").contains(coll)) {
-          collection = List("false")
+          collection = false
         } else {
-          throw XProcException.xsBadTypeValue(coll, "literal boolean", location)
+          throw XProcException.xsBadTypeValue(coll, "xs:boolean", location)
         }
       }
     }

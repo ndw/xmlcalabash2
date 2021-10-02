@@ -3,16 +3,17 @@ package com.xmlcalabash.model.xml
 import com.jafpl.graph.{ChooseStart, Node}
 import com.jafpl.steps.Manifold
 import com.xmlcalabash.config.XMLCalabashConfig
+import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.runtime.params.XPathBindingParams
 import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime, XProcXPathExpression}
+import com.xmlcalabash.util.ValueUtils
 import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable
 
 class ChooseBranch(override val config: XMLCalabashConfig) extends Container(config) with NamedArtifact {
   protected var _test = ""
-  protected var _collection = Option.empty[String]
-  protected var _collAvt = List("false")
+  protected var _collection = false
   protected var testExpr: XProcXPathExpression = _
 
   def test: String = _test
@@ -21,16 +22,21 @@ class ChooseBranch(override val config: XMLCalabashConfig) extends Container(con
     setTestExpr()
   }
 
-  def collection: String = _collection.getOrElse("false")
+  def collection: Boolean = _collection
   protected[model] def collection_=(coll: String): Unit = {
-    _collection = Some(coll)
-    _collAvt = staticContext.parseAvt(coll)
+    if (List("true", "1", "yes").contains(coll)) {
+      _collection = true
+    } else if (List("false", "0", "no").contains(coll)) {
+      _collection = false
+    } else {
+      throw XProcException.xsBadTypeValue(coll, "xs:boolean", location)
+    }
     setTestExpr()
   }
 
   private def setTestExpr(): Unit = {
     val context = new StaticContext(staticContext, this)
-    val params = new XPathBindingParams(_collAvt)
+    val params = new XPathBindingParams(collection)
     testExpr = new XProcXPathExpression(context, _test, None, None, Some(params))
   }
 

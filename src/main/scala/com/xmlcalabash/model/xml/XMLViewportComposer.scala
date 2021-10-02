@@ -94,7 +94,7 @@ class XMLViewportComposer(config: XMLCalabashConfig, context: StaticContext, pat
     }
 
     override def attributes(node: XdmNode, matchingAttributes: AttributeMap, nonMatchingAttributes: AttributeMap): Option[AttributeMap] = {
-      throw new RuntimeException("viewport cannot process attributes")
+      throw XProcException.xdViewportOnAttribute(patternString, context.location)
     }
 
     override def text(node: XdmNode): Unit = {

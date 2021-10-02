@@ -221,6 +221,55 @@ object S9Api {
     map
   }
 
+  // Base URIs are a total PITA. If document properties specifies an alternate one,
+  // we patch the actual, underlying base URI so that we don't get functions (in XSLT or XQuery,
+  // for example) that think the base URI is one thing when the document properties
+  // say it's something else.
+  def patchBaseURI(config: XMLCalabashConfig, node: XdmNode, baseURI: Option[URI]): XdmNode = {
+    if (baseURI.isEmpty) {
+      return node
+    }
+
+    if (Option(node.getBaseURI).isDefined && node.getBaseURI == baseURI.get) {
+      return node
+    }
+
+    val patcher = new SaxonTreeBuilder(config)
+    patcher.startDocument(baseURI.get)
+    patchNodeBaseURI(patcher, node, baseURI.get)
+    patcher.result
+  }
+
+  def patchBaseURI(config: XMLCalabashRuntime, node: XdmNode, baseURI: Option[URI]): XdmNode = {
+    patchBaseURI(config.config, node, baseURI)
+  }
+
+  private def patchNodeBaseURI(patcher: SaxonTreeBuilder, node: XdmNode, baseURI: URI): Unit = {
+    node.getNodeKind match {
+      case XdmNodeKind.DOCUMENT =>
+        val iter = node.axisIterator(Axis.CHILD)
+        while (iter.hasNext) {
+          patchNodeBaseURI(patcher, iter.next(), baseURI)
+        }
+      case XdmNodeKind.ELEMENT =>
+        val nodeBase = if (Option(node.getAttributeValue(XProcConstants.xml_base)).isDefined) {
+          baseURI.resolve(node.getAttributeValue(XProcConstants.xml_base))
+        } else {
+          baseURI
+        }
+        patcher.addStartElement(node, nodeBase)
+        val iter = node.axisIterator(Axis.CHILD)
+        while (iter.hasNext) {
+          patchNodeBaseURI(patcher, iter.next(), nodeBase)
+        }
+        patcher.addEndElement()
+      case XdmNodeKind.PROCESSING_INSTRUCTION =>
+        patcher.addPI(node.getNodeName.getLocalName, node.getStringValue, baseURI.toASCIIString)
+      case _ =>
+        patcher.addSubtree(node)
+    }
+  }
+
   def excludeInlineURIs(node: XdmNode): Set[String] = {
     val excludeURIs = mutable.HashSet.empty[String] ++ Set(XProcConstants.ns_p)
 

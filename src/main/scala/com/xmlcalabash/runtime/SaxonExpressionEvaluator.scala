@@ -15,6 +15,7 @@ import net.sf.saxon.ma.arrays.ArrayItem
 import net.sf.saxon.om.{Item, SpaceStrippingRule}
 import net.sf.saxon.s9api.{ItemTypeFactory, QName, SaxonApiException, SaxonApiUncheckedException, SequenceType, XPathExecutable, XdmArray, XdmAtomicValue, XdmItem, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.trans.XPathException
+import net.sf.saxon.tree.tiny.TinyAttributeImpl
 import net.sf.saxon.value.StringValue
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -299,30 +300,10 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
         val collection = if (xpathexpr.params.isDefined) {
           xpathexpr.params.get.collection
         } else {
-          List("false")
-        }
-
-        // The use of collections in some expressions is handled by the XPathBindingParams.
-        // If collection is specified and is a single string, then it must be "true"
-        // If collection is a list of strings, then it must be an AVT and we compute its
-        // value.
-        val coll_value = if (collection.isEmpty) {
           false
-        } else if (collection.size == 1) {
-          collection.head == "true" // special case for a non-AVT
-        } else {
-          val cavt = new XProcVtExpression(xpathexpr.context, collection)
-          val avtbindings = mutable.HashMap.empty[String, Message]
-          for ((str, value) <- xpath.context.statics) {
-            avtbindings.put(str, value)
-          }
-          for ((str, value) <- bindings) {
-            avtbindings.put(str, value)
-          }
-          booleanValue(cavt, context, avtbindings.toMap, None)
         }
 
-        val result = computeValue(xpathexpr.expr, xpathexpr.as, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed, options, coll_value)
+        val result = computeValue(xpathexpr.expr, xpathexpr.as, context, xpathexpr.context, patchBindings.toMap, proxies, xpathexpr.extensionFunctionsAllowed, options, collection)
         result
       case _ =>
         throw XProcException.xiUnexpectedExprType(xpath.context.location, xpath)
@@ -473,10 +454,18 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
           throw ex
       }
 
+      // Special case?
+      var uvalue = value.getUnderlyingValue
+      uvalue match {
+        case _: TinyAttributeImpl =>
+          uvalue = new XdmAtomicValue(uvalue.getStringValue).getUnderlyingValue
+        case _ => ()
+      }
+
       if (as.isDefined) {
-        val matches = as.get.getUnderlyingSequenceType.matches(value.getUnderlyingValue, config.getTypeHierarchy)
+        val matches = as.get.getUnderlyingSequenceType.matches(uvalue, config.getTypeHierarchy)
         if (!matches) {
-          throw XProcException.xdBadType(value.toString, as.get.toString, exprContext.location)
+          throw XProcException.xdBadType(uvalue.toString, as.get.toString, exprContext.location)
         }
       }
 

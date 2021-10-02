@@ -211,8 +211,9 @@ class AtomicStep(override val config: XMLCalabashConfig, params: Option[ImplPara
     }
 
     if (attributes.nonEmpty) {
-      val badattr = attributes.keySet.head
-      throw XProcException.xsBadAttribute(badattr, location)
+      // On an atomic step, any left over attributes are presumably attempts
+      // to use shortcuts for options that don't exist.
+      throw XProcException.xsUndeclaredOption(stepType, attributes.keySet.head, location)
     }
   }
 

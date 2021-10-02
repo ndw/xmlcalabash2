@@ -189,7 +189,7 @@ class DeclareStep(override val config: XMLCalabashConfig) extends DeclContainer(
       } else {
         stepSig.declaration = this
         if (atomic) {
-          throw new RuntimeException(s"Attempt to declare pipeline ${stepType.get} but no steps provided")
+          logger.info(s"No implementation for declared ${stepType.get} step")
         }
       }
     }

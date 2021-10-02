@@ -525,28 +525,29 @@ class Parser(config: XMLCalabashConfig) {
   }
 
   private class ProcessUseWhen(val staticContext: StaticContext) extends ProcessMatchingNodes {
-    private val useStack = ListBuffer.empty[Boolean]
-    private val inlineStack = ListBuffer.empty[Boolean]
+    private var useStack = ListBuffer.empty[Boolean]
+    private var inlineStack = ListBuffer.empty[Boolean]
 
     override def startDocument(node: XdmNode): Boolean = {
-      throw new RuntimeException("This can't happen")
+      throw XProcException.xiThisCantHappen("Processing use-when matched a document node", None)
     }
 
     override def endDocument(node: XdmNode): Unit = {
       matcher.endDocument()
     }
 
-    override def startElement(node: XdmNode, attribute: AttributeMap): Boolean = {
+    override def startElement(node: XdmNode, attributes: AttributeMap): Boolean = {
       val useWhenName = if (node.getNodeName.getNamespaceURI == XProcConstants.ns_p) {
         new FingerprintedQName("", "", "use-when")
       } else {
         new FingerprintedQName("p", XProcConstants.ns_p, "use-when")
       }
 
-      val useWhen = Option(attribute.get(useWhenName))
+      val useWhen = Option(attributes.get(useWhenName))
 
       var use = true
-      if (useWhen.isDefined && (inlineStack.isEmpty || !inlineStack.last)) {
+      val inline = inlineStack.nonEmpty && inlineStack.last
+      if (useWhen.isDefined && !inline) {
         val exprContext = new StaticContext(config, None, node)
         val expr = new XProcXPathExpression(exprContext, useWhen.get.getValue)
         use = config.expressionEvaluator.booleanValue(expr, List(), Map(), None)
@@ -554,7 +555,11 @@ class Parser(config: XMLCalabashConfig) {
 
       if (use) {
         matcher.location = node.getUnderlyingNode.saveLocation()
-        matcher.addStartElement(node, attribute.remove(useWhenName))
+        if (inline) {
+          matcher.addStartElement(node, attributes)
+        } else {
+          matcher.addStartElement(node, attributes.remove(useWhenName))
+        }
       }
       useStack += use
       inlineStack += ((inlineStack.nonEmpty && inlineStack.last) || node.getNodeName == XProcConstants.p_inline)
@@ -569,20 +574,20 @@ class Parser(config: XMLCalabashConfig) {
       if (useStack.last) {
         matcher.addEndElement()
       }
-      useStack.dropRight(1)
-      inlineStack.dropRight(1)
+      useStack = useStack.dropRight(1)
+      inlineStack = inlineStack.dropRight(1)
     }
 
     override def text(node: XdmNode): Unit = {
-      throw new RuntimeException("This can't happen")
+      throw XProcException.xiThisCantHappen("Processing use-when matched a text node", None)
     }
 
     override def comment(node: XdmNode): Unit = {
-      throw new RuntimeException("This can't happen")
+      throw XProcException.xiThisCantHappen("Processing use-when matched a comment node", None)
     }
 
     override def pi(node: XdmNode): Unit = {
-      throw new RuntimeException("This can't happen")
+      throw XProcException.xiThisCantHappen("Processing use-when matched a processing-instruction node", None)
     }
   }
 

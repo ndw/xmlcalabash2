@@ -290,7 +290,8 @@ class ProcessMatch(config: XMLCalabashConfig,
       case sae: SaxonApiException =>
         sae.getCause match {
           case xpe: XPathException =>
-            if (xpe.getMessage.contains("Undeclared variable")) {
+            if (xpe.getMessage.contains("Undeclared variable")
+              || xpe.getMessage.contains("Cannot find")) {
               throw XProcException.xsStaticErrorInExpression(pattern, sae.getMessage, context.location)
             } else {
               throw sae

@@ -422,7 +422,8 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     item match {
       case value: XdmNode =>
         assertXmlDocument(value)
-        new XdmNodeItemMessage(value, metadata, staticContext)
+        val patched = S9Api.patchBaseURI(config, value, metadata.baseURI)
+        new XdmNodeItemMessage(patched, metadata, staticContext)
       case value: XdmMap =>
         new XdmValueItemMessage(value, metadata, staticContext)
       case value: XdmAtomicValue =>
@@ -453,7 +454,8 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     item match {
       case value: XdmNode =>
         assertXmlDocument(value)
-        new XdmNodeItemMessage(value, metadata, staticContext)
+        val patched = S9Api.patchBaseURI(config, value, metadata.baseURI)
+        new XdmNodeItemMessage(patched, metadata, staticContext)
       case value: String =>
         val req = new DocumentRequest(metadata.baseURI.getOrElse(new URI("")), metadata.contentType)
         val result = config.documentManager.parse(req, new ByteArrayInputStream(value.getBytes("UTF-8")))
@@ -498,7 +500,8 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
     item match {
       case value: XdmNode =>
         assertTextDocument(value)
-        new XdmNodeItemMessage(value, metadata, staticContext)
+        val patched = S9Api.patchBaseURI(config, value, metadata.baseURI)
+        new XdmNodeItemMessage(patched, metadata, staticContext)
       case value: XdmValue =>
         value match {
           case atomic: XdmAtomicValue =>

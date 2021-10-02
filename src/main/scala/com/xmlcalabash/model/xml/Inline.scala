@@ -78,7 +78,6 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, implied: 
             }
           } catch {
             case ex: IllegalArgumentException =>
-              println(ex)
               throw XProcException.xdIncorrectEncoding(_encoding.get, location)
             case _: UnsupportedEncodingException =>
               throw XProcException.xdUnsupportedCharset(charset, location)
@@ -86,7 +85,7 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, implied: 
               throw ex
           }
         } else {
-          throw XProcException.xdUnsupportedEncoding(_encoding.get, location)
+          throw XProcException.xsUnsupportedEncoding(_encoding.get, location)
         }
       }
 

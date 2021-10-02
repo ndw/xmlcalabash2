@@ -1,13 +1,12 @@
 package com.xmlcalabash.steps.internal
 
 import java.net.{URI, URLConnection}
-
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.params.DocumentLoaderParams
 import com.xmlcalabash.runtime.{BinaryNode, ImplParams, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
-import com.xmlcalabash.util.MediaType
+import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.s9api.{QName, XdmMap, XdmNode, XdmValue}
 
 import scala.collection.mutable.ListBuffer
@@ -33,9 +32,11 @@ class DocumentLoader() extends AbstractLoader {
   }
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULTSEQ
 
-  override def configure(config: XMLCalabashConfig, stepType: QName, stopName: Option[String], params: Option[ImplParams]): Unit = {
+  override def configure(config: XMLCalabashConfig, stepType: QName, stepName: Option[String], params: Option[ImplParams]): Unit = {
+    super.configure(config, stepType, stepName, params)
+
     if (params.isEmpty) {
-      throw new RuntimeException("document loader params required")
+      throw XProcException.xiThisCantHappen("Document loader called without params", location)
     }
 
     params.get match {
@@ -124,7 +125,8 @@ class DocumentLoader() extends AbstractLoader {
     } else {
       result.value match {
         case node: XdmNode =>
-          consumer.get.receive("result", node, metadata)
+          val patched = S9Api.patchBaseURI(config.config, node, metadata.baseURI)
+          consumer.get.receive("result", patched, metadata)
         case _ =>
           consumer.get.receive("result", result.value, metadata)
       }

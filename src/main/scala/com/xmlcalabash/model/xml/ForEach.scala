@@ -45,8 +45,14 @@ class ForEach(override val config: XMLCalabashConfig) extends Container(config) 
     val node = start.addForEach(stepName, containerManifold)
     _graphNode = Some(node)
 
-    for (child <- children[Step]) {
-      child.graphNodes(runtime, node)
+    for (child <- allChildren) {
+      child match {
+        case _: Step =>
+          child.graphNodes(runtime, node)
+        case _: Variable =>
+          child.graphNodes(runtime, node)
+        case _ => ()
+      }
     }
   }
 
@@ -66,8 +72,14 @@ class ForEach(override val config: XMLCalabashConfig) extends Container(config) 
       }
     }
 
-    for (child <- children[Step]) {
-      child.graphEdges(runtime, _graphNode.get)
+    for (child <- allChildren) {
+      child match {
+        case _: Step =>
+          child.graphEdges(runtime, _graphNode.get)
+        case _: Variable =>
+          child.graphEdges(runtime, _graphNode.get)
+        case _ => ()
+      }
     }
   }
 

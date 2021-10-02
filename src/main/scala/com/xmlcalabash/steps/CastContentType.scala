@@ -92,7 +92,8 @@ class CastContentType() extends DefaultXmlStep {
         bindingsMap.put("{}json", vmsg)
         smsg = config.expressionEvaluator.newInstance().singletonValue(expr, List(), bindingsMap.toMap, None)
 
-        consumer.get.receive("result", smsg.item, metadata.get.castTo(castTo))
+        val patched = S9Api.patchBaseURI(config.config, smsg.item.asInstanceOf[XdmNode], metadata.get.baseURI)
+        consumer.get.receive("result", patched, metadata.get.castTo(castTo))
       case MediaType.OCTET_STREAM =>
         val builder = new SaxonTreeBuilder(config)
 

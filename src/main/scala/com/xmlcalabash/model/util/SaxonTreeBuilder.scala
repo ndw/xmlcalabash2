@@ -303,8 +303,12 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
     receiver.characters(text, loc, 0)
   }
 
-  def addPI(target: String, data: String): Unit = {
-    val loc = new DefaultLocation(receiver.getSystemId)
+  def addPI(target: String, data: String, baseURI: String): Unit = {
+    val loc = new DefaultLocation(baseURI)
     receiver.processingInstruction(target, data, loc, 0)
+  }
+
+  def addPI(target: String, data: String): Unit = {
+    addPI(target, data, receiver.getSystemId)
   }
 }

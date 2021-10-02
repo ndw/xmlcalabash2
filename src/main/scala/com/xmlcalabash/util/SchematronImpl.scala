@@ -96,11 +96,7 @@ class SchematronImpl(runtimeConfig: XMLCalabashConfig) {
     // back. Note that it's not especially clever, it doesn't handle embedded xml:base attributes,
     // for example. But how likely are they in a Schematron schema? And I hope David fixes this bug...
     val compiledSchema = if (Option(schema.getBaseURI).isDefined && schema.getBaseURI.toASCIIString != "") {
-      val patcher = new SaxonTreeBuilder(runtimeConfig)
-      patcher.startDocument(schema.getBaseURI)
-      patchBaseUri(patcher, result.getXdmNode, schema.getBaseURI)
-      patcher.endDocument()
-      patcher.result
+      S9Api.patchBaseURI(runtimeConfig, result.getXdmNode, Some(schema.getBaseURI))
     } else {
       result.getXdmNode
     }
@@ -132,25 +128,6 @@ class SchematronImpl(runtimeConfig: XMLCalabashConfig) {
     transformer.transform()
 
     result.getXdmNode
-  }
-
-  private def patchBaseUri(patcher: SaxonTreeBuilder, node: XdmNode, baseURI: URI): Unit = {
-    node.getNodeKind match {
-      case XdmNodeKind.DOCUMENT =>
-        val iter = node.axisIterator(Axis.CHILD)
-        while (iter.hasNext) {
-          patchBaseUri(patcher, iter.next(), baseURI)
-        }
-      case XdmNodeKind.ELEMENT =>
-        patcher.addStartElement(node, baseURI)
-        val iter = node.axisIterator(Axis.CHILD)
-        while (iter.hasNext) {
-          patchBaseUri(patcher, iter.next(), baseURI)
-        }
-        patcher.addEndElement()
-      case _ =>
-        patcher.addSubtree(node)
-    }
   }
 
   def failedAssertions(node: XdmNode): List[XdmNode] = {

@@ -3,6 +3,7 @@ package com.xmlcalabash.model.xml
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.params.EmptyLoaderParams
+import com.xmlcalabash.util.xc.ElaboratedPipeline
 
 class Empty(override val config: XMLCalabashConfig) extends DataSource(config) {
 
@@ -13,6 +14,11 @@ class Empty(override val config: XMLCalabashConfig) extends DataSource(config) {
 
   override protected[model] def makeStructureExplicit(): Unit = {
     // nop
+  }
+
+  override def xdump(xml: ElaboratedPipeline): Unit = {
+    xml.startEmpty(tumble_id)
+    xml.endEmpty()
   }
 
   override def toString: String = {
