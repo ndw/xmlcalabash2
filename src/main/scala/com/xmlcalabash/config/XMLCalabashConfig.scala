@@ -3,7 +3,7 @@ package com.xmlcalabash.config
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode}
-import com.xmlcalabash.functions.{Cwd, DocumentProperties, DocumentProperty, ForceQNameKeys, InjElapsed, InjId, InjName, InjType, IterationPosition, IterationSize, StepAvailable, SystemProperty, Urify}
+import com.xmlcalabash.functions.{Cwd, DocumentProperties, DocumentProperty, ForceQNameKeys, InjElapsed, InjId, InjName, InjType, IterationPosition, IterationSize, StepAvailable, SystemProperty, UrifyFunction}
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.{DeclContainer, Library}
 import com.xmlcalabash.parsers.XPathParser
@@ -404,7 +404,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
     processor.registerExtensionFunction(new StepAvailable(this))
     processor.registerExtensionFunction(new IterationPosition(this))
     processor.registerExtensionFunction(new IterationSize(this))
-    processor.registerExtensionFunction(new Urify(this))
+    processor.registerExtensionFunction(new UrifyFunction(this))
   }
   private def checkClosed(): Unit = {
     if (closed) {

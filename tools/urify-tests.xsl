@@ -79,7 +79,7 @@
         <t:title>{$name}{format-number($num, '001')}</t:title>
         <t:revision-history>
           <t:revision>
-            <t:date>{substring(string(current-date()), 1, 10)}</t:date>
+            <t:date>{string(@date)}</t:date>
             <t:author>
               <t:name>Norman Walsh</t:name>
             </t:author>

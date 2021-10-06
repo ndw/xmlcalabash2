@@ -5,9 +5,9 @@ import com.xmlcalabash.util.Urify
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
 
-class UrifyWindowsSpec extends AnyFlatSpec with BeforeAndAfter {
-  private val OSNAME = "Windows"
-  private val FILESEP = "\\"
+class UrifyNonWindowsSpec extends AnyFlatSpec with BeforeAndAfter {
+  private val OSNAME = "MacOs"
+  private val FILESEP = "/"
 
   private var saveOsname = ""
   private var saveFilesep = ""
@@ -103,12 +103,11 @@ class UrifyWindowsSpec extends AnyFlatSpec with BeforeAndAfter {
     val path = new Urify("file://path/file")
     assert(path.scheme.isDefined)
     assert(path.driveLetter.isEmpty)
-    assert(path.authority.isDefined)
+    assert(path.authority.isEmpty)
     assert(path.scheme.get == "file")
-    assert(path.authority.get == "path")
     assert(path.absolute)
     assert(path.fixable)
-    assert(path.toString == "file://path/file")
+    assert(path.toString == "file:///path/file")
   }
 
   "file:///path/file " should " parse" in {
@@ -165,13 +164,12 @@ class UrifyWindowsSpec extends AnyFlatSpec with BeforeAndAfter {
 
   "//path/file " should " parse" in {
     val path = new Urify("//path/file")
-    assert(path.scheme.isDefined)
+    assert(path.scheme.isEmpty)
     assert(path.driveLetter.isEmpty)
-    assert(path.authority.isDefined)
-    assert(path.scheme.get == "file")
+    assert(path.authority.isEmpty)
     assert(path.absolute)
-    assert(path.fixable)
-    assert(path.toString == "file://path/file")
+    assert(path.mightBeFixable)
+    assert(path.toString == "/path/file")
   }
 
   "///path/file " should " parse" in {
@@ -224,8 +222,8 @@ class UrifyWindowsSpec extends AnyFlatSpec with BeforeAndAfter {
     assert(path.absolute)
     assert(path.fixable)
     assert(path.scheme.get == "file")
-    assert(path.toFixedString == "file:///path/file")
-    assert(path.toString == "file:///path/file")
+    assert(path.toFixedString == "file:///path\\file")
+    assert(path.toString == "file:///path\\file")
   }
 
   "#B " should " resolve against an absolute HTTP URI" in {
@@ -245,7 +243,7 @@ class UrifyWindowsSpec extends AnyFlatSpec with BeforeAndAfter {
 
   "//www.acme.com/lib/acme.js " should " resolve against an absolute URI" in {
     val answer = new Urify("https://wiki.acme.com/fr/categories.html").resolve("//www.acme.com/lib/acme.js")
-    assert(answer.toString == "file://www.acme.com/lib/acme.js")
+    assert(answer.toString == "https://wiki.acme.com/www.acme.com/lib/acme.js")
   }
 
   "http://example.com/absolute/ " should " resolve against an absolute URI" in {
@@ -290,6 +288,16 @@ class UrifyWindowsSpec extends AnyFlatSpec with BeforeAndAfter {
     assert(answer.toString == "file:///path/to/%23B")
   }
 
+  "#B " should " resolve against relative path URI" in {
+    val answer = new Urify("path/to/file.txt").resolve("#B")
+    assert(answer.toString == "file:///path/to/%23B")
+  }
+
+  "#B " should " resolve against an absolute path URI" in {
+    val answer = new Urify("//path/to/file.txt").resolve("#B")
+    assert(answer.toString == "file:///path/to/%23B")
+  }
+
   "index.html " should " resolve against an absolute file URI" in {
     val answer = new Urify("file:///path/to/file.txt").resolve("index.html")
     assert(answer.toString == "file:///path/to/index.html")
@@ -302,6 +310,6 @@ class UrifyWindowsSpec extends AnyFlatSpec with BeforeAndAfter {
 
   "//www.acme.com/lib/acme.js " should " resolve against an absolute file URI" in {
     val answer = new Urify("file:///path/to/file.txt").resolve("//www.acme.com/lib/acme.js")
-    assert(answer.toString == "file://www.acme.com/lib/acme.js")
+    assert(answer.toString == "file:///www.acme.com/lib/acme.js")
   }
 }

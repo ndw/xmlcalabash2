@@ -38,10 +38,6 @@ object URIUtils {
   }
 
   def dirAsURI(dir: String): URI = {
-    new URI("file:" + dirAsDir(dir))
-  }
-
-  private def dirAsDir(dir: String): String = {
     var path = encode(dir)
     if (!path.endsWith("/")) {
       path += "/"
@@ -49,7 +45,7 @@ object URIUtils {
     if (!path.startsWith("/")) {
       path = "/" + path
     }
-    path
+    new URI("file:" + path)
   }
 
   def encode(uri: URI): String = {
@@ -109,56 +105,5 @@ object URIUtils {
     // start with is in $JAVA_HOME/lib/content-types.properties
     val contentTypeString = Option(URLConnection.guessContentTypeFromName(href)).getOrElse("application/octet-stream")
     MediaType.parse(contentTypeString).assertValid
-  }
-
-  def urify(filepath: String): URI = {
-    urify(filepath, None)
-  }
-
-  def urify(filepath: String, basedir: String): URI = {
-    urify(filepath, Some(basedir))
-  }
-
-  def urifyAgainstURI(filepath: String, basedir: URI): URI = {
-    urify(filepath, Some(basedir.toString))
-  }
-
-  def urifyAgainstURI(filepath: String, basedir: Option[URI]): URI = {
-    if (basedir.isDefined) {
-      urify(filepath, Some(basedir.get.toString))
-    } else {
-      urify(filepath, None)
-    }
-  }
-
-  def urify(filepath: String, basedir: Option[String]): URI = {
-    val path = new UrifiedPath(filepath)
-    if (path.scheme.isDefined && path.absolute) {
-      return path.toURI
-    }
-
-    // Relative path
-    val basepath = if (basedir.isEmpty) {
-      new UrifiedPath(dirAsDir(System.getProperty("user.dir")))
-    } else {
-      new UrifiedPath(basedir.get)
-    }
-
-    if (basepath.relative) {
-      throw XProcException.xdUrifyFailed(filepath, basedir.getOrElse(""), None)
-    }
-
-    if (path.relative && path.driveLetter.isDefined) {
-      if (basepath.driveLetter.isEmpty || basepath.driveLetter.get != path.driveLetter.get) {
-        throw XProcException.xdUrifyDifferentDrives(filepath, basepath.toString, None)
-      }
-      path.discardDriveLetter()
-    }
-
-    if (path.scheme.isDefined && basepath.scheme.isDefined && path.scheme.get != basepath.scheme.get) {
-      throw XProcException.xdUrifyDifferentSchemes(filepath, basepath.toString, None)
-    }
-
-    basepath.toURI.resolve(path.toURI)
   }
 }

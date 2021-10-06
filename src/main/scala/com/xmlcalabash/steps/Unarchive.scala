@@ -7,7 +7,7 @@ import com.xmlcalabash.config.DocumentRequest
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.{BinaryNode, NameValueBinding, StaticContext, XProcMetadata, XmlPortSpecification}
-import com.xmlcalabash.util.{MediaType, URIUtils}
+import com.xmlcalabash.util.{MediaType, URIUtils, Urify}
 import net.sf.saxon.s9api.{QName, XdmArray, XdmValue}
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.apache.commons.compress.utils.IOUtils
@@ -129,7 +129,7 @@ class Unarchive extends DefaultXmlStep {
             IOUtils.copy(zipIn.getInputStream(entry), baos)
             val bais = new ByteArrayInputStream(baos.toByteArray)
 
-            val href = URIUtils.urifyAgainstURI(entry.getName, relativeTo)
+            val href = new Urify(relativeTo).resolve(entry.getName).toURI
 
             var contentType = Option.empty[MediaType]
             for (over <- overrideContentTypes) {

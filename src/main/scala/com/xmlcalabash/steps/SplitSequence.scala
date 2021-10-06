@@ -3,8 +3,9 @@ package com.xmlcalabash.steps
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.model.util.XProcConstants
 import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.util.S9Api
 import net.sf.saxon.expr.LastPositionFinder
-import net.sf.saxon.om.NodeInfo
+import net.sf.saxon.om.{Item, NodeInfo}
 import net.sf.saxon.s9api.{QName, XdmNode}
 import net.sf.saxon.tree.iter.ManualIterator
 
@@ -22,15 +23,12 @@ class SplitSequence() extends DefaultXmlStep {
     Map("matched" -> List("application/xml", "text/html"), "not-matched" -> List("application/xml", "text/html"))
   )
 
-  val sources = ListBuffer.empty[Document]
+  private val sources = ListBuffer.empty[Any]
+  private val metas = ListBuffer.empty[XProcMetadata]
 
   override def receive(port: String, item: Any, metadata: XProcMetadata): Unit = {
-    item match {
-      case node: XdmNode =>
-        sources += new Document(node, metadata)
-      case _ =>
-        throw new RuntimeException("Unexpected node type")
-    }
+    sources += item
+    metas += metadata
   }
 
   override def run(staticContext: StaticContext): Unit = {
@@ -42,6 +40,7 @@ class SplitSequence() extends DefaultXmlStep {
     val fakeLastPositionFinder = new MyLastPositionFinder()
 
     for (source <- sources) {
+      val meta = metas(index)
       index += 1
       if (more) {
         val compiler = config.processor.newXPathCompiler()
@@ -57,9 +56,20 @@ class SplitSequence() extends DefaultXmlStep {
         val dyncontext = expr.createDynamicContext()
         val context = dyncontext.getXPathContextObject
 
-        var fakeIterator = new ManualIterator(source.source.getUnderlyingNode, index)
-        fakeIterator.setLastPositionFinder(fakeLastPositionFinder)
-        context.setCurrentIterator(fakeIterator)
+        source match {
+          case node: XdmNode =>
+            val fakeIterator = new ManualIterator(node.getUnderlyingValue, index)
+            fakeIterator.setLastPositionFinder(fakeLastPositionFinder)
+            context.setCurrentIterator(fakeIterator)
+          case item: Item =>
+            val fakeIterator = new ManualIterator(item, index)
+            fakeIterator.setLastPositionFinder(fakeLastPositionFinder)
+            context.setCurrentIterator(fakeIterator)
+          case _ =>
+            val fakeIterator = new ManualIterator(S9Api.emptyDocument(config).getUnderlyingValue, index)
+            fakeIterator.setLastPositionFinder(fakeLastPositionFinder)
+            context.setCurrentIterator(fakeIterator)
+        }
         val value = expr.evaluate(dyncontext)
 
         val matches = value.size() match {
@@ -69,13 +79,13 @@ class SplitSequence() extends DefaultXmlStep {
         }
 
         if (matches) {
-          consumer.get.receive("matched", source.source, source.meta)
+          consumer.get.receive("matched", source, meta)
         } else {
-          consumer.get.receive("not-matched", source.source, source.meta)
+          consumer.get.receive("not-matched", source, meta)
           more = !initialOnly
         }
       } else {
-        consumer.get.receive("not-matched", source.source, source.meta)
+        consumer.get.receive("not-matched", source, meta)
       }
     }
   }

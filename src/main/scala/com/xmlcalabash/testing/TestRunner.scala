@@ -1,26 +1,23 @@
 package com.xmlcalabash.testing
 
-import java.io.{ByteArrayOutputStream, File, PrintStream}
-import java.net.InetAddress
-import java.text.SimpleDateFormat
-import java.util.Calendar
 import com.jafpl.messages.Message
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.TestException
 import com.xmlcalabash.messages.XdmNodeItemMessage
-import com.xmlcalabash.model.xml.XMLContext
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
+import com.xmlcalabash.model.xml.XMLContext
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, StaticContext, XProcLocation, XProcMetadata, XProcXPathExpression}
-import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils, URIUtils, UrifiedPath}
-import net.sf.saxon.`type`.BuiltInAtomicType
-import net.sf.saxon.event.ReceiverOption
-import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap, SingletonAttributeMap}
-
-import javax.xml.transform.sax.SAXSource
+import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils, URIUtils, Urify}
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap}
 import net.sf.saxon.s9api.{Axis, QName, XdmNode, XdmNodeKind, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.InputSource
 
+import java.io.{ByteArrayOutputStream, File, PrintStream}
+import java.net.InetAddress
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import javax.xml.transform.sax.SAXSource
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -714,15 +711,15 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Optio
       tester.run()
     } else {
       TestRunner.lock.synchronized {
-        val os = UrifiedPath.osname
-        val sep = UrifiedPath.filesep
+        val os = Urify.osname
+        val sep = Urify.filesep
         if (urifyFeature.get == "windows") {
-          UrifiedPath.mockOS("Windows", "\\")
+          Urify.mockOS("Windows", "\\")
         } else {
-          UrifiedPath.mockOS("MacOS", "/")
+          Urify.mockOS("MacOS", "/")
         }
         val mockresult = tester.run()
-        UrifiedPath.mockOS(os, sep)
+        Urify.mockOS(os, sep)
         mockresult
       }
     }

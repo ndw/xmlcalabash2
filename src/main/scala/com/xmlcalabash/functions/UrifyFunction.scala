@@ -4,7 +4,7 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XProcItemMessage
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.util.URIUtils
+import com.xmlcalabash.util.{URIUtils, Urify}
 import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
 import net.sf.saxon.functions.AccessorFn.Component
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
@@ -14,7 +14,7 @@ import net.sf.saxon.tree.iter.ArrayIterator
 import net.sf.saxon.tree.tiny.{TinyDocumentImpl, TinyElementImpl, TinyTextImpl}
 import net.sf.saxon.value.{QNameValue, SequenceType, StringValue}
 
-class Urify (runtime: XMLCalabashConfig) extends FunctionImpl() {
+class UrifyFunction(runtime: XMLCalabashConfig) extends FunctionImpl() {
   val funcname = new StructuredQName("p", XProcConstants.ns_p, "urify")
 
   override def getFunctionQName: StructuredQName = funcname
@@ -43,9 +43,13 @@ class Urify (runtime: XMLCalabashConfig) extends FunctionImpl() {
 
       val relativeuri = arguments(0).head.getStringValue
       val proposedbase = arguments(1).head.getStringValue
-      val result = URIUtils.urify(relativeuri, Some(proposedbase))
 
-      new StringValue(result.toASCIIString)
+      if (proposedbase == "") {
+        throw XProcException.xdUrifyFailed(relativeuri, proposedbase, None)
+      }
+
+      val result = new Urify(proposedbase).resolve(relativeuri)
+      new StringValue(result.toString)
     }
   }
 }
