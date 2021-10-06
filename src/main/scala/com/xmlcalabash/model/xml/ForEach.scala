@@ -5,6 +5,7 @@ import com.jafpl.steps.Manifold
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.runtime.XMLCalabashRuntime
+import com.xmlcalabash.util.MediaType
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.s9api.XdmNode
 
@@ -23,10 +24,12 @@ class ForEach(override val config: XMLCalabashConfig) extends Container(config) 
       val winput = new WithInput(config)
       winput.port = "source"
       winput.primary = true
+      winput.sequence = true
       addChild(winput, fc)
     } else {
       val wi = firstWithInput.get
       wi.primary = true
+      wi.sequence = true
       if (wi.port == "") {
         wi.port = "source"
       }
@@ -35,6 +38,7 @@ class ForEach(override val config: XMLCalabashConfig) extends Container(config) 
     val input = new DeclareInput(config)
     input.port = "current"
     input.primary = true
+    input.contentTypes = List(MediaType.OCTET_STREAM)
     addChild(input, fc)
 
     makeContainerStructureExplicit()

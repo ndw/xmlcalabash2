@@ -1,7 +1,6 @@
 package com.xmlcalabash.exceptions
 
 import java.net.URI
-
 import com.jafpl.exceptions.{JafplException, JafplExceptionCode}
 import com.jafpl.graph.Location
 import com.jafpl.messages.{Message, Metadata}
@@ -10,7 +9,7 @@ import com.xmlcalabash.model.xml.Artifact
 import com.xmlcalabash.runtime.{StaticContext, XProcExpression}
 import com.xmlcalabash.util.MediaType
 import net.sf.saxon.om.StructuredQName
-import net.sf.saxon.s9api.{QName, XdmNode}
+import net.sf.saxon.s9api.{QName, XdmItem, XdmNode}
 
 import scala.collection.mutable.ListBuffer
 
@@ -149,6 +148,9 @@ object XProcException {
   def xdBadMapKey(key: String, location: Option[Location]): XProcException = dynamicError(70, key, location)
   def xdBadViewportInput(contentType: MediaType, location: Option[Location]): XProcException = dynamicError(72, contentType, location)
   def xdBadViewportResult(location: Option[Location]): XProcException = dynamicError(73, location)
+  def xdUrifyFailed(filepath: String, basedir: String, location: Option[Location]): XProcException = dynamicError(74, List(filepath, basedir), location)
+  def xdUrifyDifferentDrives(filepath: String, basedir: String, location: Option[Location]): XProcException = dynamicError(75, List(filepath, basedir), location)
+  def xdUrifyDifferentSchemes(filepath: String, basedir: String, location: Option[Location]): XProcException = dynamicError(76, List(filepath, basedir), location)
   def xdUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = dynamicError(79, ctype, location)
   def xdValueNotInList(value: String, location: Option[Location]): XProcException = dynamicError(101, value, location)
 
@@ -269,6 +271,8 @@ object XProcException {
   def xcInvalidSelection(pattern: String, nodeType: String, location: Option[Location]): XProcException = stepError(23, List(pattern, nodeType), location)
   def xcBadPosition(pattern: String, position: String, location: Option[Location]): XProcException = stepError(24, List(pattern, position), location)
   def xcBadChildPosition(pattern: String, position: String, location: Option[Location]): XProcException = stepError(25, List(pattern, position), location)
+  def xcXIncludeError(msg: String, location: Option[Location]): XProcException = stepError((29,1), msg, location)
+  def xcXIncludeError(href: String, msg: String, location: Option[Location]): XProcException = stepError((29,2), List(href, msg), location)
   def xcHttpCantInterpret(msg: String, location: Option[Location]): XProcException = stepError(30, msg, location)
 
   def xcOsExecBadSeparator(pathSeparator: String, location: Option[Location]): XProcException = stepError(33, pathSeparator, location)
@@ -312,6 +316,8 @@ object XProcException {
   def xcSortError(msg: String, location: Option[Location]): XProcException = stepError(98, msg, location)
   def xcSortKeyError(location: Option[Location]): XProcException = stepError(99, location)
   def xcArchiveBadManifest(location: Option[Location]): XProcException = stepError(100, location)
+  def xcXQueryInputNot30Compatible(media: MediaType, location: Option[Location]): XProcException = stepError(101, media, location)
+  def xcXQueryInvalidParameterType(name: QName, typename: String, location: Option[Location]): XProcException = stepError(102, List(name, typename), location)
   def xcXQueryCompileError(msg: String, location: Option[Location]): XProcException = stepError(103, msg, location)
   def xcXQueryEvalError(msg: String, location: Option[Location]): XProcException = stepError(104, msg, location)
   def xcRejectDuplicateKeys(key: String, location: Option[Location]): XProcException = stepError(106, key, location)

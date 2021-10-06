@@ -117,6 +117,10 @@ class InlineLoader() extends AbstractLoader {
 
     val req = expander.loadDocument()
     val resp = config.documentManager.parse(req)
-    consumer.get.receive("result", resp.value, new XProcMetadata(resp.contentType, resp.props))
+    if (resp.shadow.isDefined) {
+      consumer.get.receive("result", resp.shadow.get, new XProcMetadata(resp.contentType, resp.props))
+    } else {
+      consumer.get.receive("result", resp.value, new XProcMetadata(resp.contentType, resp.props))
+    }
   }
 }

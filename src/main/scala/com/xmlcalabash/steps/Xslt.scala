@@ -32,7 +32,6 @@ class Xslt extends DefaultXmlStep {
   private var stylesheet = Option.empty[XdmNode]
   private val inputSequence = ListBuffer.empty[XdmItem]
   private val inputMetadata = ListBuffer.empty[XProcMetadata]
-  private val binaryMap = mutable.HashMap.empty[XdmNode, BinaryNode]
 
   private var staticContext: StaticContext = _
   private var globalContextItem = Option.empty[XdmValue]
@@ -166,18 +165,6 @@ class Xslt extends DefaultXmlStep {
     val collectionFinder = config.getCollectionFinder
     val unparsedTextURIResolver = config.getUnparsedTextURIResolver
 
-    if (populateDefaultCollection) {
-      config.setDefaultCollection(XProcCollectionFinder.DEFAULT)
-      val docs = ListBuffer.empty[XdmNode]
-      for (value <- inputSequence) {
-        value match {
-          case node: XdmNode => docs += node
-          case _ => ()
-        }
-      }
-      config.setCollectionFinder(new XProcCollectionFinder(runtime, docs.toList, collectionFinder))
-    }
-
     val compiler = processor.newXsltCompiler()
     compiler.setSchemaAware(processor.isSchemaAware)
 
@@ -222,6 +209,18 @@ class Xslt extends DefaultXmlStep {
     val transformer = exec.load30()
     transformer.setResultDocumentHandler(new DocumentHandler().asJava)
     transformer.setStylesheetParameters(parameters.asJava)
+
+    if (populateDefaultCollection) {
+      transformer.getUnderlyingController.setDefaultCollection(XProcCollectionFinder.DEFAULT)
+      val docs = ListBuffer.empty[XdmNode]
+      for (value <- inputSequence) {
+        value match {
+          case node: XdmNode => docs += node
+          case _ => ()
+        }
+      }
+      transformer.getUnderlyingController.setCollectionFinder(new XProcCollectionFinder(runtime, docs.toList, collectionFinder))
+    }
 
     val inputSelection = if (document.isDefined) {
       val iter = inputSequence.iterator.asJava
@@ -503,7 +502,6 @@ class Xslt extends DefaultXmlStep {
       val xprocProps = mutable.HashMap.empty[QName, XdmValue]
       for (rawkey <- properties.getProperties.keySet().asScala) {
         val key = rawkey.toString
-        println(key)
       }
 
       secondaryOutputProperties.put(uri, xprocProps.toMap)

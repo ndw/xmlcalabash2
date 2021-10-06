@@ -14,13 +14,23 @@ class DeclContainer(override val config: XMLCalabashConfig) extends Container(co
   protected var _version = Option.empty[Double]
 
   protected var _signatures: ListBuffer[StepSignature] = ListBuffer.empty[StepSignature]
-  private var processed = mutable.HashSet.empty[DeclContainer]
+  private val processed = mutable.HashSet.empty[DeclContainer]
 
   def inScopeDeclarations: List[StepSignature] = _signatures.toList
 
   def addSignature(sig: StepSignature): Unit = {
     if (sig.stepType.isEmpty) {
       return
+    }
+
+    if (sig.declaration.isDefined) {
+      // If it's not defined, we're processing a signature within the library that contains it, visibility is irrelevant
+      val sigcontainer = sig.declaration.get.parent
+      if (sig.declaration.get.visiblity != "public"
+        && (sigcontainer.isEmpty || sigcontainer.get != this)) {
+        // not visible here
+        return
+      }
     }
 
     val dsig = declaration(sig.stepType.get)
@@ -91,6 +101,10 @@ class DeclContainer(override val config: XMLCalabashConfig) extends Container(co
   }
 
   override def declaration(stepType: QName): Option[StepSignature] = {
+    declaration(stepType, this)
+  }
+
+  override def declaration(stepType: QName, container: DeclContainer): Option[StepSignature] = {
     var found = Option.empty[StepSignature]
 
     for (sig <- _signatures) {

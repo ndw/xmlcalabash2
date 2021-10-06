@@ -1,0 +1,97 @@
+<cases>
+
+<case>
+<desc>Test against a relative URI beginning with #.</desc>
+<str>#B</str>
+<base>https://wiki.acme.com/fr/categories.html</base>
+<result>https://wiki.acme.com/fr/%23B</result>
+</case>
+
+<case>
+<desc>Test against a relative path.</desc>
+<str>index.html</str>
+<base>https://wiki.acme.com/fr/categories.html</base>
+<result>https://wiki.acme.com/fr/index.html</result>
+</case>
+
+<case>
+<desc>Test against an absolute path</desc>
+<str>/en/index.html</str>
+<base>https://wiki.acme.com/fr/categories.html</base>
+<result>https://wiki.acme.com/en/index.html</result>
+</case>
+
+<case>
+<desc>Test an absolute (http) URI against an absolute URI.</desc>
+<str>http://example.com/absolute/</str>
+<base>https://wiki.acme.com/fr/categories.html</base>
+<result>http://example.com/absolute/</result>
+</case>
+
+<case>
+<desc>Test an absolute (https) URI against an absolute URI.</desc>
+<str>https://example.com/absolute/</str>
+<base>https://wiki.acme.com/fr/categories.html</base>
+<result>https://example.com/absolute/</result>
+</case>
+
+<case>
+<desc>Test an absolute URI against a relative URI.</desc>
+<str>https://example.com/absolute/</str>
+<base>relative-uri</base>
+<result>https://example.com/absolute/</result>
+</case>
+
+<case>
+<desc>Test a URN (non-hierarchical) URI against an absolute URI.</desc>
+<str>urn:a:b:c</str>
+<base>https://wiki.acme.com/fr/categories.html</base>
+<result>urn:a:b:c</result>
+</case>
+
+<case>
+<desc>Test a URN (non-hierarchical) URI against a relative URI.</desc>
+<str>urn:a:b:c</str>
+<base>segment</base>
+<result>urn:a:b:c</result>
+</case>
+
+<case err="err:XD0076">
+<desc>URIs must have the same scheme.</desc>
+<str>file:path</str>
+<base>http://example.com/</base>
+</case>
+
+<case err="err:XD0074">
+<desc>The base URI must be absolute.</desc>
+<str>file:path</str>
+<base>file:otherpath</base>
+</case>
+
+<case err="err:XD0074">
+<desc>The base URI must be absolute.</desc>
+<str>file:path</str>
+<base></base>
+</case>
+
+<case feature="non-windows">
+<desc>Test against an absolute path (not a UNC path except on Windows).</desc>
+<str>//www.acme.com/lib/acme.js</str>
+<base>https://wiki.acme.com/fr/categories.html</base>
+<result>https://wiki.acme.com/www.acme.com/lib/acme.js</result>
+</case>
+
+<case feature="windows">
+<desc>Test against a UNC path.</desc>
+<str>//www.acme.com/lib/acme.js</str>
+<base>https://wiki.acme.com/fr/categories.html</base>
+<result>file://www.acme.com/lib/acme.js</result>
+</case>
+
+<case err="err:XD0075" feature="windows">
+<desc>Paths must be on the same drive.</desc>
+<str>c:Users\\ndw</str>
+<base>D:\\Data\\</base>
+</case>
+
+</cases>

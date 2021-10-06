@@ -68,7 +68,10 @@ class Unarchive extends DefaultXmlStep {
     relativeTo = if (uriBinding(_relativeTo).isDefined) {
       uriBinding(_relativeTo).get
     } else {
-      smeta.baseURI.get
+      if (smeta.baseURI.isEmpty) {
+        throw XProcException.xcArchiveNoBaseURI(location)
+      }
+      new URI(smeta.baseURI.get.toString + "/")
     }
 
     if (bindings.contains(XProcConstants._include_filter)) {
@@ -126,7 +129,7 @@ class Unarchive extends DefaultXmlStep {
             IOUtils.copy(zipIn.getInputStream(entry), baos)
             val bais = new ByteArrayInputStream(baos.toByteArray)
 
-            val href = relativeTo.resolve(entry.getName)
+            val href = URIUtils.urifyAgainstURI(entry.getName, relativeTo)
 
             var contentType = Option.empty[MediaType]
             for (over <- overrideContentTypes) {
@@ -145,8 +148,9 @@ class Unarchive extends DefaultXmlStep {
             }
 
             val request = new DocumentRequest(href, contentType.get)
+            request.baseURI = href
             val response = config.documentManager.parse(request, bais)
-            consumer.get.receive("result", response.value, new XProcMetadata(response.contentType))
+            consumer.get.receive("result", response.value, new XProcMetadata(response.contentType, response.props))
           } else {
             logger.info(s"Cannot read {$entry.getName} from ZIP")
           }

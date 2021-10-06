@@ -3,7 +3,7 @@ package com.xmlcalabash.config
 import com.jafpl.runtime.RuntimeConfiguration
 import com.jafpl.util.{ErrorListener, TraceEventManager}
 import com.xmlcalabash.exceptions.{ConfigurationException, ExceptionCode}
-import com.xmlcalabash.functions.{Cwd, DocumentProperties, DocumentProperty, ForceQNameKeys, InjElapsed, InjId, InjName, InjType, IterationPosition, IterationSize, StepAvailable, SystemProperty}
+import com.xmlcalabash.functions.{Cwd, DocumentProperties, DocumentProperty, ForceQNameKeys, InjElapsed, InjId, InjName, InjType, IterationPosition, IterationSize, StepAvailable, SystemProperty, Urify}
 import com.xmlcalabash.model.util.ExpressionParser
 import com.xmlcalabash.model.xml.{DeclContainer, Library}
 import com.xmlcalabash.parsers.XPathParser
@@ -13,7 +13,6 @@ import com.xmlcalabash.util.URIUtils
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.{Processor, QName, XdmNode}
 import org.slf4j.{Logger, LoggerFactory}
-import org.xml.sax.helpers.XMLReaderFactory
 import org.xml.sax.{EntityResolver, InputSource}
 
 import java.net.URI
@@ -405,6 +404,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
     processor.registerExtensionFunction(new StepAvailable(this))
     processor.registerExtensionFunction(new IterationPosition(this))
     processor.registerExtensionFunction(new IterationSize(this))
+    processor.registerExtensionFunction(new Urify(this))
   }
   private def checkClosed(): Unit = {
     if (closed) {

@@ -217,6 +217,21 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
       p = p.get.parent
     }
 
+    var exprString = ""
+    val usesContextItem = try {
+      if (_avt.isDefined) {
+        exprString = _avt.toString
+        val avt = staticContext.parseAvt(_avt.get)
+        staticContext.dependsOnContextAvt(avt)
+      } else {
+        exprString = _select.getOrElse("()")
+        staticContext.dependsOnContextString(_select.getOrElse("()"))
+      }
+    } catch {
+      case ex: Throwable =>
+        throw XProcException.xsStaticErrorInExpression(exprString, ex.getMessage, location)
+    }
+
     val ds = ListBuffer.empty[DataSource]
     for (child <- allChildren) {
       child match {
@@ -236,7 +251,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
     val drp = env.defaultReadablePort
 
     if (ds.isEmpty) {
-      if (drp.isDefined && !static) {
+      if (drp.isDefined && !static && usesContextItem) {
         val winput = new WithInput(config)
         winput.port = "source"
         addChild(winput)
@@ -323,7 +338,7 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
         for (ref <- bindings) {
           val binding = env.variable(ref)
           if (binding.isEmpty) {
-            throw new RuntimeException("Reference to undefined variable")
+            throw XProcException.xsNoBindingInExpression(ref, location);
           }
           if (!binding.get.static) {
             val pipe = new NamePipe(config, ref, binding.get.tumble_id, binding.get)

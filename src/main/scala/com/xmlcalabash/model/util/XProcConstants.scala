@@ -31,6 +31,7 @@ object XProcConstants {
 
   val fn_map = new QName("fn", ns_fn, "map")
   val fn_array = new QName("fn", ns_fn, "array")
+  val fn_collection = new QName("fn", ns_fn, "collection")
 
   val p_catch = new QName("p", ns_p, "catch")
   val p_choose = new QName("p", ns_p, "choose")

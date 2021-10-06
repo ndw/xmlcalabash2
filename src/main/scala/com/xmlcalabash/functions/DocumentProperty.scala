@@ -4,7 +4,6 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XProcItemMessage
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.SaxonExpressionEvaluator
 import net.sf.saxon.expr.{Expression, StaticContext, XPathContext}
 import net.sf.saxon.functions.AccessorFn.Component
 import net.sf.saxon.lib.{ExtensionFunctionCall, ExtensionFunctionDefinition}
@@ -12,9 +11,7 @@ import net.sf.saxon.om.{Item, Sequence, StructuredQName}
 import net.sf.saxon.s9api.{QName, XdmAtomicValue, XdmEmptySequence, XdmItem, XdmNode, XdmValue}
 import net.sf.saxon.tree.iter.ArrayIterator
 import net.sf.saxon.tree.tiny.{TinyDocumentImpl, TinyElementImpl, TinyTextImpl}
-import net.sf.saxon.value.{AnyURIValue, QNameValue, SequenceType, StringValue}
-
-import java.net.URI
+import net.sf.saxon.value.{QNameValue, SequenceType, StringValue}
 
 class DocumentProperty(runtime: XMLCalabashConfig) extends FunctionImpl() {
   val funcname = new StructuredQName("p", XProcConstants.ns_p, "document-property")

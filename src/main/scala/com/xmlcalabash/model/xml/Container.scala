@@ -5,7 +5,7 @@ import com.jafpl.steps.{Manifold, PortCardinality, PortSpecification}
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.XMLCalabashRuntime
+import com.xmlcalabash.runtime.{XMLCalabashRuntime, XmlPortSpecification}
 import com.xmlcalabash.runtime.params.{ContentTypeCheckerParams, SelectFilterParams}
 import com.xmlcalabash.util.MediaType
 
@@ -173,7 +173,14 @@ class Container(override val config: XMLCalabashConfig) extends Step(config) wit
       if (input.select.isDefined) {
         logger.debug(s"Adding select filter for container input ${stepName}/${input.port}: ${input.select.get}")
         val context = staticContext.withStatics(inScopeStatics)
-        val params = new SelectFilterParams(context, input.select.get)
+
+        val ispec = if (input.sequence) {
+          XmlPortSpecification.ANYSOURCESEQ
+        } else {
+          XmlPortSpecification.ANYSOURCE
+        }
+
+        val params = new SelectFilterParams(context, input.select.get, input.port, ispec)
         val filter = new AtomicStep(config, params)
         filter.stepType = XProcConstants.cx_select_filter
 

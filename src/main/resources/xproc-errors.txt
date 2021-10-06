@@ -296,7 +296,7 @@ XS0102/2
 Mismatched primary outputs in p:try, “$1” != “$2”
 
 XS0107/1
-No binding in expression: “$1”
+There is no variable or reference named “$1” in scope.
 
 XS0107/2
 Static error in expression “$1”: $2
@@ -319,6 +319,9 @@ The content type is not a valid text content type: “$1”.
 XC0007
 Parameter “$1” has invalid type “$2” for an XSLT 2.0 stylesheet.
 
+XC0009
+XQuery version “$1” is not supported.
+
 XC0013
 Cannot rename PI to a name with a namespace: “$1”.
 
@@ -330,6 +333,12 @@ Bad child position; cannot specify “$2” with pattern “$1”.
 
 XC0025
 Bad position; cannot specify “$2” with pattern “$1”.
+
+XC0029/1
+XInclude error: $1
+
+XC0029/2
+XInclude resource error, failed to load: $1. $2.
 
 XC0036/1
 Bad CRC version in p:hash: “$1”.
@@ -402,6 +411,15 @@ User termination: “$1”.
 
 XC0098
 XPath error occurred: $1
+
+XC0101
+Cannot process “$1” documents with XQuery 3.0.
+
+XC0102
+Parameter “$1” has invalid type “$2” for an XQuery 3.0 query.
+
+XC0104
+Error evaluating query: $1
 
 XC0113
 Attempt to delete non-empty directory without the recursive option: $1

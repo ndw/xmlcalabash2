@@ -11,7 +11,7 @@ import com.xmlcalabash.messages.XdmNodeItemMessage
 import com.xmlcalabash.model.xml.XMLContext
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser}
 import com.xmlcalabash.runtime.{SaxonExpressionEvaluator, StaticContext, XProcLocation, XProcMetadata, XProcXPathExpression}
-import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils, URIUtils}
+import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils, URIUtils, UrifiedPath}
 import net.sf.saxon.`type`.BuiltInAtomicType
 import net.sf.saxon.event.ReceiverOption
 import net.sf.saxon.om.{AttributeInfo, AttributeMap, EmptyAttributeMap, SingletonAttributeMap}
@@ -23,6 +23,10 @@ import org.xml.sax.InputSource
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+
+object TestRunner {
+  private val lock = new Object()
+}
 
 class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Option[String], testlist: List[String], testloc: List[String]) {
   private val _testsuite = new QName("", "testsuite")
@@ -547,6 +551,7 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Optio
       }
     }
 
+    var urifyFeature = Option.empty[String]
     val features = node.getAttributeValue(_features)
     if (features != null) {
       if (features.contains("lazy-eval")) {
@@ -559,6 +564,12 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Optio
         val result = new TestResult(true) // skipped counts as a pass...
         result.baseURI = node.getBaseURI
         result.skipped = "XSLT 1.0 is not supported"
+        return result
+      }
+      if (features.contains("xquery_1_0")) {
+        val result = new TestResult(true) // skipped counts as a pass...
+        result.baseURI = node.getBaseURI
+        result.skipped = "XQuery 1.0 is not supported"
         return result
       }
       if (!online && features.contains("webaccess")) {
@@ -574,6 +585,15 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Optio
           result.skipped = "The 'p-validate-with-xsd' feature is not supported with this version of Saxon"
           return result
         }
+      }
+      if (features.contains("urify-windows")) {
+        urifyFeature = Some("windows")
+      }
+      if (features.contains("urify-non-windows")) {
+        if (urifyFeature.nonEmpty) {
+          logger.warn("Attempting to set multiple urify features")
+        }
+        urifyFeature = Some("non-windows")
       }
     }
 
@@ -690,7 +710,23 @@ class TestRunner(runtimeConfig: XMLCalabashConfig, online: Boolean, regex: Optio
       tester.addBinding(name, bind)
     }
 
-    val result = tester.run()
+    val result = if (urifyFeature.isEmpty) {
+      tester.run()
+    } else {
+      TestRunner.lock.synchronized {
+        val os = UrifiedPath.osname
+        val sep = UrifiedPath.filesep
+        if (urifyFeature.get == "windows") {
+          UrifiedPath.mockOS("Windows", "\\")
+        } else {
+          UrifiedPath.mockOS("MacOS", "/")
+        }
+        val mockresult = tester.run()
+        UrifiedPath.mockOS(os, sep)
+        mockresult
+      }
+    }
+
     result.baseURI = node.getBaseURI
 
     //System.err.println("RESULT")

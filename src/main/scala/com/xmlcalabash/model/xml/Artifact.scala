@@ -326,9 +326,24 @@ class Artifact(val config: XMLCalabashConfig) {
     }
   }
 
+
   protected[model] def declaration(stepType: QName): Option[StepSignature] = {
+    // First find the decl container
+    var container: Option[Artifact] = Some(this)
+    while (container.isDefined) {
+      container.get match {
+        case decl: DeclContainer =>
+          return declaration(stepType, decl)
+        case _ =>
+          container = container.get.parent
+      }
+    }
+    None
+  }
+
+  protected[model] def declaration(stepType: QName, container: DeclContainer): Option[StepSignature] = {
     if (parent.isDefined) {
-      parent.get.declaration(stepType)
+      parent.get.declaration(stepType, container)
     } else {
       None
     }

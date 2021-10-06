@@ -30,8 +30,13 @@ class Port(override val config: XMLCalabashConfig) extends Artifact(config) {
   protected[model] def primary_=(primary: Boolean): Unit = {
     _primary = Some(primary)
   }
+
   def select: Option[String] = _select
+
   def contentTypes: List[MediaType] = _content_types
+  def contentTypes_=(types: List[MediaType]): Unit = {
+    _content_types = types
+  }
 
   def step: NamedArtifact = {
     if (parent.isDefined) {

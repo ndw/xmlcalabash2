@@ -32,6 +32,8 @@ class SelectFilter() extends DefaultXmlStep {
   private val nodes = ListBuffer.empty[Any]
   private var select: String = _
   private var selectContext: StaticContext = _
+  private var port: String = _
+  private var ispec: XmlPortSpecification = _
 
   // ==========================================================================
 
@@ -54,6 +56,8 @@ class SelectFilter() extends DefaultXmlStep {
         case cp: SelectFilterParams =>
           select = cp.select
           selectContext = cp.context
+          port = cp.port
+          ispec = cp.ispec
         case _ => throw XProcException.xiWrongImplParams()
       }
     }
@@ -96,8 +100,15 @@ class SelectFilter() extends DefaultXmlStep {
     val exprEval = config.expressionEvaluator.newInstance()
     val result = exprEval.value(expr, context, msgBindings.toMap, None)
     val iter = result.item.iterator()
+    var count = 0
     while (iter.hasNext) {
       val item = iter.next()
+      count += 1
+
+      if (!ispec.cardinality("source").get.withinBounds(count)) {
+        throw XProcException.xdInputSequenceNotAllowed(port, location)
+      }
+
       item match {
         case node: XdmNode =>
           if (node.getNodeKind == XdmNodeKind.ATTRIBUTE) {
@@ -111,6 +122,10 @@ class SelectFilter() extends DefaultXmlStep {
         case _ =>
           consume(item, "result")
       }
+    }
+
+    if (!ispec.cardinality("source").get.withinBounds(count)) {
+      throw XProcException.xdInputSequenceNotAllowed(port, location)
     }
   }
 

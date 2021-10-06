@@ -13,6 +13,12 @@ import net.sf.saxon.s9api.{ItemType, QName, SaxonApiException, SequenceType, Xdm
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
+object XMLContext {
+  private val contextFunctions =
+    List(XProcConstants.p_iteration_size, XProcConstants.p_iteration_position,
+      XProcConstants.fn_collection, XProcConstants._collection)
+}
+
 class XMLContext(override val config: XMLCalabashConfig, override val artifact: Option[Artifact]) extends StaticContext(config, artifact) {
   def this(config: XMLCalabashConfig, artifact: Artifact) = {
     this(config, Some(artifact))
@@ -220,14 +226,17 @@ class XMLContext(override val config: XMLCalabashConfig, override val artifact: 
   def dependsOnContextString(expr: String): Boolean = {
     var depends = false
     for (func <- findFunctionRefsInString(expr)) {
-      depends = depends || func == XProcConstants.p_iteration_size || func == XProcConstants.p_iteration_position
+      depends = depends || XMLContext.contextFunctions.contains(func)
     }
-    depends = depends || findVariableRefsInString(expr).nonEmpty
+    val vars = findVariableRefsInString(expr)
 
     if (!depends) {
       val xcomp = config.processor.newXPathCompiler()
       for ((prefix, uri) <- nsBindings) {
         xcomp.declareNamespace(prefix, uri)
+      }
+      for (name <- vars) {
+        xcomp.declareVariable(name)
       }
       val xexec = xcomp.compile(expr)
       val xexpr = xexec.getUnderlyingExpression.getInternalExpression

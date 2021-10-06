@@ -1,5 +1,7 @@
 <!-- -*- nxml -*- -->
 <cc:xmlcalabash xmlns:cc="http://xmlcalabash.com/ns/configuration">
+  <cc:system-property key="content.types.user.table"
+                      value="src/test/resources/content-types.properties"/>
   <cc:system-property key="log4j.configurationFile"
                       value="src/test/resources/log4j2.xml"/>
   <cc:system-property key="com.xmlcalabash.trace"

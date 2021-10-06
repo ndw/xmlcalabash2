@@ -5,10 +5,12 @@
                 xmlns:cx="http://xmlcalabash.com/ns/extensions"
                 xmlns:dot="http://jafpl.com/ns/dot"
                 exclude-result-prefixes="xs"
-                version="2.0">
+                version="3.0">
 
 <xsl:output method="xml" encoding="utf-8" indent="yes"
             omit-xml-declaration="yes"/>
+
+<xsl:param name="debug" select="0"/>
 
 <xsl:strip-space elements="*"/>
 
@@ -17,6 +19,9 @@
 
 <xsl:template match="/">
   <dot:digraph name="pg_graph">
+    <xsl:if test="$debug = 1">
+      <xsl:apply-templates mode="debug-ids"/>
+    </xsl:if>
     <xsl:apply-templates/>
     <xsl:apply-templates select="//p:pipe|//p:name-pipe" mode="pipes"/>
   </dot:digraph>
@@ -64,7 +69,9 @@
                 select="concat(node-name(.),
                                    if (starts-with(@name, '!syn'))
                                    then '' else concat(' ', @name))"/>
-  <dot:anchor name="{generate-id(.)}-input-{generate-id(p:with-input)}" label="${@optname}"/>
+  <xsl:if test="*">
+    <dot:anchor name="{generate-id(.)}-input-{generate-id(p:with-input)}" label="${@optname}"/>
+  </xsl:if>
 </xsl:template>
 
 <xsl:template match="*">
@@ -101,8 +108,17 @@
 
 <xsl:template match="p:name-pipe[ancestor::p:with-option]" mode="pipes">
   <xsl:variable name="from" select="key('name', @step)"/>
-  <dot:arrow k="3" from="{$from/@xml:id}-output"
-             to="{generate-id(../..)}-input-{generate-id(..)}"/>
+
+  <xsl:choose>
+    <xsl:when test="$from/self::p:variable">
+      <dot:arrow k="3" gid="{generate-id(.)}" from="{$from/@xml:id}-output"
+                 to="{generate-id(..)}-input-{generate-id(preceding::p:with-input[1])}"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <dot:arrow k="3" gid="{generate-id(.)}" from="{$from/@xml:id}-output"
+                 to="{generate-id(../..)}-input-{generate-id(..)}"/>
+    </xsl:otherwise>
+  </xsl:choose>
 </xsl:template>
 
 <!-- ============================================================ -->
@@ -132,6 +148,21 @@
 
 <xsl:template match="p:output|p:with-output" mode="io">
   <dot:anchor name="{generate-id(..)}-output-{generate-id(.)}" label="{@port}"/>
+</xsl:template>
+
+<!-- ============================================================ -->
+
+<xsl:template match="element()" mode="debug-ids">
+  <xsl:copy>
+    <xsl:attribute name="gid" select="generate-id(.)"/>
+    <xsl:apply-templates select="@*" mode="debug-ids"/>
+    <xsl:apply-templates select="node()" mode="debug-ids"/>
+  </xsl:copy>
+</xsl:template>
+
+<xsl:template match="attribute()|text()|comment()|processing-instruction()"
+              mode="debug-ids">
+  <xsl:copy/>
 </xsl:template>
 
 </xsl:stylesheet>

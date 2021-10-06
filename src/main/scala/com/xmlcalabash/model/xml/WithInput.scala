@@ -6,7 +6,7 @@ import com.xmlcalabash.exceptions
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime.params.SelectFilterParams
-import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime}
+import com.xmlcalabash.runtime.{StaticContext, XMLCalabashRuntime, XmlPortSpecification}
 import com.xmlcalabash.util.xc.ElaboratedPipeline
 import net.sf.saxon.functions.ConstantFunction.{False, True}
 import net.sf.saxon.s9api.{QName, XdmNode}
@@ -61,16 +61,18 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
     examineBindings()
     super.makeBindingsExplicit()
 
+    var primaryInput = primary
+    parent.get match {
+      case atom: AtomicStep =>
+        val decl = declaration(atom.stepType).get
+        primaryInput = decl.input(_port, None).primary
+        sequence = decl.input(_port, None).sequence
+      case _ => ()
+    }
+
     if (allChildren.nonEmpty) {
       // If there are explicit children, we'll check them elsewhere
       return
-    }
-
-    val primaryInput = parent.get match {
-      case atom: AtomicStep =>
-        declaration(atom.stepType).get.input(_port, None).primary
-      case _ =>
-        primary
     }
 
     val env = environment()
@@ -137,7 +139,14 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
     }
 
     val context = staticContext.withStatics(inScopeStatics)
-    val params = new SelectFilterParams(context, select.get)
+
+    val ispec = if (sequence) {
+      XmlPortSpecification.ANYSOURCESEQ
+    } else {
+      XmlPortSpecification.ANYSOURCE
+    }
+
+    val params = new SelectFilterParams(context, select.get, port, ispec)
     val filter = new AtomicStep(config, params)
     filter.stepType = XProcConstants.cx_select_filter
 

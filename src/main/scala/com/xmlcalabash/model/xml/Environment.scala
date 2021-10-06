@@ -33,9 +33,16 @@ object Environment {
 
     val env = new Environment()
 
-    val ancestors = ListBuffer.empty[Artifact]    // includes self for compound steps
+    var ancestors = ListBuffer.empty[Artifact]    // includes self for compound steps
+
+    // If we start at a DeclareOption, then we're really in a pipeline that we're
+    // running for a step. Stop at the first atomic step ancestor...
+    val stopAtStep = step.isInstanceOf[DeclareOption]
+    var scopeRoot = Option.empty[Artifact]
+
     var pptr: Option[Artifact] = Some(step)
     while (pptr.isDefined) {
+      var next = pptr.get.parent
       pptr.get match {
         case variable: Variable =>
           ancestors.insert(0, variable)
@@ -50,11 +57,33 @@ object Environment {
         case option: WithOption =>
           ancestors.insert(0, option)
         case step: Step =>
+          if (stopAtStep && scopeRoot.isEmpty) {
+            scopeRoot = Some(step)
+          }
           ancestors.insert(0, step)
         case _ => ()
       }
 
-      pptr = pptr.get.parent
+      pptr = next
+    }
+
+    if (scopeRoot.isDefined) {
+      // The scopeRoot is really the top of the ancestor list, *except* that any static
+      // variables declared "above" this root are in scope.
+      val senv = Environment.newEnvironment(scopeRoot.get)
+      for (opt <- senv.staticVariables) {
+        if (opt ne step) {
+          env.addVariable(opt)
+        }
+      }
+
+      while (ancestors.nonEmpty && (ancestors.head ne scopeRoot.get)) {
+        ancestors = ancestors.drop(1)
+      }
+      if (ancestors.isEmpty) {
+        throw XProcException.xiThisCantHappen("Failed to find scopeRoot in ancestors when creating new environment", None)
+      }
+      ancestors = ancestors.drop(1)
     }
 
     walk(env, ancestors.toList)
@@ -206,7 +235,7 @@ object Environment {
 
         // Now walk down to the next ancestor, calculating the drp
         for (child <- xstep.allChildren) {
-          if (next.get == child) {
+          if (next.get eq child) {
             return walk(env, ancestors.tail)
           }
           xstep match {
@@ -229,8 +258,13 @@ object Environment {
           }
         }
 
-        // If we fell off the bottom of this loop, something has gone terribly wrong
-        throw new RuntimeException("Fell off ancestor list in container")
+        next.get match {
+          case _: DeclareStep =>
+            return walk(env, ancestors.tail)
+          case _ =>
+            // If we fell off the bottom of this loop, something has gone terribly wrong
+            throw new RuntimeException("Fell off ancestor list in container")
+        }
 
       case step: AtomicStep =>
         if (next.isEmpty) {
@@ -242,7 +276,19 @@ object Environment {
 
       case option: DeclareOption =>
         if (next.isEmpty) {
-          // This is us.
+          // This is us. Any preceding options are in-scope
+          val parent = option.parent.get
+          var found = false
+          for (child <- parent.allChildren) {
+            child match {
+              case opt: DeclareOption =>
+                found = found || (opt eq option)
+                if (!found) {
+                  env.addVariable(opt)
+                }
+              case _ => ()
+            }
+          }
           return env
         }
 

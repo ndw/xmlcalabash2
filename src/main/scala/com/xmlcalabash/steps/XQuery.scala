@@ -11,7 +11,7 @@ import com.xmlcalabash.util.{MediaType, S9Api, XProcCollectionFinder}
 import javax.xml.transform.{ErrorListener, TransformerException}
 import net.sf.saxon.event.{PipelineConfiguration, Receiver}
 import net.sf.saxon.lib.SaxonOutputKeys
-import net.sf.saxon.s9api.{Destination, QName, RawDestination, Serializer, ValidationMode, XdmAtomicValue, XdmDestination, XdmItem, XdmNode, XdmNodeKind, XdmValue}
+import net.sf.saxon.s9api.{Destination, QName, RawDestination, Serializer, ValidationMode, XdmArray, XdmAtomicValue, XdmDestination, XdmFunctionItem, XdmItem, XdmMap, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.serialize.SerializationProperties
 
 import scala.collection.mutable
@@ -21,7 +21,8 @@ class XQuery extends DefaultXmlStep {
   private var query = Option.empty[XdmNode]
   private var queryMetadata = Option.empty[XProcMetadata]
   private val defaultCollection = ListBuffer.empty[XdmNode]
-  private val sources = ListBuffer.empty[XdmItem]
+  private val inputSequence = ListBuffer.empty[XdmItem]
+  private val inputMetadata = ListBuffer.empty[XProcMetadata]
 
   private var parameters = Map.empty[QName, XdmValue]
   private var version = Option.empty[String]
@@ -44,9 +45,11 @@ class XQuery extends DefaultXmlStep {
         item match {
           case node: XdmNode =>
             defaultCollection += node
-            sources += node
+            inputSequence += node
+            inputMetadata += metadata
           case item: XdmItem =>
-            sources += item
+            inputSequence += item
+            inputMetadata += metadata
         }
       case "query" =>
         query = Some(item.asInstanceOf[XdmNode])
@@ -65,11 +68,44 @@ class XQuery extends DefaultXmlStep {
 
     version = optionalStringBinding(XProcConstants._version)
 
-    val document: Option[XdmItem] = sources.headOption
-
-    if (version.isDefined && version.get != "3.0" && version.get != "3.1") {
-      throw XProcException.xcXQueryVersionNotAvailable(version.getOrElse(""), location)
+    version.getOrElse("3.1") match {
+      case "3.0" => xquery30()
+      case "3.1" => xquery31()
+      case _ =>
+        throw XProcException.xcXQueryVersionNotAvailable(version.getOrElse(""), location)
     }
+  }
+
+  private def xquery30(): Unit = {
+    for (meta <- inputMetadata) {
+      val ctype = meta.contentType
+      if (!ctype.xmlContentType && !ctype.htmlContentType && !ctype.textContentType) {
+        throw XProcException.xcXQueryInputNot30Compatible(ctype, location)
+      }
+    }
+
+    for ((name, value) <- parameters) {
+      value match {
+        case _: XdmAtomicValue => ()
+        case _: XdmNode => ()
+        case _: XdmMap =>
+          throw XProcException.xcXQueryInvalidParameterType(name, "map", location)
+        case _: XdmArray => ()
+          throw XProcException.xcXQueryInvalidParameterType(name, "array", location)
+        case _: XdmFunctionItem => ()
+          throw XProcException.xcXQueryInvalidParameterType(name, "function", location)
+        case _ =>
+          logger.debug(s"Unexpected parameter type: ${value} passed to p:xquery")
+      }
+    }
+  }
+
+  private def xquery31(): Unit = {
+    runXQueryProcessor()
+  }
+
+  private def runXQueryProcessor(): Unit = {
+    val document: Option[XdmItem] = inputSequence.headOption
 
     val runtime = this.config.config
     val processor = runtime.processor
@@ -119,9 +155,13 @@ class XQuery extends DefaultXmlStep {
 
     queryEval.setSchemaValidationMode(ValidationMode.DEFAULT)
     queryEval.setErrorListener(new MyErrorListener(false))
-    // FIXME: transformer.getUnderlyingController().setUnparsedTextURIResolver(unparsedTextURIResolver)
 
-    queryEval.run()
+    try {
+      queryEval.run()
+    } catch {
+      case ex: Throwable =>
+        throw XProcException.xcXQueryEvalError(ex.getMessage, location)
+    }
 
     try {
       val iter = queryEval.iterator()

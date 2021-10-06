@@ -20,7 +20,9 @@ import net.sf.saxon.s9api.{Processor, QName, XdmAtomicValue, XdmNode, XdmValue}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.EntityResolver
 
+import java.io.{File, FileOutputStream}
 import java.net.URI
+import java.nio.charset.StandardCharsets
 import javax.xml.transform.URIResolver
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -82,6 +84,9 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
         }
       }
 
+      val fos = new FileOutputStream(new File("graph.xml"))
+      fos.write(decl.xdump.toString.getBytes(StandardCharsets.UTF_8))
+      fos.close()
       config.debugOptions.dumpOpenGraph(decl, graph)
 
       runtime = new GraphRuntime(graph, this)

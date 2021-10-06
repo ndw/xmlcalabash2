@@ -117,7 +117,7 @@ class CastContentType() extends DefaultXmlStep {
             val bos = new ByteArrayOutputStream()
             var totBytes = 0L
             val pagesize = 4096
-            val tmp = new Array[Byte](4096)
+            val tmp = new Array[Byte](pagesize)
             var length = 0
             length = is.read(tmp)
             while (length >= 0) {
