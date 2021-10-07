@@ -17,6 +17,8 @@ class FileMove() extends FileStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val href = uriBinding(XProcConstants._href).get
     var target = uriBinding(XProcConstants._target).get
     failOnError = booleanBinding(XProcConstants._fail_on_error).getOrElse(failOnError)

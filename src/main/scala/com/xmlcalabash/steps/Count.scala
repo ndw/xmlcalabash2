@@ -37,6 +37,8 @@ class Count() extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     sendCount()
   }
 

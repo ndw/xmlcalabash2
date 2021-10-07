@@ -9,6 +9,8 @@ class Count() extends TextLines {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(None)
     builder.addStartElement(XProcConstants.c_result)

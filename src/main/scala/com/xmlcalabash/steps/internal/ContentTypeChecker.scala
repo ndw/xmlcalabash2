@@ -137,6 +137,8 @@ class ContentTypeChecker() extends XmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    // FIXME: do whatever logging DefaultXmlStep does.
+
     for ((name, message) <- selectContext.statics) {
       if (!bindings.contains(name)) {
         bindings.put(name, message)

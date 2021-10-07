@@ -27,6 +27,8 @@ class Store extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val href = if (context.baseURI.isDefined) {
       context.baseURI.get.resolve(stringBinding(XProcConstants._href))
     } else {

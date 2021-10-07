@@ -20,6 +20,8 @@ class Producer() extends DefaultXmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.ANYRESULTSEQ
 
   override def run(staticContext: StaticContext): Unit = {
+    super.run(staticContext)
+
     for (item <- items) {
       consumer.get.receive("result", item, new XProcMetadata(MediaType.TEXT))
     }

@@ -27,6 +27,8 @@ class OsInfo extends DefaultXmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     var amap: AttributeMap = EmptyAttributeMap.getInstance()
     for (property <- System.getProperties.asScala.keySet) {
       val pname = property.toString

@@ -17,6 +17,8 @@ class WwwFormUrlEncode() extends DefaultXmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.TEXTRESULT
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val parameters = mapBinding(XProcConstants._parameters)
     val encoded = new StringBuilder()
     var sep = ""

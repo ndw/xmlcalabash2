@@ -37,6 +37,8 @@ class Hash() extends DefaultXmlStep  with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val value = stringBinding(_value).getBytes("UTF-8")
     val algorithm = qnameBinding(_algorithm).get
 

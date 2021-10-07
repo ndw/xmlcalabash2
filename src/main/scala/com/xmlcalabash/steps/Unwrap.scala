@@ -21,6 +21,8 @@ class Unwrap() extends DefaultXmlStep  with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     pattern = stringBinding(XProcConstants._match)
 
     matcher = new ProcessMatch(config, this, context)

@@ -134,6 +134,8 @@ class HttpRequest() extends DefaultXmlStep {
   }
 
   override def run(ctx: StaticContext): Unit = {
+    super.run(ctx)
+
     context = ctx
 
     // Check parameters

@@ -33,6 +33,8 @@ class PropertyMerge extends DefaultXmlStep {
   }
 
   override def run(staticContext: StaticContext): Unit = {
+    super.run(staticContext)
+
     propDoc.get match {
       case node: XdmNode =>
         val piter = node.axisIterator(Axis.CHILD)

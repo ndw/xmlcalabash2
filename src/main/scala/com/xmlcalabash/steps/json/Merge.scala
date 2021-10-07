@@ -31,6 +31,8 @@ class Merge extends DefaultXmlStep {
   }
 
   override def run(staticContext: StaticContext): Unit = {
+    super.run(staticContext)
+
     duplicates = bindings(_duplicates).value.getUnderlyingValue.getStringValue
     val keyExpr = bindings(_key).value.getUnderlyingValue.getStringValue
     var index = 0

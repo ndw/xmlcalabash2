@@ -40,6 +40,8 @@ class B64Encode extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val baseValue = if (smeta.isDefined) {
       smeta.get.property(XProcConstants._base_uri)
     } else {

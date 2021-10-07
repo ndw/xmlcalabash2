@@ -34,6 +34,8 @@ class FileCopy() extends FileStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     staticContext = context
     href = uriBinding(XProcConstants._href).get
     target = uriBinding(XProcConstants._target).get

@@ -32,6 +32,8 @@ class Markdown() extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val parser = Parser.builder.build
     val document = parser.parse(markdown.get.getStringValue)
     val renderer = HtmlRenderer.builder.build

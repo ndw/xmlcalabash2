@@ -38,6 +38,8 @@ abstract class AbstractLoader() extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     if (bindings.contains(XProcConstants._content_type)) {
       content_type = Some(MediaType.parse(bindings(XProcConstants._content_type).value.getUnderlyingValue.getStringValue))
     }

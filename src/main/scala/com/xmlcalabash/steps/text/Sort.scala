@@ -36,6 +36,8 @@ class Sort() extends TextLines {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val xslbuilder = new XsltStylesheet(config, context.nsBindings, List(), "2.0")
 
     xslbuilder.startVariable("lines", "element()*")

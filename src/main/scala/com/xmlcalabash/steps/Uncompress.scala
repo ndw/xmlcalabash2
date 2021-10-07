@@ -37,6 +37,8 @@ class Uncompress extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     format = qnameBinding(XProcConstants._format)
     if (format.isEmpty) {
       if (metadata.contentType.matches(applicationGzip)) {

@@ -42,6 +42,8 @@ class CastContentType() extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     if (castTo.xmlContentType) {
       castToXML(context)
     } else if (castTo.jsonContentType) {

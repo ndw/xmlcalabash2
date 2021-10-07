@@ -28,6 +28,8 @@ class SetProperties() extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val properties = mapBinding(XProcConstants._properties)
 
     val newprops = mutable.HashMap.empty[QName,XdmValue]

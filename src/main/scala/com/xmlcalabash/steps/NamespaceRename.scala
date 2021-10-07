@@ -27,6 +27,8 @@ class NamespaceRename() extends DefaultXmlStep with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     from = stringBinding(_from)
     to = stringBinding(_to)
     applyTo = stringBinding(_apply_to, "all")

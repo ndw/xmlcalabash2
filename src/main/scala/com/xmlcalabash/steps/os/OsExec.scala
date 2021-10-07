@@ -48,6 +48,8 @@ class OsExec extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     command = stringBinding(_command)
     args = listOfStringBinding(_args)
     cwd = optionalStringBinding(_cwd)

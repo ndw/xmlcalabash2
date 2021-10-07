@@ -32,6 +32,8 @@ class SetAttributes() extends DefaultXmlStep with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     pattern = stringBinding(XProcConstants._match)
 
     val attr = mapBinding(_attributes)

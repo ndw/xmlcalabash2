@@ -13,6 +13,8 @@ class Tail() extends TextLines {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.TEXTRESULT
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val count = integerBinding(_count).get
     var newLines = ListBuffer.empty[String]
 

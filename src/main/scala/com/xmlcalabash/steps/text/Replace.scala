@@ -27,6 +27,8 @@ class Replace() extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val pattern = stringBinding(_pattern).replace("'", "''")
     val replacement = stringBinding(_replacement).replace("'", "''")
     val flags = optionalStringBinding(_flags)

@@ -19,6 +19,8 @@ class FileMkdir() extends FileStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     href = uriBinding(XProcConstants._href).get
     failOnError = booleanBinding(XProcConstants._fail_on_error).getOrElse(failOnError)
     var exception = Option.empty[Exception]

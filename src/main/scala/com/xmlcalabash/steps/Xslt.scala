@@ -81,6 +81,7 @@ class Xslt extends DefaultXmlStep {
 
   override def run(staticContext: StaticContext): Unit = {
     super.run(staticContext)
+
     this.staticContext = staticContext
 
     var pmap = mapBinding(XProcConstants._parameters)

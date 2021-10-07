@@ -16,6 +16,8 @@ class FileTouch() extends FileStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val href = uriBinding(XProcConstants._href).get
     val failOnError = booleanBinding(XProcConstants._fail_on_error).getOrElse(true)
     val timestamp = optionalStringBinding(XProcConstants._timestamp)

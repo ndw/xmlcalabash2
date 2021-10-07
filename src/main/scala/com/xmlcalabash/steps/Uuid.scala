@@ -27,6 +27,8 @@ class Uuid() extends DefaultXmlStep  with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val version = integerBinding(XProcConstants._version)
     if (version.isEmpty || version.get == 4) {
       val id = java.util.UUID.randomUUID

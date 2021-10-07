@@ -16,6 +16,8 @@ class WwwFormUrlDecode() extends DefaultXmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.JSONRESULT
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val value = stringBinding(XProcConstants._value).trim
     val encoding = optionalStringBinding(XProcConstants.cx_encoding).getOrElse("UTF-8")
 

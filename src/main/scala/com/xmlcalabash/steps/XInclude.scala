@@ -28,6 +28,8 @@ class XInclude() extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     staticContext = context
     super.run(context)
 

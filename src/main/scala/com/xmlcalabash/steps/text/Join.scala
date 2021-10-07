@@ -27,6 +27,8 @@ class Join() extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val separator = stringBinding(_separator)
 
     var result = stringBinding(_prefix)

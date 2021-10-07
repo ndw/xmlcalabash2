@@ -20,6 +20,8 @@ class Parameters() extends DefaultXmlStep {
   }
 
   override def run(staticContext: StaticContext): Unit = {
+    super.run(staticContext)
+
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(staticContext.baseURI)
     builder.addStartElement(XProcConstants.c_param_set)

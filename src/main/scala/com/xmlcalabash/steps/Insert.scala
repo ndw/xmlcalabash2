@@ -44,6 +44,8 @@ class Insert() extends DefaultXmlStep  with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     position = stringBinding(_position)
     pattern = stringBinding(XProcConstants._match)
 

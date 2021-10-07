@@ -16,6 +16,8 @@ class FileCreateTempFile() extends FileStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val href = uriBinding(XProcConstants._href)
     val prefix = optionalStringBinding(XProcConstants._prefix)
     val suffix = optionalStringBinding(XProcConstants._suffix)

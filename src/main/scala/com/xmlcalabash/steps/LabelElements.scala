@@ -45,6 +45,8 @@ class LabelElements() extends DefaultXmlStep with ProcessMatchingNodes {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     attribute = qnameBinding(_attribute).get
     label = stringBinding(_label)
     pattern = stringBinding(XProcConstants._match)

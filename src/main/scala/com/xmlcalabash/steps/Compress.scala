@@ -35,6 +35,8 @@ class Compress extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     format = qnameBinding(XProcConstants._format)
 
     if (format.get != _gzip) {

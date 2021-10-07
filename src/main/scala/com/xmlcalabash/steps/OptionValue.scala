@@ -16,6 +16,8 @@ class OptionValue extends DefaultXmlStep {
   }
 
   override def run(staticContext: StaticContext): Unit = {
+    super.run(staticContext)
+
     val builder = new SaxonTreeBuilder(config)
     builder.startDocument(None)
     builder.addStartElement(XProcConstants.c_result)

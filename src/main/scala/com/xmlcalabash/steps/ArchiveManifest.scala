@@ -45,6 +45,8 @@ class ArchiveManifest extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     format = if (qnameBinding(XProcConstants._format).isDefined) {
       qnameBinding(XProcConstants._format)
     } else {

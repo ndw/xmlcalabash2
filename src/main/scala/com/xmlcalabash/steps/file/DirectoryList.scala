@@ -22,6 +22,8 @@ class DirectoryList() extends DefaultXmlStep {
   override def outputSpec: XmlPortSpecification = XmlPortSpecification.XMLRESULT
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     val builder = new SaxonTreeBuilder(config)
 
     val path = if (context.baseURI.isDefined) {

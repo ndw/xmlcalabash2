@@ -32,6 +32,8 @@ class SplitSequence() extends DefaultXmlStep {
   }
 
   override def run(staticContext: StaticContext): Unit = {
+    super.run(staticContext)
+
     val initialOnly = bindings(_initial_only).value.getUnderlyingValue.effectiveBooleanValue()
     val testExpr = bindings(XProcConstants._test).value.getUnderlyingValue.getStringValue
     var more = true

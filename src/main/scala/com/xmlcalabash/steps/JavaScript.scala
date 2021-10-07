@@ -45,6 +45,8 @@ class JavaScript extends DefaultXmlStep {
   }
 
   override def run(context: StaticContext): Unit = {
+    super.run(context)
+
     for (key <- parameters.keySet) {
       engine.put(key.getLocalName, parameters(key))
     }

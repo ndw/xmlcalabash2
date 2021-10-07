@@ -35,6 +35,8 @@ class WrapSequence extends DefaultXmlStep {
   }
 
   override def run(staticContext: StaticContext): Unit = {
+    super.run(staticContext)
+
     wrapper = qnameBinding(_wrapper).get
     groupAdjacent = optionalStringBinding(_group_adjacent)
     if (groupAdjacent.isDefined) {
