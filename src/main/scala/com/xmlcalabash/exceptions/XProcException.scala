@@ -118,6 +118,7 @@ object XProcException {
   def xdBadMatchPattern(pattern: String, message: String, location: Option[Location]): XProcException = dynamicError((19, 2), List(pattern, message), location)
   def xdBadVisibility(visibility: String, location: Option[Location]): XProcException = dynamicError((19, 3), visibility, location)
   def xdBadValue(value: String, location: Option[Location]): XProcException = dynamicError((19, 4), value, location)
+  def xdValueNotInList(value: String, values: String, location: Option[Location]): XProcException = dynamicError((19,5), List(value, values), location)
 
   def xdNotAuthorized(href: String, message: String, location: Option[Location]): XProcException = dynamicError(21, List(href, message), location)
   def xdGeneralError(message: String, location: Option[Location]): XProcException = dynamicError(30, message, location)
@@ -153,7 +154,6 @@ object XProcException {
   def xdUrifyDifferentDrives(filepath: String, basedir: String, location: Option[Location]): XProcException = dynamicError(75, List(filepath, basedir), location)
   def xdUrifyDifferentSchemes(filepath: String, basedir: String, location: Option[Location]): XProcException = dynamicError(76, List(filepath, basedir), location)
   def xdUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = dynamicError(79, ctype, location)
-  def xdValueNotInList(value: String, location: Option[Location]): XProcException = dynamicError(101, value, location)
 
   def xsLoop(step: String, port: String, location: Option[Location]): XProcException = staticError(1, List(step, port), location)
   def xsDuplicateStepName(step: String, location: Option[Location]): XProcException = staticError(2, step, location)
@@ -228,7 +228,7 @@ object XProcException {
 
   def xsInvalidPipeline(message: String, location: Option[Location]): XProcException = staticError((100,1), message, location)
   def xsElementNotAllowed(element: QName, location: Option[Location]): XProcException = staticError((100,2), List(element, "element is not allowed here"), location)
-
+  def xsInvalidValues(values: String, location: Option[Location]): XProcException = staticError(101, values, location)
   def xsBadChooseOutputs(primary: String, alsoPrimary: String, location: Option[Location]): XProcException = staticError((102,1), List(primary,alsoPrimary), location)
   def xsBadTryOutputs(primary: String, alsoPrimary: String, location: Option[Location]): XProcException = staticError((102,2), List(primary,alsoPrimary), location)
 

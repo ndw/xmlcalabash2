@@ -39,6 +39,12 @@ Invalid match pattern “$1”: $2
 XD0019/3
 Invalid visibility: “$1” (Must be “public” or “private”.)
 
+XD0019/4
+Bad value: “$1”
+
+XD0019/5
+Value “$1” is not one of “$2”.
+
 XD0011
 File not found: “$1”
 
@@ -122,6 +128,9 @@ Mismatched content types: “$1” is not the same as “$2”.
 
 XD0063
 When an non-XML (and non-HTML) encoding is specified for a p:inline, markup is not allowed: “$1”.
+
+XD0064
+Invalid URI: “$1”.
 
 XD0072
 Cannot pass “$1” documents to p:viewport (only HTML and XML are allowed).
