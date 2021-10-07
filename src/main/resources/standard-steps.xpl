@@ -178,8 +178,8 @@
 <p:input port="insertion" sequence="true" content-types="application/xml text/* */*+xml"/>
 <p:output port="result" content-types="application/xml"/>
 <p:option name="match" select="'/*'" as="xs:string" cx:as="XSLTSelectionPattern"/>
-<p:option name="position" required="true" as="xs:token"
-          cx:as="first-child|last-child|before|after"/>
+<p:option name="position" as="xs:token"
+          values="('first-child','last-child','before','after')" select="'after'"/>
 </p:declare-step>
 
 <p:declare-step type="p:json-join">

@@ -118,6 +118,25 @@ class NameBinding(override val config: XMLCalabashConfig) extends Artifact(confi
       }
 
     _values = attr(XProcConstants._values)
+
+    if (_values.isDefined) {
+      val exprEval = config.expressionEvaluator.newInstance()
+      val expr = new XProcXPathExpression(staticContext, _values.get, None, None, None)
+      val value = exprEval.value(expr, List(), Map(), None)
+      val iter = value.item.iterator()
+      val allowed = ListBuffer.empty[XdmAtomicValue]
+      while (iter.hasNext) {
+        val token = iter.next()
+        token match {
+          case atom: XdmAtomicValue =>
+            allowed += atom
+          case _ =>
+            throw XProcException.xsInvalidValues(_values.get, location)
+        }
+      }
+      _allowedValues = Some(allowed.toList)
+    }
+
     _static = staticContext.parseBoolean(attr(XProcConstants._static))
     _required = staticContext.parseBoolean(attr(XProcConstants._required))
     _select = attr(XProcConstants._select)

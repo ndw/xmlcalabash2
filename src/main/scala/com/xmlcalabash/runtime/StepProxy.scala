@@ -1,8 +1,5 @@
 package com.xmlcalabash.runtime
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, IOException, InputStream}
-import java.net.URI
-
 import com.jafpl.graph.Location
 import com.jafpl.messages.{BindingMessage, ExceptionMessage, ItemMessage, Message, PipelineMessage}
 import com.jafpl.runtime.RuntimeConfiguration
@@ -18,6 +15,8 @@ import net.sf.saxon.s9api.{Axis, QName, SequenceType, XdmAtomicValue, XdmItem, X
 import org.apache.http.util.ByteArrayBuffer
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, IOException, InputStream}
+import java.net.URI
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -145,7 +144,29 @@ class StepProxy(config: XMLCalabashRuntime, stepType: QName, step: StepExecutabl
               found = found || value.equals(item)
             }
             if (!found) {
-              throw XProcException.xdValueNotInList(value.getStringValue, valuemsg.context.location)
+              val sb = new StringBuffer()
+              sb.append("(")
+              var first = true;
+              for (item <- optlist.get) {
+                if (!first) {
+                  sb.append(", ")
+                }
+                first = false
+
+                item.getPrimitiveTypeName match {
+                  case XProcConstants.xs_string =>
+                    sb.append("\"")
+                    sb.append(item.getStringValue)
+                    sb.append("\"")
+                  case XProcConstants.xs_boolean =>
+                    sb.append(item.getStringValue)
+                    sb.append("()")
+                  case _ =>
+                    sb.append(item.getStringValue)
+                }
+              }
+              sb.append(")")
+              throw XProcException.xdValueNotInList(value.getStringValue, sb.toString, valuemsg.context.location)
             }
           }
           step.receiveBinding(new NameValueBinding(qname, value, valuemsg))
