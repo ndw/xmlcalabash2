@@ -4,10 +4,10 @@ import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.exceptions.{ExceptionCode, ModelException, XProcException}
 import com.xmlcalabash.runtime.XMLCalabashRuntime
 import com.xmlcalabash.util.{DefaultLocation, S9Api, SysIdLocation, VoidLocation}
-import net.sf.saxon.`type`.{BuiltInType, SchemaType, SimpleType, Untyped}
+import net.sf.saxon.`type`.{SchemaType, Untyped}
 import net.sf.saxon.event.{NamespaceReducer, Receiver}
 import net.sf.saxon.expr.instruct.Executable
-import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap, FingerprintedQName, NameOfNode, NamePool, NamespaceBinding, NamespaceMap, NodeName, StandardNames}
+import net.sf.saxon.om.{AttributeMap, EmptyAttributeMap, FingerprintedQName, NameOfNode, NamePool, NamespaceBinding, NamespaceMap, NodeName}
 import net.sf.saxon.s9api.{Axis, Location, QName, XdmDestination, XdmNode, XdmNodeKind, XdmValue}
 import net.sf.saxon.serialize.SerializationProperties
 import net.sf.saxon.trans.XPathException
@@ -179,7 +179,17 @@ class SaxonTreeBuilder(runtime: XMLCalabashConfig) {
 
   def addStartElement(node: XdmNode, attrs: AttributeMap): Unit = {
     val inode = node.getUnderlyingNode
-    addStartElement(NameOfNode.makeName(inode), attrs, inode.getSchemaType, inode.getAllNamespaces, node.getBaseURI)
+
+    val baseURI = try {
+      node.getBaseURI
+    } catch {
+      case _: IllegalStateException =>
+        throw XProcException.xdInvalidURI(node.getUnderlyingNode.getBaseURI, None)
+      case ex: Throwable =>
+        throw ex
+    }
+
+    addStartElement(NameOfNode.makeName(inode), attrs, inode.getSchemaType, inode.getAllNamespaces, baseURI)
   }
 
   def addStartElement(node: XdmNode, newName: QName, overrideBaseURI: URI, attrs: AttributeMap): Unit = {
