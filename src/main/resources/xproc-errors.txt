@@ -21,8 +21,11 @@ A sequence is not allowed as the context item in expression: “$1” (Saxon: $2
 XD0010
 A p:viewport cannot process attributes: “$1”.
 
-XD0015
+XD0015/1
 There is no in-scope namespace for the QName “$1”.
+
+XD0015/2
+$1
 
 XD0016
 Invalid selection, “$1” selects $2.

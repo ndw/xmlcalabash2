@@ -1,6 +1,6 @@
 import java.io.{BufferedReader, InputStreamReader}
 
-lazy val xmlCalabashVersion = "1.99.38"
+lazy val xmlCalabashVersion = "1.99.39"
 lazy val jafplVersion = "0.3.65"
 lazy val saxonVersion = "10.6"
 lazy val useSaxonEE = true
@@ -153,7 +153,7 @@ libraryDependencies ++= Seq(
   "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.10.2",
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.2",
   "com.jafpl" % "jafpl_2.13" % jafplVersion,
-  "com.nwalsh" % "sinclude" % "3.1.1" excludeAll(ExclusionRule(organization="com.saxonica"), ExclusionRule(organization="net.sf.saxon"))
+  "com.nwalsh" % "sinclude" % "4.0.0" excludeAll(ExclusionRule(organization="com.saxonica"), ExclusionRule(organization="net.sf.saxon"))
 )
 
 lazy val logback = "ch.qos.logback" % "logback-classic" % "1.0.13"

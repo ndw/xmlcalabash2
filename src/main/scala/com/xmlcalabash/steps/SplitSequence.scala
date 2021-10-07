@@ -2,12 +2,12 @@ package com.xmlcalabash.steps
 
 import com.jafpl.steps.PortCardinality
 import com.xmlcalabash.model.util.XProcConstants
-import com.xmlcalabash.runtime.{StaticContext, XProcMetadata, XmlPortSpecification}
+import com.xmlcalabash.runtime.{BinaryNode, StaticContext, XProcMetadata, XmlPortSpecification}
 import com.xmlcalabash.util.S9Api
 import net.sf.saxon.expr.LastPositionFinder
-import net.sf.saxon.om.{Item, NodeInfo}
-import net.sf.saxon.s9api.{QName, XdmNode}
-import net.sf.saxon.tree.iter.ManualIterator
+import net.sf.saxon.om.{FocusIterator, Item, NodeInfo}
+import net.sf.saxon.s9api.{QName, XdmItem, XdmMap, XdmNode}
+import net.sf.saxon.tree.iter.{LookaheadIterator, ManualIterator}
 
 import scala.collection.mutable.ListBuffer
 
@@ -57,19 +57,18 @@ class SplitSequence() extends DefaultXmlStep {
         val context = dyncontext.getXPathContextObject
 
         source match {
-          case node: XdmNode =>
-            val fakeIterator = new ManualIterator(node.getUnderlyingValue, index)
+          case item: XdmItem =>
+            val fakeIterator = new ManualIterator(item.getUnderlyingValue, index)
             fakeIterator.setLastPositionFinder(fakeLastPositionFinder)
             context.setCurrentIterator(fakeIterator)
-          case item: Item =>
-            val fakeIterator = new ManualIterator(item, index)
+          case bin: BinaryNode =>
+            val fakeIterator = new ManualIterator(bin.node.getUnderlyingValue, index)
             fakeIterator.setLastPositionFinder(fakeLastPositionFinder)
             context.setCurrentIterator(fakeIterator)
           case _ =>
-            val fakeIterator = new ManualIterator(S9Api.emptyDocument(config).getUnderlyingValue, index)
-            fakeIterator.setLastPositionFinder(fakeLastPositionFinder)
-            context.setCurrentIterator(fakeIterator)
+            logger.debug(s"p:split-sequence saw a ${source} go by")
         }
+
         val value = expr.evaluate(dyncontext)
 
         val matches = value.size() match {

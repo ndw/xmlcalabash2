@@ -444,8 +444,11 @@ class SaxonExpressionEvaluator(xmlCalabash: XMLCalabashConfig) extends Expressio
               throw XProcException.xdContextItemAbsent(xpath, sae.getMessage, exprContext.location)
             }
           } else {
-            if (sae.getMessage.contains("Invalid JSON")) {
+            val msg = sae.getMessage
+            if (msg.contains("Invalid JSON")) {
               throw XProcException.xdInvalidJson(sae.getMessage, exprContext.location)
+            } else if (msg.contains("Namespace prefix") && msg.contains("has not been declared")) {
+              throw XProcException.xdMissingNamespaceBinding(msg, exprContext.location)
             } else {
               throw XProcException.xdGeneralError(sae.getMessage, exprContext.location)
             }

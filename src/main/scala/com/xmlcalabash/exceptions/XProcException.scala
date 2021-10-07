@@ -107,7 +107,8 @@ object XProcException {
   def xdSequenceNotAllowedAsContext(location: Option[Location]): XProcException = dynamicError(8, location)
   def xdViewportOnAttribute(pattern: String, location: Option[Location]): XProcException = dynamicError(10, pattern, location)
   def xdDoesNotExist(href: String, location: Option[Location]): XProcException = dynamicError(11, href, location)
-  def xdCannotResolveQName(name: String, location: Option[Location]): XProcException = dynamicError(15, name, location)
+  def xdCannotResolveQName(name: String, location: Option[Location]): XProcException = dynamicError((15,1), name, location)
+  def xdMissingNamespaceBinding(msg: String, location: Option[Location]): XProcException = dynamicError((15,2), msg, location)
   def xdInvalidSelection(expr: String, selected: String, location: Option[Location]): XProcException = dynamicError(16, List(expr,selected), location)
 
   def xdContextItemAbsent(expr: String, msg: String, location: Option[Location]): XProcException = dynamicError(1, List(expr, msg), location)
