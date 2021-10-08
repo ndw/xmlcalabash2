@@ -1,6 +1,6 @@
 import java.io.{BufferedReader, InputStreamReader}
 
-lazy val xmlCalabashVersion = "1.99.39"
+lazy val xmlCalabashVersion = "1.99.40"
 lazy val jafplVersion = "0.3.65"
 lazy val saxonVersion = "10.6"
 lazy val useSaxonEE = true
