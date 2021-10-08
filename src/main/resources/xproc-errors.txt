@@ -403,6 +403,12 @@ The ‘content-type’ property cannot be set with p:set-properties.
 XC0070
 Serialization property is not a map: “$1”.
 
+XC0084/1
+Bad archive URI: $1
+
+XC0084/2
+Bad archive URI.
+
 XC0091
 Multiple top-level elements are not allowed in p:escape-markup.
 
