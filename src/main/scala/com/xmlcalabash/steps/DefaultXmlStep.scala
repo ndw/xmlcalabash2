@@ -103,7 +103,16 @@ class DefaultXmlStep extends XmlStep {
     }
   }
 
+  def runningMessage(): Unit = {
+    if (stepName.isEmpty) {
+      logger.info(s"Running ${stepType}")
+    } else {
+      logger.info(s"Running ${stepType}/${stepName}")
+    }
+  }
+
   override def run(context: StaticContext): Unit = {
+    runningMessage()
     if (_location.isEmpty) {
       _location = context.location
     }

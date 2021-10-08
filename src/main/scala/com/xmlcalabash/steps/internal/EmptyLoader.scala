@@ -24,6 +24,10 @@ class EmptyLoader() extends AbstractLoader {
     }
   }
 
+  override def runningMessage(): Unit = {
+    logger.info("Loading empty document")
+  }
+
   override def run(context: StaticContext): Unit = {
     super.run(context)
     // Produce nothing.

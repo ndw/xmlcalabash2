@@ -53,6 +53,10 @@ class DocumentLoader() extends AbstractLoader {
     }
   }
 
+  override def runningMessage(): Unit = {
+    logger.info("Loading document")
+  }
+
   override def run(context: StaticContext): Unit = {
     super.run(context)
 

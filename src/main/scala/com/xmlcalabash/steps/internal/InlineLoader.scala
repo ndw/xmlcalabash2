@@ -29,12 +29,8 @@ class InlineLoader() extends AbstractLoader {
   private var node: XdmNode = _
   private var encoding = Option.empty[String]
   private var exclude_inline_prefixes = Option.empty[String]
-  private val excludeURIs = mutable.HashSet.empty[String]
   private var expandText = false
   private var contextProvided = false
-
-  private val fq_inline_expand_text = TypeUtils.fqName(XProcConstants._inline_expand_text)
-  private val fq_p_inline_expand_text = TypeUtils.fqName(XProcConstants.p_inline_expand_text)
 
   override def inputSpec: XmlPortSpecification = {
     if (contextProvided) {
@@ -62,6 +58,25 @@ class InlineLoader() extends AbstractLoader {
         exprContext = doc.context
       case _ =>
         throw new RuntimeException("document loader params wrong type")
+    }
+  }
+
+  override def runningMessage(): Unit = {
+    if (encoding.isDefined) {
+      logger.info(s"Loading inline ${contentType}")
+    } else {
+      val root = S9Api.documentElement(node)
+      if (root.isDefined) {
+        logger.info(s"Loading <${root.get.getNodeName}>")
+      } else {
+        var text = node.getStringValue.replace("\n", " ")
+        text = text.replaceAll("\\s+", " ")
+        text = text.replaceAll("^\\s", "")
+        if (text.length > 25) {
+          text = text.substring(0, 25) + "..."
+        }
+        logger.info(s"Loading text '${text}'")
+      }
     }
   }
 
