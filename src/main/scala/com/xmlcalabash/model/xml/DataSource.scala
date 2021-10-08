@@ -8,8 +8,8 @@ import net.sf.saxon.s9api.QName
 
 import scala.collection.mutable.ListBuffer
 
-class DataSource(override val config: XMLCalabashConfig) extends Artifact(config) {
-  private val depends = ListBuffer.empty[String]
+abstract class DataSource(override val config: XMLCalabashConfig) extends Artifact(config) {
+  protected val depends: ListBuffer[String] = ListBuffer.empty[String]
 
   override protected[model] def validateStructure(): Unit = {
     for (child <- allChildren) {

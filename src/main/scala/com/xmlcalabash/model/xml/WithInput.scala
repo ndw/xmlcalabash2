@@ -99,7 +99,16 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
           val psig = sig.input(_port, location)
           if (psig.defaultBindings.nonEmpty) {
             for (binding <- psig.defaultBindings) {
-              addChild(binding)
+              binding match {
+                case empty: Empty =>
+                  addChild(new Empty(empty))
+                case inline: Inline =>
+                  addChild(new Inline(inline))
+                case document: Document =>
+                  addChild(new Document(document))
+                case _ =>
+                  throw XProcException.xiThisCantHappen("Default input is not empty, inline, or document", location)
+              }
             }
             return
           }

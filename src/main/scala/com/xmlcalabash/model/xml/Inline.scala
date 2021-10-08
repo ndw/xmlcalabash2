@@ -32,6 +32,19 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, implied: 
     this(config, srcNode, false)
   }
 
+  def this(copy: Inline) = {
+    this(copy.config, copy._node, true) // Why can't I put copy._synthetic in the constructor?
+    _synthetic = copy._synthetic
+    depends ++= copy.depends
+    _contentType = copy._contentType
+    _documentProperties = copy._documentProperties
+    _encoding = copy._encoding
+    _exclude_inline_prefixes = copy._exclude_inline_prefixes
+    _context_provided = copy._context_provided
+    nameBindings ++= copy.nameBindings
+    _statics ++= copy._statics
+  }
+
   def node: XdmNode = _node
   def contentType: Option[MediaType] = _contentType
   def documentProperties: Option[String] = _documentProperties
