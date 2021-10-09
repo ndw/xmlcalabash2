@@ -10,7 +10,7 @@ import net.sf.saxon.s9api.{QName, XdmItem, XdmMap, XdmNode, XdmValue}
 
 import scala.collection.mutable
 
-abstract class AbstractLoader() extends DefaultXmlStep {
+class AbstractLoader() extends DefaultXmlStep {
   protected var content_type = Option.empty[MediaType]
   protected var _document_properties = Option.empty[String]
   protected var contextItem = Option.empty[XProcItemMessage]

@@ -6,6 +6,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.model.util.{ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.params.DocumentLoaderParams
 import com.xmlcalabash.runtime.{BinaryNode, ImplParams, StaticContext, XProcMetadata, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.steps.DefaultXmlStep
 import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.s9api.{QName, XdmMap, XdmNode, XdmValue}
 
@@ -54,7 +55,7 @@ class DocumentLoader() extends AbstractLoader {
   }
 
   override def runningMessage(): Unit = {
-    logger.info("Loading document")
+    // nop, we do it after we've computed the href attribute
   }
 
   override def run(context: StaticContext): Unit = {
@@ -77,6 +78,10 @@ class DocumentLoader() extends AbstractLoader {
       baseURI.get.resolve(parts.mkString(""))
     } else {
       new URI(parts.mkString(""))
+    }
+
+    if (DefaultXmlStep.showRunningMessage) {
+      logger.info("Loading document: {}", href)
     }
 
     if (_parameters.isDefined) {

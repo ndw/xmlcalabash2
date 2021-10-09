@@ -8,18 +8,21 @@ import org.scalatest.flatspec.AnyFlatSpec
 class UrifyNonWindowsSpec extends AnyFlatSpec with BeforeAndAfter {
   private val OSNAME = "MacOs"
   private val FILESEP = "/"
+  private val CWD = "/home/johndoe/"
 
   private var saveOsname = ""
   private var saveFilesep = ""
+  private var saveCwd = ""
 
   before {
     saveOsname = Urify.osname
     saveFilesep = Urify.filesep
-    Urify.mockOS(OSNAME, FILESEP)
+    saveCwd = Urify.cwd
+    Urify.mockOS(OSNAME, FILESEP, Some(CWD))
   }
 
   after {
-    Urify.mockOS(saveOsname, saveFilesep)
+    Urify.mockOS(saveOsname, saveFilesep, Some(saveCwd))
   }
 
   "http://example.com/path/file " should " parse" in {
@@ -290,7 +293,7 @@ class UrifyNonWindowsSpec extends AnyFlatSpec with BeforeAndAfter {
 
   "#B " should " resolve against relative path URI" in {
     val answer = new Urify("path/to/file.txt").resolve("#B")
-    assert(answer.toString == "file:///path/to/%23B")
+    assert(answer.toString == "file:///home/johndoe/path/to/%23B")
   }
 
   "#B " should " resolve against an absolute path URI" in {

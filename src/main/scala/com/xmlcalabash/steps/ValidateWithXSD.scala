@@ -168,24 +168,24 @@ class ValidateWithXSD() extends DefaultXmlStep {
             case ve: ValidationException =>
               msg = ve.getMessage
               val fail = ve.getValidationFailure
-              val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, fail.getLineNumber, fail.getColumnNumber, msg, location)
+              val except = XProcException.xcNotSchemaValidXmlSchema(source.getBaseURI.toASCIIString, fail.getLineNumber, fail.getColumnNumber, msg, location)
               except.underlyingCauses = listener.exceptions
               except.errors = errors.get
               raisedException = Some(except)
             case _: Exception =>
               msg = lex.getMessage
-              val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, msg, location)
+              val except = XProcException.xcNotSchemaValidXmlSchema(source.getBaseURI.toASCIIString, msg, location)
               except.underlyingCauses = listener.exceptions
               except.errors = errors.get
               raisedException = Some(except)
           }
         } else {
-          val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, msg, location)
+          val except = XProcException.xcNotSchemaValidXmlSchema(source.getBaseURI.toASCIIString, msg, location)
           raisedException = Some(except)
         }
       case ex: Exception =>
         errors = Some(report.endErrors())
-        val except = XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, ex.getMessage, location)
+        val except = XProcException.xcNotSchemaValidXmlSchema(source.getBaseURI.toASCIIString, ex.getMessage, location)
         except.underlyingCauses = listener.exceptions
         except.errors = errors.get
         raisedException = Some(except)

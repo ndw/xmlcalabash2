@@ -1,21 +1,27 @@
 <configuration>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
+    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+      <target>System.err</target>
+      <encoder>
+        <pattern>%-5level %msg%n</pattern>
+      </encoder>
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <!-- path to your log file, where you want to store logs -->
-        <file>/Users/yourusername/test.log</file>
-        <append>false</append>
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
+    <!-- Don't log to disk by default
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>/tmp/xmlcalabash.log</file>
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <fileNamePattern>/tmp/xmlcalabash.%d{yyyy-MM-dd}.log</fileNamePattern>
+        <maxHistory>5</maxHistory>
+      </rollingPolicy>
 
-    <root level="debug">
-        <appender-ref ref="STDOUT" />
-        <appender-ref ref="FILE" />
+      <encoder>
+        <pattern>%d{HH:mm:ss.SSS}  %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+      </encoder>
+    </appender>
+    -->
+
+    <root level="warn" additivity="false">
+      <appender-ref ref="STDERR"/>
+      <!-- <appender-ref ref="FILE"/> -->
     </root>
 </configuration>

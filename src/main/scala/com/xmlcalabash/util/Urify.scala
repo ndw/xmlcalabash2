@@ -9,14 +9,25 @@ import scala.collection.mutable.ListBuffer
 object Urify {
   private var _osname: String = Option(System.getProperty("os.name")).getOrElse("not-windows")
   private var _filesep: String = Option(System.getProperty("file.separator")).getOrElse("/")
+  private var _cwd = Option.empty[String]
+
+  def cwd: String = {
+    val dir = _cwd.getOrElse(System.getProperty("user.dir"))
+    if (dir.endsWith(filesep)) {
+      dir
+    } else {
+      dir + filesep
+    }
+  }
 
   def osname: String = _osname
   def filesep: String = _filesep
   def windows: Boolean = osname.startsWith("Windows")
 
-  def mockOS(name: String, sep: String): Unit = {
+  def mockOS(name: String, sep: String, cwd: Option[String]): Unit = {
     _osname = name
     _filesep = sep
+    _cwd = cwd
   }
 }
 
@@ -237,13 +248,9 @@ class Urify(val filepath: String) {
     if (absolute) {
       this
     } else {
-      var cwd = System.getProperty("user.dir")
-      if (!cwd.endsWith(filesep)) {
-        cwd += filesep
-      }
-      val base = new Urify(cwd).resolve(this.toString)
+      val base = new Urify(Urify.cwd).resolve(this.toString)
       if (base.relative) {
-        throw XProcException.xdUrifyFailed(this.toString, cwd, None)
+        throw XProcException.xdUrifyFailed(this.toString, Urify.cwd, None)
       }
       base
     }
@@ -259,11 +266,7 @@ class Urify(val filepath: String) {
       return path
     }
 
-    var cwd = System.getProperty("user.dir")
-    if (!cwd.endsWith(filesep)) {
-      cwd += filesep
-    }
-    val cwduri = new Urify(s"file://${cwd}")
+    val cwduri = new Urify(s"file://${Urify.cwd}")
 
     val basepath = if (absolute) {
       if (scheme.isDefined) {
@@ -274,7 +277,7 @@ class Urify(val filepath: String) {
     } else {
       val base = cwduri.resolve(this.toString)
       if (base.relative) {
-        throw XProcException.xdUrifyFailed(this.toString, cwd, None)
+        throw XProcException.xdUrifyFailed(this.toString, Urify.cwd, None)
       }
       base
     }

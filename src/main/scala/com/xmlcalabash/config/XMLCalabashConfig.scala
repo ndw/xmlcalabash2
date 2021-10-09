@@ -137,7 +137,7 @@ class XMLCalabashConfig(val xprocConfigurer: XProcConfigurer, saxonProcessor: Op
 
   def logProductDetails(): Unit = {
     logger.info(s"$productName version $productVersion (with JAFPL $jafplVersion and Saxon $saxonVersion)")
-    logger.debug(s"Copyright © 2018, 2019 $vendor; $vendorURI")
+    logger.debug(s"Copyright © 2018-2021 $vendor; $vendorURI")
     logger.debug(s"(release id: $productHash; episode: $episode)")
   }
 

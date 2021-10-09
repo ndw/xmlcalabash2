@@ -57,6 +57,10 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
   val jafpl: Jafpl = Jafpl.newInstance()
   val graph: Graph = jafpl.newGraph()
 
+  if (decl._name.isDefined) {
+    graph.label = decl._name.get
+  }
+
   protected[xmlcalabash] def init(decl: DeclareStep): Unit = {
     try {
       for (input <- decl.inputs) {
@@ -84,13 +88,12 @@ class XMLCalabashRuntime protected[xmlcalabash] (val decl: DeclareStep) extends 
         }
       }
 
-      val fos = new FileOutputStream(new File("graph.xml"))
-      fos.write(decl.xdump.toString.getBytes(StandardCharsets.UTF_8))
-      fos.close()
+      config.debugOptions.dumpPipeline(decl)
       config.debugOptions.dumpOpenGraph(decl, graph)
 
       runtime = new GraphRuntime(graph, this)
-      config.debugOptions.dumpJafplGraph(decl, graph)
+      config.debugOptions.dumpGraph(decl, graph)
+
       runtime.traceEventManager = _traceEventManager
     } catch {
       case ex: JafplException =>

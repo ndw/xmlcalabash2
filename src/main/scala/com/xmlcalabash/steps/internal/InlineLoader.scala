@@ -7,6 +7,7 @@ import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, ValueParser, XProcConstants}
 import com.xmlcalabash.runtime.params.InlineLoaderParams
 import com.xmlcalabash.runtime.{BinaryNode, ImplParams, StaticContext, XProcMetadata, XProcVtExpression, XProcXPathExpression, XmlPortSpecification}
+import com.xmlcalabash.steps.DefaultXmlStep
 import com.xmlcalabash.util.{MediaType, S9Api, TypeUtils}
 import net.sf.saxon.`type`.BuiltInAtomicType
 import net.sf.saxon.event.ReceiverOption
@@ -62,22 +63,7 @@ class InlineLoader() extends AbstractLoader {
   }
 
   override def runningMessage(): Unit = {
-    if (encoding.isDefined) {
-      logger.info(s"Loading inline ${contentType}")
-    } else {
-      val root = S9Api.documentElement(node)
-      if (root.isDefined) {
-        logger.info(s"Loading <${root.get.getNodeName}>")
-      } else {
-        var text = node.getStringValue.replace("\n", " ")
-        text = text.replaceAll("\\s+", " ")
-        text = text.replaceAll("^\\s", "")
-        if (text.length > 25) {
-          text = text.substring(0, 25) + "..."
-        }
-        logger.info(s"Loading text '${text}'")
-      }
-    }
+    // nop, we do it after we've computed the href attribute
   }
 
   override def run(context: StaticContext): Unit = {
@@ -102,6 +88,22 @@ class InlineLoader() extends AbstractLoader {
       } else {
         MediaType.XML
       }
+    }
+
+    if (DefaultXmlStep.showRunningMessage) {
+      val root = S9Api.documentElement(node)
+      val show = if (root.isDefined) {
+        s"<${root.get.getNodeName}>"
+      } else {
+        var text = node.getStringValue.replace("\n", " ")
+        text = text.replaceAll("\\s+", " ")
+        text = text.replaceAll("^\\s", "")
+        if (text.length > 25) {
+          text = text.substring(0, 25) + "..."
+        }
+        text
+      }
+      logger.info("Loading inline {}: {}", contentType, show)
     }
 
     val meta = new XProcMetadata(contentType, docProps)

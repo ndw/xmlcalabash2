@@ -116,13 +116,13 @@ class ForUntil(override val config: XMLCalabashConfig) extends ForContainer(conf
     val winput = firstWithInput
     if (winput.isDefined) {
       for (pipe <- winput.get.children[Pipe]) {
-        runtime.graph.addEdge(pipe.link.get.parent.get._graphNode.get, pipe.port, _graphNode.get, "source")
+        runtime.graph.addOrderedEdge(pipe.link.get.parent.get._graphNode.get, pipe.port, _graphNode.get, "source")
       }
     }
 
     for (output <- children[DeclareOutput]) {
       for (pipe <- output.children[Pipe]) {
-        runtime.graph.addEdge(pipe.link.get.parent.get._graphNode.get, pipe.port, _graphNode.get, output.port)
+        runtime.graph.addOrderedEdge(pipe.link.get.parent.get._graphNode.get, pipe.port, _graphNode.get, output.port)
       }
     }
 

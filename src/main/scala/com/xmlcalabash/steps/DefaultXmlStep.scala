@@ -9,6 +9,7 @@ import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.messages.XdmValueItemMessage
 import com.xmlcalabash.model.util.{SaxonTreeBuilder, XProcConstants}
 import com.xmlcalabash.runtime._
+import com.xmlcalabash.steps.DefaultXmlStep.showRunningMessage
 import com.xmlcalabash.util.{MediaType, S9Api}
 import net.sf.saxon.`type`.TypeHierarchy
 import net.sf.saxon.expr.parser.RoleDiagnostic
@@ -25,6 +26,14 @@ import java.util.regex.{Pattern, PatternSyntaxException}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.IterableHasAsScala
+
+object DefaultXmlStep {
+  // For consistency, this is the same property that JAFPL uses.
+  protected[xmlcalabash] def showRunningMessage: Boolean = {
+    val prop = System.getProperty("com.jafpl.show-running-messages")
+    Option(prop).isDefined && (prop == "true" || prop == "1" || prop == "yes")
+  }
+}
 
 class DefaultXmlStep extends XmlStep {
   private val stringMapping = Map(
@@ -104,10 +113,12 @@ class DefaultXmlStep extends XmlStep {
   }
 
   def runningMessage(): Unit = {
-    if (stepName.isEmpty) {
-      logger.info(s"Running ${stepType}")
-    } else {
-      logger.info(s"Running ${stepType}/${stepName}")
+    if (showRunningMessage) {
+      if (stepName.isEmpty) {
+        logger.info("Running {}", stepType)
+      } else {
+        logger.info("Running {}/{}", stepType, stepName.get)
+      }
     }
   }
 

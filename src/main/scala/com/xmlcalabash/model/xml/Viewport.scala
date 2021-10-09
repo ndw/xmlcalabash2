@@ -159,7 +159,7 @@ class Viewport(override val config: XMLCalabashConfig) extends Container(config)
 
     for (output <- children[DeclareOutput]) {
       for (pipe <- output.children[Pipe]) {
-        runtime.graph.addEdge(pipe.link.get.parent.get._graphNode.get, pipe.port, _graphNode.get, output.port)
+        runtime.graph.addOrderedEdge(pipe.link.get.parent.get._graphNode.get, pipe.port, _graphNode.get, output.port)
       }
     }
 

@@ -29,6 +29,7 @@ class Document(override val config: XMLCalabashConfig) extends DataSource(config
     _documentProperties = copy._documentProperties
     _parameters = copy._parameters
     _context_provided = copy._context_provided
+    _staticContext = copy._staticContext
   }
 
   def href: String = _href

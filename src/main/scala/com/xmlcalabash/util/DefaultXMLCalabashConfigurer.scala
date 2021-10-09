@@ -1,17 +1,16 @@
 package com.xmlcalabash.util
 
-import java.util.Properties
-
 import com.jafpl.util.DefaultTraceEventManager
 import com.xmlcalabash.config.{XMLCalabashConfig, XMLCalabashConfigurer}
 import com.xmlcalabash.exceptions.XProcException
-import javax.xml.transform.URIResolver
-import javax.xml.transform.sax.SAXSource
 import net.sf.saxon.lib.{ModuleURIResolver, UnparsedTextURIResolver}
 import net.sf.saxon.s9api.{Processor, QName}
 import org.slf4j.{Logger, LoggerFactory}
 import org.xml.sax.{EntityResolver, InputSource}
 
+import java.util.Properties
+import javax.xml.transform.URIResolver
+import javax.xml.transform.sax.SAXSource
 import scala.collection.mutable
 
 class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
@@ -87,24 +86,16 @@ class DefaultXMLCalabashConfigurer extends XMLCalabashConfigurer {
       configuration.debugOptions.tree = config.debug_tree
     }
 
-    if (config.debug_xml_tree.isDefined) {
-      configuration.debugOptions.xmlTree = config.debug_xml_tree
+    if (config.debug_pipeline.isDefined) {
+      configuration.debugOptions.graph = config.debug_pipeline
     }
 
     if (config.debug_graph.isDefined) {
       configuration.debugOptions.graph = config.debug_graph
     }
 
-    if (config.debug_jafpl_graph.isDefined) {
-      configuration.debugOptions.jafplGraph = config.debug_jafpl_graph
-    }
-
     if (config.debug_open_graph.isDefined) {
       configuration.debugOptions.openGraph = config.debug_open_graph
-    }
-
-    if (config.debug_stacktrace.isDefined) {
-      configuration.debugOptions.stackTrace = config.debug_stacktrace
     }
 
     loadProperties(configuration)

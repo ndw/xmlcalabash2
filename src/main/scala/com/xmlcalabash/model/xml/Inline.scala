@@ -42,7 +42,9 @@ class Inline(override val config: XMLCalabashConfig, srcNode: XdmNode, implied: 
     _exclude_inline_prefixes = copy._exclude_inline_prefixes
     _context_provided = copy._context_provided
     nameBindings ++= copy.nameBindings
-    _statics ++= copy._statics
+    _inScopeDynamics = copy._inScopeDynamics
+    _inScopeStatics = copy._inScopeStatics
+    staticContext = copy.staticContext
   }
 
   def node: XdmNode = _node

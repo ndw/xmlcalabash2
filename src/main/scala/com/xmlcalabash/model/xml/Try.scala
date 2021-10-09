@@ -176,15 +176,15 @@ class Try(override val config: XMLCalabashConfig) extends Container(config) with
       child match {
         case group: Group =>
           for (output <- group.children[DeclareOutput]) {
-            runtime.graph.addEdge(group._graphNode.get, output.port, tryNode, output.port)
+            runtime.graph.addOrderedEdge(group._graphNode.get, output.port, tryNode, output.port)
           }
         case cat: Catch =>
           for (output <- cat.children[DeclareOutput]) {
-            runtime.graph.addEdge(cat._graphNode.get, output.port, tryNode, output.port)
+            runtime.graph.addOrderedEdge(cat._graphNode.get, output.port, tryNode, output.port)
           }
         case fin: Finally =>
           for (output <- fin.children[DeclareOutput]) {
-            runtime.graph.addEdge(fin._graphNode.get, output.port, tryNode, output.port)
+            runtime.graph.addOrderedEdge(fin._graphNode.get, output.port, tryNode, output.port)
           }
         case _ => ()
       }

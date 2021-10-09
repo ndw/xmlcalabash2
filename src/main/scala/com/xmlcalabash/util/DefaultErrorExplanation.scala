@@ -5,6 +5,7 @@ import com.xmlcalabash.model.util.XProcConstants
 import net.sf.saxon.s9api.QName
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
@@ -12,11 +13,14 @@ class DefaultErrorExplanation() extends ErrorExplanation {
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val messages = ListBuffer.empty[ErrorExplanationTemplate]
 
+  private var namespaces = mutable.HashMap.empty[String, String]
   private var code = Option.empty[String]
   private var variant = 1
   private var message = ""
   private var explanation = ""
   private val stream = getClass.getResourceAsStream("/xproc-errors.txt")
+
+  namespaces.put("", "http://xmlcalabash.com/ns/ERROR")
 
   for (line <- Source.fromInputStream(stream, "UTF-8").getLines()) {
     if (line == "") {
@@ -28,44 +32,68 @@ class DefaultErrorExplanation() extends ErrorExplanation {
         explanation = ""
       }
     } else {
-      if (code.isEmpty) {
-        val BareCode = "(\\S+)".r
-        val BareCodeVar = "(\\S+)\\s*/\\s*(\\d+)".r
-        val ClarkCode = "\\{(.*)\\}\\s*(\\S+)".r
-        val ClarkCodeVar = "\\{(.*)\\}\\s*(\\S+)\\s*/\\s*(\\d+)".r
+      val Namespace = "namespace\\s+(\\S+)\\s*=\\s*(.*)\\s*".r
+      line match {
+        case Namespace(prefix, uri) =>
+          namespaces.put(prefix, uri)
+        case _ =>
+          if (code.isEmpty) {
+            val PrefixCode = "([^{]\\S*):(\\S+)".r
+            val PrefixCodeVar = "([^{]\\S*):(\\S+)\\s*/\\s*(\\d+)".r
+            val BareCode = "([^:\\s]+)".r
+            val BareCodeVar = "([^:\\s]+)\\s*/\\s*(\\d+)".r
+            val ClarkCode = "\\{(.*)\\}\\s*(\\S+)".r
+            val ClarkCodeVar = "\\{(.*)\\}\\s*(\\S+)\\s*/\\s*(\\d+)".r
 
-        val qcode = line match {
-          case ClarkCodeVar(namespace, localname, vcode) =>
-            variant = vcode.toInt
-            Some(new QName(namespace, localname))
-          case ClarkCode(namespace, localname) =>
-            variant = 1
-            Some(new QName(namespace, localname))
-          case BareCodeVar(bcode, vcode) =>
-            variant = vcode.toInt
-            Some(new QName(XProcConstants.ns_err, bcode))
-          case BareCode(bcode) =>
-            variant = 1
-            Some(new QName(XProcConstants.ns_err, bcode))
-          case _  =>
-            logger.info(s"Expected error code on line: $line")
-            None
-        }
+            val qcode = line match {
+              case PrefixCodeVar(prefix, localname, vcode) =>
+                variant = vcode.toInt
+                var uri = namespaces.getOrElse(prefix, "")
+                if (uri == "") {
+                  logger.error(s"Invalid error code: ${prefix}:${localname}, no namespace binding for ${prefix} in error explanations.")
+                  uri = namespaces("")
+                }
+                Some(new QName(uri, localname))
+              case PrefixCode(prefix, localname) =>
+                variant = 1
+                var uri = namespaces.getOrElse(prefix, "")
+                if (uri == "") {
+                  logger.error(s"Invalid error code: ${prefix}:${localname}, no namespace binding for ${prefix} in error explanations.")
+                  uri = namespaces("")
+                }
+                Some(new QName(uri, localname))
+              case ClarkCodeVar(namespace, localname, vcode) =>
+                variant = vcode.toInt
+                Some(new QName(namespace, localname))
+              case ClarkCode(namespace, localname) =>
+                variant = 1
+                Some(new QName(namespace, localname))
+              case BareCodeVar(bcode, vcode) =>
+                variant = vcode.toInt
+                Some(new QName(XProcConstants.ns_err, bcode))
+              case BareCode(bcode) =>
+                variant = 1
+                Some(new QName(XProcConstants.ns_err, bcode))
+              case _  =>
+                logger.info(s"Expected error code on line: $line")
+                None
+            }
 
-        if (qcode.isDefined) {
-          code = Some(qcode.get.getClarkName)
-        } else {
-          // If it's *still* empty, move along
-          if (message == "") {
+            if (qcode.isDefined) {
+              code = Some(qcode.get.getClarkName)
+            } else {
+              // If it's *still* empty, move along
+              if (message == "") {
+                message = line
+              } else {
+                explanation += line + "\n"
+              }
+            }
+          } else if (message == "") {
             message = line
           } else {
             explanation += line + "\n"
           }
-        }
-      } else if (message == "") {
-        message = line
-      } else {
-        explanation += line + "\n"
       }
     }
   }

@@ -1,3 +1,5 @@
+namespace xi=http://xmlcalabash.com/ns/extensions
+
 XD0004
 The p:choose contained no matching p:when options and no p:otherwise.
 The p:choose step contains a number of alternatives. Exactly one of those
@@ -260,13 +262,13 @@ XS0077
 Invalid value specified: “$1”. Value must be $2.
 
 XS0079/1
-Text not allowed here. Found “$1”.
+Comment not allowed here. Found “$1”.
 
 XS0079/2
-Commentt not allowed here. Found “$1”.
+Processing instruction not allowed here. Found “$1”.
 
 XS0079/3
-Processing instruction not allowed here. Found “$1”.
+Text not allowed here. Found “$1”.
 
 XS0080
 Duplicated option name: “$1”.
@@ -379,10 +381,7 @@ The requested version, “$1”, is not available.
 XC0050
 Cannot store at “$1”
 
-XC0053/1
-Validity error in “$1” at line $2, column $3: $4
-
-XC0053/2
+XC0053
 Validity error in “$1”: $2.
 
 XC0054
@@ -495,6 +494,15 @@ Delete not allowed: $1
 
 XC0151
 Schema is not a valid schematron document.
+
+XC0155
+Validity error in “$1”: $2.
+
+XC0156/1
+Validity error in “$1”: $2.
+
+XC0156/2
+Validity error in “$1” at $2:$3: $4.
 
 XC0157
 Cannot copy directory ($1) to file ($2)
@@ -627,6 +635,17 @@ Configuration file not found: “$1”.
 
 {http://xmlcalabash.com/ns/extensions}XI0066
 Malformed URI: “$1”: $2.
+
+xi:XI0067
+Attempt to redefine log level from “$2” to “$1”
+Only one of --info or --debug may be specified.
+
+xi:XI0068
+Ambiguous graph type: “$1”
+
+xi:XI0069
+Invalid graph type: “$1”
+Only “tree”, “pipeline”, “graph”, and “open-graph” are allowed.
 
 {http://xmlcalabash.com/ns/extensions}XI0999
 It must be time for breakfast at Milliways, something impossible has happened: $1

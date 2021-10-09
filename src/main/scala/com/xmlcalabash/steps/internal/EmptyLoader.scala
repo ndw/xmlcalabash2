@@ -3,6 +3,7 @@ package com.xmlcalabash.steps.internal
 import com.xmlcalabash.config.XMLCalabashConfig
 import com.xmlcalabash.runtime.params.EmptyLoaderParams
 import com.xmlcalabash.runtime.{ImplParams, StaticContext, XmlPortSpecification}
+import com.xmlcalabash.steps.DefaultXmlStep
 import net.sf.saxon.s9api.QName
 
 class EmptyLoader() extends AbstractLoader {
@@ -25,7 +26,9 @@ class EmptyLoader() extends AbstractLoader {
   }
 
   override def runningMessage(): Unit = {
-    logger.info("Loading empty document")
+    if (DefaultXmlStep.showRunningMessage) {
+      logger.info("Loading empty")
+    }
   }
 
   override def run(context: StaticContext): Unit = {

@@ -291,6 +291,7 @@ class Parser(config: XMLCalabashConfig) {
   private def parseConnections[T <: Artifact](node: XdmNode, art: T, forbidden: List[QName]): T = {
     art.parse(node)
 
+    var implicitInline = false
     for (child <- children(node)) {
       if (forbidden.nonEmpty && forbidden.contains(child.getNodeName)) {
         throw XProcException.xsElementNotAllowed(child.getNodeName, Some(new XProcLocation(child)))
@@ -312,11 +313,21 @@ class Parser(config: XMLCalabashConfig) {
             case XProcConstants.p_pipeinfo =>
               art.addChild(parsePipeInfo(child))
             case _ =>
+              implicitInline = true
               art.addChild(parseSyntheticInline(child))
           }
-        case XdmNodeKind.COMMENT => ()
-        case XdmNodeKind.PROCESSING_INSTRUCTION => ()
+        case XdmNodeKind.COMMENT =>
+          if (implicitInline) {
+            throw XProcException.xsInlineCommentNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
+          }
+        case XdmNodeKind.PROCESSING_INSTRUCTION =>
+          if (implicitInline) {
+            throw XProcException.xsInlinePiNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
+          }
         case XdmNodeKind.TEXT =>
+          if (implicitInline) {
+            throw XProcException.xsInlineTextNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
+          }
           throw XProcException.xsTextNotAllowed(child.getStringValue.trim(), Some(new XProcLocation(child)))
         case _ =>
           throw new RuntimeException(s"Unexpected element kind: ${child.getNodeKind}")

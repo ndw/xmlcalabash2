@@ -25,7 +25,7 @@ class Artifact(val config: XMLCalabashConfig) {
   protected[model] var _graphNode: Option[Node] = None
   private var _parent: Option[Artifact] = None
   private val _children: ListBuffer[Artifact] = ListBuffer.empty[Artifact]
-  private var _staticContext = new XMLContext(config, this)
+  protected[model] var _staticContext: XMLContext = new XMLContext(config, this)
   private var _xmlId = Option.empty[String]
   protected var _synthetic = true
   private val _uid = UniqueId.nextId

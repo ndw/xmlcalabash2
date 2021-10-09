@@ -125,10 +125,10 @@ class Port(override val config: XMLCalabashConfig) extends Artifact(config) {
     var implinline = false
     for (child <- allChildren) {
       child match {
-        case source: Document =>
+        case _: Document =>
           nonEmpty = true
           pns = true
-        case source: Empty =>
+        case _: Empty =>
           empty = true
           pns = true
         case source: Inline =>
@@ -138,10 +138,10 @@ class Port(override val config: XMLCalabashConfig) extends Artifact(config) {
           } else {
             pns = true
           }
-        case source: Pipe =>
+        case _: Pipe =>
           nonEmpty = true
           pns = true
-        case source: NamePipe => ()
+        case _: NamePipe => ()
         case _ => throw new RuntimeException(s"Unexpected port binding: $child")
       }
     }

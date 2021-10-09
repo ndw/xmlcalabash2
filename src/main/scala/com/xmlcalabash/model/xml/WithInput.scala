@@ -103,7 +103,8 @@ class WithInput(override val config: XMLCalabashConfig) extends Port(config) {
                 case empty: Empty =>
                   addChild(new Empty(empty))
                 case inline: Inline =>
-                  addChild(new Inline(inline))
+                  val x= new Inline(inline)
+                  addChild(x)
                 case document: Document =>
                   addChild(new Document(document))
                 case _ =>

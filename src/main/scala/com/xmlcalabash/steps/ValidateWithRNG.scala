@@ -116,17 +116,17 @@ class ValidateWithRNG() extends DefaultXmlStep {
                   errloc = Some(new XProcLocation(ex))
                 }
                 if (except.isEmpty) {
-                  except = Some(XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, lex.getMessage, errloc))
+                  except = Some(XProcException.xcNotSchemaValidRelaxNG(source.getBaseURI.toASCIIString, lex.getMessage, errloc))
                 }
               case _: Exception =>
                 if (except.isEmpty) {
-                  except = Some(XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, lex.getMessage, location))
+                  except = Some(XProcException.xcNotSchemaValidRelaxNG(source.getBaseURI.toASCIIString, lex.getMessage, location))
                 }
             }
           }
 
           if (except.isEmpty) {
-            except = Some(XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, "RELAX NG validation failed", location))
+            except = Some(XProcException.xcNotSchemaValidRelaxNG(source.getBaseURI.toASCIIString, "RELAX NG validation failed", location))
           }
 
           except.get.underlyingCauses = listener.exceptions
@@ -136,7 +136,7 @@ class ValidateWithRNG() extends DefaultXmlStep {
         }
       }
     } else {
-      throw XProcException.xcNotSchemaValid(source.getBaseURI.toASCIIString, "Error loading schema", location)
+      throw XProcException.xcNotSchemaValidRelaxNG(source.getBaseURI.toASCIIString, "Error loading schema", location)
     }
 
     consumer.get.receive("report", report.endErrors() , XProcMetadata.XML)

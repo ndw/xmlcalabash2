@@ -1,10 +1,12 @@
 package com.xmlcalabash.drivers
 
 import com.xmlcalabash.config.{DocumentRequest, XMLCalabashConfig}
+import com.xmlcalabash.drivers.Main.config
 import com.xmlcalabash.exceptions.XProcException
 import com.xmlcalabash.testing.TestRunner
 import com.xmlcalabash.util.{DefaultErrorExplanation, MediaType, S9Api}
 import net.sf.saxon.s9api.{QName, Serializer, XdmAtomicValue, XdmDestination, XdmValue}
+import org.slf4j.LoggerFactory
 
 import java.io.{BufferedReader, File, FileReader, PrintWriter}
 import java.net.URI
@@ -35,6 +37,16 @@ object Test extends App {
   }
 
   crudeArgParse()
+
+  val level = "info"
+  val logcontext = LoggerFactory.getILoggerFactory
+  val logger = logcontext.getLogger("root")
+  logger match {
+    case lgr: ch.qos.logback.classic.Logger =>
+      lgr.setLevel(ch.qos.logback.classic.Level.toLevel(level))
+    case _ =>
+      ()
+  }
 
   private val showAll = !showPassing && !showFailing && !showSkipping
 

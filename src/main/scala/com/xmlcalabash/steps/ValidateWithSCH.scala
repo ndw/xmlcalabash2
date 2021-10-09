@@ -69,7 +69,7 @@ class ValidateWithSCH() extends DefaultXmlStep {
     if (assert_valid) {
       val failed = impl.failedAssertions(report)
       if (failed.nonEmpty) {
-        val except = XProcException.xcNotSchematronValid(source.getBaseURI, "Schematron assertions failed", location)
+        val except = XProcException.xcNotSchemaValidSchematron(source.getBaseURI, "Schematron assertions failed", location)
         except.errors = report
         throw except
       }

@@ -30,9 +30,8 @@ class XMLCalabashConfiguration {
   private val cc_http_proxy = new QName("cc", ns_cc, "http-proxy")
   private val cc_debug_output_directory = new QName("cc", ns_cc, "debug-output-directory")
   private val cc_debug_tree = new QName("cc", ns_cc, "tree")
-  private val cc_debug_xml_tree = new QName("cc", ns_cc, "xml-tree")
+  private val cc_debug_pipeline = new QName("cc", ns_cc, "pipeline")
   private val cc_debug_graph = new QName("cc", ns_cc, "graph")
-  private val cc_debug_jafpl_graph = new QName("cc", ns_cc, "jafpl-graph")
   private val cc_debug_open_graph = new QName("cc", ns_cc, "open-graph")
   private val cc_debug_stacktrace = new QName("cc", ns_cc, "stacktrace")
   private val cc_show_errors = new QName("cc", ns_cc, "show-errors")
@@ -61,11 +60,10 @@ class XMLCalabashConfiguration {
   private var _showErrors = false
   private var _debug_output_directory = Option.empty[String]
   private var _debug_tree = Option.empty[String]
-  private var _debug_xml_tree = Option.empty[String]
+  private var _debug_pipeline = Option.empty[String]
   private var _debug_graph = Option.empty[String]
-  private var _debug_jafpl_graph = Option.empty[String]
   private var _debug_open_graph = Option.empty[String]
-  private var _debug_stacktrace = Option.empty[String]
+  private var _debug_stacktrace = Option.empty[Boolean]
 
   def show_messages: Boolean = _show_messages.getOrElse(false)
   def schema_aware: Boolean = _schema_aware.getOrElse(false)
@@ -83,11 +81,10 @@ class XMLCalabashConfiguration {
   def showErrors: Boolean = _showErrors
   def debug_output_directory: Option[String] = _debug_output_directory
   def debug_tree: Option[String] = _debug_tree
-  def debug_xml_tree: Option[String] = _debug_xml_tree
+  def debug_pipeline: Option[String] = _debug_pipeline
   def debug_graph: Option[String] = _debug_graph
-  def debug_jafpl_graph: Option[String] = _debug_jafpl_graph
   def debug_open_graph: Option[String] = _debug_open_graph
-  def debug_stacktrace: Option[String] = _debug_stacktrace
+  def debug_stacktrace: Option[Boolean] = _debug_stacktrace
 
   def serialization: Map[String,Map[QName,String]] = {
     val map = mutable.HashMap.empty[String, Map[QName,String]]
@@ -195,12 +192,10 @@ class XMLCalabashConfiguration {
         parseDebugOutputDirectory(node)
       case `cc_debug_tree` =>
         parseDebugTree(node)
-      case `cc_debug_xml_tree` =>
-        parseDebugXmlTree(node)
+      case `cc_debug_pipeline` =>
+        parseDebugPipeline(node)
       case `cc_debug_graph` =>
         parseDebugGraph(node)
-      case `cc_debug_jafpl_graph` =>
-        parseDebugJafplGraph(node)
       case `cc_debug_open_graph` =>
         parseDebugOpenGraph(node)
       case `cc_debug_stacktrace` =>
@@ -310,7 +305,7 @@ class XMLCalabashConfiguration {
     val name = node.getStringValue.trim
     val file = new File(name)
     if (!file.exists || !file.isDirectory) {
-      logger.error(s"The debug-output-directory must be a directory")
+      logger.error(s"The cc:debug-output-directory value must be a directory")
     } else {
       _debug_output_directory = Some(name)
     }
@@ -319,43 +314,34 @@ class XMLCalabashConfiguration {
   private def parseDebugTree(node: XdmNode): Unit = {
     val name = node.getStringValue.trim
     if (name.contains("/")) {
-      logger.error(s"The cc:debug-tree must be a filename (no /'s allowed)")
+      logger.error(s"The cc:debug-tree value must be a filename (no /'s allowed)")
     } else {
       _debug_tree = Some(name)
     }
   }
 
-  private def parseDebugXmlTree(node: XdmNode): Unit = {
+  private def parseDebugPipeline(node: XdmNode): Unit = {
     val name = node.getStringValue.trim
     if (name.contains("/")) {
-      logger.error(s"The cc:debug-xml-tree must be a filename (no /'s allowed)")
+      logger.error(s"The cc:debug-pipeline value must be a filename (no /'s allowed)")
     } else {
-      _debug_xml_tree = Some(name)
+      _debug_graph = Some(name)
     }
   }
 
   private def parseDebugGraph(node: XdmNode): Unit = {
     val name = node.getStringValue.trim
     if (name.contains("/")) {
-      logger.error(s"The cc:debug-graph must be a filename (no /'s allowed)")
+      logger.error(s"The cc:debug-graph value must be a filename (no /'s allowed)")
     } else {
       _debug_graph = Some(name)
-    }
-  }
-
-  private def parseDebugJafplGraph(node: XdmNode): Unit = {
-    val name = node.getStringValue.trim
-    if (name.contains("/")) {
-      logger.error(s"The cc:debug-jafpl-graph must be a filename (no /'s allowed)")
-    } else {
-      _debug_jafpl_graph = Some(name)
     }
   }
 
   private def parseDebugOpenGraph(node: XdmNode): Unit = {
     val name = node.getStringValue.trim
     if (name.contains("/")) {
-      logger.error(s"The cc:debug-open-graph must be a filename (no /'s allowed)")
+      logger.error(s"The cc:debug-open-graph value must be a filename (no /'s allowed)")
     } else {
       _debug_open_graph = Some(name)
     }
@@ -363,10 +349,9 @@ class XMLCalabashConfiguration {
 
   private def parseDebugStacktrace(node: XdmNode): Unit = {
     val name = node.getStringValue.trim
-    if (name.contains("/")) {
-      logger.error(s"The cc:debug-stacktrace must be a filename (no /'s allowed)")
-    } else {
-      _debug_stacktrace = Some(name)
+    _debug_stacktrace = Some(name == "true")
+    if (name != "true" && name != "false") {
+      logger.error(s"The cc:stacktrace value '${name}' treated as false.")
     }
   }
 

@@ -25,7 +25,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
   private val _options = mutable.HashMap.empty[QName, XProcVarValue]
   private var _pipeline = Option.empty[String]
   private var _verbose = false
-  private var _debugOptions = xmlCalabash.debugOptions
+  private val _debugOptions = xmlCalabash.debugOptions
 
   def this(config: XMLCalabashConfig, args: List[String]) = {
     this(config)
@@ -61,7 +61,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
     // ?param=xpath expression value
 
     val longPortRegex   = "--((input)|(output))".r
-    val paramRegex      = "([\\+\\?])?([^-]\\S+)=(\\S+)".r
+    val paramRegex      = "([+?])?([^-]\\S+)=(\\S+)".r
     val pipelineRegex   = "([^-])(.*)".r
     val shortOptRegex   = "-(.+)".r
     val longOptRegex    = "--(.+)".r
@@ -115,8 +115,8 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
             optname match {
               case "verbose" => _verbose = true
               case "norun" => _debugOptions.run = false
-              case "debug" =>
-                parseDebugOptions(args(pos+1))
+              case "graph" =>
+                parseGraphOptions(args(pos+1))
                 pos += 1
               case "inject" =>
                 _injectables += args(pos+1)
@@ -157,6 +157,17 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
                   throw XProcException.xiArgBundleCannotParseNamespace(rest)
                 }
                 pos += 1
+              case "stacktrace" => _debugOptions.stacktrace = true
+              case "info" =>
+                if (_debugOptions.logLevel.isDefined) {
+                  throw XProcException.xiArgBundleDuplicateLogLevel("info", _debugOptions.logLevel.get)
+                }
+                _debugOptions.logLevel = "info"
+              case "debug" =>
+                if (_debugOptions.logLevel.isDefined) {
+                  throw XProcException.xiArgBundleDuplicateLogLevel("debug", _debugOptions.logLevel.get)
+                }
+                _debugOptions.logLevel = "debug"
               case _ => throw XProcException.xiArgBundleUnexpectedOption(optname)
             }
           } catch {
@@ -177,7 +188,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
                   case 'v' => _verbose = true
                   case 'd' =>
                     val rest = chars.substring(chpos + 1)
-                    parseDebugOptions(rest)
+                    parseGraphOptions(rest)
                     skip = true
                   case 'i' =>
                     val rest = chars.substring(chpos + 1)
@@ -235,7 +246,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
               chpos += 1
             }
           } catch {
-            case iobe: IndexOutOfBoundsException =>
+            case _: IndexOutOfBoundsException =>
               throw XProcException.xiArgBundleIndexOOB(optname)
             case t: Throwable => throw t
           }
@@ -268,8 +279,8 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
     }
   }
 
-  private def parseDebugOptions(opts: String): Unit = {
-    val validKeys = List("stacktrace", "tree", "xml-tree", "graph", "jafpl-graph", "open-graph")
+  private def parseGraphOptions(opts: String): Unit = {
+    val validKeys = List("tree", "pipeline", "graph", "open-graph")
 
     val options = opts.split("\\s*,\\s*")
     for (opt <- options) {
@@ -286,7 +297,7 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
       for (valid <- validKeys) {
         if (valid.startsWith(token)) {
           if (key.isDefined) {
-            throw new RuntimeException(s"Ambiguous debug key: $token")
+            throw XProcException.xiArgBundleAmbiguousGraphKey(token)
           }
           key = Some(valid)
         }
@@ -294,15 +305,13 @@ class ArgBundle(xmlCalabash: XMLCalabashConfig) {
 
       if (key.isDefined) {
         key.get match {
-          case "stacktrace" => _debugOptions.stackTrace = value
           case "tree" => _debugOptions.tree = value
-          case "xml-tree" => _debugOptions.xmlTree = value
+          case "pipeline" => _debugOptions.pipeline = value
           case "graph" => _debugOptions.graph = value
-          case "jafpl-graph" => _debugOptions.jafplGraph = value
           case "open-graph" => _debugOptions.openGraph = value
         }
       } else {
-        throw new RuntimeException(s"Invalid debug key: $token")
+        throw XProcException.xiArgBundleInvalidGraphKey(token)
       }
     }
   }

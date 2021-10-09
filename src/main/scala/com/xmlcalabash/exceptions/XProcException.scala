@@ -93,10 +93,12 @@ object XProcException {
   def xiMaxRegressionsExceededWhile(max: Long, location: Option[Location]): XProcException = internalError(61, location, max)
   def xiMaxRegressionsExceededUntil(max: Long, location: Option[Location]): XProcException = internalError(62, location, max)
   def xiAttempToCountByZero(location: Option[Location]): XProcException = internalError(63, location)
-
   def xiBadConfigSchema(scheme: String): XProcException = internalError(64, None, scheme)
   def xiConfigNotFound(cfg: URI): XProcException = internalError(65, None, cfg)
   def xiMalformedURI(uri: String, message: String, location: Option[Location]): XProcException = internalError(66, location, List(uri, message))
+  def xiArgBundleDuplicateLogLevel(level: String, curLevel: String): XProcException = internalError(67, None, List(level, curLevel))
+  def xiArgBundleAmbiguousGraphKey(token: String): XProcException = internalError(68, None, token)
+  def xiArgBundleInvalidGraphKey(token: String): XProcException = internalError(69, None, token)
 
   def xiThisCantHappen(msg: String, location: Option[Location]): XProcException = internalError(999, location, msg)
 
@@ -203,8 +205,9 @@ object XProcException {
 
   def xsBadTypeValue(value: String, reqdType: String, location: Option[Location]): XProcException = staticError(77, List(value, reqdType), location)
 
-  def xsCommentNotAllowed(comment: String, location: Option[Location]): XProcException = staticError((79,2), comment, location)
-  def xsPiNotAllowed(pi: String, location: Option[Location]): XProcException = staticError((79,3), pi, location)
+  def xsInlineCommentNotAllowed(comment: String, location: Option[Location]): XProcException = staticError((79,1), comment, location)
+  def xsInlinePiNotAllowed(pi: String, location: Option[Location]): XProcException = staticError((79,2), pi, location)
+  def xsInlineTextNotAllowed(text: String, location: Option[Location]): XProcException = staticError((79,3), text, location)
 
   def xsDupWithOptionName(optName: QName, location: Option[Location]): XProcException = staticError(80, optName, location)
 
@@ -288,9 +291,8 @@ object XProcException {
   def xcVersionNotAvailable(version: String, location: Option[Location]): XProcException = stepError(38, version, location)
 
   def xcCannotStore(href: URI, location: Option[Location]): XProcException = stepError(50, href, location)
-  def xcNotSchemaValid(href: String, message: String, location: Option[Location]): XProcException = stepError(53, List(href, message), location)
-  def xcNotSchemaValid(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = stepError(53, List(href, line, col, message), location)
-  def xcNotSchematronValid(href: URI, message: String, location: Option[Location]): XProcException = stepError(54, List(href, message), location)
+  def xcNotSchemaValidNvdl(href: String, message: String, location: Option[Location]): XProcException = stepError(53, List(href, message), location)
+  def xcNotSchemaValidSchematron(href: URI, message: String, location: Option[Location]): XProcException = stepError(54, List(href, message), location)
   def xcXsltNoTemplate(template: QName, location: Option[Location]): XProcException = stepError(56, template, location)
   def xcCannotAddNamespaces(name: QName, location: Option[Location]): XProcException = stepError(59, name, location)
   def xcUnsupportedUuidVersion(version: Integer, location: Option[Location]): XProcException = stepError(60, version.toString, location)
@@ -357,6 +359,9 @@ object XProcException {
   def xcOverrideContentTypesBadRegex(regex: String, location: Option[Location]): XProcException = stepError(147, regex, location)
   def xcFileMoveBadScheme(uri: URI, location: Option[Location]): XProcException = stepError(148, uri, location)
   def xcNotASchematronDocument(): XProcException = stepError(151, None)
+  def xcNotSchemaValidRelaxNG(href: String, message: String, location: Option[Location]): XProcException = stepError(155, List(href, message), location)
+  def xcNotSchemaValidXmlSchema(href: String, message: String, location: Option[Location]): XProcException = stepError((156,1), List(href, message), location)
+  def xcNotSchemaValidXmlSchema(href: String, line: Long, col: Long, message: String, location: Option[Location]): XProcException = stepError((156,2), List(href, line, col, message), location)
   def xcFileCopyDirToFile(source: URI, target: URI, location: Option[Location]): XProcException = stepError(157, List(source, target), location)
   def xcFileMoveDirToFile(source: URI, target: URI, location: Option[Location]): XProcException = stepError(158, List(source, target), location)
 
