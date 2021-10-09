@@ -1,7 +1,7 @@
 import java.io.{BufferedReader, InputStreamReader}
 
 lazy val xmlCalabashVersion = "1.99.40"
-lazy val jafplVersion = "0.3.65"
+lazy val jafplVersion = "0.3.72"
 lazy val saxonVersion = "10.6"
 lazy val useSaxonEE = true
 
@@ -126,37 +126,27 @@ resolvers += "Artima Maven Repository" at "https://repo.artima.com/releases"
 resolvers += "Restlet" at "https://maven.restlet.com"
 resolvers += "Saxonica" at "https://dev.saxonica.com/maven"
 
-libraryDependencies ++= Seq(
-  //"org.apache.logging.log4j" % "log4j-api" % "2.12.1",
-  //"org.apache.logging.log4j" % "log4j-core" % "2.12.1",
-  //"org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.12.1",
-  //"org.slf4j" % "jcl-over-slf4j" % "1.7.25",
-  //"org.slf4j" % "slf4j-api" % "1.7.25",
-  "org.apache.commons" % "commons-compress" % "1.19",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-  //"ch.qos.logback" % "logback-classic" % "1.2.3",
-  "org.scalactic" %% "scalactic" % "3.2.3",
-  "org.scalatest" %% "scalatest" % "3.2.3" % "test",
-  "org.scala-lang.modules" %% "scala-xml" % "1.3.0",
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
-  "org.scala-lang.modules" %% "scala-swing" % "2.1.1",
-  "com.ibm.icu" % "icu4j" % "59.1",
-  "org.apache.httpcomponents" % "httpclient" % "4.5.11",
-  "org.apache.httpcomponents" % "httpcore" % "4.4.13",
-  "org.apache.httpcomponents" % "httpmime" % "4.5.11",
-  "org.restlet.jee" % "org.restlet" % "2.2.2",
-  "org.restlet.jee" % "org.restlet.ext.fileupload" % "2.2.2",
-  "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2",
-  "org.xmlresolver" % "xmlresolver" % "3.1.0",
-  "nu.validator" % "htmlparser" % "1.4.12",
-  "com.atlassian.commonmark" % "commonmark" % "0.12.1",
-  "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.10.2",
-  "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.2",
-  "com.jafpl" % "jafpl_2.13" % jafplVersion,
-  "com.nwalsh" % "sinclude" % "4.0.0" excludeAll(ExclusionRule(organization="com.saxonica"), ExclusionRule(organization="net.sf.saxon"))
-)
-
-lazy val logback = "ch.qos.logback" % "logback-classic" % "1.0.13"
+libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.32"
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.6"
+libraryDependencies += "org.apache.commons" % "commons-compress" % "1.19"
+libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.3"
+libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
+libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2"
+libraryDependencies += "org.scala-lang.modules" %% "scala-swing" % "2.1.1"
+libraryDependencies += "com.ibm.icu" % "icu4j" % "59.1"
+libraryDependencies += "org.apache.httpcomponents" % "httpclient" % "4.5.11"
+libraryDependencies += "org.apache.httpcomponents" % "httpcore" % "4.4.13"
+libraryDependencies += "org.apache.httpcomponents" % "httpmime" % "4.5.11"
+libraryDependencies += "org.restlet.jee" % "org.restlet" % "2.2.2"
+//libraryDependencies += "org.restlet.jee" % "org.restlet.ext.fileupload" % "2.2.2"
+//libraryDependencies += "org.restlet.jee" % "org.restlet.ext.slf4j" % "2.2.2"
+libraryDependencies += "org.xmlresolver" % "xmlresolver" % "3.1.0"
+libraryDependencies += "nu.validator" % "htmlparser" % "1.4.12"
+libraryDependencies += "com.atlassian.commonmark" % "commonmark" % "0.12.1"
+libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.10.2"
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.2"
+libraryDependencies += "com.jafpl" % "jafpl_2.13" % jafplVersion
+libraryDependencies += "com.nwalsh" % "sinclude" % "4.0.0" excludeAll(ExclusionRule(organization="com.saxonica"), ExclusionRule(organization="net.sf.saxon"))
 
 libraryDependencies ++= (
   if (useSaxonEE) {
@@ -165,6 +155,8 @@ libraryDependencies ++= (
     Seq("net.sf.saxon" % "Saxon-HE" % saxonVersion)
   }
 )
+
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.3" % "test"
 
 // ============================================================
 // This section is an attempt to get sbt assembly to work.
