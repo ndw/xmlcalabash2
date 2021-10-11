@@ -131,7 +131,7 @@ class Unarchive extends DefaultXmlStep {
             IOUtils.copy(zipIn.getInputStream(entry), baos)
             val bais = new ByteArrayInputStream(baos.toByteArray)
 
-            val href = new Urify(relativeTo).resolve(entry.getName).toURI
+            val href = URI.create(new Urify(relativeTo).resolve(entry.getName))
 
             var contentType = Option.empty[MediaType]
             for (over <- overrideContentTypes) {

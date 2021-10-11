@@ -25,294 +25,1352 @@ class UrifyNonWindowsSpec extends AnyFlatSpec with BeforeAndAfter {
     Urify.mockOS(saveOsname, saveFilesep, Some(saveCwd))
   }
 
-  "http://example.com/path/file " should " parse" in {
-    val path = new Urify("http://example.com/path/file")
-    assert(path.scheme.isDefined)
-    assert(path.driveLetter.isEmpty)
+  "" should " parse" in {
+    val path = new Urify("")
+    assert(path.scheme.isEmpty)
+    assert(!path.explicit)
+    assert(path.hierarchical)
     assert(path.authority.isEmpty)
-    assert(path.scheme.get == "http")
-    assert(path.absolute)
-    assert(!path.fixable)
-    assert(path.toString == "http://example.com/path/file")
-  }
-
-  "http://user@example.com/path/file " should " parse" in {
-    val path = new Urify("http://user@example.com/path/file")
-    assert(path.scheme.isDefined)
     assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
-    assert(path.scheme.get == "http")
-    assert(path.absolute)
-    assert(!path.fixable)
-    assert(path.toString == "http://user@example.com/path/file")
-  }
-
-  "http://user:pass@example.com/path/file " should " parse" in {
-    val path = new Urify("http://user:pass@example.com/path/file")
-    assert(path.scheme.isDefined)
-    assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
-    assert(path.scheme.get == "http")
-    assert(path.absolute)
-    assert(!path.fixable)
-    assert(path.toString == "http://user:pass@example.com/path/file")
-  }
-
-  "http://example.com/path/file#foo " should " parse" in {
-    val path = new Urify("http://example.com/path/file#foo")
-    assert(path.scheme.isDefined)
-    assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
-    assert(path.scheme.get == "http")
-    assert(path.absolute)
-    assert(!path.fixable)
-    assert(path.toString == "http://example.com/path/file#foo")
-  }
-
-  "http://example.com/path/file?foo " should " parse" in {
-    val path = new Urify("http://example.com/path/file?foo")
-    assert(path.scheme.isDefined)
-    assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
-    assert(path.scheme.get == "http")
-    assert(path.absolute)
-    assert(!path.fixable)
-    assert(path.toString == "http://example.com/path/file?foo")
-  }
-
-  "file:path/file " should " parse" in {
-    val path = new Urify("file:path/file")
-    assert(path.scheme.isDefined)
-    assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
-    assert(path.scheme.get == "file")
+    assert(!path.absolute)
     assert(path.relative)
-    assert(path.fixable)
-    assert(path.toString == "file:path/file")
+    assert(path.path == "")
   }
 
-  "file:/path/file " should " parse" in {
-    val path = new Urify("file:/path/file")
-    assert(path.scheme.isDefined)
-    assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
-    assert(path.scheme.get == "file")
-    assert(path.absolute)
-    assert(path.fixable)
-    assert(path.toString == "file:///path/file")
-  }
-
-  "file://path/file " should " parse" in {
-    val path = new Urify("file://path/file")
-    assert(path.scheme.isDefined)
-    assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
-    assert(path.scheme.get == "file")
-    assert(path.absolute)
-    assert(path.fixable)
-    assert(path.toString == "file:///path/file")
-  }
-
-  "file:///path/file " should " parse" in {
-    val path = new Urify("file:///path/file")
-    assert(path.scheme.isDefined)
-    assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
-    assert(path.scheme.get == "file")
-    assert(path.absolute)
-    assert(path.fixable)
-    assert(path.toString == "file:///path/file")
-  }
-
-  "file:////path/file " should " parse" in {
-    val path = new Urify("file:////path/file")
-    assert(path.scheme.isDefined)
-    assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
-    assert(path.scheme.get == "file")
-    assert(path.absolute)
-    assert(path.fixable)
-    assert(path.toString == "file:///path/file")
-  }
-
-  "path/file " should " parse" in {
-    val path = new Urify("path/file")
+  "/ " should " parse" in {
+    val path = new Urify("/")
     assert(path.scheme.isEmpty)
-    assert(path.driveLetter.isEmpty)
+    assert(!path.explicit)
+    assert(path.hierarchical)
     assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(path.absolute)
+    assert(!path.relative)
+    assert(path.path == "/")
+  }
+
+  "// " should " parse" in {
+    val path = new Urify("/")
+    assert(path.scheme.isEmpty)
+    assert(!path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(path.absolute)
+    assert(!path.relative)
+    assert(path.path == "/")
+  }
+
+  // =======================================================================================================
+
+  "///path/to/thing " should " parse" in {
+    val path = new Urify("///path/to/thing")
+    assert(path.scheme.isEmpty)
+    assert(!path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(path.absolute)
+    assert(!path.relative)
+    assert(path.path == "/path/to/thing")
+  }
+
+  "//authority " should " parse" in {
+    val path = new Urify("//authority")
+    assert(path.scheme.isEmpty)
+    assert(!path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isDefined)
+    assert(path.authority.get == "authority")
+    assert(path.driveLetter.isEmpty)
+    assert(!path.absolute)
     assert(path.relative)
-    assert(path.mightBeFixable)
-    assert(path.toString == "path/file")
+    assert(path.path == "")
   }
 
-  "#B " should " parse" in {
-    val path = new Urify("#B")
+  "//authority/ " should " parse" in {
+    val path = new Urify("//authority/")
     assert(path.scheme.isEmpty)
+    assert(!path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isDefined)
+    assert(path.authority.get == "authority")
     assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
-    assert(path.relative)
-    assert(path.mightBeFixable)
-    assert(path.toString == "#B")
-  }
-
-  "/path/file " should " parse" in {
-    val path = new Urify("/path/file")
-    assert(path.scheme.isEmpty)
-    assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
     assert(path.absolute)
-    assert(path.mightBeFixable)
-    assert(path.toString == "/path/file")
+    assert(!path.relative)
+    assert(path.path == "/")
   }
 
-  "//path/file " should " parse" in {
-    val path = new Urify("//path/file")
+  "//authority/path/to/thing " should " parse" in {
+    val path = new Urify("//authority/path/to/thing")
     assert(path.scheme.isEmpty)
+    assert(!path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isDefined)
+    assert(path.authority.get == "authority")
     assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
     assert(path.absolute)
-    assert(path.mightBeFixable)
-    assert(path.toString == "/path/file")
+    assert(!path.relative)
+    assert(path.path == "/path/to/thing")
   }
 
-  "///path/file " should " parse" in {
-    val path = new Urify("///path/file")
+  "/Documents and Files/thing " should " parse" in {
+    val path = new Urify("/Documents and Files/thing")
     assert(path.scheme.isEmpty)
-    assert(path.driveLetter.isEmpty)
+    assert(!path.explicit)
+    assert(path.hierarchical)
     assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
     assert(path.absolute)
-    assert(path.mightBeFixable)
-    assert(path.toString == "/path/file")
+    assert(!path.relative)
+    assert(path.path == "/Documents and Files/thing")
   }
 
-  "////path/file " should " parse" in {
-    val path = new Urify("////path/file")
+  "/path/to/thing " should " parse" in {
+    val path = new Urify("/path/to/thing")
     assert(path.scheme.isEmpty)
-    assert(path.driveLetter.isEmpty)
+    assert(!path.explicit)
+    assert(path.hierarchical)
     assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
     assert(path.absolute)
-    assert(path.mightBeFixable)
-    assert(path.toString == "/path/file")
+    assert(!path.relative)
+    assert(path.path == "/path/to/thing")
   }
 
-  "/Users/John Doe/Document Settings/path/file " should " parse" in {
-    val path = new Urify("/Users/John Doe/Document Settings/path/file")
-    assert(path.scheme.isEmpty)
-    assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
-    assert(path.absolute)
-    assert(path.mightBeFixable)
-    assert(path.toFixedString == "/Users/John%20Doe/Document%20Settings/path/file")
-    assert(path.toString == "/Users/John Doe/Document Settings/path/file")
-  }
-
-  "/Users/John%?#Madison%20Doe/path#foo/bar% " should " parse" in {
-    val path = new Urify("/Users/John%?#Madison%20Doe/path#foo/bar%")
-    assert(path.scheme.isEmpty)
-    assert(path.driveLetter.isEmpty)
-    assert(path.authority.isEmpty)
-    assert(path.absolute)
-    assert(path.mightBeFixable)
-    assert(path.toFixedString == "/Users/John%25%3F%23Madison%20Doe/path%23foo/bar%25")
-    assert(path.toString == "/Users/John%?#Madison%20Doe/path#foo/bar%")
-  }
-
-  "file:///path\\file " should " parse" in {
-    val path = new Urify("file:///path\\file")
+  "C:/Users/Jane/Documents and Files/Thing " should " parse" in {
+    val path = new Urify("C:/Users/Jane/Documents and Files/Thing")
     assert(path.scheme.isDefined)
-    assert(path.driveLetter.isEmpty)
+    assert(path.scheme.get == "C")
+    assert(path.explicit)
+    assert(path.hierarchical)
     assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
     assert(path.absolute)
-    assert(path.fixable)
+    assert(!path.relative)
+    assert(path.path == "/Users/Jane/Documents and Files/Thing")
+  }
+
+  "C:Users/Jane/Documents and Files/Thing " should " parse" in {
+    val path = new Urify("C:Users/Jane/Documents and Files/Thing")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "C")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(!path.absolute)
+    assert(path.relative)
+    assert(path.path == "Users/Jane/Documents and Files/Thing")
+  }
+
+  "Documents and Files/thing " should " parse" in {
+    val path = new Urify("Documents and Files/thing")
+    assert(path.scheme.isEmpty)
+    assert(!path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(!path.absolute)
+    assert(path.relative)
+    assert(path.path == "Documents and Files/thing")
+  }
+
+  "file: " should " parse" in {
+    val path = new Urify("file:")
+    assert(path.scheme.isDefined)
     assert(path.scheme.get == "file")
-    assert(path.toFixedString == "file:///path\\file")
-    assert(path.toString == "file:///path\\file")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(!path.absolute)
+    assert(path.relative)
+    assert(path.path == "")
   }
 
-  "#B " should " resolve against an absolute HTTP URI" in {
-    val answer = new Urify("https://wiki.acme.com/fr/categories.html").resolve("#B")
-    assert(answer.toString == "https://wiki.acme.com/fr/categories.html#B")
+  "file:///path/to/thing " should " parse" in {
+    val path = new Urify("file:///path/to/thing")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "file")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(path.absolute)
+    assert(!path.relative)
+    assert(path.path == "/path/to/thing")
   }
 
-  "index.html " should " resolve against an absolute URI" in {
-    val answer = new Urify("https://wiki.acme.com/fr/categories.html").resolve("index.html")
-    assert(answer.toString == "https://wiki.acme.com/fr/index.html")
+  "file://authority.com " should " parse" in {
+    val path = new Urify("file://authority.com")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "file")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isDefined)
+    assert(path.authority.get == "authority.com")
+    assert(path.driveLetter.isEmpty)
+    assert(!path.absolute)
+    assert(path.relative)
+    assert(path.path == "")
   }
 
-  "/en/index.html " should " resolve against an absolute URI" in {
-    val answer = new Urify("https://wiki.acme.com/fr/categories.html").resolve("/en/index.html")
-    assert(answer.toString == "https://wiki.acme.com/en/index.html")
+  "file://authority.com/ " should " parse" in {
+    val path = new Urify("file://authority.com/")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "file")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isDefined)
+    assert(path.authority.get == "authority.com")
+    assert(path.driveLetter.isEmpty)
+    assert(path.absolute)
+    assert(!path.relative)
+    assert(path.path == "/")
   }
 
-  "//www.acme.com/lib/acme.js " should " resolve against an absolute URI" in {
-    val answer = new Urify("https://wiki.acme.com/fr/categories.html").resolve("//www.acme.com/lib/acme.js")
-    assert(answer.toString == "https://wiki.acme.com/www.acme.com/lib/acme.js")
+  "file://authority.com/path/to/thing " should " parse" in {
+    val path = new Urify("file://authority.com/path/to/thing")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "file")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isDefined)
+    assert(path.authority.get == "authority.com")
+    assert(path.driveLetter.isEmpty)
+    assert(path.absolute)
+    assert(!path.relative)
+    assert(path.path == "/path/to/thing")
   }
 
-  "http://example.com/absolute/ " should " resolve against an absolute URI" in {
-    val answer = new Urify("https://wiki.acme.com/fr/categories.html").resolve("http://example.com/absolute/")
-    assert(answer.toString == "http://example.com/absolute/")
+  "file:/path/to/thing " should " parse" in {
+    val path = new Urify("file:/path/to/thing")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "file")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(path.absolute)
+    assert(!path.relative)
+    assert(path.path == "/path/to/thing")
   }
 
-  "https://example.com/absolute/ " should " resolve against an absolute URI" in {
-    val answer = new Urify("https://wiki.acme.com/fr/categories.html").resolve("https://example.com/absolute/")
-    assert(answer.toString == "https://example.com/absolute/")
+  "file:C:/Users/Jane/Documents and Files/Thing " should " parse" in {
+    val path = new Urify("file:C:/Users/Jane/Documents and Files/Thing")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "file")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(!path.absolute)
+    assert(path.relative)
+    assert(path.path == "C:/Users/Jane/Documents and Files/Thing")
   }
 
-  "https://example.com/absolute/ " should " resolve against a relative URI" in {
-    val answer = new Urify("relative-uri").resolve("https://example.com/absolute/")
-    assert(answer.toString == "https://example.com/absolute/")
+  "file:C:Users/Jane/Documents and Files/Thing " should " parse" in {
+    val path = new Urify("file:C:Users/Jane/Documents and Files/Thing")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "file")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(!path.absolute)
+    assert(path.relative)
+    assert(path.path == "C:Users/Jane/Documents and Files/Thing")
   }
 
-  "file:path " should " throw an exception if resolved against a base URI with a different scheme" in {
-    assertThrows[XProcException] {
-      new Urify("http://example.com/").resolve("file:path")
+  "file:path/to/thing " should " parse" in {
+    val path = new Urify("file:path/to/thing")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "file")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(!path.absolute)
+    assert(path.relative)
+    assert(path.path == "path/to/thing")
+  }
+
+  "https: " should " parse" in {
+    val path = new Urify("https:")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "https")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(!path.absolute)
+    assert(path.relative)
+    assert(path.path == "")
+  }
+
+  "https://example.com " should " parse" in {
+    val path = new Urify("https://example.com")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "https")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(path.absolute)
+    assert(!path.relative)
+    assert(path.path == "//example.com")
+  }
+
+  "https://example.com/ " should " parse" in {
+    val path = new Urify("https://example.com/")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "https")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(path.absolute)
+    assert(!path.relative)
+    assert(path.path == "//example.com/")
+  }
+
+  "https://example.com/path/to/thing " should " parse" in {
+    val path = new Urify("https://example.com/path/to/thing")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "https")
+    assert(path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(path.absolute)
+    assert(!path.relative)
+    assert(path.path == "//example.com/path/to/thing")
+  }
+
+  "path/to/thing " should " parse" in {
+    val path = new Urify("path/to/thing")
+    assert(path.scheme.isEmpty)
+    assert(!path.explicit)
+    assert(path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(!path.absolute)
+    assert(path.relative)
+    assert(path.path == "path/to/thing")
+  }
+
+  "urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN " should " parse" in {
+    val path = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    assert(path.scheme.isDefined)
+    assert(path.scheme.get == "urn")
+    assert(path.explicit)
+    assert(!path.hierarchical)
+    assert(path.authority.isEmpty)
+    assert(path.driveLetter.isEmpty)
+    assert(!path.absolute)
+    assert(path.relative)
+    assert(path.path == "publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+  }
+
+  // =======================================================================================================
+
+  "///path/to/thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("///path/to/thing")
+    assert(path == "file:///path/to/thing")
+  }
+
+  "//authority " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("//authority")
+    assert(path == "file://authority")
+  }
+
+  "//authority/ " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("//authority/")
+    assert(path == "file://authority/")
+  }
+
+  "//authority/path/to/thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("//authority/path/to/thing")
+    assert(path == "file://authority/path/to/thing")
+  }
+
+  "/Documents and Files/thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("/Documents and Files/thing")
+    assert(path == "file:///Documents%20and%20Files/thing")
+  }
+
+  "/path/to/thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("/path/to/thing")
+    assert(path == "file:///path/to/thing")
+  }
+
+  "C:/Users/Jane/Documents and Files/Thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("C:/Users/Jane/Documents and Files/Thing")
+    assert(path == "C:/Users/Jane/Documents and Files/Thing")
+  }
+
+  "C:Users/Jane/Documents and Files/Thing " should " throw an exception against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    try {
+      basepath.resolve("C:Users/Jane/Documents and Files/Thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
     }
   }
 
-  "file:path " should " throw an exception if resolved against a relative URI" in {
-    assertThrows[XProcException] {
-      new Urify("file:otherpath").resolve("file:path")
+  "Documents and Files/thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("Documents and Files/thing")
+    assert(path == "file:///home/jdoe/documents/Documents%20and%20Files/thing")
+  }
+
+  "file: " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("file:")
+    assert(path == "file:///home/jdoe/documents/")
+  }
+
+  "file:///path/to/thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("file:///path/to/thing")
+    assert(path == "file:///path/to/thing")
+  }
+
+  "file://authority.com " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("file://authority.com")
+    assert(path == "file://authority.com")
+  }
+
+  "file://authority.com/ " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("file://authority.com/")
+    assert(path == "file://authority.com/")
+  }
+
+  "file://authority.com/path/to/thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("file://authority.com/path/to/thing")
+    assert(path == "file://authority.com/path/to/thing")
+  }
+
+  "file:/path/to/thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("file:/path/to/thing")
+    assert(path == "file:///path/to/thing")
+  }
+
+  "file:C:/Users/Jane/Documents and Files/Thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("file:C:/Users/Jane/Documents and Files/Thing")
+    assert(path == "file:///home/jdoe/documents/C:/Users/Jane/Documents and Files/Thing")
+  }
+
+  "file:C:Users/Jane/Documents and Files/Thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("file:C:Users/Jane/Documents and Files/Thing")
+    assert(path == "file:///home/jdoe/documents/C:Users/Jane/Documents and Files/Thing")
+  }
+
+  "file:path/to/thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("file:path/to/thing")
+    assert(path == "file:///home/jdoe/documents/path/to/thing")
+  }
+
+  "https: " should " throw an exception against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    try {
+      basepath.resolve("https:")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
     }
   }
 
-  "urn:a:b:c " should " resolve against an absolute URI" in {
-    val answer = new Urify("https://wiki.acme.com/fr/categories.html").resolve("urn:a:b:c")
-    assert(answer.toString == "urn:a:b:c")
+  "https://example.com " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("https://example.com")
+    assert(path == "https://example.com")
   }
 
-  "urn:a:b:c " should " resolve against an relative URI" in {
-    val answer = new Urify("segment").resolve("urn:a:b:c")
-    assert(answer.toString == "urn:a:b:c")
+  "https://example.com/ " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("https://example.com/")
+    assert(path == "https://example.com/")
   }
 
-  "#B " should " resolve against an absolute file URI" in {
-    val answer = new Urify("file:///path/to/file.txt").resolve("#B")
-    assert(answer.toString == "file:///path/to/%23B")
+  "https://example.com/path/to/thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("https://example.com/path/to/thing")
+    assert(path == "https://example.com/path/to/thing")
   }
 
-  "#B " should " resolve against relative path URI" in {
-    val answer = new Urify("path/to/file.txt").resolve("#B")
-    assert(answer.toString == "file:///home/johndoe/path/to/%23B")
+  "path/to/thing " should " resolve against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    val path = basepath.resolve("path/to/thing")
+    assert(path == "file:///home/jdoe/documents/path/to/thing")
   }
 
-  "#B " should " resolve against an absolute path URI" in {
-    val answer = new Urify("//path/to/file.txt").resolve("#B")
-    assert(answer.toString == "file:///path/to/%23B")
+  "urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN " should " throw an exception against file:///home/jdoe/documents/" in {
+    val basepath = new Urify("file:///home/jdoe/documents/")
+    try {
+      basepath.resolve("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
+    }
   }
 
-  "index.html " should " resolve against an absolute file URI" in {
-    val answer = new Urify("file:///path/to/file.txt").resolve("index.html")
-    assert(answer.toString == "file:///path/to/index.html")
+  "///path/to/thing " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("///path/to/thing")
+    assert(path == "http://example.com/path/to/thing")
   }
 
-  "/en/index.html " should " resolve against an absolute file URI" in {
-    val answer = new Urify("file:///path/to/file.txt").resolve("/en/index.html")
-    assert(answer.toString == "file:///en/index.html")
+  "//authority " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("//authority")
+    assert(path == "http://authority")
   }
 
-  "//www.acme.com/lib/acme.js " should " resolve against an absolute file URI" in {
-    val answer = new Urify("file:///path/to/file.txt").resolve("//www.acme.com/lib/acme.js")
-    assert(answer.toString == "file:///www.acme.com/lib/acme.js")
+  "//authority/ " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("//authority/")
+    assert(path == "http://authority/")
   }
+
+  "//authority/path/to/thing " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("//authority/path/to/thing")
+    assert(path == "http://authority/path/to/thing")
+  }
+
+  "/Documents and Files/thing " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("/Documents and Files/thing")
+    assert(path == "http://example.com/Documents%20and%20Files/thing")
+  }
+
+  "/path/to/thing " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("/path/to/thing")
+    assert(path == "http://example.com/path/to/thing")
+  }
+
+  "C:/Users/Jane/Documents and Files/Thing " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("C:/Users/Jane/Documents and Files/Thing")
+    assert(path == "C:/Users/Jane/Documents and Files/Thing")
+  }
+
+  "C:Users/Jane/Documents and Files/Thing " should " throw an exception against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    try {
+      basepath.resolve("C:Users/Jane/Documents and Files/Thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
+    }
+  }
+
+  "Documents and Files/thing " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("Documents and Files/thing")
+    assert(path == "http://example.com/documents/Documents%20and%20Files/thing")
+  }
+
+  "file: " should " throw an exception against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    try {
+      basepath.resolve("file:")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
+    }
+  }
+
+  "file:///path/to/thing " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("file:///path/to/thing")
+    assert(path == "file:///path/to/thing")
+  }
+
+  "file://authority.com " should " throw an exception against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    try {
+      basepath.resolve("file://authority.com")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
+    }
+  }
+
+  "file://authority.com/ " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("file://authority.com/")
+    assert(path == "file://authority.com/")
+  }
+
+  "file://authority.com/path/to/thing " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("file://authority.com/path/to/thing")
+    assert(path == "file://authority.com/path/to/thing")
+  }
+
+  "file:/path/to/thing " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("file:/path/to/thing")
+    assert(path == "file:///path/to/thing")
+  }
+
+  "file:C:/Users/Jane/Documents and Files/Thing " should " throw an exception against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    try {
+      basepath.resolve("file:C:/Users/Jane/Documents and Files/Thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
+    }
+  }
+
+  "file:C:Users/Jane/Documents and Files/Thing " should " throw an exception against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    try {
+      basepath.resolve("file:C:Users/Jane/Documents and Files/Thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
+    }
+  }
+
+  "file:path/to/thing " should " throw an exception against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    try {
+      basepath.resolve("file:path/to/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
+    }
+  }
+
+  "https: " should " throw an exception against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    try {
+      basepath.resolve("https:")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
+    }
+  }
+
+  "https://example.com " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("https://example.com")
+    assert(path == "https://example.com")
+  }
+
+  "https://example.com/ " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("https://example.com/")
+    assert(path == "https://example.com/")
+  }
+
+  "https://example.com/path/to/thing " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("https://example.com/path/to/thing")
+    assert(path == "https://example.com/path/to/thing")
+  }
+
+  "path/to/thing " should " resolve against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    val path = basepath.resolve("path/to/thing")
+    assert(path == "http://example.com/documents/path/to/thing")
+  }
+
+  "urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN " should " throw an exception against http://example.com/documents/" in {
+    val basepath = new Urify("http://example.com/documents/")
+    try {
+      basepath.resolve("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
+    }
+  }
+
+  "///path/to/thing " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("///path/to/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "//authority " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("//authority")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "//authority/ " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("//authority/")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "//authority/path/to/thing " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("//authority/path/to/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "/Documents and Files/thing " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("/Documents and Files/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "/path/to/thing " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("/path/to/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "C:/Users/Jane/Documents and Files/Thing " should " resolve against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    val path = basepath.resolve("C:/Users/Jane/Documents and Files/Thing")
+    assert(path == "C:/Users/Jane/Documents and Files/Thing")
+  }
+
+  "C:Users/Jane/Documents and Files/Thing " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("C:Users/Jane/Documents and Files/Thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "Documents and Files/thing " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("Documents and Files/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "file: " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("file:")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "file:///path/to/thing " should " resolve against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    val path = basepath.resolve("file:///path/to/thing")
+    assert(path == "file:///path/to/thing")
+  }
+
+  "file://authority.com " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("file://authority.com")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "file://authority.com/ " should " resolve against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    val path = basepath.resolve("file://authority.com/")
+    assert(path == "file://authority.com/")
+  }
+
+  "file://authority.com/path/to/thing " should " resolve against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    val path = basepath.resolve("file://authority.com/path/to/thing")
+    assert(path == "file://authority.com/path/to/thing")
+  }
+
+  "file:/path/to/thing " should " resolve against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    val path = basepath.resolve("file:/path/to/thing")
+    assert(path == "file:///path/to/thing")
+  }
+
+  "file:C:/Users/Jane/Documents and Files/Thing " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("file:C:/Users/Jane/Documents and Files/Thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "file:C:Users/Jane/Documents and Files/Thing " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("file:C:Users/Jane/Documents and Files/Thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "file:path/to/thing " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("file:path/to/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "https: " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("https:")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "https://example.com " should " resolve against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    val path = basepath.resolve("https://example.com")
+    assert(path == "https://example.com")
+  }
+
+  "https://example.com/ " should " resolve against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    val path = basepath.resolve("https://example.com/")
+    assert(path == "https://example.com/")
+  }
+
+  "https://example.com/path/to/thing " should " resolve against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    val path = basepath.resolve("https://example.com/path/to/thing")
+    assert(path == "https://example.com/path/to/thing")
+  }
+
+  "path/to/thing " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("path/to/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN " should " throw an exception against urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN" in {
+    val basepath = new Urify("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+    try {
+      basepath.resolve("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0080")
+      case _ => fail()
+    }
+  }
+
+  "///path/to/thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("///path/to/thing")
+    assert(path == "file://hostname/path/to/thing")
+  }
+
+  "//authority " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("//authority")
+    assert(path == "file://authority")
+  }
+
+  "//authority/ " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("//authority/")
+    assert(path == "file://authority/")
+  }
+
+  "//authority/path/to/thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("//authority/path/to/thing")
+    assert(path == "file://authority/path/to/thing")
+  }
+
+  "/Documents and Files/thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("/Documents and Files/thing")
+    assert(path == "file://hostname/Documents%20and%20Files/thing")
+  }
+
+  "/path/to/thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("/path/to/thing")
+    assert(path == "file://hostname/path/to/thing")
+  }
+
+  "C:/Users/Jane/Documents and Files/Thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("C:/Users/Jane/Documents and Files/Thing")
+    assert(path == "C:/Users/Jane/Documents and Files/Thing")
+  }
+
+  "C:Users/Jane/Documents and Files/Thing " should " throw an exception against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    try {
+      basepath.resolve("C:Users/Jane/Documents and Files/Thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
+    }
+  }
+
+  "Documents and Files/thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("Documents and Files/thing")
+    assert(path == "file://hostname/Documents/Documents%20and%20Files/thing")
+  }
+
+  "file: " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("file:")
+    assert(path == "file://hostname/Documents/")
+  }
+
+  "file:///path/to/thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("file:///path/to/thing")
+    assert(path == "file:///path/to/thing")
+  }
+
+  "file://authority.com " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("file://authority.com")
+    assert(path == "file://authority.com")
+  }
+
+  "file://authority.com/ " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("file://authority.com/")
+    assert(path == "file://authority.com/")
+  }
+
+  "file://authority.com/path/to/thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("file://authority.com/path/to/thing")
+    assert(path == "file://authority.com/path/to/thing")
+  }
+
+  "file:/path/to/thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("file:/path/to/thing")
+    assert(path == "file:///path/to/thing")
+  }
+
+  "file:C:/Users/Jane/Documents and Files/Thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("file:C:/Users/Jane/Documents and Files/Thing")
+    assert(path == "file://hostname/Documents/C:/Users/Jane/Documents and Files/Thing")
+  }
+
+  "file:C:Users/Jane/Documents and Files/Thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("file:C:Users/Jane/Documents and Files/Thing")
+    assert(path == "file://hostname/Documents/C:Users/Jane/Documents and Files/Thing")
+  }
+
+  "file:path/to/thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("file:path/to/thing")
+    assert(path == "file://hostname/Documents/path/to/thing")
+  }
+
+  "https: " should " throw an exception against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    try {
+      basepath.resolve("https:")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
+    }
+  }
+
+  "https://example.com " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("https://example.com")
+    assert(path == "https://example.com")
+  }
+
+  "https://example.com/ " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("https://example.com/")
+    assert(path == "https://example.com/")
+  }
+
+  "https://example.com/path/to/thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("https://example.com/path/to/thing")
+    assert(path == "https://example.com/path/to/thing")
+  }
+
+  "path/to/thing " should " resolve against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    val path = basepath.resolve("path/to/thing")
+    assert(path == "file://hostname/Documents/path/to/thing")
+  }
+
+  "urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN " should " throw an exception against file://hostname/Documents/" in {
+    val basepath = new Urify("file://hostname/Documents/")
+    try {
+      basepath.resolve("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0077")
+      case _ => fail()
+    }
+  }
+
+  "///path/to/thing " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("///path/to/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "//authority " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("//authority")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "//authority/ " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("//authority/")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "//authority/path/to/thing " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("//authority/path/to/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "/Documents and Files/thing " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("/Documents and Files/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "/path/to/thing " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("/path/to/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "C:/Users/Jane/Documents and Files/Thing " should " resolve against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    val path = basepath.resolve("C:/Users/Jane/Documents and Files/Thing")
+    assert(path == "C:/Users/Jane/Documents and Files/Thing")
+  }
+
+  "C:Users/Jane/Documents and Files/Thing " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("C:Users/Jane/Documents and Files/Thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "Documents and Files/thing " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("Documents and Files/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "file: " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("file:")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "file:///path/to/thing " should " resolve against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    val path = basepath.resolve("file:///path/to/thing")
+    assert(path == "file:///path/to/thing")
+  }
+
+  "file://authority.com " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("file://authority.com")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "file://authority.com/ " should " resolve against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    val path = basepath.resolve("file://authority.com/")
+    assert(path == "file://authority.com/")
+  }
+
+  "file://authority.com/path/to/thing " should " resolve against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    val path = basepath.resolve("file://authority.com/path/to/thing")
+    assert(path == "file://authority.com/path/to/thing")
+  }
+
+  "file:/path/to/thing " should " resolve against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    val path = basepath.resolve("file:/path/to/thing")
+    assert(path == "file:///path/to/thing")
+  }
+
+  "file:C:/Users/Jane/Documents and Files/Thing " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("file:C:/Users/Jane/Documents and Files/Thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "file:C:Users/Jane/Documents and Files/Thing " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("file:C:Users/Jane/Documents and Files/Thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "file:path/to/thing " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("file:path/to/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "https: " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("https:")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "https://example.com " should " resolve against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    val path = basepath.resolve("https://example.com")
+    assert(path == "https://example.com")
+  }
+
+  "https://example.com/ " should " resolve against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    val path = basepath.resolve("https://example.com/")
+    assert(path == "https://example.com/")
+  }
+
+  "https://example.com/path/to/thing " should " resolve against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    val path = basepath.resolve("https://example.com/path/to/thing")
+    assert(path == "https://example.com/path/to/thing")
+  }
+
+  "path/to/thing " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("path/to/thing")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+  "urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN " should " throw an exception against file:not-absolute" in {
+    val basepath = new Urify("file:not-absolute")
+    try {
+      basepath.resolve("urn:publicid:ISO+8879%3A1986:ENTITIES+Added+Latin+1:EN")
+      fail()
+    } catch {
+      case ex: XProcException =>
+        assert(ex.code.getLocalName == "XD0074")
+      case _ => fail()
+    }
+  }
+
+
+
 }

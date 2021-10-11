@@ -152,10 +152,15 @@ object XProcException {
   def xdBadMapKey(key: String, location: Option[Location]): XProcException = dynamicError(70, key, location)
   def xdBadViewportInput(contentType: MediaType, location: Option[Location]): XProcException = dynamicError(72, contentType, location)
   def xdBadViewportResult(location: Option[Location]): XProcException = dynamicError(73, location)
+
   def xdUrifyFailed(filepath: String, basedir: String, location: Option[Location]): XProcException = dynamicError(74, List(filepath, basedir), location)
   def xdUrifyDifferentDrives(filepath: String, basedir: String, location: Option[Location]): XProcException = dynamicError(75, List(filepath, basedir), location)
-  def xdUrifyDifferentSchemes(filepath: String, basedir: String, location: Option[Location]): XProcException = dynamicError(76, List(filepath, basedir), location)
+  def xdUrifyMixedDrivesAndAuthorities(filepath: String, basedir: String, location: Option[Location]): XProcException = dynamicError(76, List(filepath, basedir), location)
+  def xdUrifyDifferentSchemes(filepath: String, basedir: String, location: Option[Location]): XProcException = dynamicError(77, List(filepath, basedir), location)
+
   def xdUnrecognizedContentType(ctype: String, location: Option[Location]): XProcException = dynamicError(79, ctype, location)
+
+  def xdUrifyNonhierarchicalBase(filepath: String, basedir: String, location: Option[Location]): XProcException = dynamicError(80, List(filepath, basedir), location)
 
   def xsLoop(step: String, port: String, location: Option[Location]): XProcException = staticError(1, List(step, port), location)
   def xsDuplicateStepName(step: String, location: Option[Location]): XProcException = staticError(2, step, location)

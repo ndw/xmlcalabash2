@@ -1,7 +1,7 @@
 package com.xmlcalabash.util
 
 import com.xmlcalabash.exceptions.XProcException
-import com.xmlcalabash.util.Urify.filesep
+import com.xmlcalabash.util.Urify.{filesep, windows}
 
 import java.net.URI
 import scala.collection.mutable.ListBuffer
@@ -29,59 +29,110 @@ object Urify {
     _filesep = sep
     _cwd = cwd
   }
+
+  private val WindowsFilepath = "^(?i)(file:/*)?(?i)([a-z]):(.*)$".r
+  private val FileAuthority = "^(?i)(file://)([^/]+)(/.*)?$".r
+  private val Filepath = "^(?i)(file:)(.*)$".r
+  private val OtherScheme = "^(?i)([a-z]+):(.*)$".r
+  private val Authority = "^//([^/]+)(/.*)?$".r
 }
 
 class Urify(val filepath: String) {
-  private var _path: String = _
-  private var _driveLetter = Option.empty[String]
-  private var _authority = Option.empty[String]
-  private var _absolute = false
-  private var _fixable = Option.empty[Boolean]
-  private var _hierarchical = true
   private var _scheme = Option.empty[String]
-  private var _fixedString = Option.empty[String]
-  private var _uri = Option.empty[URI]
+  private var _explicit = false
+  private var _hierarchical = true
+  private var _authority = Option.empty[String]
+  private var _driveLetter = Option.empty[String]
+  private var _path: String = _
+  private var _absolute = false
 
-  if (filesep == "\\") {
-    _path = filepath.replace("\\", "/")
+  if (filesep != "/") {
+    _path = filepath.replace(filesep, "/")
   } else {
     _path = filepath
   }
 
-  if (_path.toLowerCase().startsWith("file:/")) {
-    _scheme = Some("file")
-    _path = _path.substring(5)
-    _fixable = Some(true)
-    _absolute = true
-    driveAndAuthority()
-    _path = _path.replaceAll("^/+", "/")
-  } else if (_path.toLowerCase().startsWith("file:")) {
-    // It appears to be a relative file: URI, but might be file:c:/path
-    _scheme = Some("file")
-    _path = _path.substring(5)
-    _fixable = Some(true)
-    driveAndAuthority()
-    _path = _path.replaceAll("^/+", "/")
-  } else {
-    if (_path.toLowerCase().matches("^[-a-z0-9_]+:.*$") && (!Urify.windows || _path.charAt(1) != ':')) {
-      val pos = _path.indexOf(":")
-      _scheme = Some(_path.substring(0, pos))
-      _path = _path.substring(pos + 1)
-      _absolute = _path.startsWith("/")
-      _fixable = Some(false)
-
-      if (List("http", "https", "ftp").contains(_scheme.get)) {
-        // We know these are hierarchical
-      } else {
-        if (List("urn", "doi").contains(_scheme.get) || !filepath.contains("/")) {
+  if (windows) {
+    filepath match {
+      case "" =>
+        _path = ""
+      case "//" =>
+        _path = ""
+        _absolute = true
+      case Urify.WindowsFilepath(fpfile, fpdrive, fppath) =>
+        _scheme = Some("file")
+        _explicit = Option(fpfile).getOrElse("").toLowerCase().startsWith("file:")
+        _driveLetter = Some(fpdrive)
+        _path = fppath.replaceAll("^/+", "/")
+        _absolute = _path.startsWith("/")
+      case Urify.FileAuthority(fpfile, fpauthority, fppath) =>
+        _scheme = Some("file")
+        _explicit = true
+        _authority = Some(fpauthority)
+        _path = Option(fppath).getOrElse("").replaceAll("^/+", "/")
+        _absolute = _path.startsWith("/")
+      case Urify.Filepath(fpfile, fppath) =>
+        _scheme = Some("file")
+        _explicit = true
+        _path = fppath.replaceAll("^/+", "/")
+        _absolute = _path.startsWith("/")
+      case Urify.OtherScheme(fpscheme, fppath) =>
+        _scheme = Some(fpscheme)
+        _explicit = true
+        _path = fppath
+        if (List("http", "https", "ftp").contains(fpscheme)) {
+          _absolute = _path.startsWith("/")
+        } else if (List("urn", "doi", "mailto").contains(fpscheme)) {
           _hierarchical = false
-          _absolute = true
+        } else {
+          _hierarchical = filepath.contains("/")
+          _absolute = _hierarchical && _path.startsWith("/")
         }
-      }
-    } else {
-      driveAndAuthority()
-      _path = _path.replaceAll("^/+", "/")
-      _absolute = _path.startsWith("/")
+      case Urify.Authority(fpauthority, fppath) =>
+        _authority = Some(fpauthority)
+        _path = Option(fppath).getOrElse("").replaceAll("^/+", "/")
+        _absolute = _path.startsWith("/")
+      case _ =>
+        _path = filepath.replaceAll("^/+", "/")
+        _absolute = _path.startsWith("/")
+    }
+  } else {
+    filepath match {
+      case "" =>
+        _path = ""
+      case "//" =>
+        _path = ""
+        _absolute = true
+      case Urify.FileAuthority(fpfile, fpauthority, fppath) =>
+        _scheme = Some("file")
+        _explicit = true
+        _authority = Some(fpauthority)
+        _path = Option(fppath).getOrElse("").replaceAll("^/+", "/")
+        _absolute = _path.startsWith("/")
+      case Urify.Filepath(fpfile, fppath) =>
+        _scheme = Some("file")
+        _explicit = true
+        _path = fppath.replaceAll("^/+", "/")
+        _absolute = _path.startsWith("/")
+      case Urify.OtherScheme(fpscheme, fppath) =>
+        _scheme = Some(fpscheme)
+        _explicit = true
+        _path = fppath
+        if (List("http", "https", "ftp").contains(fpscheme)) {
+          _absolute = _path.startsWith("/")
+        } else if (List("urn", "doi", "mailto").contains(fpscheme)) {
+          _hierarchical = false
+        } else {
+          _hierarchical = filepath.contains("/")
+          _absolute = _hierarchical && _path.startsWith("/")
+        }
+      case Urify.Authority(fpauthority, fppath) =>
+        _authority = Some(fpauthority)
+        _path = Option(fppath).getOrElse("").replaceAll("^/+", "/")
+        _absolute = _path.startsWith("/")
+      case _ =>
+        _path = filepath.replaceAll("^/+", "/")
+        _absolute = _path.startsWith("/")
     }
   }
 
@@ -91,88 +142,32 @@ class Urify(val filepath: String) {
 
   def this(copy: Urify) = {
     this(copy.filepath)
-    _path = copy._path
-    _driveLetter = copy._driveLetter
-    _authority = copy._authority
-    _fixable = copy._fixable
-    _absolute = copy._absolute
-    _hierarchical = copy._hierarchical
     _scheme = copy._scheme
+    _explicit = copy._explicit
+    _hierarchical = copy._hierarchical
+    _authority = copy._authority
+    _driveLetter = copy._driveLetter
+    _path = copy._path
+    _absolute = copy._absolute
   }
 
-  private def driveAndAuthority(): Unit = {
-    if (!Urify.windows) {
-      return
-    }
-
-    if (_path.matches("^/*[a-zA-Z]:.*")) {
-      val pos = _path.indexOf(':')
-      _scheme = Some("file")
-      _fixable = Some(true)
-      _driveLetter = Some(_path.charAt(pos-1).toString)
-      _path = _path.substring(pos+1)
-      _absolute = path.startsWith("/")
-    } else if (_path.startsWith("//") && !_path.startsWith("///")) {
-      _scheme = Some("file")
-      _fixable = Some(true)
-      _path = _path.substring(2)
-      val pos = _path.indexOf("/")
-      if (pos >= 0) {
-        _authority = Some(_path.substring(0, pos))
-        _path = _path.substring(pos)
-      } else {
-        // ???
-        _authority = Some(_path)
-        _path = "/"
-      }
-      _absolute = true
-    }
-  }
-
-  def path: String = _path
-  def driveLetter: Option[String] = _driveLetter
+  def scheme: Option[String] = _scheme
+  def explicit: Boolean = _explicit
+  def hierarchical: Boolean = _hierarchical
   def authority: Option[String] = _authority
+  def driveLetter: Option[String] = _driveLetter
+  def path: String = _path
   def absolute: Boolean = _absolute
   def relative: Boolean = !_absolute
-  def hierarchical: Boolean = _hierarchical
-  def fixable: Boolean = _fixable.getOrElse(false)
-  def mightBeFixable: Boolean = _fixable.isEmpty || _fixable.get
-  def scheme: Option[String] = _scheme
 
-  def discardDriveLetter(): Urify = {
-    if (_driveLetter.isEmpty) {
-      this
-    } else {
-      val repl = new Urify(this)
-      repl._driveLetter = None
-      repl
+  def fixedPath: String = {
+    if (explicit) {
+      return _path
     }
-  }
 
-  private def fixup(path: String): String = {
-    val fixed = path.replaceAll("^/+", "/")
-      .replaceAll("\\?", "%3F")
+    var newpath = path.replaceAll("\\?", "%3F")
       .replaceAll("#", "%23")
       .replaceAll(" ", "%20")
-
-    val parts = fixed.split("/")
-    var stack = ListBuffer.empty[String]
-    for (part <- parts) {
-      part match {
-        case "." => ()
-        case ".." =>
-          if (stack.nonEmpty) {
-            stack = stack.dropRight(1)
-          }
-        case _ =>
-          stack += part
-      }
-    }
-    if (fixed.endsWith("/")) {
-      stack += ""
-    }
-
-    var newpath = stack.mkString("/")
 
     // unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
     var buf = new StringBuffer()
@@ -233,119 +228,138 @@ class Urify(val filepath: String) {
     buf.toString
   }
 
-  def makeFixable(): Urify = {
-    if (fixable) {
-      this
-    } else {
-      val fixable = new Urify(this)
-      fixable._fixable = Some(true)
-      fixable
-    }
-  }
-
-
-  def makeAbsolute: Urify = {
-    if (absolute) {
-      this
-    } else {
-      val base = new Urify(Urify.cwd).resolve(this.toString)
-      if (base.relative) {
-        throw XProcException.xdUrifyFailed(this.toString, Urify.cwd, None)
-      }
-      base
-    }
-  }
-
-  def resolve(uri: URI): Urify = {
+  def resolve(uri: URI): String = {
     resolve(uri.toString)
   }
 
-  def resolve(uri: String): Urify = {
-    var path = new Urify(uri)
-    if (path.scheme.isDefined && path.absolute) {
-      return path
+  def resolve(uri: String): String = {
+    val respath = new Urify(uri)
+    if (respath.scheme.isDefined && respath.absolute) {
+      return respath.toString
     }
 
-    val cwduri = new Urify(s"file://${Urify.cwd}")
+    if (!hierarchical) {
+      throw XProcException.xdUrifyNonhierarchicalBase(uri, filepath, None)
+    }
 
-    val basepath = if (absolute) {
-      if (scheme.isDefined) {
-        this
-      } else {
-        cwduri.resolve(toString)
-      }
+    if (!absolute) {
+      throw XProcException.xdUrifyFailed(uri, filepath, None)
+    }
+
+    if (respath.driveLetter.isDefined && (driveLetter.isEmpty || respath.driveLetter.get != driveLetter.get)) {
+      throw XProcException.xdUrifyDifferentDrives(uri, filepath, None)
+    }
+
+    if ((respath.driveLetter.isDefined && authority.isDefined)
+      || (respath.authority.isDefined && driveLetter.isDefined)) {
+      throw XProcException.xdUrifyMixedDrivesAndAuthorities(uri, filepath, None)
+    }
+
+    if ((respath.scheme.isDefined && respath.scheme.get != scheme.get)) {
+      throw XProcException.xdUrifyDifferentSchemes(uri, filepath, None)
+    }
+
+    if (scheme.isDefined && scheme.get != "file" && absolute) {
+      return URI.create(filepath).resolve(respath.toString).toString
+    }
+
+    val rscheme = scheme.get
+    val rauthority = if (respath.authority.isDefined) {
+      respath.authority
     } else {
-      val base = cwduri.resolve(this.toString)
-      if (base.relative) {
-        throw XProcException.xdUrifyFailed(this.toString, Urify.cwd, None)
-      }
-      base
+      authority
     }
-
-    if (path.relative && path.driveLetter.isDefined) {
-      if (basepath.driveLetter.isEmpty || basepath.driveLetter.get != path.driveLetter.get) {
-        throw XProcException.xdUrifyDifferentDrives(filepath, basepath.toString, None)
-      }
-      path = path.discardDriveLetter()
-    }
-
-    if (path.scheme.isDefined && basepath.scheme.isDefined && path.scheme.get != basepath.scheme.get) {
-      throw XProcException.xdUrifyDifferentSchemes(filepath, basepath.toString, None)
-    }
-
-    if (basepath.scheme.isDefined && basepath.scheme.get == "file" && path.scheme.isEmpty) {
-      new Urify(basepath.toURI.resolve(path.makeFixable().toURI))
+    val rdrive = driveLetter
+    val rpath = if (respath.authority.isDefined || respath.absolute) {
+      respath.fixedPath
     } else {
-      new Urify(basepath.toURI.resolve(path.toURI))
+      resolvePaths(fixedPath, respath.fixedPath)
+    }
+
+    val sb = new StringBuffer()
+    sb.append(rscheme)
+    sb.append(":")
+    if (rauthority.isDefined) {
+      sb.append("//")
+      sb.append(rauthority.get)
+    } else {
+      if (scheme.isDefined && scheme.get == "file") {
+        if (absolute) {
+          sb.append("//")
+          if (rdrive.isDefined) {
+            sb.append("/")
+          }
+        }
+      }
+    }
+    if (rdrive.isDefined) {
+      sb.append(rdrive.get)
+      sb.append(":")
+    }
+    sb.append(rpath)
+    sb.toString
+  }
+
+  private def resolvePaths(basepath: String, newpath: String): String = {
+    // This is only called when newpath is relative.
+    val pos = basepath.lastIndexOf("/")
+    if (pos >= 0) {
+      resolveDotSegments(basepath.substring(0, pos+1) + newpath)
+    } else {
+      resolveDotSegments("/" + newpath)
     }
   }
+
+  private def resolveDotSegments(path: String): String = {
+    val parts = path.split("/")
+    var stack = ListBuffer.empty[String]
+    for (part <- parts) {
+      part match {
+        case "." => ()
+        case ".." =>
+          if (stack.nonEmpty) {
+            stack = stack.dropRight(1)
+          }
+        case _ =>
+          stack += part
+      }
+    }
+    if (path.endsWith("/")) {
+      stack += ""
+    }
+
+    stack.mkString("/")
+  }
+
 
   def toURI: URI = {
-    if (_uri.isEmpty) {
-      _uri = Some(new URI(toString))
-    }
-    _uri.get
-  }
-
-  private def combineParts(fpath: String): String = {
-    val str = if (_driveLetter.isDefined) {
-      s"file:///${_driveLetter.get}:${fpath}"
-    } else if (_authority.isDefined) {
-      s"file://${_authority.get}${fpath}"
-    } else if (_scheme.isDefined) {
-      if (_scheme.get == "file") {
-        if (fpath.startsWith("/")) {
-          s"${_scheme.get}://${fpath}"
-        } else {
-          s"${_scheme.get}:${fpath}"
-        }
-      } else {
-        s"${_scheme.get}:${fpath}"
-      }
-    } else {
-      s"${fpath}"
-    }
-    str
-  }
-
-  def toFixedString: String = {
-    if (_fixedString.isEmpty) {
-      combineParts(fixup(_path))
-    } else {
-      _fixedString.get
-    }
+    new URI(toString)
   }
 
   override def toString: String = {
-    if (_fixedString.isDefined) {
-      return _fixedString.get
+    val sb = new StringBuffer()
+    if (scheme.isDefined) {
+      sb.append(scheme.get)
+      sb.append(":")
     }
-
-    if (fixable) {
-      _fixedString = Some(toFixedString)
-      return _fixedString.get
+    if (authority.isDefined) {
+      sb.append("//")
+      sb.append(authority.get)
+    } else {
+      if (scheme.isDefined && scheme.get == "file") {
+        if (absolute) {
+          sb.append("//")
+          if (driveLetter.isDefined) {
+            sb.append("/")
+          }
+        }
+      }
     }
-
-    combineParts(_path)
+    if (driveLetter.isDefined) {
+      sb.append(driveLetter.get)
+      sb.append(":")
+    }
+    sb.append(fixedPath)
+    sb.toString
  }
 }
